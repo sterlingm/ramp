@@ -110,6 +110,7 @@ class Planner {
               const int                 population_size, 
               const bool                sub_populations,  
               const std::vector<tf::Transform> ob_T_odoms,
+              const double              trans_delta_t=0.1,
               const int                 gens_before_cc=0,
               const double              t_pc_rate=2.,
               const double              t_fixed_cc=2.,
@@ -216,7 +217,7 @@ class Planner {
 
     // Callback methods for ros::Timers
     void controlCycleCallback     (const ros::TimerEvent& t);
-    void planningCycleCallback    (const ros::TimerEvent& t);
+    void planningCycleCallback    ()                        ;
     void imminentCollisionCallback(const ros::TimerEvent& t);
 
     // Msg building methods
@@ -396,6 +397,9 @@ class Planner {
 
 
     tf::Transform T_w_odom_;
+
+
+    double trans_delta_t_;
 
     std::vector<double> error_correct_val_pos_, error_correct_val_or_;
     double avg_error_correct_val_pos_, avg_error_correct_val_or_;

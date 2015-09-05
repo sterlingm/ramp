@@ -16,7 +16,9 @@ fixed_control_cycle_rate: 2
 
 sensing_cycle_rate: 10
 
-error_reduction: true
+error_reduction: false 
+
+transition_delta_t: 0.1
 
 num_of_obstacles: 3
 

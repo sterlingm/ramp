@@ -19,6 +19,7 @@ bool                errorReduction;
 double              t_cc_rate;
 double              t_pc_rate;
 int                 num_obs;
+double              trans_delta_t;
 std::vector<std::string> ob_topics;
 std::vector< tf::Transform > ob_tfs;
 
@@ -208,6 +209,12 @@ void loadParameters(const ros::NodeHandle handle)
     handle.getParam("ramp/error_reduction", errorReduction);
     ROS_INFO("errorReduction: %s", errorReduction ? "True" : "False");
   }
+  
+  if(handle.hasParam("ramp/transition_delta_t"))
+  {
+    handle.getParam("ramp/transition_delta_t", trans_delta_t);
+    ROS_INFO("trans_delta_t: %f", trans_delta_t);
+  }
 
   if(handle.hasParam("ramp/num_of_obstacles"))
   {
@@ -254,7 +261,7 @@ int main(int argc, char** argv) {
   std::cout<<"\nHandle namespace: "<<handle.getNamespace();
   
   ros::Subscriber sub_update_ = handle.subscribe("update", 100, &Planner::updateCallback, &my_planner);
-  ros::Subscriber sub_sc_ = handle.subscribe("obstacles", 100, &Planner::sensingCycleCallback, &my_planner);
+  ros::Subscriber sub_sc_ = handle.subscribe("obstacles", 1, &Planner::sensingCycleCallback, &my_planner);
 
 
   // Load ros parameters
@@ -267,7 +274,7 @@ int main(int argc, char** argv) {
 
  
   /** Initialize the Planner's handlers */ 
-  my_planner.init(id, handle, start, goal, ranges, population_size, sub_populations, ob_tfs, gensBeforeCC, t_pc_rate, t_cc_rate, errorReduction); 
+  my_planner.init(id, handle, start, goal, ranges, population_size, sub_populations, ob_tfs, trans_delta_t, gensBeforeCC, t_pc_rate, t_cc_rate, errorReduction); 
   my_planner.modifications_   = modifications;
   my_planner.evaluations_     = evaluations;
   my_planner.seedPopulation_  = seedPopulation;

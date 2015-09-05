@@ -66,6 +66,12 @@ const CollisionDetection::QueryResult CollisionDetection::query(const ramp_msgs:
     else  
       std::cout<<"\nRobot 0 has no trajectory!\n";
   }*/
+
+
+  if(trajectory_.trajectory.points.size() == 1 && ob_trajectory.trajectory.points.size() == 1)
+  {
+
+  }
   
   uint16_t i_stop;
   if(trajectory_.i_knotPoints.size() == 0) 
