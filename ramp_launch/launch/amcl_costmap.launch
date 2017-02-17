@@ -1,0 +1,42 @@
+<launch>
+  <arg name="custom_param_file" default="$(find turtlebot_navigation)/param/dummy.yaml"/>
+  <!-- <include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
+    <arg name="rgb_processing" value="false" />
+    <arg name="depth_registration" value="false" />
+    <arg name="depth_processing" value="false" />
+    
+
+
+    We must specify an absolute topic name because if not it will be prefixed by "$(arg camera)".
+         Probably is a bug in the nodelet manager: https://github.com/ros/nodelet_core/issues/7  
+    <arg name="scan_topic" value="/scan" />
+  </include> -->
+
+
+
+  <!-- Map server -->
+  <arg name="map_file" default="/home/sterlingm/my_map.yaml"/>
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" output="screen" />
+
+  <arg name="initial_pose_x" default="0.0"/> <!-- Use 17.0 for willow's map in simulation -->
+  <arg name="initial_pose_y" default="0.0"/> <!-- Use 17.0 for willow's map in simulation -->
+  <arg name="initial_pose_a" default="0.0"/>
+  <include file="$(find ramp_launch)/launch/launch_include/amcl.launch.xml">
+    <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
+    <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
+    <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
+  </include>
+
+
+  <!-- Run the costmap node -->
+  <node name="costmap_node" pkg="costmap_2d" type="costmap_2d_node" >
+      <rosparam file="$(find ramp_launch)/launch/param/diff_costmap.yaml" command="load"/>
+      <!-- <rosparam file="$(find ramp_launch)/launch/param/global_costmap_params.yaml" command="load"/>
+      <rosparam file="$(find ramp_launch)/launch/param/costmap_common_params.yaml" command="load"/>
+      <rosparam file="$(find ramp_launch)/launch/param/local_costmap_params.yaml" command="load"/> -->
+      <param name="costmap/global_frame" value="/map" />
+  </node>
+
+
+</launch>
+

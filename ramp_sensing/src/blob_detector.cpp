@@ -46,7 +46,7 @@ Moments BlobDetector::buildMoment(Mat _src, bool binary)
 
   Mat src0(_src);
 
-  if( binary || depth == CV_8U )
+  /*if( binary || depth == CV_8U )
     func = momentsInTile<uchar, int, int>;
   else if( depth == CV_16U )
     func = momentsInTile<ushort, int, int64>;
@@ -57,7 +57,7 @@ Moments BlobDetector::buildMoment(Mat _src, bool binary)
   else if( depth == CV_64F )
     func = momentsInTile<double, double, double>;
   else
-    CV_Error( CV_StsUnsupportedFormat, "" );
+    CV_Error( CV_StsUnsupportedFormat, "" );*/
 
 
   for(int y=0;y<size.height;y+=TILE_SIZE)
