@@ -1017,10 +1017,12 @@ Circle CirclePacker::getCircleFromKeypoint(const cv::KeyPoint k) const
 
 std::vector<Circle> CirclePacker::go()
 {
+  ROS_INFO("In CirclePacker::go()");
   std::vector<Circle> result;
 
   // Create a matrix of the same size and type as src
   dst.create( src.size(), src.type() );
+  ROS_INFO("Done with dst.create");
 
   // Convert to grayscale
   //cvtColor(src, src_gray, CV_BGR2GRAY);
@@ -1029,6 +1031,7 @@ std::vector<Circle> CirclePacker::go()
   ros::Time t_start_edge_detect = ros::Time::now();
   CannyThreshold(0, 0);
   ros::Duration d_edges_detect(ros::Time::now()-t_start_edge_detect);
+  ROS_INFO("Done with CannyThreshold");
 
   /*
    * Detect blobs
@@ -1151,7 +1154,6 @@ std::vector<Circle> CirclePacker::go()
   //ROS_INFO("d_cirs_from_edges: %f", d_cirs_from_edges.toSec());
   //ROS_INFO("d_cirs_from_sets: %f", d_cirs_from_sets.toSec());
 
-  //ROS_INFO("Leaving go()");
-
+  ROS_INFO("Leaving CirclePacker::go()");
   return result;
 }

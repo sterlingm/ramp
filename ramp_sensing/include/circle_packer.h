@@ -66,6 +66,7 @@ class CirclePacker
 {
   public:
     CirclePacker(nav_msgs::OccupancyGridConstPtr);
+    CirclePacker(nav_msgs::OccupancyGrid);
     ~CirclePacker();
 
     void convertOGtoMat(nav_msgs::OccupancyGridConstPtr);

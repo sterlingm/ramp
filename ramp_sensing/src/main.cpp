@@ -11,6 +11,7 @@
 #include "circle_packer.h"
 #include <visualization_msgs/MarkerArray.h>
 #include "utility.h"
+#include "blob_detector.h"
 
 
 #include <filter/extendedkalmanfilter.h>
@@ -25,7 +26,7 @@
 
 Utility util;
 double rate;
-ros::Publisher pub_obj, pub_rviz;
+ros::Publisher pub_obj, pub_rviz, pub_cons_costmap;
 std::vector< Obstacle> obs;
 ramp_msgs::ObstacleList list;
 std::vector< std::string > ob_odoms;
@@ -45,6 +46,8 @@ ros::Time t_last_costmap;
 
 int count;
 
+
+std::vector<nav_msgs::OccupancyGrid> prev_grids;
 
 
 
@@ -568,17 +571,93 @@ void init_linear_system_model()
 }
 
 
+void consolidateCostmaps(const nav_msgs::OccupancyGrid g1, const nav_msgs::OccupancyGrid g2, nav_msgs::OccupancyGrid& result)
+{
+  ROS_INFO("In consolidateCostmaps(OccupancyGrid, OccupancyGrid, OccupancyGrid)");
+  ROS_INFO("g1.data.size(): %i", (int)g1.data.size());
+  result = g1;
+  ROS_INFO("Before for loops, result.size(): %i", (int)result.data.size());
+  for(int r=0;r<g1.info.width;r++)
+  {
+    int r_offset = g1.info.width*r;
+    for(int c=0;c<g1.info.height;c++)
+    {
+      result.data[r_offset + c] = g1.data[r_offset + c] | g2.data[r_offset + c];
+    }
+  }
+  ROS_INFO("After for loops, result.size(): %i", (int)result.data.size());
+}
+
+void consolidateCostmaps(const nav_msgs::OccupancyGrid gi, const std::vector<nav_msgs::OccupancyGrid> prev_grids, nav_msgs::OccupancyGrid& result)
+{
+  ROS_INFO("In consolidateCostmaps(OccupancyGrid, vector<OccupancyGrid>, OccupancyGrid)");
+  ROS_INFO("gi.size(): %i", (int)gi.data.size());
+  
+  if(prev_grids.size() == 0)
+  {
+    result = gi;
+  }
+  else
+  {
+    nav_msgs::OccupancyGrid temp = gi;
+
+    for(int i=0;i<prev_grids.size();i++)
+    {
+      ROS_INFO("Consolidating with previous grid %i, prev_grid[%i].size(): %i", i, i, (int)prev_grids[i].data.size());
+      consolidateCostmaps(temp, prev_grids[i], result);
+      ROS_INFO("New result size: %i", (int)result.data.size());
+      temp = result;
+    }
+  }
+}
+
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
+  ROS_INFO("**************************************************");
+  ROS_INFO("Got a new costmap!");
+  ROS_INFO("**************************************************");
   ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;
   t_last_costmap = ros::Time::now();
+
+  ROS_INFO("New costmap size: %i", (int)grid->data.size());
+
+  // Consolidate this occupancy grid with prev ones
+  nav_msgs::OccupancyGrid consolidated_grid;
+  consolidateCostmaps(*grid, prev_grids, consolidated_grid);
+  
+  // Push this grid onto prev_grids
+  prev_grids.push_back(*grid);
+  if(prev_grids.size() > 5)
+  {
+    prev_grids.pop_back();
+  }
+
+  // Publish the consolidated costmap
+  pub_cons_costmap.publish(consolidated_grid);
+
+
+  //nav_msgs::OccupancyGridPtr cg(&consolidated_grid);
+  boost::shared_ptr<nav_msgs::OccupancyGrid> cg_ptr = boost::make_shared<nav_msgs::OccupancyGrid>(consolidated_grid);
+  //nav_msgs::OccupancyGridPtr p = cg_ptr;
+
+  //*cg = consolidated_grid;
+  ROS_INFO("consolidated_grid.data.size(): %i", (int)consolidated_grid.data.size());
+  ROS_INFO("cg_ptr->data.size(): %i", (int)cg_ptr->data.size());
+
 
   double grid_resolution = grid->info.resolution; 
 
   global_grid = *grid;
-  //ROS_INFO("Got a new costmap!");
-  CirclePacker c(grid);
+
+  CirclePacker c(cg_ptr);
+  //CirclePacker c(grid);
   std::vector<Circle> cirs = c.go();
+
+
+  /*BlobDetector bd(grid);
+  std::vector<Center> cs;
+  bd.findBlobs(cs);*/
+
   
   // This seg faults if I don't check size > 0
   // Figure out why...
@@ -693,6 +772,7 @@ int main(int argc, char** argv)
   //Publishers
   pub_obj = handle.advertise<ramp_msgs::ObstacleList>("obstacles", 1);
   pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1);
+  pub_cons_costmap = handle.advertise<nav_msgs::OccupancyGrid>("consolidated_costmap", 1);
 
   //Timers
   //ros::Timer timer = handle.createTimer(ros::Duration(1.f / rate), publishList);

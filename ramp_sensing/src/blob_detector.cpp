@@ -1,9 +1,31 @@
 #include "blob_detector.h"
 
 
-BlobDetector::BlobDetector() {}
+BlobDetector::BlobDetector(nav_msgs::OccupancyGridConstPtr g) 
+{
+  grid = *g;
+  convertOGtoMat(g);
+}
 BlobDetector::~BlobDetector() {}
 
+void BlobDetector::convertOGtoMat(nav_msgs::OccupancyGridConstPtr g)
+{
+  ROS_INFO("In BlobDetector::convertOGtoMat");
+  
+  // Use the GridMap2D library to convert from nav_msgs::OccupancyGrid to cv::Mat
+  gridmap_2d::GridMap2D gmap(g, false);
+
+  // Create a window
+  //cv::namedWindow("testing", CV_WINDOW_AUTOSIZE);
+
+  src = gmap.binaryMap();
+
+  // Show the image
+  //cv::imshow("testing", src);
+
+  // PRESS ESC TO BEFORE CLOSING WINDOW, OTHERWISE THE PROGRAM WILL HANG
+  //cv::waitKey(0);
+}
 
 void BlobDetector::detect(std::vector<KeyPoint>& keypoints)
 {
@@ -28,7 +50,7 @@ void BlobDetector::detect(std::vector<KeyPoint>& keypoints)
     threshold(grayscaleImage, binarizedImage, thresh, 255, THRESH_BINARY);
 
     std::vector<Center> curCenters;
-    findBlobs(binarizedImage, curCenters);
+    findBlobs(curCenters);
   }
   
 }
@@ -36,6 +58,9 @@ void BlobDetector::detect(std::vector<KeyPoint>& keypoints)
 
 Moments BlobDetector::buildMoment(Mat _src, bool binary)
 {
+  ROS_INFO("In buildMoment");
+
+  // Get type of image
   int type = _src.type(), depth = CV_MAT_DEPTH(type), cn = CV_MAT_CN(type);  
   Size size = _src.size();
   const int TILE_SIZE = 32;
@@ -46,6 +71,7 @@ Moments BlobDetector::buildMoment(Mat _src, bool binary)
 
   Mat src0(_src);
 
+  // Set...something?
   /*if( binary || depth == CV_8U )
     func = momentsInTile<uchar, int, int>;
   else if( depth == CV_16U )
@@ -59,7 +85,9 @@ Moments BlobDetector::buildMoment(Mat _src, bool binary)
   else
     CV_Error( CV_StsUnsupportedFormat, "" );*/
 
-
+  /*
+   * Go through each pixel in the polygon
+   */
   for(int y=0;y<size.height;y+=TILE_SIZE)
   {
     Size tileSize;
@@ -78,6 +106,7 @@ Moments BlobDetector::buildMoment(Mat _src, bool binary)
        } 
 
 
+      // Need to have func defined
       double mom[10];
       func( src, mom );
 
@@ -90,31 +119,48 @@ Moments BlobDetector::buildMoment(Mat _src, bool binary)
         }
       }
 
+      /*
+       * Start computing values in the moment array!
+       */
+
       double xm = x * mom[0], ym = y * mom[0];
-
+      ROS_INFO("xm: %f ym: %f", xm, ym);
+      
       // Accumulate the moments computed in each tile      
+      m.m10 += mom[1] + xm;
+      m.m01 += mom[2] + ym;
 
+
+      ROS_INFO("mom[1]: %f mom[2]: %f", mom[1], mom[2]);
 
     } // end inner for
   } // end outter for
+  
+  ROS_INFO("Exiting buildMoment");
 }
 
 
-void BlobDetector::findBlobs(Mat binaryImage, std::vector<Center>& centers)
+void BlobDetector::findBlobs(std::vector<Center>& centers)
 {
+  ROS_INFO("In findBlobs");
+
   centers.clear();
 
+  // Find the contours, aka edge points
   std::vector< std::vector<Point> > contours;
-  Mat tempBinaryImage = binaryImage.clone();
+  Mat tempBinaryImage = src.clone();
   findContours(tempBinaryImage, contours, RETR_LIST, CHAIN_APPROX_NONE);
 
+  // For each contour
   for(size_t contourIdx = 0; contourIdx < contours.size(); contourIdx++)
   {
     Center center;
     center.confidence = 1;
 
+    // Build the moment array for each set of contour points (aka each polygon)
     Moments moms = moments(Mat(contours[contourIdx]));
 
+    // After computing moment, compute the center
     if(moms.m00 == 0.0)
         continue;
     center.location = Point2d(moms.m10 / moms.m00, moms.m01 / moms.m00);    
@@ -131,5 +177,5 @@ void BlobDetector::findBlobs(Mat binaryImage, std::vector<Center>& centers)
     center.radius = (dists[(dists.size() - 1) / 2] + dists[dists.size() / 2]) / 2.;
 
     centers.push_back(center);
-  }
+  } // end for each contour
 }
