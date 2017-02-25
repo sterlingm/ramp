@@ -627,7 +627,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   
   // Push this grid onto prev_grids
   prev_grids.push_back(*grid);
-  if(prev_grids.size() > 5)
+  if(prev_grids.size() > 20)
   {
     prev_grids.pop_back();
   }
@@ -654,9 +654,12 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   std::vector<Circle> cirs = c.go();
 
 
-  /*BlobDetector bd(grid);
+  /*
+   * Use custom BlobDetector
+   */
+  BlobDetector bd(grid);
   std::vector<Center> cs;
-  bd.findBlobs(cs);*/
+  bd.findBlobs(cs);
 
   
   // This seg faults if I don't check size > 0

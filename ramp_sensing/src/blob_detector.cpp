@@ -176,6 +176,8 @@ void BlobDetector::findBlobs(std::vector<Center>& centers)
     std::sort(dists.begin(), dists.end());
     center.radius = (dists[(dists.size() - 1) / 2] + dists[dists.size() / 2]) / 2.;
 
+    ROS_INFO("Center found: (%f, %f), radius: %f", center.location.x, center.location.y, center.radius);
+
     centers.push_back(center);
   } // end for each contour
 }
