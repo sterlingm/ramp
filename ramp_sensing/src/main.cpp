@@ -603,9 +603,9 @@ void consolidateCostmaps(const nav_msgs::OccupancyGrid gi, const std::vector<nav
 
     for(int i=0;i<prev_grids.size();i++)
     {
-      ROS_INFO("Consolidating with previous grid %i, prev_grid[%i].size(): %i", i, i, (int)prev_grids[i].data.size());
+      //ROS_INFO("Consolidating with previous grid %i, prev_grid[%i].size(): %i", i, i, (int)prev_grids[i].data.size());
       consolidateCostmaps(temp, prev_grids[i], result);
-      ROS_INFO("New result size: %i", (int)result.data.size());
+      //ROS_INFO("New result size: %i", (int)result.data.size());
       temp = result;
     }
   }
@@ -627,7 +627,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   
   // Push this grid onto prev_grids
   prev_grids.push_back(*grid);
-  if(prev_grids.size() > 20)
+  if(prev_grids.size() > 5)
   {
     prev_grids.pop_back();
   }

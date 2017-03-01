@@ -9,9 +9,6 @@
 using namespace cv;
 
 
-typedef void (*MomentsInTileFunc)(const Mat& img, double* moments);
-
-
 struct Center
 {
   cv::Point2d location;
@@ -30,7 +27,7 @@ public:
 
   void detect(std::vector<cv::KeyPoint>& keypoints);
   void findBlobs(std::vector<Center>& centers);
-  Moments buildMoment(Mat _src, bool binary);
+  Moments buildMoment_contour(Mat contour);
 
   void convertOGtoMat(nav_msgs::OccupancyGridConstPtr g);
 
