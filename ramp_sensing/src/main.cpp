@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <signal.h>
 #include "ros/ros.h"
 #include "nav_msgs/Odometry.h"
 #include "tf/transform_datatypes.h"
@@ -49,7 +50,16 @@ int count;
 
 std::vector<nav_msgs::OccupancyGrid> prev_grids;
 
+std::vector<Circle> prev_valid_cirs;
+std::vector<ros::Time> prev_times;
+std::vector<double> jump_thresholds;
+double jump_threshold = 0.5;
+double jump_threshold_inc = 0.25;
 
+
+std::vector<double> predicted_velocities;
+
+ros::Timer timer_markers;
 
 /*********************************
  * Variables for BFL
@@ -308,6 +318,17 @@ int getClosestPrev(Circle m, std::vector<Circle> N)
 }
 
 
+bool jump(const Circle cir_i, const Circle cir_prev, double threshold)
+{
+  ROS_INFO("In jump");
+  double dist = util.positionDistance(cir_i.center.x, cir_i.center.y, cir_prev.center.x, cir_prev.center.y);
+
+  ROS_INFO("cir_i center: (%f, %f), cir_prev center: (%f, %f) threshold: %f dist: %f", cir_i.center.x, cir_i.center.y, cir_prev.center.x, cir_prev.center.y, threshold, dist);
+
+
+  return dist > threshold;
+}
+
 std::vector<double> velocityFromOnePrev(const std::vector<Circle> cirs, const std::vector<Circle> prev_cirs, const ros::Duration d_elapsed, const double grid_resolution)
 {
   std::vector<double> result;
@@ -320,24 +341,52 @@ std::vector<double> velocityFromOnePrev(const std::vector<Circle> cirs, const st
     // Find closest previous circle for each new circle
     for(int i=0;i<cirs.size();i++)
     {
-      int index = getClosestPrev(cirs[i], prev_cirs);
+      //int index = getClosestPrev(cirs[i], prev_cirs);
+      int index = getClosestPrev(cirs[i], prev_valid_cirs);
       ROS_INFO("Circle %i center: (%f,%f)", i, cirs[i].center.x, cirs[i].center.y);
-      ROS_INFO("Closest prev: Circle %i center: (%f, %f)", i, prev_cirs[index].center.x, prev_cirs[index].center.y);
+      ROS_INFO("Closest prev: Circle %i center: (%f, %f)", i, prev_valid_cirs[index].center.x, prev_valid_cirs[index].center.y);
       cir_prev_cen_index.push_back(index);
 
-      // Find velocities
-      std::vector<double> pc;
-      pc.push_back(prev_cirs[index].center.x);
-      pc.push_back(prev_cirs[index].center.y);
-      std::vector<double> cc;
-      cc.push_back(cirs[i].center.x);
-      cc.push_back(cirs[i].center.y);
-      double theta = util.findAngleFromAToB(pc, cc);
-      double linear_v = (util.positionDistance(pc, cc) / d_elapsed.toSec()) * grid_resolution;
-      result.push_back(linear_v);
-      ROS_INFO("dist: %f time: %f linear_v: %f converted: %f", util.positionDistance(pc, cc), d_elapsed.toSec(), util.positionDistance(pc, cc) / d_elapsed.toSec(), linear_v);
-    }
-  }
+      if(jump(cirs[i], prev_valid_cirs[index], jump_thresholds[i]))
+      {
+        ROS_INFO("Huge jump between previous costmap and this costmap");
+        jump_thresholds[i] += jump_threshold_inc;
+      }
+      else
+      {
+        ros::Duration d_prev = ros::Time::now() - prev_times[i];
+        ROS_INFO("d_prev: %f", d_prev.toSec());
+
+        jump_thresholds[i] = jump_threshold;
+
+        // Find velocities
+        std::vector<double> pc;
+        pc.push_back(prev_valid_cirs[index].center.x);
+        pc.push_back(prev_valid_cirs[index].center.y);
+        std::vector<double> cc;
+        cc.push_back(cirs[i].center.x);
+        cc.push_back(cirs[i].center.y);
+        double theta = util.findAngleFromAToB(pc, cc);
+        double linear_v = (util.positionDistance(pc, cc) / d_prev.toSec()) * grid_resolution;
+        result.push_back(linear_v);
+        ROS_INFO("dist: %f time: %f linear_v: %f converted: %f", util.positionDistance(pc, cc), d_prev.toSec(), util.positionDistance(pc, cc) / d_elapsed.toSec(), linear_v);
+
+        prev_times[i] = ros::Time::now();
+
+        predicted_velocities.push_back(linear_v);
+
+        // Set new valid previous circle
+        if(i > prev_valid_cirs.size())
+        {
+          prev_valid_cirs.push_back(cirs[i]);
+        }
+        else
+        {
+          prev_valid_cirs[i] = cirs[i];
+        }
+      } // end else
+    } // end for each circle
+  } // end outer if
 
   // This doesn't actually compute velocity, it just sets a new prev_cir
   else
@@ -621,6 +670,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
   ROS_INFO("New costmap size: %i", (int)grid->data.size());
 
+
   // Consolidate this occupancy grid with prev ones
   nav_msgs::OccupancyGrid consolidated_grid;
   consolidateCostmaps(*grid, prev_grids, consolidated_grid);
@@ -653,13 +703,21 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   //CirclePacker c(grid);
   std::vector<Circle> cirs = c.go();
 
+  if(prev_valid_cirs.size() == 0)
+  {
+    prev_valid_cirs = cirs;
+   
+    // Make another for 2
+    Circle temp;
+    prev_valid_cirs.push_back(temp);
+  }
 
   /*
    * Use custom BlobDetector
    */
-  BlobDetector bd(grid);
+  /*BlobDetector bd(grid);
   std::vector<Center> cs;
-  bd.findBlobs(cs);
+  bd.findBlobs(cs);*/
 
   
   // This seg faults if I don't check size > 0
@@ -713,6 +771,36 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
  
   //ROS_INFO("obs.size(): %i", (int)obs.size());
   //ROS_INFO("Leaving Cb");
+}
+
+
+void reportPredictedVelocity(int sig)
+{
+  timer_markers.stop();
+
+
+  printf("\npredicted_velocities.size(): %i", (int)predicted_velocities.size());
+  double min=predicted_velocities.at(0), max = min, average=min;
+  for(int i=1;i<predicted_velocities.size();i++)
+  {
+    if(predicted_velocities[i] < min)
+    {
+      min = predicted_velocities[i];
+    }
+    if(predicted_velocities[i] > max)
+    {
+      max = predicted_velocities[i];
+    }
+
+    if (predicted_velocities[i] > 0)
+    {
+      ROS_INFO("Adding %f", predicted_velocities[i]);
+      average += predicted_velocities[i];
+    }
+  }
+  average /= predicted_velocities.size();
+
+  printf("\nPredicted Velocities range=[%f,%f], average: %f\n", min, max, average);
 }
 
 
@@ -770,6 +858,13 @@ int main(int argc, char** argv)
     subs_obs.push_back(sub_ob);
   } // end for*/
 
+  // Initialize this in a better way later on...
+  for(int i=0;i<3;i++)
+  {
+    prev_times.push_back(ros::Time::now());
+    jump_thresholds.push_back(0.5);
+  }
+
   ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);
 
   //Publishers
@@ -779,14 +874,22 @@ int main(int argc, char** argv)
 
   //Timers
   //ros::Timer timer = handle.createTimer(ros::Duration(1.f / rate), publishList);
-  ros::Timer timer_markers = handle.createTimer(ros::Duration(1.f/10.f), publishMarkers);
+  timer_markers = handle.createTimer(ros::Duration(1.f/10.f), publishMarkers);
 
   init_bel.mean = 0;
   init_bel.variance = 5;
+
+  signal(SIGINT, reportPredictedVelocity);
+  
    
 
   std::cout<<"\nSpinning\n";
-  ros::spin();
+
+  ros::AsyncSpinner spinner(8);
+  std::cout<<"\nWaiting for requests...\n";
+  spinner.start();
+  ros::waitForShutdown();
+
   std::cout<<"\nExiting Normally\n";
   return 0;
 }
