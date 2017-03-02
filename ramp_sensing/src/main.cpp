@@ -329,6 +329,8 @@ bool jump(const Circle cir_i, const Circle cir_prev, double threshold)
   return dist > threshold;
 }
 
+
+
 std::vector<double> velocityFromOnePrev(const std::vector<Circle> cirs, const std::vector<Circle> prev_cirs, const ros::Duration d_elapsed, const double grid_resolution)
 {
   std::vector<double> result;
@@ -341,8 +343,7 @@ std::vector<double> velocityFromOnePrev(const std::vector<Circle> cirs, const st
     // Find closest previous circle for each new circle
     for(int i=0;i<cirs.size();i++)
     {
-      //int index = getClosestPrev(cirs[i], prev_cirs);
-      int index = getClosestPrev(cirs[i], prev_valid_cirs);
+      int index = getClosestPrev(cirs[i], prev_cirs);
       ROS_INFO("Circle %i center: (%f,%f)", i, cirs[i].center.x, cirs[i].center.y);
       ROS_INFO("Closest prev: Circle %i center: (%f, %f)", i, prev_valid_cirs[index].center.x, prev_valid_cirs[index].center.y);
       cir_prev_cen_index.push_back(index);
@@ -359,21 +360,16 @@ std::vector<double> velocityFromOnePrev(const std::vector<Circle> cirs, const st
 
         jump_thresholds[i] = jump_threshold;
 
-        // Find velocities
-        std::vector<double> pc;
-        pc.push_back(prev_valid_cirs[index].center.x);
-        pc.push_back(prev_valid_cirs[index].center.y);
-        std::vector<double> cc;
-        cc.push_back(cirs[i].center.x);
-        cc.push_back(cirs[i].center.y);
-        double theta = util.findAngleFromAToB(pc, cc);
-        double linear_v = (util.positionDistance(pc, cc) / d_prev.toSec()) * grid_resolution;
+        // Find linear velocity
+        double dist = util.positionDistance(prev_valid_cirs[index].center.x, prev_valid_cirs[index].center.y, cirs[i].center.x, cirs[i].center.y);
+        double linear_v = (dist / d_prev.toSec()) * grid_resolution;
+        
         result.push_back(linear_v);
-        ROS_INFO("dist: %f time: %f linear_v: %f converted: %f", util.positionDistance(pc, cc), d_prev.toSec(), util.positionDistance(pc, cc) / d_elapsed.toSec(), linear_v);
+        ROS_INFO("dist: %f time: %f linear_v: %f converted: %f", dist, d_prev.toSec(), dist / d_elapsed.toSec(), linear_v);
 
+
+        // Set previous time and circle
         prev_times[i] = ros::Time::now();
-
-        predicted_velocities.push_back(linear_v);
 
         // Set new valid previous circle
         if(i > prev_valid_cirs.size())
@@ -384,6 +380,9 @@ std::vector<double> velocityFromOnePrev(const std::vector<Circle> cirs, const st
         {
           prev_valid_cirs[i] = cirs[i];
         }
+        
+        // Save for reporting min,max,avg at the end of execution
+        predicted_velocities.push_back(linear_v);
       } // end else
     } // end for each circle
   } // end outer if
@@ -483,13 +482,17 @@ NormalDist1D multiplyNorm(const NormalDist1D n1, const NormalDist1D n2)
 
 
 
-std::vector<double> velocityFromNPrev(const std::vector<Circle> cirs, const std::vector<Circle> prev_cirs, const ros::Duration d_elapsed, const double grid_resolution, int N)
+/*
+ * prev_cirs is the list of previous valid circles
+ */
+std::vector<double> velocityFromNPrev(const std::vector<Circle> cirs, const ros::Duration d_elapsed, const double grid_resolution, int N)
 {
   ROS_INFO("In velocityFromNPrev");
   std::vector<double> result;
 
+
   // Get velocity from one cycle prev
-  result = velocityFromOnePrev(cirs, prev_cirs, d_elapsed, grid_resolution);
+  result = velocityFromOnePrev(cirs, prev_valid_cirs, d_elapsed, grid_resolution);
   ROS_INFO("velocityFromOnePrev: %f", result.size() > 0 ? result[0] : 0);
 
   // Build points vector for normal distribution
@@ -740,7 +743,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   ROS_INFO("Velocities returned from going back one cycle:");*/
 
   int N = 0;
-  std::vector<double> velocities = velocityFromNPrev(cirs, prev_cirs, d_elapsed, grid_resolution, N);
+  std::vector<double> velocities = velocityFromNPrev(cirs, d_elapsed, grid_resolution, N);
   
   for(int i=0;i<velocities.size();i++)
   {
