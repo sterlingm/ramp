@@ -12,7 +12,7 @@ namespace BFL
      - Covariance is independent of the ConditionalArguments, and is
      the covariance of the Noise pdf
   */
-  class NonLinearAnalyticConditionalGaussianOdo : public AnalyticConditionalGaussianAdditiveNoise
+  class NonLinearAnalyticConditionalGaussianMobile : public AnalyticConditionalGaussianAdditiveNoise
   {
     public:
       /// Constructor
@@ -22,10 +22,10 @@ namespace BFL
     the corresponding conditional argument!
     @param additiveNoise Pdf representing the additive Gaussian uncertainty
       */
-      NonLinearAnalyticConditionalGaussianOdo( const Gaussian& additiveNoise);
+      NonLinearAnalyticConditionalGaussianMobile( const Gaussian& additiveNoise);
 
       /// Destructor
-      virtual ~NonLinearAnalyticConditionalGaussianOdo();
+      virtual ~NonLinearAnalyticConditionalGaussianMobile();
 
       // redefine virtual functions
       virtual MatrixWrapper::ColumnVector    ExpectedValueGet() const;
