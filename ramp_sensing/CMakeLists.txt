@@ -22,7 +22,6 @@ catkin_package(
 ## Build ##
 ###########
 
-#include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${BFL_INCLUDE_DIRS})
 link_directories(${BFL_LIBRARY_DIRS})
 
@@ -32,10 +31,13 @@ set (CMAKE_CXX_FLAGS "-std=c++11 -g -O0")
 
 #add_executable(${PROJECT_NAME} src/circle_packer.cpp src/GridMap2D.cpp src/main.cpp src/obstacle.cpp src/circle.cpp src/data.cpp src/utility.cpp)
 add_executable(${PROJECT_NAME} src/blob_detector.cpp src/circle_filter.cpp src/circle_packer.cpp src/GridMap2D.cpp src/main.cpp src/nonlinearanalyticconditionalgaussian.cpp src/obstacle.cpp src/utility.cpp)
-#target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBS} orocos-bfl)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBS} ${BFL_LIBRARIES})
 add_dependencies(${PROJECT_NAME} ramp_msgs_generate_messages_cpp)
 
+
+add_executable(test_bfl src/main_test_bfl.cpp src/nonlinearanalyticconditionalgaussian.cpp src/utility.cpp)
+target_link_libraries(test_bfl ${catkin_LIBRARIES} ${OpenCV_LIBS} ${BFL_LIBRARIES})
+add_dependencies(test_bfl ramp_msgs_generate_messages_cpp)
 
 add_executable(pub_laser_tf src/main_laser_frame.cpp)
 target_link_libraries(pub_laser_tf ${catkin_LIBRARIES})
