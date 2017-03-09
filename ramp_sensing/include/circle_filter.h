@@ -1,10 +1,10 @@
 #ifndef CIRCLE_FILTER_H
 #define CIRCLE_FILTER_H
-#include <filter/extendedkalmanfilter.h>
-#include <model/linearanalyticsystemmodel_gaussianuncertainty.h>
-#include <model/linearanalyticmeasurementmodel_gaussianuncertainty.h>
-#include <pdf/linearanalyticconditionalgaussian.h>
-#include <pdf/analyticconditionalgaussian.h>
+#include <bfl/filter/extendedkalmanfilter.h>
+#include <bfl/model/linearanalyticsystemmodel_gaussianuncertainty.h>
+#include <bfl/model/linearanalyticmeasurementmodel_gaussianuncertainty.h>
+#include <bfl/pdf/linearanalyticconditionalgaussian.h>
+#include <bfl/pdf/analyticconditionalgaussian.h>
 #include "nonlinearanalyticconditionalgaussian.h"
 #include <ros/console.h>
 

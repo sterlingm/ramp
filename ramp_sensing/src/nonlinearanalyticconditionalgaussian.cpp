@@ -1,5 +1,5 @@
 #include "nonlinearanalyticconditionalgaussian.h"
-#include <wrappers/rng/rng.h> // Wrapper around several rng libraries
+#include <bfl/wrappers/rng/rng.h> // Wrapper around several rng libraries
 #define NUMCONDARGUMENTS_MOBILE 2
 
 namespace BFL

@@ -1,7 +1,7 @@
 #ifndef __NON_LINEAR_SYSTEM_CONDITIONAL_GAUSSIAN
 #define __NON_LINEAR_SYSTEM_CONDITIONAL_GAUSSIAN
 
-#include <pdf/analyticconditionalgaussian_additivenoise.h>
+#include <bfl/pdf/analyticconditionalgaussian_additivenoise.h>
 
 namespace BFL
 {

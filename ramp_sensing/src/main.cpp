@@ -16,11 +16,11 @@
 #include "circle_filter.h"
 
 
-#include <filter/extendedkalmanfilter.h>
-#include <model/linearanalyticsystemmodel_gaussianuncertainty.h>
-#include <model/linearanalyticmeasurementmodel_gaussianuncertainty.h>
-#include <pdf/linearanalyticconditionalgaussian.h>
-#include <pdf/analyticconditionalgaussian.h>
+#include <bfl/filter/extendedkalmanfilter.h>
+#include <bfl/model/linearanalyticsystemmodel_gaussianuncertainty.h>
+#include <bfl/model/linearanalyticmeasurementmodel_gaussianuncertainty.h>
+#include <bfl/pdf/linearanalyticconditionalgaussian.h>
+#include <bfl/pdf/analyticconditionalgaussian.h>
 #include "nonlinearanalyticconditionalgaussian.h"
 //using namespace MatrixWrapper; comment out to compile
 //using namespace BFL; ambiguation on ramp_msgs::ObstacleList list
@@ -79,8 +79,8 @@ BFL::LinearAnalyticSystemModelGaussianUncertainty* sys_model=0;
 BFL::NonLinearAnalyticConditionalGaussianMobile* nl_sys_pdf = 0;
 BFL::AnalyticSystemModelGaussianUncertainty* nl_sys_model = 0;
 int STATE_SIZE=2;
-double MU_SYSTEM_NOISE_X = 0.02;
-double MU_SYSTEM_NOISE_Y = 0.02;
+double MU_SYSTEM_NOISE_X = 1;
+double MU_SYSTEM_NOISE_Y = 1;
 double SIGMA_SYSTEM_NOISE_X = 0.05;
 double SIGMA_SYSTEM_NOISE_Y = 0.05;
 
@@ -567,7 +567,11 @@ void update(BFL::SystemModel<MatrixWrapper::ColumnVector>* const sys_model, cons
   ROS_INFO("In update");
   ROS_INFO("u: (%f,%f) s: (%f, %f)", u[0], u[1], s[0], s[1]);
   
-  ekf->Update(sys_model, u, meas_model, s);
+  //if(!ekf->Update(sys_model, u, meas_model, s))
+  if(!ekf->Update(meas_model, s))
+  {
+    ROS_INFO("Problem updating filter!");
+  }
   ROS_INFO("Called ekf->Update");
   posterior = ekf->PostGet(); 
 
@@ -612,26 +616,40 @@ BFL::ExtendedKalmanFilter makeFilter(BFL::Gaussian prior)
 
 void init_measurement_model(Circle temp)
 {
+  ROS_INFO("In init_measurement_model");
+
   //  z_k+1 = H_x_k+1
   MatrixWrapper::Matrix H(1,2);
 
   // Set x and y
-  H(1,1) = temp.center.x;
-  H(1,2) = temp.center.y;
+  H(1,1) = 1;
+  H(1,2) = 1;
+
+  ROS_INFO("Setting mu");
 
   BFL::ColumnVector meas_noise_mu(STATE_SIZE);
   meas_noise_mu(1) = MU_MEAS_NOISE;
   meas_noise_mu(2) = MU_MEAS_NOISE;
 
+  ROS_INFO("Setting cov");
+
   MatrixWrapper::SymmetricMatrix meas_noise_cov(STATE_SIZE);
   meas_noise_cov(1,1) = SIGMA_MEAS_NOISE;
+  ROS_INFO("After setting (1,1)");
   meas_noise_cov(2,2) = SIGMA_MEAS_NOISE;
+  ROS_INFO("After setting (2,2)");
+
+  ROS_INFO("Setting measurement_uncertainty");
 
   // Make the Gaussian
   BFL::Gaussian measurement_uncertainty(meas_noise_mu, meas_noise_cov);
 
+  ROS_INFO("Setting meas_pdf");
+
   // Make the pdf
   meas_pdf = new BFL::LinearAnalyticConditionalGaussian(H, measurement_uncertainty);
+
+  ROS_INFO("Setting meas_model");
 
   // Make model
   meas_model = new BFL::LinearAnalyticMeasurementModelGaussianUncertainty(meas_pdf);
@@ -639,12 +657,16 @@ void init_measurement_model(Circle temp)
 
 void init_ekf()
 {
+  ROS_INFO("In init_ekf");
+
   ekf = new BFL::ExtendedKalmanFilter(prior);
   circle_ekf = new CircleFilter(prior);
 }
 
 void init_prior_model()
 {
+  ROS_INFO("In init_prior_model");
+
   // Build prior distribution
   BFL::ColumnVector prior_mu(STATE_SIZE);
   prior_mu(1) = PRIOR_MU_X;
@@ -665,6 +687,7 @@ void init_prior_model()
  */
 void init_nonlinear_system_model()
 {
+  ROS_INFO("In init_nonlinear_system_model");
 
   MatrixWrapper::ColumnVector sys_noise_Mu(STATE_SIZE);
   sys_noise_Mu(1) = MU_SYSTEM_NOISE_X;
@@ -812,13 +835,13 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   {
     ROS_INFO("Calling Update!");
     MatrixWrapper::ColumnVector u(STATE_SIZE);
-    u[0] = 0.01;
-    u[1] = 0.01;
-    MatrixWrapper::ColumnVector s(STATE_SIZE);
-    s[0] = cirs[0].center.x;
-    s[1] = cirs[0].center.y;
+    u[0] = cirs[0].center.x;
+    u[1] = cirs[0].center.y;
+    MatrixWrapper::ColumnVector y(STATE_SIZE);
+    y[0] = cirs[0].center.x;
+    y[1] = cirs[0].center.y;
   
-    update(sys_model, u, meas_model, s);
+    update(sys_model, u, meas_model, y);
     printPosterior();
   }
 
