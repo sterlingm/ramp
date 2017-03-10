@@ -81,8 +81,8 @@ BFL::AnalyticSystemModelGaussianUncertainty* nl_sys_model = 0;
 int STATE_SIZE=6;
 double MU_SYSTEM_NOISE_X = 0;
 double MU_SYSTEM_NOISE_Y = 0;
-double SIGMA_SYSTEM_NOISE_X = 0.0001;
-double SIGMA_SYSTEM_NOISE_Y = 0.0001;
+double SIGMA_SYSTEM_NOISE_X = 0.01;
+double SIGMA_SYSTEM_NOISE_Y = 0.01;
 
 /*
  * Measurement model
@@ -90,7 +90,7 @@ double SIGMA_SYSTEM_NOISE_Y = 0.0001;
 //MatrixWrapper::Matrix* H=0;
 BFL::LinearAnalyticConditionalGaussian* meas_pdf = 0;
 BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model = 0;
-double MU_MEAS_NOISE = 0.0;
+double MU_MEAS_NOISE = 0.01;
 double SIGMA_MEAS_NOISE = 0.0001;
 
 
@@ -99,18 +99,18 @@ double SIGMA_MEAS_NOISE = 0.0001;
  * Prior distribution
  */
 BFL::Gaussian* prior = 0;
-double PRIOR_MU_X = 59;
-double PRIOR_MU_Y = 32;
+double PRIOR_MU_X = 328;
+double PRIOR_MU_Y = 211;
 double PRIOR_MU_VX = 0;
 double PRIOR_MU_VY = 0;
 double PRIOR_MU_AX = 0;
 double PRIOR_MU_AY = 0;
 double PRIOR_COV_X = 0.0001;
 double PRIOR_COV_Y = 0.0001;
-double PRIOR_COV_VX = 0.0001;
-double PRIOR_COV_VY = 0.0001;
-double PRIOR_COV_AX = 0.0001;
-double PRIOR_COV_AY = 0.0001;
+double PRIOR_COV_VX = 0.01;
+double PRIOR_COV_VY = 0.01;
+double PRIOR_COV_AX = 0.01;
+double PRIOR_COV_AY = 0.01;
 
 
 BFL::Pdf<MatrixWrapper::ColumnVector>* posterior;
@@ -575,8 +575,8 @@ void update(BFL::SystemModel<MatrixWrapper::ColumnVector>* const sys_model, cons
   ROS_INFO("In update");
   ROS_INFO("u: (%f,%f) y: (%f, %f)", u[0], u[1], y[0], y[1]);
   
-  //if(!ekf->Update(sys_model, u, meas_model, y))
-  if(!ekf->Update(meas_model, y))
+  if(!ekf->Update(sys_model, u, meas_model, y))
+  //if(!ekf->Update(meas_model, y))
   {
     ROS_INFO("Problem updating filter!");
   }
@@ -628,14 +628,15 @@ void init_measurement_model(Circle temp)
 
   //  z_k+1 = H_x_k+1
   MatrixWrapper::Matrix H(6,6);
+  H = 0.0;
 
   // Set x and y
   H(1,1) = 1;
   H(1,2) = 1;
-  H(1,3) = 0;
-  H(1,4) = 0;
-  H(1,5) = 0;
-  H(1,6) = 0;
+  H(1,3) = 1;
+  H(1,4) = 1;
+  H(1,5) = 1;
+  H(1,6) = 1;
 
   ROS_INFO("Setting mu");
 
@@ -650,6 +651,7 @@ void init_measurement_model(Circle temp)
   ROS_INFO("Setting cov");
 
   MatrixWrapper::SymmetricMatrix meas_noise_cov(STATE_SIZE);
+  meas_noise_cov = 0.0;
   meas_noise_cov(1,1) = SIGMA_MEAS_NOISE;
   meas_noise_cov(2,2) = SIGMA_MEAS_NOISE;
   meas_noise_cov(3,3) = SIGMA_MEAS_NOISE;
@@ -695,6 +697,7 @@ void init_prior_model()
   prior_mu(6) = PRIOR_MU_AY;
 
   MatrixWrapper::SymmetricMatrix prior_cov(STATE_SIZE);
+  prior_cov = 0.0;
   prior_cov(1,1) = PRIOR_COV_X;
   prior_cov(2,2) = PRIOR_COV_Y;
   prior_cov(3,3) = PRIOR_COV_VX;
@@ -868,7 +871,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     y[1] = cirs[0].center.y;
     for(int i=2;i<STATE_SIZE;i++)
     {
-      y[i] = 0;
+      y[i] = 1;
     }
   
     update(sys_model, u, meas_model, y);
