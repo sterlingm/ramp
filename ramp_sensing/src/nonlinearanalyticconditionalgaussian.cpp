@@ -25,16 +25,30 @@ namespace BFL
 
   ColumnVector NonLinearAnalyticConditionalGaussianMobile::ExpectedValueGet() const
   {
+    ROS_INFO("In ExpectedValueGet");
     ColumnVector state = ConditionalArgumentGet(0);
     ColumnVector vel  = ConditionalArgumentGet(1);
+    ROS_INFO("state:");
+    for(int i=0;i<7;i++)
+    {
+      ROS_INFO("state[%i]: %f", i, state[i]);
+    }
     state(1) += cos(state(6)) * vel(1);
     state(2) += sin(state(6)) * vel(1);
     state(6) += vel(2);
+    
+    ROS_INFO("state after changing:");
+    for(int i=0;i<7;i++)
+    {
+      ROS_INFO("state[%i]: %f", i, state[i]);
+    }
+
     return state + AdditiveNoiseMuGet();
   }
 
 Matrix NonLinearAnalyticConditionalGaussianMobile::dfGet(unsigned int i) const
 {
+  ROS_INFO("In dfGet");
   if (i==0)//derivative to the first conditional argument (x)
   {
     double vel_trans = ConditionalArgumentGet(1)(1);

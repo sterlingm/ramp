@@ -79,10 +79,10 @@ BFL::LinearAnalyticSystemModelGaussianUncertainty* sys_model=0;
 BFL::NonLinearAnalyticConditionalGaussianMobile* nl_sys_pdf = 0;
 BFL::AnalyticSystemModelGaussianUncertainty* nl_sys_model = 0;
 int STATE_SIZE=6;
-double MU_SYSTEM_NOISE_X = 0;
-double MU_SYSTEM_NOISE_Y = 0;
-double SIGMA_SYSTEM_NOISE_X = 0.01;
-double SIGMA_SYSTEM_NOISE_Y = 0.01;
+double MU_SYSTEM_NOISE_X = 0.01;
+double MU_SYSTEM_NOISE_Y = 0.01;
+double SIGMA_SYSTEM_NOISE_X = 0.0001;
+double SIGMA_SYSTEM_NOISE_Y = 0.0001;
 
 /*
  * Measurement model
@@ -90,8 +90,8 @@ double SIGMA_SYSTEM_NOISE_Y = 0.01;
 //MatrixWrapper::Matrix* H=0;
 BFL::LinearAnalyticConditionalGaussian* meas_pdf = 0;
 BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model = 0;
-double MU_MEAS_NOISE = 0.01;
-double SIGMA_MEAS_NOISE = 0.0001;
+double MU_MEAS_NOISE = 0.1;
+double SIGMA_MEAS_NOISE = 0.1;
 
 
 
@@ -107,10 +107,10 @@ double PRIOR_MU_AX = 0;
 double PRIOR_MU_AY = 0;
 double PRIOR_COV_X = 0.0001;
 double PRIOR_COV_Y = 0.0001;
-double PRIOR_COV_VX = 0.01;
-double PRIOR_COV_VY = 0.01;
-double PRIOR_COV_AX = 0.01;
-double PRIOR_COV_AY = 0.01;
+double PRIOR_COV_VX = 0.0001;
+double PRIOR_COV_VY = 0.0001;
+double PRIOR_COV_AX = 0.0001;
+double PRIOR_COV_AY = 0.0001;
 
 
 BFL::Pdf<MatrixWrapper::ColumnVector>* posterior;
@@ -573,21 +573,15 @@ void prediction(BFL::SystemModel<MatrixWrapper::ColumnVector>* const sys_model, 
 void update(BFL::SystemModel<MatrixWrapper::ColumnVector>* const sys_model, const MatrixWrapper::ColumnVector& u, BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model, const MatrixWrapper::ColumnVector& y)
 {
   ROS_INFO("In update");
-  ROS_INFO("u: (%f,%f) y: (%f, %f)", u[0], u[1], y[0], y[1]);
+  ROS_INFO("u: (%f,%f) y: (%f, %f, %f)", u[0], u[1], y[0], y[1], y[2]);
   
-  if(!ekf->Update(sys_model, u, meas_model, y))
-  //if(!ekf->Update(meas_model, y))
+  //if(!ekf->Update(sys_model, u, meas_model, y))
+  if(!ekf->Update(meas_model, y))
   {
     ROS_INFO("Problem updating filter!");
   }
-  ROS_INFO("Called ekf->Update");
-  posterior = ekf->PostGet(); 
-
-  //circle_ekf->update(sys_model, u, meas_model, s);
-  ROS_INFO("Called circle_ekf->Update");
-  //posterior = circle_ekf->PostGet();
-
-  //MatrixWrapper::ColumnVector x = ekf->_x;
+  posterior = ekf->PostGet();
+  ROS_INFO("u: (%f,%f) y: (%f, %f, %f)", u[0], u[1], y[0], y[1], y[2]);
 }
 
 void printPosterior()
@@ -622,12 +616,12 @@ BFL::ExtendedKalmanFilter makeFilter(BFL::Gaussian prior)
   return filter;
 }
 
-void init_measurement_model(Circle temp)
+void init_measurement_model()
 {
   ROS_INFO("In init_measurement_model");
 
   //  z_k+1 = H_x_k+1
-  MatrixWrapper::Matrix H(6,6);
+  MatrixWrapper::Matrix H(STATE_SIZE,STATE_SIZE);
   H = 0.0;
 
   // Set x and y
@@ -643,10 +637,10 @@ void init_measurement_model(Circle temp)
   BFL::ColumnVector meas_noise_mu(STATE_SIZE);
   meas_noise_mu(1) = MU_MEAS_NOISE;
   meas_noise_mu(2) = MU_MEAS_NOISE;
-  meas_noise_mu(3) = MU_MEAS_NOISE;
-  meas_noise_mu(4) = MU_MEAS_NOISE;
-  meas_noise_mu(5) = MU_MEAS_NOISE;
-  meas_noise_mu(6) = MU_MEAS_NOISE;
+  meas_noise_mu(3) = 0;
+  meas_noise_mu(4) = 0;
+  meas_noise_mu(5) = 0;
+  meas_noise_mu(6) = 0;
 
   ROS_INFO("Setting cov");
 
@@ -719,11 +713,11 @@ void init_nonlinear_system_model()
   MatrixWrapper::ColumnVector sys_noise_Mu(STATE_SIZE);
   for(int i=1;i<=STATE_SIZE;i++)
   {
-    sys_noise_Mu(i) = MU_SYSTEM_NOISE_Y;
+    sys_noise_Mu(i) = MU_SYSTEM_NOISE_X;
   }
 
 
-  MatrixWrapper::SymmetricMatrix sys_noise_Cov(2);
+  MatrixWrapper::SymmetricMatrix sys_noise_Cov(STATE_SIZE);
   sys_noise_Cov = 0.0;
   for(int i=1;i<=STATE_SIZE;i++)
   {
@@ -861,6 +855,8 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   if(cirs.size() > 0)
   {
     ROS_INFO("Calling Update!");
+    ROS_INFO("Posterior before update:");
+    printPosterior();
     MatrixWrapper::ColumnVector u(STATE_SIZE);
     for(int i=0;i<STATE_SIZE;i++)
     {
@@ -871,10 +867,11 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     y[1] = cirs[0].center.y;
     for(int i=2;i<STATE_SIZE;i++)
     {
-      y[i] = 1;
+      y[i] = 0;
     }
   
-    update(sys_model, u, meas_model, y);
+    update(nl_sys_model, u, meas_model, y);
+    ROS_INFO("Posterior after update:");
     printPosterior();
   }
 
@@ -1013,16 +1010,13 @@ int main(int argc, char** argv)
     subs_obs.push_back(sub_ob);
   } // end for*/
 
-  Circle init;
-  init.center.x = 0;
-  init.center.y = 0;
-  init.radius = 0;
 
   // Initialize the Kalman Filter
   init_nonlinear_system_model();
-  init_measurement_model(init);
+  init_measurement_model();
   init_prior_model();
   init_ekf();
+  posterior = ekf->PostGet(); 
 
   // Initialize this in a better way later on...
   for(int i=0;i<3;i++)
