@@ -81,8 +81,8 @@ BFL::AnalyticSystemModelGaussianUncertainty* nl_sys_model = 0;
 int STATE_SIZE=6;
 double MU_SYSTEM_NOISE_X = 0.01;
 double MU_SYSTEM_NOISE_Y = 0.01;
-double SIGMA_SYSTEM_NOISE_X = 0.0001;
-double SIGMA_SYSTEM_NOISE_Y = 0.0001;
+double SIGMA_SYSTEM_NOISE_X = 0.01;
+double SIGMA_SYSTEM_NOISE_Y = 0.01;
 
 /*
  * Measurement model
@@ -90,8 +90,8 @@ double SIGMA_SYSTEM_NOISE_Y = 0.0001;
 //MatrixWrapper::Matrix* H=0;
 BFL::LinearAnalyticConditionalGaussian* meas_pdf = 0;
 BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model = 0;
-double MU_MEAS_NOISE = 0.1;
-double SIGMA_MEAS_NOISE = 0.1;
+double MU_MEAS_NOISE = 0.01;
+double SIGMA_MEAS_NOISE = 0.01;
 
 
 
@@ -105,8 +105,8 @@ double PRIOR_MU_VX = 0;
 double PRIOR_MU_VY = 0;
 double PRIOR_MU_AX = 0;
 double PRIOR_MU_AY = 0;
-double PRIOR_COV_X = 0.0001;
-double PRIOR_COV_Y = 0.0001;
+double PRIOR_COV_X = 0.1;
+double PRIOR_COV_Y = 0.1;
 double PRIOR_COV_VX = 0.0001;
 double PRIOR_COV_VY = 0.0001;
 double PRIOR_COV_AX = 0.0001;
@@ -620,17 +620,12 @@ void init_measurement_model()
 {
   ROS_INFO("In init_measurement_model");
 
-  //  z_k+1 = H_x_k+1
   MatrixWrapper::Matrix H(STATE_SIZE,STATE_SIZE);
   H = 0.0;
 
   // Set x and y
   H(1,1) = 1;
-  H(1,2) = 1;
-  H(1,3) = 1;
-  H(1,4) = 1;
-  H(1,5) = 1;
-  H(1,6) = 1;
+  H(2,2) = 1;
 
   ROS_INFO("Setting mu");
 
