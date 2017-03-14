@@ -371,7 +371,14 @@ int getClosestPrev(Circle m, std::vector<Circle> N)
 bool jump(const Circle cir_i, const Circle cir_prev, double threshold)
 {
   ROS_INFO("In jump");
+
+  // Get distance in pixels
   double dist = util.positionDistance(cir_i.center.x, cir_i.center.y, cir_prev.center.x, cir_prev.center.y);
+  ROS_INFO("dist: %f", dist);
+
+  // Convert distance to meters
+  dist /= 50;
+  ROS_INFO("dist after conversion: %f", dist);
 
   ROS_INFO("cir_i center: (%f, %f), cir_prev center: (%f, %f) threshold: %f dist: %f", cir_i.center.x, cir_i.center.y, cir_prev.center.x, cir_prev.center.y, threshold, dist);
 
@@ -404,8 +411,8 @@ std::vector<double> velocityFromOnePrev(const std::vector<Circle> cirs, const st
 
         jump_thresholds[i] = jump_threshold;
 
-        // Find linear velocity
-        // x velocity
+        // Find distance values in both directions, and velocity direction
+        // (These distance values are still in the pixel resolution and coordinate system)
         double x_dist = cirs[i].center.x - prev_valid_cirs[index].center.x;
         double y_dist = cirs[i].center.y - prev_valid_cirs[index].center.y;
         double dist = util.positionDistance(prev_valid_cirs[index].center.x, prev_valid_cirs[index].center.y, cirs[i].center.x, cirs[i].center.y);
@@ -416,15 +423,19 @@ std::vector<double> velocityFromOnePrev(const std::vector<Circle> cirs, const st
 
       if(jump(cirs[i], prev_valid_cirs[index], jump_thresholds[i]))
       {
-        dist = (0.5*grid_resolution) * d_prev.toSec();
-        ROS_INFO("Jump occurred, dist: %f, setting dist to %f", dist, ((0.5 / d_prev.toSec())));
+        // Don't convert dist until computing velocity
+        dist = (50) * d_prev.toSec();
+        ROS_INFO("Jump occurred, setting dist to %f", dist);
       }
         
         double linear_v = (dist / d_prev.toSec()) * grid_resolution;
 
+        // Xdot and Ydot should be based on overall linear speed
         Velocity temp;
-        temp.vx = (x_dist / d_prev.toSec()) * grid_resolution;
-        temp.vy = (y_dist / d_prev.toSec()) * grid_resolution;
+        temp.vx = linear_v*cos(theta);
+        temp.vy = linear_v*sin(theta);
+        //temp.vx = (x_dist / d_prev.toSec()) * grid_resolution;
+        //temp.vy = (y_dist / d_prev.toSec()) * grid_resolution;
 
         x_y_velocities.push_back(temp);
         
