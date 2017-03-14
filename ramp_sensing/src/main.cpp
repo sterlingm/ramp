@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <signal.h>
+#include <math.h>
 #include "ros/ros.h"
 #include "nav_msgs/Odometry.h"
 #include "tf/transform_datatypes.h"
@@ -24,6 +25,12 @@
 #include "nonlinearanalyticconditionalgaussian.h"
 //using namespace MatrixWrapper; comment out to compile
 //using namespace BFL; ambiguation on ramp_msgs::ObstacleList list
+
+
+struct Velocity
+{
+  double vx, vy;
+};
 
 
 Utility util;
@@ -59,6 +66,7 @@ double jump_threshold_inc = 0.25;
 
 
 std::vector<double> predicted_velocities;
+std::vector<Velocity> x_y_velocities;
 
 ros::Timer timer_markers;
 
@@ -78,11 +86,11 @@ BFL::LinearAnalyticSystemModelGaussianUncertainty* sys_model=0;
  */
 BFL::NonLinearAnalyticConditionalGaussianMobile* nl_sys_pdf = 0;
 BFL::AnalyticSystemModelGaussianUncertainty* nl_sys_model = 0;
-int STATE_SIZE=6;
+int STATE_SIZE=4;
 double MU_SYSTEM_NOISE_X = 0.01;
 double MU_SYSTEM_NOISE_Y = 0.01;
-double SIGMA_SYSTEM_NOISE_X = 0.01;
-double SIGMA_SYSTEM_NOISE_Y = 0.01;
+double SIGMA_SYSTEM_NOISE_X = 0.001;
+double SIGMA_SYSTEM_NOISE_Y = 0.001;
 
 /*
  * Measurement model
@@ -90,17 +98,18 @@ double SIGMA_SYSTEM_NOISE_Y = 0.01;
 //MatrixWrapper::Matrix* H=0;
 BFL::LinearAnalyticConditionalGaussian* meas_pdf = 0;
 BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model = 0;
-double MU_MEAS_NOISE = 0.01;
-double SIGMA_MEAS_NOISE = 0.01;
+double MU_MEAS_NOISE = 0.25;
+double SIGMA_MEAS_NOISE = 0.25;
 
-
+// Input vector
+MatrixWrapper::ColumnVector u(STATE_SIZE);
 
 /*
  * Prior distribution
  */
 BFL::Gaussian* prior = 0;
-double PRIOR_MU_X = 328;
-double PRIOR_MU_Y = 211;
+double PRIOR_MU_X = 242;
+double PRIOR_MU_Y = 84;
 double PRIOR_MU_VX = 0;
 double PRIOR_MU_VY = 0;
 double PRIOR_MU_AX = 0;
@@ -312,6 +321,8 @@ void publishMarkers(const ros::TimerEvent& e)
 
 int getClosestPrev(Circle m, std::vector<Circle> N)
 {
+  ROS_INFO("In getClosestPrev");
+  ROS_INFO("N.size(): %i", (int)N.size());
   int min_index = 0;
 
   std::vector<double> center;
@@ -320,7 +331,7 @@ int getClosestPrev(Circle m, std::vector<Circle> N)
 
   //ROS_INFO("center: [%f, %f]", center[0], center[1]);
 
-  if(prev_cirs.size() > 0)
+  if(N.size() > 0)
   {
 
     std::vector<double> prev_center;
@@ -329,13 +340,14 @@ int getClosestPrev(Circle m, std::vector<Circle> N)
 
     double dist = util.positionDistance(center, prev_center);
     
-    //ROS_INFO("Prev center: [%f, %f]", prev_center[0], prev_center[1]);
-    //ROS_INFO("dist: %f", dist);
+    ROS_INFO("Prev center: [%f, %f]", prev_center[0], prev_center[1]);
+    ROS_INFO("dist: %f", dist);
 
     for(int i=1;i<N.size();i++)
     {
       prev_center.at(0) =  N[i].center.x;
       prev_center.at(1) =  N[i].center.y;
+      ROS_INFO("Prev center: [%f, %f] dist: %f", prev_center[0], prev_center[1], util.positionDistance(center, prev_center));
 
       if( util.positionDistance(center, prev_center) < dist )
       {
@@ -344,7 +356,7 @@ int getClosestPrev(Circle m, std::vector<Circle> N)
       }
     }
 
-    //ROS_INFO("min_index: %i dist: %f", min_index, dist);
+    ROS_INFO("min_index: %i dist: %f", min_index, dist);
   }
 
   else
@@ -371,12 +383,13 @@ bool jump(const Circle cir_i, const Circle cir_prev, double threshold)
 
 std::vector<double> velocityFromOnePrev(const std::vector<Circle> cirs, const std::vector<Circle> prev_cirs, const ros::Duration d_elapsed, const double grid_resolution)
 {
+  ROS_INFO("In velocityFromOnePrev");
   std::vector<double> result;
 
   std::vector<int> cir_prev_cen_index;
   std::vector<double> linear_vs;
   std::vector<double> angular_vs;
-  if(cirs.size() == prev_cirs.size() || cirs.size() < prev_cirs.size())
+  if(cirs.size() <= prev_cirs.size())
   {
     // Find closest previous circle for each new circle
     for(int i=0;i<cirs.size();i++)
@@ -392,15 +405,28 @@ std::vector<double> velocityFromOnePrev(const std::vector<Circle> cirs, const st
         jump_thresholds[i] = jump_threshold;
 
         // Find linear velocity
+        // x velocity
+        double x_dist = cirs[i].center.x - prev_valid_cirs[index].center.x;
+        double y_dist = cirs[i].center.y - prev_valid_cirs[index].center.y;
         double dist = util.positionDistance(prev_valid_cirs[index].center.x, prev_valid_cirs[index].center.y, cirs[i].center.x, cirs[i].center.y);
+
+        double theta = atan2(y_dist, x_dist);
+
+        ROS_INFO("x_dist: %f y_dist: %f dist: %f theta: %f", x_dist, y_dist, dist, theta);
 
       if(jump(cirs[i], prev_valid_cirs[index], jump_thresholds[i]))
       {
-        dist = (0.5/grid_resolution) * d_prev.toSec();
+        dist = (0.5*grid_resolution) * d_prev.toSec();
         ROS_INFO("Jump occurred, dist: %f, setting dist to %f", dist, ((0.5 / d_prev.toSec())));
       }
         
         double linear_v = (dist / d_prev.toSec()) * grid_resolution;
+
+        Velocity temp;
+        temp.vx = (x_dist / d_prev.toSec()) * grid_resolution;
+        temp.vy = (y_dist / d_prev.toSec()) * grid_resolution;
+
+        x_y_velocities.push_back(temp);
         
         result.push_back(linear_v);
         ROS_INFO("dist: %f time: %f linear_v: %f grid_resolution: %f converted: %f", dist, d_prev.toSec(), dist / d_prev.toSec(), grid_resolution, linear_v);
@@ -535,28 +561,33 @@ std::vector<double> velocityFromNPrev(const std::vector<Circle> cirs, const ros:
   // Build points vector for normal distribution
   std::vector<double> points; 
 
+  ROS_INFO("result.size(): %i", (int)result.size());
+
   // Average the results
   for(int i=0;i<result.size();i++)
   {
-    ROS_INFO("Circle %i prev velocities", i);
-    for(int j=prev_velocities.size()-2;j>prev_velocities.size()-N-1 && j>-1;j--)
+    if(N > 0)
     {
-      if(prev_velocities[j].size() > i)
+      ROS_INFO("Circle %i prev velocities", i);
+      for(int j=prev_velocities.size()-2;j>prev_velocities.size()-N-1 && j>-1;j--)
       {
-        ROS_INFO("Velocity at prev cycle %i: %f", (int)prev_velocities.size()-j, prev_velocities[j][i]);
-        result[i] += prev_velocities[j][i];
-        points.push_back(prev_velocities[j][i]);
+        if(prev_velocities[j].size() > i)
+        {
+          ROS_INFO("Velocity at prev cycle %i: %f", (int)prev_velocities.size()-j, prev_velocities[j][i]);
+          result[i] += prev_velocities[j][i];
+          points.push_back(prev_velocities[j][i]);
+        }
       }
-    }
 
-    if(points.size() > 0)
-    {
-      NormalDist1D norm = fitNormal(points);
-    }
+      if(points.size() > 0)
+      {
+        NormalDist1D norm = fitNormal(points);
+      }
 
-    result[i] /= N;
-    ROS_INFO("Average: %f", result[i]);
-  }
+      result[i] /= N;
+      ROS_INFO("Average: %f", result[i]);
+    } // end if N>0
+  } // end for
   
 
   return result;
@@ -575,13 +606,12 @@ void update(BFL::SystemModel<MatrixWrapper::ColumnVector>* const sys_model, cons
   ROS_INFO("In update");
   ROS_INFO("u: (%f,%f) y: (%f, %f, %f)", u[0], u[1], y[0], y[1], y[2]);
   
-  //if(!ekf->Update(sys_model, u, meas_model, y))
-  if(!ekf->Update(meas_model, y))
+  if(!ekf->Update(sys_model, u, meas_model, y))
+  //if(!ekf->Update(meas_model, y))
   {
     ROS_INFO("Problem updating filter!");
   }
   posterior = ekf->PostGet();
-  ROS_INFO("u: (%f,%f) y: (%f, %f, %f)", u[0], u[1], y[0], y[1], y[2]);
 }
 
 void printPosterior()
@@ -590,23 +620,21 @@ void printPosterior()
   MatrixWrapper::SymmetricMatrix cov = posterior->CovarianceGet();
 
   // Print the mean
-  ROS_INFO("Mean: (%f, %f)", mean[0], mean[1]);
   for(int i=0;i<STATE_SIZE;i++)
   {
     ROS_INFO("Mean[%i]: %f", i, mean[i]);
   } 
 
-  ROS_INFO("cov.rows: %i cov.columns: %i", cov.rows(), cov.columns());
   ROS_INFO("cov.det: %f", cov.determinant());
 
   // Print the covariance
-  for(int i=0;i<cov.rows();i++)
+  /*for(int i=0;i<cov.rows();i++)
   {
     for(int j=0;j<cov.columns();j++)
     {
       ROS_INFO("cov[%i][%i]: %f", i, j, cov(i+1,j+1));
     }
-  }
+  }*/
 }
 
 
@@ -634,19 +662,15 @@ void init_measurement_model()
   meas_noise_mu(2) = MU_MEAS_NOISE;
   meas_noise_mu(3) = 0;
   meas_noise_mu(4) = 0;
-  meas_noise_mu(5) = 0;
-  meas_noise_mu(6) = 0;
 
   ROS_INFO("Setting cov");
 
   MatrixWrapper::SymmetricMatrix meas_noise_cov(STATE_SIZE);
   meas_noise_cov = 0.0;
-  meas_noise_cov(1,1) = SIGMA_MEAS_NOISE;
-  meas_noise_cov(2,2) = SIGMA_MEAS_NOISE;
-  meas_noise_cov(3,3) = SIGMA_MEAS_NOISE;
-  meas_noise_cov(4,4) = SIGMA_MEAS_NOISE;
-  meas_noise_cov(5,5) = SIGMA_MEAS_NOISE;
-  meas_noise_cov(6,6) = SIGMA_MEAS_NOISE;
+  for(int i=1;i<=STATE_SIZE;i++)
+  {
+    meas_noise_cov(i,i) = SIGMA_MEAS_NOISE;
+  }
 
   ROS_INFO("Setting measurement_uncertainty");
 
@@ -669,7 +693,6 @@ void init_ekf()
   ROS_INFO("In init_ekf");
 
   ekf = new BFL::ExtendedKalmanFilter(prior);
-  circle_ekf = new CircleFilter(prior);
 }
 
 void init_prior_model()
@@ -682,8 +705,6 @@ void init_prior_model()
   prior_mu(2) = PRIOR_MU_Y;
   prior_mu(3) = PRIOR_MU_VX;
   prior_mu(4) = PRIOR_MU_VY;
-  prior_mu(5) = PRIOR_MU_AX;
-  prior_mu(6) = PRIOR_MU_AY;
 
   MatrixWrapper::SymmetricMatrix prior_cov(STATE_SIZE);
   prior_cov = 0.0;
@@ -691,8 +712,6 @@ void init_prior_model()
   prior_cov(2,2) = PRIOR_COV_Y;
   prior_cov(3,3) = PRIOR_COV_VX;
   prior_cov(4,4) = PRIOR_COV_VY;
-  prior_cov(5,5) = PRIOR_COV_AX;
-  prior_cov(6,6) = PRIOR_COV_AY;
 
   prior = new BFL::Gaussian(prior_mu, prior_cov);
 }
@@ -726,6 +745,57 @@ void init_nonlinear_system_model()
   
   nl_sys_model = new BFL::AnalyticSystemModelGaussianUncertainty(nl_sys_pdf);
 }
+
+/*
+ * Initialize a linear system model
+ */
+void init_linear_system_model()
+{
+  ROS_INFO("In init_nonlinear_system_model");
+
+  MatrixWrapper::ColumnVector sys_noise_Mu(STATE_SIZE);
+  for(int i=1;i<=STATE_SIZE;i++)
+  {
+    sys_noise_Mu(i) = MU_SYSTEM_NOISE_X;
+  }
+
+
+  MatrixWrapper::SymmetricMatrix sys_noise_Cov(STATE_SIZE);
+  sys_noise_Cov = 0.0;
+  for(int i=1;i<=STATE_SIZE;i++)
+  {
+    sys_noise_Cov(i,i) = SIGMA_SYSTEM_NOISE_X;
+  }
+
+  /*
+   * Need two matrices, A and B
+   * A is multiplied by the current state
+   * B is multiplied by the input
+   * X_(t+1) = Ax_t + Bu_t
+   */
+  MatrixWrapper::Matrix A(4,4);
+  A = 0;
+  A(1,1) = 1;
+  A(2,2) = 1;
+  A(3,3) = 1;
+  A(4,4) = 1;
+  MatrixWrapper::Matrix B(4,4);
+  B = 0;
+  B(1,1) = 1;
+  B(2,2) = 1;
+  std::vector<MatrixWrapper::Matrix> AB(2);
+  AB[0] = A;
+  AB[1] = B;
+
+  ROS_INFO("Initializing the linear system uncertainty"); 
+
+  BFL::Gaussian system_Uncertainty(sys_noise_Mu, sys_noise_Cov);
+
+  sys_pdf = new BFL::LinearAnalyticConditionalGaussian(AB, system_Uncertainty);
+  
+  sys_model = new BFL::LinearAnalyticSystemModelGaussianUncertainty(sys_pdf);
+}
+
 
 
 void consolidateCostmaps(const nav_msgs::OccupancyGrid g1, const nav_msgs::OccupancyGrid g2, nav_msgs::OccupancyGrid& result)
@@ -778,9 +848,11 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
   ROS_INFO("New costmap size: %i", (int)grid->data.size());
 
+  double grid_resolution = grid->info.resolution; 
+  global_grid = *grid;
 
   // Consolidate this occupancy grid with prev ones
-  nav_msgs::OccupancyGrid consolidated_grid;
+  /*nav_msgs::OccupancyGrid consolidated_grid;
   consolidateCostmaps(*grid, prev_grids, consolidated_grid);
   
   // Push this grid onto prev_grids
@@ -791,23 +863,16 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   }
 
   // Publish the consolidated costmap
-  //pub_cons_costmap.publish(consolidated_grid);
+  pub_cons_costmap.publish(consolidated_grid);
 
 
-  //nav_msgs::OccupancyGridPtr cg(&consolidated_grid);
   boost::shared_ptr<nav_msgs::OccupancyGrid> cg_ptr = boost::make_shared<nav_msgs::OccupancyGrid>(consolidated_grid);
-  //nav_msgs::OccupancyGridPtr p = cg_ptr;
 
-  //*cg = consolidated_grid;
   ROS_INFO("consolidated_grid.data.size(): %i", (int)consolidated_grid.data.size());
   ROS_INFO("cg_ptr->data.size(): %i", (int)cg_ptr->data.size());
 
 
-  double grid_resolution = grid->info.resolution; 
-
-  global_grid = *grid;
-
-  //CirclePacker c(cg_ptr);
+  CirclePacker c(cg_ptr);*/
   CirclePacker c(grid);
   std::vector<Circle> cirs = c.go();
 
@@ -852,11 +917,24 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     ROS_INFO("Calling Update!");
     ROS_INFO("Posterior before update:");
     printPosterior();
-    MatrixWrapper::ColumnVector u(STATE_SIZE);
-    for(int i=0;i<STATE_SIZE;i++)
+
+    // Prediction
+    if(prev_velocities.size() > 0)
     {
-      u[i] = 0.;
+      u[0] = x_y_velocities[x_y_velocities.size()-1].vx;
+      u[1] = x_y_velocities[x_y_velocities.size()-1].vy;
+      u[2] = 0;
+      u[3] = 0;
     }
+    else
+    {
+      u[0] = 0.2;
+      u[1] = 0.2;
+      u[2] = 0;
+      u[3] = 0;
+    }
+    
+    // Measurement 
     MatrixWrapper::ColumnVector y(STATE_SIZE);
     y[0] = cirs[0].center.x;
     y[1] = cirs[0].center.y;
@@ -865,9 +943,13 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
       y[i] = 0;
     }
   
-    update(nl_sys_model, u, meas_model, y);
+    update(sys_model, u, meas_model, y);
     ROS_INFO("Posterior after update:");
     printPosterior();
+
+    MatrixWrapper::ColumnVector mean = posterior->ExpectedValueGet(); 
+    cirs[0].center.x = mean[0];
+    cirs[0].center.y = mean[1];
   }
 
 
@@ -944,8 +1026,8 @@ void reportPredictedVelocity(int sig)
   // Also, free up some memory
   delete meas_pdf;
   delete meas_model;
-  delete nl_sys_model;
-  delete nl_sys_pdf;
+  //delete nl_sys_model;
+  //delete nl_sys_pdf;
   delete prior;
   delete ekf;
 }
@@ -1007,10 +1089,15 @@ int main(int argc, char** argv)
 
 
   // Initialize the Kalman Filter
-  init_nonlinear_system_model();
+  //init_nonlinear_system_model();
+  init_linear_system_model();
+  ROS_INFO("Done initializing linear system model");
   init_measurement_model();
+  ROS_INFO("Done initializing measurement model");
   init_prior_model();
+  ROS_INFO("Done initializing prior model");
   init_ekf();
+  ROS_INFO("Done initializing ekf");
   posterior = ekf->PostGet(); 
 
   // Initialize this in a better way later on...
