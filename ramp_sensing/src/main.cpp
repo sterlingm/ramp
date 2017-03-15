@@ -55,6 +55,8 @@ ros::Time t_last_costmap;
 
 int count;
 
+int num_costmaps=0;
+
 
 std::vector<nav_msgs::OccupancyGrid> prev_grids;
 
@@ -108,8 +110,8 @@ MatrixWrapper::ColumnVector u(STATE_SIZE);
  * Prior distribution
  */
 BFL::Gaussian* prior = 0;
-double PRIOR_MU_X = 242;
-double PRIOR_MU_Y = 84;
+double PRIOR_MU_X = 328;
+double PRIOR_MU_Y = 211;
 double PRIOR_MU_VX = 0;
 double PRIOR_MU_VY = 0;
 double PRIOR_MU_AX = 0;
@@ -130,6 +132,7 @@ BFL::Pdf<MatrixWrapper::ColumnVector>* posterior;
 BFL::ExtendedKalmanFilter* ekf = 0;
 CircleFilter* circle_ekf = 0;
 
+std::vector<CircleFilter*> ob_filters;
 
 
 
@@ -188,6 +191,164 @@ void loadObstacleTF()
   ifile.close();
 }
 
+
+void init_measurement_model()
+{
+  ROS_INFO("In init_measurement_model");
+
+  MatrixWrapper::Matrix H(STATE_SIZE,STATE_SIZE);
+  H = 0.0;
+
+  // Set x and y
+  H(1,1) = 1;
+  H(2,2) = 1;
+
+  ROS_INFO("Setting mu");
+
+  BFL::ColumnVector meas_noise_mu(STATE_SIZE);
+  meas_noise_mu(1) = MU_MEAS_NOISE;
+  meas_noise_mu(2) = MU_MEAS_NOISE;
+  meas_noise_mu(3) = 0;
+  meas_noise_mu(4) = 0;
+
+  ROS_INFO("Setting cov");
+
+  MatrixWrapper::SymmetricMatrix meas_noise_cov(STATE_SIZE);
+  meas_noise_cov = 0.0;
+  for(int i=1;i<=STATE_SIZE;i++)
+  {
+    meas_noise_cov(i,i) = SIGMA_MEAS_NOISE;
+  }
+
+  ROS_INFO("Setting measurement_uncertainty");
+
+  // Make the Gaussian
+  BFL::Gaussian measurement_uncertainty(meas_noise_mu, meas_noise_cov);
+
+  ROS_INFO("Setting meas_pdf");
+
+  // Make the pdf
+  meas_pdf = new BFL::LinearAnalyticConditionalGaussian(H, measurement_uncertainty);
+
+  ROS_INFO("Setting meas_model");
+
+  // Make model
+  meas_model = new BFL::LinearAnalyticMeasurementModelGaussianUncertainty(meas_pdf);
+}
+
+void init_ekf()
+{
+  ROS_INFO("In init_ekf");
+
+  ekf = new BFL::ExtendedKalmanFilter(prior);
+  posterior = ekf->PostGet(); 
+
+
+  circle_ekf = new CircleFilter(STATE_SIZE, prior, sys_pdf, meas_pdf);
+  //CircleFilter temp(STATE_SIZE, prior, sys_pdf, meas_pdf);
+  ob_filters.push_back(circle_ekf);
+}
+
+void init_prior_model()
+{
+  ROS_INFO("In init_prior_model");
+
+  // Build prior distribution
+  BFL::ColumnVector prior_mu(STATE_SIZE);
+  prior_mu(1) = PRIOR_MU_X;
+  prior_mu(2) = PRIOR_MU_Y;
+  prior_mu(3) = PRIOR_MU_VX;
+  prior_mu(4) = PRIOR_MU_VY;
+
+  MatrixWrapper::SymmetricMatrix prior_cov(STATE_SIZE);
+  prior_cov = 0.0;
+  prior_cov(1,1) = PRIOR_COV_X;
+  prior_cov(2,2) = PRIOR_COV_Y;
+  prior_cov(3,3) = PRIOR_COV_VX;
+  prior_cov(4,4) = PRIOR_COV_VY;
+
+  prior = new BFL::Gaussian(prior_mu, prior_cov);
+}
+
+
+/*
+ * Initialize the nonlinear system model
+ */
+void init_nonlinear_system_model()
+{
+  ROS_INFO("In init_nonlinear_system_model");
+
+  MatrixWrapper::ColumnVector sys_noise_Mu(STATE_SIZE);
+  for(int i=1;i<=STATE_SIZE;i++)
+  {
+    sys_noise_Mu(i) = MU_SYSTEM_NOISE_X;
+  }
+
+
+  MatrixWrapper::SymmetricMatrix sys_noise_Cov(STATE_SIZE);
+  sys_noise_Cov = 0.0;
+  for(int i=1;i<=STATE_SIZE;i++)
+  {
+    sys_noise_Cov(i,i) = SIGMA_SYSTEM_NOISE_X;
+  }
+    
+
+  BFL::Gaussian system_Uncertainty(sys_noise_Mu, sys_noise_Cov);
+
+  nl_sys_pdf = new BFL::NonLinearAnalyticConditionalGaussianMobile(system_Uncertainty);
+  
+  nl_sys_model = new BFL::AnalyticSystemModelGaussianUncertainty(nl_sys_pdf);
+}
+
+/*
+ * Initialize a linear system model
+ */
+void init_linear_system_model()
+{
+  ROS_INFO("In init_nonlinear_system_model");
+
+  MatrixWrapper::ColumnVector sys_noise_Mu(STATE_SIZE);
+  for(int i=1;i<=STATE_SIZE;i++)
+  {
+    sys_noise_Mu(i) = MU_SYSTEM_NOISE_X;
+  }
+
+
+  MatrixWrapper::SymmetricMatrix sys_noise_Cov(STATE_SIZE);
+  sys_noise_Cov = 0.0;
+  for(int i=1;i<=STATE_SIZE;i++)
+  {
+    sys_noise_Cov(i,i) = SIGMA_SYSTEM_NOISE_X;
+  }
+
+  /*
+   * Need two matrices, A and B
+   * A is multiplied by the current state
+   * B is multiplied by the input
+   * X_(t+1) = Ax_t + Bu_t
+   */
+  MatrixWrapper::Matrix A(4,4);
+  A = 0;
+  A(1,1) = 1;
+  A(2,2) = 1;
+  A(3,3) = 1;
+  A(4,4) = 1;
+  MatrixWrapper::Matrix B(4,4);
+  B = 0;
+  B(1,1) = 1;
+  B(2,2) = 1;
+  std::vector<MatrixWrapper::Matrix> AB(2);
+  AB[0] = A;
+  AB[1] = B;
+
+  ROS_INFO("Initializing the linear system uncertainty"); 
+
+  BFL::Gaussian system_Uncertainty(sys_noise_Mu, sys_noise_Cov);
+
+  sys_pdf = new BFL::LinearAnalyticConditionalGaussian(AB, system_Uncertainty);
+  
+  sys_model = new BFL::LinearAnalyticSystemModelGaussianUncertainty(sys_pdf);
+}
 
 
 
@@ -434,8 +595,6 @@ std::vector<double> velocityFromOnePrev(const std::vector<Circle> cirs, const st
         Velocity temp;
         temp.vx = linear_v*cos(theta);
         temp.vy = linear_v*sin(theta);
-        //temp.vx = (x_dist / d_prev.toSec()) * grid_resolution;
-        //temp.vy = (y_dist / d_prev.toSec()) * grid_resolution;
 
         x_y_velocities.push_back(temp);
         
@@ -475,6 +634,9 @@ std::vector<double> velocityFromOnePrev(const std::vector<Circle> cirs, const st
       ROS_INFO("Closest prev: Circle %i center: (%f, %f)", i, prev_cirs[i].center.x, prev_cirs[i].center.y);
       cir_prev_cen_index.push_back(index);
     }
+
+    //init_prior_model();
+    //init_ekf();
     ROS_INFO("********************************************************************************");
   }
 
@@ -617,12 +779,18 @@ void update(BFL::SystemModel<MatrixWrapper::ColumnVector>* const sys_model, cons
   ROS_INFO("In update");
   ROS_INFO("u: (%f,%f) y: (%f, %f, %f)", u[0], u[1], y[0], y[1], y[2]);
   
-  if(!ekf->Update(sys_model, u, meas_model, y))
+  ob_filters[0]->update(u, y);
+  posterior = ob_filters[0]->PostGet(); 
+  
+  //circle_ekf->update(u, y);
+  //posterior = circle_ekf->PostGet();
+  /*if(!ekf->Update(sys_model, u, meas_model, y))
   //if(!ekf->Update(meas_model, y))
   {
     ROS_INFO("Problem updating filter!");
   }
-  posterior = ekf->PostGet();
+  posterior = ekf->PostGet();*/
+  
 }
 
 void printPosterior()
@@ -646,165 +814,6 @@ void printPosterior()
       ROS_INFO("cov[%i][%i]: %f", i, j, cov(i+1,j+1));
     }
   }*/
-}
-
-
-BFL::ExtendedKalmanFilter makeFilter(BFL::Gaussian prior)
-{
-  BFL::ExtendedKalmanFilter filter(&prior);
-  return filter;
-}
-
-void init_measurement_model()
-{
-  ROS_INFO("In init_measurement_model");
-
-  MatrixWrapper::Matrix H(STATE_SIZE,STATE_SIZE);
-  H = 0.0;
-
-  // Set x and y
-  H(1,1) = 1;
-  H(2,2) = 1;
-
-  ROS_INFO("Setting mu");
-
-  BFL::ColumnVector meas_noise_mu(STATE_SIZE);
-  meas_noise_mu(1) = MU_MEAS_NOISE;
-  meas_noise_mu(2) = MU_MEAS_NOISE;
-  meas_noise_mu(3) = 0;
-  meas_noise_mu(4) = 0;
-
-  ROS_INFO("Setting cov");
-
-  MatrixWrapper::SymmetricMatrix meas_noise_cov(STATE_SIZE);
-  meas_noise_cov = 0.0;
-  for(int i=1;i<=STATE_SIZE;i++)
-  {
-    meas_noise_cov(i,i) = SIGMA_MEAS_NOISE;
-  }
-
-  ROS_INFO("Setting measurement_uncertainty");
-
-  // Make the Gaussian
-  BFL::Gaussian measurement_uncertainty(meas_noise_mu, meas_noise_cov);
-
-  ROS_INFO("Setting meas_pdf");
-
-  // Make the pdf
-  meas_pdf = new BFL::LinearAnalyticConditionalGaussian(H, measurement_uncertainty);
-
-  ROS_INFO("Setting meas_model");
-
-  // Make model
-  meas_model = new BFL::LinearAnalyticMeasurementModelGaussianUncertainty(meas_pdf);
-}
-
-void init_ekf()
-{
-  ROS_INFO("In init_ekf");
-
-  ekf = new BFL::ExtendedKalmanFilter(prior);
-}
-
-void init_prior_model()
-{
-  ROS_INFO("In init_prior_model");
-
-  // Build prior distribution
-  BFL::ColumnVector prior_mu(STATE_SIZE);
-  prior_mu(1) = PRIOR_MU_X;
-  prior_mu(2) = PRIOR_MU_Y;
-  prior_mu(3) = PRIOR_MU_VX;
-  prior_mu(4) = PRIOR_MU_VY;
-
-  MatrixWrapper::SymmetricMatrix prior_cov(STATE_SIZE);
-  prior_cov = 0.0;
-  prior_cov(1,1) = PRIOR_COV_X;
-  prior_cov(2,2) = PRIOR_COV_Y;
-  prior_cov(3,3) = PRIOR_COV_VX;
-  prior_cov(4,4) = PRIOR_COV_VY;
-
-  prior = new BFL::Gaussian(prior_mu, prior_cov);
-}
-
-
-/*
- * Initialize the nonlinear system model
- */
-void init_nonlinear_system_model()
-{
-  ROS_INFO("In init_nonlinear_system_model");
-
-  MatrixWrapper::ColumnVector sys_noise_Mu(STATE_SIZE);
-  for(int i=1;i<=STATE_SIZE;i++)
-  {
-    sys_noise_Mu(i) = MU_SYSTEM_NOISE_X;
-  }
-
-
-  MatrixWrapper::SymmetricMatrix sys_noise_Cov(STATE_SIZE);
-  sys_noise_Cov = 0.0;
-  for(int i=1;i<=STATE_SIZE;i++)
-  {
-    sys_noise_Cov(i,i) = SIGMA_SYSTEM_NOISE_X;
-  }
-    
-
-  BFL::Gaussian system_Uncertainty(sys_noise_Mu, sys_noise_Cov);
-
-  nl_sys_pdf = new BFL::NonLinearAnalyticConditionalGaussianMobile(system_Uncertainty);
-  
-  nl_sys_model = new BFL::AnalyticSystemModelGaussianUncertainty(nl_sys_pdf);
-}
-
-/*
- * Initialize a linear system model
- */
-void init_linear_system_model()
-{
-  ROS_INFO("In init_nonlinear_system_model");
-
-  MatrixWrapper::ColumnVector sys_noise_Mu(STATE_SIZE);
-  for(int i=1;i<=STATE_SIZE;i++)
-  {
-    sys_noise_Mu(i) = MU_SYSTEM_NOISE_X;
-  }
-
-
-  MatrixWrapper::SymmetricMatrix sys_noise_Cov(STATE_SIZE);
-  sys_noise_Cov = 0.0;
-  for(int i=1;i<=STATE_SIZE;i++)
-  {
-    sys_noise_Cov(i,i) = SIGMA_SYSTEM_NOISE_X;
-  }
-
-  /*
-   * Need two matrices, A and B
-   * A is multiplied by the current state
-   * B is multiplied by the input
-   * X_(t+1) = Ax_t + Bu_t
-   */
-  MatrixWrapper::Matrix A(4,4);
-  A = 0;
-  A(1,1) = 1;
-  A(2,2) = 1;
-  A(3,3) = 1;
-  A(4,4) = 1;
-  MatrixWrapper::Matrix B(4,4);
-  B = 0;
-  B(1,1) = 1;
-  B(2,2) = 1;
-  std::vector<MatrixWrapper::Matrix> AB(2);
-  AB[0] = A;
-  AB[1] = B;
-
-  ROS_INFO("Initializing the linear system uncertainty"); 
-
-  BFL::Gaussian system_Uncertainty(sys_noise_Mu, sys_noise_Cov);
-
-  sys_pdf = new BFL::LinearAnalyticConditionalGaussian(AB, system_Uncertainty);
-  
-  sys_model = new BFL::LinearAnalyticSystemModelGaussianUncertainty(sys_pdf);
 }
 
 
@@ -929,6 +938,8 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     ROS_INFO("Posterior before update:");
     printPosterior();
 
+    
+
     // Prediction
     if(prev_velocities.size() > 0)
     {
@@ -968,25 +979,29 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   /*std::vector<double> velocities = velocityFromOnePrev(cirs, prev_cirs, d_elapsed, grid_resolution);
   ROS_INFO("Velocities returned from going back one cycle:");*/
 
-  int N = 0;
-  std::vector<double> velocities = velocityFromNPrev(cirs, d_elapsed, grid_resolution, N);
-  
-  for(int i=0;i<velocities.size();i++)
+  if(num_costmaps % 2 == 0)
   {
-    ROS_INFO("Velocity %i: %f", i, velocities[i]);
+    int N = 5;
+    std::vector<double> velocities = velocityFromNPrev(cirs, d_elapsed, grid_resolution, N);
+    
+    for(int i=0;i<velocities.size();i++)
+    {
+      ROS_INFO("Velocity %i: %f", i, velocities[i]);
+    }
+
+    prev_velocities.push_back(velocities);
+
+    
+    // Set prev_cirs variable!
+    prev_cirs = cirs;
+
+    /*
+     *  Compute Circle velocity
+     */
+    // Create Obstacle for each circle?
+
   }
-
-  prev_velocities.push_back(velocities);
-
-  
-  // Set prev_cirs variable!
-  prev_cirs = cirs;
-
-  /*
-   *  Compute Circle velocity
-   */
-  // Create Obstacle for each circle?
-
+ 
   // After finding velocities, populate Obstacle list
   obs.clear();
 
@@ -997,7 +1012,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     obs.push_back(o);
   }
 
- 
+  num_costmaps++;
   //ROS_INFO("obs.size(): %i", (int)obs.size());
   //ROS_INFO("Leaving Cb");
 }
@@ -1109,7 +1124,7 @@ int main(int argc, char** argv)
   ROS_INFO("Done initializing prior model");
   init_ekf();
   ROS_INFO("Done initializing ekf");
-  posterior = ekf->PostGet(); 
+  //posterior = ekf->PostGet(); 
 
   // Initialize this in a better way later on...
   for(int i=0;i<3;i++)

@@ -12,10 +12,16 @@
 class CircleFilter : public BFL::ExtendedKalmanFilter
 {
   public:
-    CircleFilter(BFL::Gaussian* prior);
+    CircleFilter(uint8_t state_size, BFL::Gaussian* prior, BFL::LinearAnalyticConditionalGaussian* sys_pdf, BFL::LinearAnalyticConditionalGaussian* meas_pdf);
     ~CircleFilter();
 
-    void update(BFL::SystemModel<MatrixWrapper::ColumnVector>* const sys_model, const MatrixWrapper::ColumnVector& u, BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model, const MatrixWrapper::ColumnVector& s);
+    void update(MatrixWrapper::ColumnVector u, MatrixWrapper::ColumnVector y);
+
+  private:
+    uint8_t state_size_;
+    BFL::Gaussian* prior = 0;
+    BFL::LinearAnalyticSystemModelGaussianUncertainty* sys_model = 0;
+    BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model = 0;
 };
 
 #endif
