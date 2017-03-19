@@ -8,9 +8,6 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <queue>
 #include <visualization_msgs/Marker.h>
-//#include "data.h"
-//#include "circle.h"
-//#include "mystuff.h"
 
 struct Edge
 {

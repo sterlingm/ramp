@@ -27,11 +27,26 @@
 //using namespace BFL; ambiguation on ramp_msgs::ObstacleList list
 
 
+struct CircleOb
+{
+  CircleOb() {}
+  ~CircleOb()
+  {
+    if(kf)
+    {
+      delete kf;
+    }
+  }
+  Circle cir;
+  CircleFilter* kf=0;
+};
+
 struct Velocity
 {
   double vx, vy;
 };
 
+std::vector<CircleOb*> cir_obs;
 
 Utility util;
 double rate;
@@ -91,8 +106,8 @@ BFL::AnalyticSystemModelGaussianUncertainty* nl_sys_model = 0;
 int STATE_SIZE=4;
 double MU_SYSTEM_NOISE_X = 0.01;
 double MU_SYSTEM_NOISE_Y = 0.01;
-double SIGMA_SYSTEM_NOISE_X = 0.001;
-double SIGMA_SYSTEM_NOISE_Y = 0.001;
+double SIGMA_SYSTEM_NOISE_X = 0.25;
+double SIGMA_SYSTEM_NOISE_Y = 0.25;
 
 /*
  * Measurement model
@@ -100,8 +115,8 @@ double SIGMA_SYSTEM_NOISE_Y = 0.001;
 //MatrixWrapper::Matrix* H=0;
 BFL::LinearAnalyticConditionalGaussian* meas_pdf = 0;
 BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model = 0;
-double MU_MEAS_NOISE = 0.25;
-double SIGMA_MEAS_NOISE = 0.25;
+double MU_MEAS_NOISE = 0.0001;
+double SIGMA_MEAS_NOISE = 0.0001;
 
 // Input vector
 MatrixWrapper::ColumnVector u(STATE_SIZE);
@@ -127,11 +142,8 @@ double PRIOR_COV_AY = 0.0001;
 BFL::Pdf<MatrixWrapper::ColumnVector>* posterior;
 
 /*
- * Filter
+ * Filters
  */
-BFL::ExtendedKalmanFilter* ekf = 0;
-CircleFilter* circle_ekf = 0;
-
 std::vector<CircleFilter*> ob_filters;
 
 
@@ -233,21 +245,9 @@ void init_measurement_model()
   ROS_INFO("Setting meas_model");
 
   // Make model
-  meas_model = new BFL::LinearAnalyticMeasurementModelGaussianUncertainty(meas_pdf);
+  //meas_model = new BFL::LinearAnalyticMeasurementModelGaussianUncertainty(meas_pdf);
 }
 
-void init_ekf()
-{
-  ROS_INFO("In init_ekf");
-
-  ekf = new BFL::ExtendedKalmanFilter(prior);
-  posterior = ekf->PostGet(); 
-
-
-  circle_ekf = new CircleFilter(STATE_SIZE, prior, sys_pdf, meas_pdf);
-  //CircleFilter temp(STATE_SIZE, prior, sys_pdf, meas_pdf);
-  ob_filters.push_back(circle_ekf);
-}
 
 void init_prior_model()
 {
@@ -297,7 +297,7 @@ void init_nonlinear_system_model()
 
   nl_sys_pdf = new BFL::NonLinearAnalyticConditionalGaussianMobile(system_Uncertainty);
   
-  nl_sys_model = new BFL::AnalyticSystemModelGaussianUncertainty(nl_sys_pdf);
+  //nl_sys_model = new BFL::AnalyticSystemModelGaussianUncertainty(nl_sys_pdf);
 }
 
 /*
@@ -347,7 +347,7 @@ void init_linear_system_model()
 
   sys_pdf = new BFL::LinearAnalyticConditionalGaussian(AB, system_Uncertainty);
   
-  sys_model = new BFL::LinearAnalyticSystemModelGaussianUncertainty(sys_pdf);
+  //sys_model = new BFL::LinearAnalyticSystemModelGaussianUncertainty(sys_pdf);
 }
 
 
@@ -595,6 +595,7 @@ std::vector<double> velocityFromOnePrev(const std::vector<Circle> cirs, const st
         Velocity temp;
         temp.vx = linear_v*cos(theta);
         temp.vy = linear_v*sin(theta);
+        ROS_INFO("vx: %f vy: %f speed: %f theta: %f", temp.vx, temp.vy, linear_v, theta);
 
         x_y_velocities.push_back(temp);
         
@@ -625,18 +626,49 @@ std::vector<double> velocityFromOnePrev(const std::vector<Circle> cirs, const st
   {
     ROS_INFO("********************************************************************************");
     ROS_INFO("More new circles than previous circles!");
+
+    std::vector<int> matches(cirs.size(), 0);
+
+
     // Find closest new circle for each prev center
     // Do this because the other way could match 2 new circles to the same prev center
     for(int i=0;i<prev_cirs.size();i++)
     {
       int index = getClosestPrev(prev_cirs[i], cirs);
-      ROS_INFO("Circle %i center: (%f,%f)", i, cirs[i].center.x, cirs[i].center.y);
-      ROS_INFO("Closest prev: Circle %i center: (%f, %f)", i, prev_cirs[i].center.x, prev_cirs[i].center.y);
+      ROS_INFO("Circle %i center: (%f,%f)", i, prev_cirs[i].center.x, prev_cirs[i].center.y);
+      ROS_INFO("Closest prev: Circle %i center: (%f, %f)", index, cirs[index].center.x, cirs[index].center.y);
       cir_prev_cen_index.push_back(index);
+      matches[index]++;
+    }
+
+    ROS_INFO("Creating new Kalman filters");
+    for(int i=0;i<cirs.size();i++)
+    {
+      ROS_INFO("matches[%i]: %i", i, matches[i]);
+      // If the circle couldn't be matched with any other circle,
+      // Create a new Kalman Filter for it
+      if(matches[i] == 0)
+      {
+        BFL::ColumnVector prior_mu(STATE_SIZE);
+        prior_mu(1) = cirs[i].center.x;
+        prior_mu(2) = cirs[i].center.y;
+        prior_mu(3) = 0;
+        prior_mu(4) = 0;
+        MatrixWrapper::SymmetricMatrix prior_cov(STATE_SIZE);
+        prior_cov = 0.0;
+        prior_cov(1,1) = PRIOR_COV_X;
+        prior_cov(2,2) = PRIOR_COV_Y;
+        prior_cov(3,3) = PRIOR_COV_VX;
+        prior_cov(4,4) = PRIOR_COV_VY;
+        BFL::Gaussian* prior = new BFL::Gaussian(prior_mu, prior_cov);
+        
+        ROS_INFO("Creating new filter with prior mu = [%f, %f]", prior_mu(1), prior_mu(2));
+        CircleFilter* temp = new CircleFilter(STATE_SIZE, prior, sys_pdf, meas_pdf);
+        ob_filters.push_back(temp);
+      }
     }
 
     //init_prior_model();
-    //init_ekf();
     ROS_INFO("********************************************************************************");
   }
 
@@ -644,78 +676,32 @@ std::vector<double> velocityFromOnePrev(const std::vector<Circle> cirs, const st
 }
 
 
-// Get N random samples?
-std::vector<double> getSamples(const std::vector<double> vels, const int N)
+CircleOb* createCircleOb(Circle temp)
 {
-  std::vector<double> result;
+  CircleOb* result = new CircleOb;
+  result->cir = temp;
 
+  BFL::ColumnVector prior_mu(STATE_SIZE);
+  prior_mu(1) = temp.center.x;
+  prior_mu(2) = temp.center.y;
+  prior_mu(3) = 0;
+  prior_mu(4) = 0;
+  MatrixWrapper::SymmetricMatrix prior_cov(STATE_SIZE);
+  prior_cov = 0.0;
+  prior_cov(1,1) = PRIOR_COV_X;
+  prior_cov(2,2) = PRIOR_COV_Y;
+  prior_cov(3,3) = PRIOR_COV_VX;
+  prior_cov(4,4) = PRIOR_COV_VY;
+  BFL::Gaussian* prior = new BFL::Gaussian(prior_mu, prior_cov);
+
+  ROS_INFO("Creating new filter with prior mu = [%f, %f]", prior_mu(1), prior_mu(2));
+  CircleFilter* cir_filter = new CircleFilter(STATE_SIZE, prior, sys_pdf, meas_pdf);
+  ROS_INFO("Created filter");
+  result->kf = cir_filter;
+
+  ROS_INFO("Returning filter");
   return result;
 }
-
-
-// Fit normal distribution to velocity?
-// index 0 = mean, 1 = variance
-NormalDist1D fitNormal(const std::vector<double> points)
-{
-  ROS_INFO("In fitNormal");
-  ROS_INFO("points.size(): %i", (int)points.size());
-
-  NormalDist1D result;
-
-  double mean = points[0];
-  for(int i=0;i<points.size();i++)
-  {
-    ROS_INFO("Points[%i]: %f", i, points[i]);
-    mean += points[i];
-  }
-  mean /= points.size();
-  ROS_INFO("Mean: %f", mean);
-
-  double std=0;
-  for(int i=0;i<points.size();i++)
-  {
-    double diff = pow(points[i] - mean,2);
-    std += diff;
-  }
-  std /= points.size();
-
-  ROS_INFO("Variance: %f", std);
-
-  result.mean = mean;
-  result.variance = std;
-
-  ROS_INFO("Exiting fitNormal");
-  return result;
-}
-
-
-
-NormalDist1D addNorm(const NormalDist1D n1, const NormalDist1D n2)
-{
-  NormalDist1D result;
-
-  result.mean = n1.mean + n2.mean;
-  result.variance = n1.variance + n2.variance;
-
-  return result;
-}
-
-
-NormalDist1D multiplyNorm(const NormalDist1D n1, const NormalDist1D n2)
-{
-  NormalDist1D result;
-
-  double var_result = 1.f / ((1.f/n1.mean) + (1.f/n2.mean));
-
-  double mean_result = ( (n1.variance / n1.mean) + (n2.variance / n2.mean) ) * var_result;
-
-  result.mean = mean_result;
-  result.variance = var_result;
-
-  return result;
-}
-
-
 
 
 /*
@@ -752,10 +738,6 @@ std::vector<double> velocityFromNPrev(const std::vector<Circle> cirs, const ros:
         }
       }
 
-      if(points.size() > 0)
-      {
-        NormalDist1D norm = fitNormal(points);
-      }
 
       result[i] /= N;
       ROS_INFO("Average: %f", result[i]);
@@ -769,10 +751,6 @@ std::vector<double> velocityFromNPrev(const std::vector<Circle> cirs, const ros:
 
 
 
-void prediction(BFL::SystemModel<MatrixWrapper::ColumnVector>* const sys_model, const MatrixWrapper::ColumnVector& u)
-{
-  ekf->Update(sys_model, u);
-}
 
 void update(BFL::SystemModel<MatrixWrapper::ColumnVector>* const sys_model, const MatrixWrapper::ColumnVector& u, BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model, const MatrixWrapper::ColumnVector& y)
 {
@@ -891,19 +869,15 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   ROS_INFO("consolidated_grid.data.size(): %i", (int)consolidated_grid.data.size());
   ROS_INFO("cg_ptr->data.size(): %i", (int)cg_ptr->data.size());
 
+  /*
+   ********************************************
+   * Finding circles on latest costmap
+   ********************************************
+   */
 
-  CirclePacker c(cg_ptr);*/
+  //CirclePacker c(cg_ptr); // (If using consolidated costmaps)
   CirclePacker c(grid);
   std::vector<Circle> cirs = c.go();
-
-  if(prev_valid_cirs.size() == 0)
-  {
-    prev_valid_cirs = cirs;
-   
-    // Make another for 2
-    Circle temp;
-    prev_valid_cirs.push_back(temp);
-  }
 
   /*
    * Use custom BlobDetector
@@ -913,6 +887,9 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   bd.findBlobs(cs);*/
 
   
+  /*
+   * Combine overlapping circles
+   */
   // This seg faults if I don't check size > 0
   // Figure out why...
   std::vector<Circle> over;
@@ -927,21 +904,27 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   }
 
   cirs = over;
+
+
+  /*
+   ********************************************
+   * Done finding circles on latest costmap
+   ********************************************
+   */
   
   
   /*
    * Call the Kalman filter
    */
-  if(cirs.size() > 0)
+  /*ROS_INFO("ob_filters.size(): %i", (int)ob_filters.size());
+  for(int i=0;i<ob_filters.size();i++)
   {
-    ROS_INFO("Calling Update!");
+    ROS_INFO("Running ob_filter %i", i);
     ROS_INFO("Posterior before update:");
-    printPosterior();
-
-    
+    ob_filters[i]->printPosterior();
 
     // Prediction
-    if(prev_velocities.size() > 0)
+    if(x_y_velocities.size() > 0)
     {
       u[0] = x_y_velocities[x_y_velocities.size()-1].vx;
       u[1] = x_y_velocities[x_y_velocities.size()-1].vy;
@@ -958,49 +941,125 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     
     // Measurement 
     MatrixWrapper::ColumnVector y(STATE_SIZE);
-    y[0] = cirs[0].center.x;
-    y[1] = cirs[0].center.y;
+    y[0] = cirs[i].center.x;
+    y[1] = cirs[i].center.y;
     for(int i=2;i<STATE_SIZE;i++)
     {
       y[i] = 0;
     }
   
-    update(sys_model, u, meas_model, y);
+    ob_filters[i]->update(u, y);
     ROS_INFO("Posterior after update:");
-    printPosterior();
+    ob_filters[i]->printPosterior();
 
-    MatrixWrapper::ColumnVector mean = posterior->ExpectedValueGet(); 
-    cirs[0].center.x = mean[0];
-    cirs[0].center.y = mean[1];
+    MatrixWrapper::ColumnVector mean = ob_filters[i]->posterior->ExpectedValueGet(); 
+    cirs[i].center.x = mean[0];
+    cirs[i].center.y = mean[1];
+  }*/
+
+  /*
+   * Done updating Kalman Filters
+   * Circle positions for this time event are finalized
+   */
+
+  ROS_INFO("Checking if any circles were added or removed");
+
+  /*
+   * Determine which circles are pre-existing and which ones are new
+   */
+  // If the same number of circles
+  if(cirs.size() == prev_valid_cirs.size())
+  {
+    ROS_INFO("Same number of circles!");
+  }
+  // Else If there are new circles
+  else if(cirs.size() >= prev_valid_cirs.size())
+  {
+    ROS_INFO("New circles, cirs.size(): %i prev_valid_cirs.size(): %i", (int)cirs.size(), (int)prev_valid_cirs.size());
+    ROS_INFO("cir_obs.size(): %i", (int)cir_obs.size());
+    // Figure out which circles are new
+    // Match the PREVIOUS circles to the new list
+    // and see which of the new circles have not been matched to a previous circle
+    int matched_cirs[cirs.size()] = {0};
+    for(int i=0;i<prev_valid_cirs.size();i++)
+    {
+      int index = getClosestPrev(prev_valid_cirs[i], cirs);
+      matched_cirs[index] = 1;
+    }
+
+    ROS_INFO("Done matching");
+
+    // Go through matched_cirs and get the indices whose elements are equal to 0
+    for(int i=0;i<cirs.size();i++)
+    {
+      ROS_INFO("i: %i cirs.size(): %i", i, (int)cirs.size());
+      // If the circle was not matched, create a new CircleOb
+      if(!matched_cirs[i])
+      {
+        CircleOb* temp = createCircleOb(cirs[i]);
+        ROS_INFO("temp created");
+        cir_obs.push_back(temp);
+        ROS_INFO("Done pushing on new CircleOb");
+      }
+    } // end for matched_cirs
+    
+    ROS_INFO("After adding, cir_obs.size(): %i", (int)cir_obs.size());
+  }
+  // Else If some circles disappeared
+  else
+  {
+    ROS_INFO("Fewer circles, cirs.size(): %i prev_valid_cirs.size(): %i", (int)cirs.size(), (int)prev_valid_cirs.size());
+    ROS_INFO("cir_obs.size(): %i", (int)cir_obs.size());
+    // Go through cirs and match them to prev cirs
+    int matched_cirs[prev_valid_cirs.size()] = {0};
+    for(int i=0;i<cirs.size();i++)
+    {
+      int index = getClosestPrev(cirs[i], prev_valid_cirs);
+      matched_cirs[index] = 1;
+    }
+    
+    // Go through matched_cirs and get the indices whose elements are equal to 0
+    for(int i=0;i<prev_valid_cirs.size();i++)
+    {
+      ROS_INFO("matched_cirs[%i]: %i", i, matched_cirs[i]);
+      // If the circle was not matched, delete that CircleOb
+      if(!matched_cirs[i])
+      {
+        cir_obs.erase(cir_obs.begin()+i);
+      }
+    } // end for matched_cirs
+    
+    ROS_INFO("After removing, cir_obs.size(): %i", (int)cir_obs.size());
   }
 
 
-  //ROS_INFO("cirs.size(): %i obs.size(): %i", (int)cirs.size(), (int)obs.size());
+
+  ROS_INFO("cirs.size(): %i obs.size(): %i", (int)cirs.size(), (int)obs.size());
   /*std::vector<double> velocities = velocityFromOnePrev(cirs, prev_cirs, d_elapsed, grid_resolution);
   ROS_INFO("Velocities returned from going back one cycle:");*/
 
-  if(num_costmaps % 2 == 0)
+  /*
+   * Predict velocities
+   
+  int N = 0;
+  std::vector<double> velocities = velocityFromNPrev(cirs, d_elapsed, grid_resolution, N);
+  
+  for(int i=0;i<velocities.size();i++)
   {
-    int N = 5;
-    std::vector<double> velocities = velocityFromNPrev(cirs, d_elapsed, grid_resolution, N);
-    
-    for(int i=0;i<velocities.size();i++)
-    {
-      ROS_INFO("Velocity %i: %f", i, velocities[i]);
-    }
-
-    prev_velocities.push_back(velocities);
-
-    
-    // Set prev_cirs variable!
-    prev_cirs = cirs;
-
-    /*
-     *  Compute Circle velocity
-     */
-    // Create Obstacle for each circle?
-
+    ROS_INFO("Velocity %i: %f", i, velocities[i]);
   }
+
+  prev_velocities.push_back(velocities);*/
+
+  
+  // Set prev_cirs variable!
+  prev_valid_cirs = cirs;
+
+
+  /*
+   *  Compute Circle velocity
+   */
+  // Create Obstacle for each circle?
  
   // After finding velocities, populate Obstacle list
   obs.clear();
@@ -1024,38 +1083,57 @@ void reportPredictedVelocity(int sig)
 
 
   printf("\npredicted_velocities.size(): %i", (int)predicted_velocities.size());
-  double min=predicted_velocities.at(0), max = min, average=min;
-  int count=0;
-  for(int i=1;i<predicted_velocities.size();i++)
+  if(predicted_velocities.size() > 0)
   {
-    if(predicted_velocities[i] < min)
+    double min=predicted_velocities.at(0), max = min, average=min;
+    int count=0;
+    for(int i=1;i<predicted_velocities.size();i++)
     {
-      min = predicted_velocities[i];
-    }
-    if(predicted_velocities[i] > max)
-    {
-      max = predicted_velocities[i];
-    }
+      if(predicted_velocities[i] < min)
+      {
+        min = predicted_velocities[i];
+      }
+      if(predicted_velocities[i] > max)
+      {
+        max = predicted_velocities[i];
+      }
 
-    if (predicted_velocities[i] > 0)
-    {
-      ROS_INFO("Adding %f", predicted_velocities[i]);
-      average += predicted_velocities[i];
-      count++;
+      if (predicted_velocities[i] > 0)
+      {
+        ROS_INFO("Adding %f", predicted_velocities[i]);
+        average += predicted_velocities[i];
+        count++;
+      }
     }
+    average /= count;
+
+    printf("\nPredicted Velocities range=[%f,%f], average: %f\n", min, max, average);
   }
-  average /= count;
-
-  printf("\nPredicted Velocities range=[%f,%f], average: %f\n", min, max, average);
 
 
   // Also, free up some memory
-  delete meas_pdf;
-  delete meas_model;
-  //delete nl_sys_model;
-  //delete nl_sys_pdf;
-  delete prior;
-  delete ekf;
+  if(meas_pdf)
+  {
+    delete meas_pdf;
+  }
+  printf("\nFreed meas_pdf\n");
+  if(sys_pdf)
+  {
+    delete sys_pdf;
+  }
+  printf("\nFreed meas_model\n");
+
+  for(int i=0;i<ob_filters.size();i++)
+  {
+    delete ob_filters[i];
+  }
+  
+  for(int i=0;i<cir_obs.size();i++)
+  {
+    delete cir_obs[i];
+  }
+
+  printf("\nDone freeing memory\n");
 }
 
 
@@ -1122,9 +1200,6 @@ int main(int argc, char** argv)
   ROS_INFO("Done initializing measurement model");
   init_prior_model();
   ROS_INFO("Done initializing prior model");
-  init_ekf();
-  ROS_INFO("Done initializing ekf");
-  //posterior = ekf->PostGet(); 
 
   // Initialize this in a better way later on...
   for(int i=0;i<3;i++)

@@ -5,18 +5,29 @@
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
 BFL	nonlinearanalyticconditionalgaussian.cpp	/^namespace BFL$/;"	n	file:
-BFL::NonLinearAnalyticConditionalGaussianOdo::ExpectedValueGet	nonlinearanalyticconditionalgaussian.cpp	/^  ColumnVector NonLinearAnalyticConditionalGaussianOdo::ExpectedValueGet() const$/;"	f	class:BFL::NonLinearAnalyticConditionalGaussianOdo	signature:() const
-BFL::NonLinearAnalyticConditionalGaussianOdo::NonLinearAnalyticConditionalGaussianOdo	nonlinearanalyticconditionalgaussian.cpp	/^  NonLinearAnalyticConditionalGaussianOdo::NonLinearAnalyticConditionalGaussianOdo(const Gaussian& additiveNoise)$/;"	f	class:BFL::NonLinearAnalyticConditionalGaussianOdo	signature:(const Gaussian& additiveNoise)
-BFL::NonLinearAnalyticConditionalGaussianOdo::dfGet	nonlinearanalyticconditionalgaussian.cpp	/^  Matrix NonLinearAnalyticConditionalGaussianOdo::dfGet(unsigned int i) const$/;"	f	class:BFL::NonLinearAnalyticConditionalGaussianOdo	signature:(unsigned int i) const
-BFL::NonLinearAnalyticConditionalGaussianOdo::~NonLinearAnalyticConditionalGaussianOdo	nonlinearanalyticconditionalgaussian.cpp	/^  NonLinearAnalyticConditionalGaussianOdo::~NonLinearAnalyticConditionalGaussianOdo(){}$/;"	f	class:BFL::NonLinearAnalyticConditionalGaussianOdo	signature:()
+BFL::NonLinearAnalyticConditionalGaussianMobile::ExpectedValueGet	nonlinearanalyticconditionalgaussian.cpp	/^  ColumnVector NonLinearAnalyticConditionalGaussianMobile::ExpectedValueGet() const$/;"	f	class:BFL::NonLinearAnalyticConditionalGaussianMobile	signature:() const
+BFL::NonLinearAnalyticConditionalGaussianMobile::NonLinearAnalyticConditionalGaussianMobile	nonlinearanalyticconditionalgaussian.cpp	/^  NonLinearAnalyticConditionalGaussianMobile::NonLinearAnalyticConditionalGaussianMobile(const Gaussian& additiveNoise)$/;"	f	class:BFL::NonLinearAnalyticConditionalGaussianMobile	signature:(const Gaussian& additiveNoise)
+BFL::NonLinearAnalyticConditionalGaussianMobile::dfGet	nonlinearanalyticconditionalgaussian.cpp	/^Matrix NonLinearAnalyticConditionalGaussianMobile::dfGet(unsigned int i) const$/;"	f	class:BFL::NonLinearAnalyticConditionalGaussianMobile	signature:(unsigned int i) const
+BFL::NonLinearAnalyticConditionalGaussianMobile::~NonLinearAnalyticConditionalGaussianMobile	nonlinearanalyticconditionalgaussian.cpp	/^  NonLinearAnalyticConditionalGaussianMobile::~NonLinearAnalyticConditionalGaussianMobile(){}$/;"	f	class:BFL::NonLinearAnalyticConditionalGaussianMobile	signature:()
 BFL::NumConditionalArgumentsGet	nonlinearanalyticconditionalgaussian.cpp	/^      cerr << "This pdf Only has " << NumConditionalArgumentsGet() << " conditional arguments\\n";$/;"	p	file:	signature:()
-BFL::i	nonlinearanalyticconditionalgaussian.cpp	/^    cerr << "The df is not implemented for the" <<i << "th conditional argument\\n";$/;"	l
+BFL::i	nonlinearanalyticconditionalgaussian.cpp	/^      cerr << "The df is not implemented for the" <<i << "th conditional argument\\n";$/;"	l
 BFL::state	nonlinearanalyticconditionalgaussian.cpp	/^    ColumnVector state = ConditionalArgumentGet(0);$/;"	l
 BFL::vel	nonlinearanalyticconditionalgaussian.cpp	/^    ColumnVector vel  = ConditionalArgumentGet(1);$/;"	l
-BFL::vel_trans	nonlinearanalyticconditionalgaussian.cpp	/^  double vel_trans = ConditionalArgumentGet(1)(1);$/;"	l
-BFL::yaw	nonlinearanalyticconditionalgaussian.cpp	/^  double yaw = ConditionalArgumentGet(0)(6);$/;"	l
+BFL::vel_trans	nonlinearanalyticconditionalgaussian.cpp	/^    double vel_trans = ConditionalArgumentGet(1)(1);$/;"	l
+BFL::yaw	nonlinearanalyticconditionalgaussian.cpp	/^    double yaw = ConditionalArgumentGet(0)(6);$/;"	l
+BlobDetector	blob_detector.cpp	/^BlobDetector::BlobDetector(nav_msgs::OccupancyGridConstPtr g) $/;"	f	class:BlobDetector	signature:(nav_msgs::OccupancyGridConstPtr g)
+BlobDetector::BlobDetector	blob_detector.cpp	/^BlobDetector::BlobDetector(nav_msgs::OccupancyGridConstPtr g) $/;"	f	class:BlobDetector	signature:(nav_msgs::OccupancyGridConstPtr g)
+BlobDetector::buildMoment_contour	blob_detector.cpp	/^Moments BlobDetector::buildMoment_contour(Mat contour)$/;"	f	class:BlobDetector	signature:(Mat contour)
+BlobDetector::convertOGtoMat	blob_detector.cpp	/^void BlobDetector::convertOGtoMat(nav_msgs::OccupancyGridConstPtr g)$/;"	f	class:BlobDetector	signature:(nav_msgs::OccupancyGridConstPtr g)
+BlobDetector::detect	blob_detector.cpp	/^void BlobDetector::detect(std::vector<KeyPoint>& keypoints)$/;"	f	class:BlobDetector	signature:(std::vector<KeyPoint>& keypoints)
+BlobDetector::findBlobs	blob_detector.cpp	/^void BlobDetector::findBlobs(std::vector<Center>& centers)$/;"	f	class:BlobDetector	signature:(std::vector<Center>& centers)
+BlobDetector::~BlobDetector	blob_detector.cpp	/^BlobDetector::~BlobDetector() {}$/;"	f	class:BlobDetector	signature:()
 Canny	circle_packer.cpp	/^  cv::Canny( detected_edges, detected_edges, lowThreshold, lowThreshold*ratio, kernel_size );$/;"	p	class:cv	file:	signature:( detected_edges, detected_edges, lowThreshold, lowThreshold*ratio, kernel_size )
 CannyThreshold	circle_packer.cpp	/^void CirclePacker::CannyThreshold(int, void*)$/;"	f	class:CirclePacker	signature:(int, void*)
+CircleFilter	circle_filter.cpp	/^CircleFilter::CircleFilter(uint8_t state_size, BFL::Gaussian* prior, BFL::LinearAnalyticConditionalGaussian* sys_pdf, BFL::LinearAnalyticConditionalGaussian* meas_pdf) : BFL::ExtendedKalmanFilter(prior)$/;"	f	class:CircleFilter	signature:(uint8_t state_size, BFL::Gaussian* prior, BFL::LinearAnalyticConditionalGaussian* sys_pdf, BFL::LinearAnalyticConditionalGaussian* meas_pdf)
+CircleFilter::CircleFilter	circle_filter.cpp	/^CircleFilter::CircleFilter(uint8_t state_size, BFL::Gaussian* prior, BFL::LinearAnalyticConditionalGaussian* sys_pdf, BFL::LinearAnalyticConditionalGaussian* meas_pdf) : BFL::ExtendedKalmanFilter(prior)$/;"	f	class:CircleFilter	signature:(uint8_t state_size, BFL::Gaussian* prior, BFL::LinearAnalyticConditionalGaussian* sys_pdf, BFL::LinearAnalyticConditionalGaussian* meas_pdf)
+CircleFilter::update	circle_filter.cpp	/^void CircleFilter::update(MatrixWrapper::ColumnVector u, MatrixWrapper::ColumnVector y)$/;"	f	class:CircleFilter	signature:(MatrixWrapper::ColumnVector u, MatrixWrapper::ColumnVector y)
+CircleFilter::~CircleFilter	circle_filter.cpp	/^CircleFilter::~CircleFilter() $/;"	f	class:CircleFilter	signature:()
 CircleFit	circle.cpp	/^CircleFit::CircleFit()$/;"	f	class:CircleFit	signature:()
 CircleFit	circle.cpp	/^CircleFit::CircleFit(reals aa, reals bb, reals rr)$/;"	f	class:CircleFit	signature:(reals aa, reals bb, reals rr)
 CircleFit::CircleFit	circle.cpp	/^CircleFit::CircleFit()$/;"	f	class:CircleFit	signature:()
@@ -31,12 +42,15 @@ CirclePacker::combineTwoCircles	circle_packer.cpp	/^void CirclePacker::combineTw
 CirclePacker::computeNormal	circle_packer.cpp	/^Normal CirclePacker::computeNormal(Edge e)$/;"	f	class:CirclePacker	signature:(Edge e)
 CirclePacker::convertOGtoMat	circle_packer.cpp	/^void CirclePacker::convertOGtoMat(nav_msgs::OccupancyGridConstPtr g)$/;"	f	class:CirclePacker	signature:(nav_msgs::OccupancyGridConstPtr g)
 CirclePacker::deleteCellsInCir	circle_packer.cpp	/^void CirclePacker::deleteCellsInCir(const std::vector<Cell>& cells, const Circle cir, std::vector<Cell>& result)$/;"	f	class:CirclePacker	signature:(const std::vector<Cell>& cells, const Circle cir, std::vector<Cell>& result)
+CirclePacker::findCenterOfPixels	circle_packer.cpp	/^Point CirclePacker::findCenterOfPixels(const std::vector<cv::Point> pixels) const$/;"	f	class:CirclePacker	signature:(const std::vector<cv::Point> pixels) const
+CirclePacker::getCircleFromKeypoint	circle_packer.cpp	/^Circle CirclePacker::getCircleFromKeypoint(const cv::KeyPoint k) const$/;"	f	class:CirclePacker	signature:(const cv::KeyPoint k) const
 CirclePacker::getCirclesFromEdgeSets	circle_packer.cpp	/^std::vector<Circle> CirclePacker::getCirclesFromEdgeSets(const std::vector< std::vector<Edge> > edge_sets)$/;"	f	class:CirclePacker	signature:(const std::vector< std::vector<Edge> > edge_sets)
 CirclePacker::getCirclesFromEdges	circle_packer.cpp	/^std::vector<Circle> CirclePacker::getCirclesFromEdges(const std::vector<Edge> edges, const cv::Point robot_cen)$/;"	f	class:CirclePacker	signature:(const std::vector<Edge> edges, const cv::Point robot_cen)
 CirclePacker::getCirclesFromPoly	circle_packer.cpp	/^std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)$/;"	f	class:CirclePacker	signature:(Polygon poly)
 CirclePacker::getMedian	circle_packer.cpp	/^double CirclePacker::getMedian(const std::vector<double> points) const$/;"	f	class:CirclePacker	signature:(const std::vector<double> points) const
 CirclePacker::getMinDistToCirs	circle_packer.cpp	/^double CirclePacker::getMinDistToCirs(const std::vector<Circle>& cirs, const Cell& cell)$/;"	f	class:CirclePacker	signature:(const std::vector<Circle>& cirs, const Cell& cell)
 CirclePacker::getMinDistToPoly	circle_packer.cpp	/^double CirclePacker::getMinDistToPoly(const Polygon& poly, const Cell& cell)$/;"	f	class:CirclePacker	signature:(const Polygon& poly, const Cell& cell)
+CirclePacker::getWeights	circle_packer.cpp	/^std::vector<double> CirclePacker::getWeights(const std::vector<cv::Point> pixels, const Point center) const$/;"	f	class:CirclePacker	signature:(const std::vector<cv::Point> pixels, const Point center) const
 CirclePacker::go	circle_packer.cpp	/^std::vector<Circle> CirclePacker::go()$/;"	f	class:CirclePacker	signature:()
 CirclePacker::triangulatePolygon	circle_packer.cpp	/^std::vector<Triangle> CirclePacker::triangulatePolygon(const Polygon& poly)$/;"	f	class:CirclePacker	signature:(const Polygon& poly)
 CirclePacker::~CirclePacker	circle_packer.cpp	/^CirclePacker::~CirclePacker() {}$/;"	f	class:CirclePacker	signature:()
@@ -53,7 +67,7 @@ Data::print	data.cpp	/^void Data::print(void)$/;"	f	class:Data	signature:(void)
 Data::scale	data.cpp	/^void Data::scale(void)$/;"	f	class:Data	signature:(void)
 Data::~Data	data.cpp	/^Data::~Data()$/;"	f	class:Data	signature:()
 DirectoryOfThisScript	.ycm_extra_conf.py	/^def DirectoryOfThisScript():$/;"	f	access:public
-ExpectedValueGet	nonlinearanalyticconditionalgaussian.cpp	/^  ColumnVector NonLinearAnalyticConditionalGaussianOdo::ExpectedValueGet() const$/;"	f	class:BFL::NonLinearAnalyticConditionalGaussianOdo	signature:() const
+ExpectedValueGet	nonlinearanalyticconditionalgaussian.cpp	/^  ColumnVector NonLinearAnalyticConditionalGaussianMobile::ExpectedValueGet() const$/;"	f	class:BFL::NonLinearAnalyticConditionalGaussianMobile	signature:() const
 FlagsForFile	.ycm_extra_conf.py	/^def FlagsForFile( filename, **kwargs ):$/;"	f	access:public
 GetCompilationInfoForFile	.ycm_extra_conf.py	/^def GetCompilationInfoForFile( filename ):$/;"	f	access:public
 GetRosIncludeFlags	.ycm_extra_conf.py	/^def GetRosIncludeFlags():$/;"	f	access:public
@@ -61,17 +75,25 @@ GetRosIncludePaths	.ycm_extra_conf.py	/^def GetRosIncludePaths():$/;"	f	access:p
 GridMap2D	GridMap2D.cpp	/^GridMap2D::GridMap2D()$/;"	f	class:gridmap_2d::GridMap2D	signature:()
 GridMap2D	GridMap2D.cpp	/^GridMap2D::GridMap2D(const GridMap2D& other)$/;"	f	class:gridmap_2d::GridMap2D	signature:(const GridMap2D& other)
 GridMap2D	GridMap2D.cpp	/^GridMap2D::GridMap2D(const nav_msgs::OccupancyGridConstPtr& gridMap, bool unknown_as_obstacle) {$/;"	f	class:gridmap_2d::GridMap2D	signature:(const nav_msgs::OccupancyGridConstPtr& gridMap, bool unknown_as_obstacle)
+H	main.cpp	/^  MatrixWrapper::Matrix H(STATE_SIZE,STATE_SIZE);$/;"	p	file:	signature:(STATE_SIZE,STATE_SIZE)
 IsHeaderFile	.ycm_extra_conf.py	/^def IsHeaderFile( filename ):$/;"	f	access:public
 MAX_LENGTH	circle_packer.cpp	/^  double MAX_LENGTH= vertices[0].y;$/;"	l
 MAX_WIDTH	circle_packer.cpp	/^  double MAX_WIDTH = vertices[0].x;$/;"	l
 MIN_LENGTH	circle_packer.cpp	/^  double MIN_LENGTH= vertices[0].y;$/;"	l
 MIN_WIDTH	circle_packer.cpp	/^  double MIN_WIDTH = vertices[0].x;$/;"	l
+MU_MEAS_NOISE	main.cpp	/^double MU_MEAS_NOISE = 0.25;$/;"	v
+MU_MEAS_NOISE	main_test_bfl.cpp	/^double MU_MEAS_NOISE = 0.0001;$/;"	v
+MU_SYSTEM_NOISE_A	main_test_bfl.cpp	/^double MU_SYSTEM_NOISE_A = 0.0001;$/;"	v
+MU_SYSTEM_NOISE_V	main_test_bfl.cpp	/^double MU_SYSTEM_NOISE_V = 0.0001;$/;"	v
+MU_SYSTEM_NOISE_X	main.cpp	/^double MU_SYSTEM_NOISE_X = 0.01;$/;"	v
+MU_SYSTEM_NOISE_X	main_test_bfl.cpp	/^double MU_SYSTEM_NOISE_X = 0.0001;$/;"	v
+MU_SYSTEM_NOISE_Y	main.cpp	/^double MU_SYSTEM_NOISE_Y = 0.01;$/;"	v
 MakeRelativePathsInFlagsAbsolute	.ycm_extra_conf.py	/^def MakeRelativePathsInFlagsAbsolute( flags, working_directory ):$/;"	f	access:public
 Mr	Utilties.cpp	/^    reals Mr=0.,dx,dy;$/;"	l
 N	Utilties.cpp	/^  int N=data.n; reals theta,dx,dy;$/;"	l
-N	main.cpp	/^  int N = 15;$/;"	l
+N	main.cpp	/^    int N = 5;$/;"	l
 NUMCONDARGUMENTS_MOBILE	nonlinearanalyticconditionalgaussian.cpp	3;"	d	file:
-NonLinearAnalyticConditionalGaussianOdo	nonlinearanalyticconditionalgaussian.cpp	/^  NonLinearAnalyticConditionalGaussianOdo::NonLinearAnalyticConditionalGaussianOdo(const Gaussian& additiveNoise)$/;"	f	class:BFL::NonLinearAnalyticConditionalGaussianOdo	signature:(const Gaussian& additiveNoise)
+NonLinearAnalyticConditionalGaussianMobile	nonlinearanalyticconditionalgaussian.cpp	/^  NonLinearAnalyticConditionalGaussianMobile::NonLinearAnalyticConditionalGaussianMobile(const Gaussian& additiveNoise)$/;"	f	class:BFL::NonLinearAnalyticConditionalGaussianMobile	signature:(const Gaussian& additiveNoise)
 NormalDist1D	main.cpp	/^struct NormalDist1D$/;"	s	file:
 NormalDist1D::mean	main.cpp	/^  double mean;$/;"	m	struct:NormalDist1D	file:	access:public
 NormalDist1D::variance	main.cpp	/^  double variance;$/;"	m	struct:NormalDist1D	file:	access:public
@@ -85,16 +107,45 @@ Obstacle::update	obstacle.cpp	/^void Obstacle::update(const Circle c)$/;"	f	clas
 Obstacle::update	obstacle.cpp	/^void Obstacle::update(const nav_msgs::Odometry o) $/;"	f	class:Obstacle	signature:(const nav_msgs::Odometry o)
 Obstacle::~Obstacle	obstacle.cpp	/^Obstacle::~Obstacle() {}$/;"	f	class:Obstacle	signature:()
 OptimalRadius	Utilties.cpp	/^reals OptimalRadius (Data& data, CircleFit& circle)$/;"	f	signature:(Data& data, CircleFit& circle)
+PRIOR_COV_A	main_test_bfl.cpp	/^double PRIOR_COV_A = 0.0001;$/;"	v
+PRIOR_COV_AX	main.cpp	/^double PRIOR_COV_AX = 0.0001;$/;"	v
+PRIOR_COV_AY	main.cpp	/^double PRIOR_COV_AY = 0.0001;$/;"	v
+PRIOR_COV_V	main_test_bfl.cpp	/^double PRIOR_COV_V = 0.0001;$/;"	v
+PRIOR_COV_VX	main.cpp	/^double PRIOR_COV_VX = 0.0001;$/;"	v
+PRIOR_COV_VY	main.cpp	/^double PRIOR_COV_VY = 0.0001;$/;"	v
+PRIOR_COV_X	main.cpp	/^double PRIOR_COV_X = 0.1;$/;"	v
+PRIOR_COV_X	main_test_bfl.cpp	/^double PRIOR_COV_X = 0.0001;$/;"	v
+PRIOR_COV_Y	main.cpp	/^double PRIOR_COV_Y = 0.1;$/;"	v
+PRIOR_MU_A	main_test_bfl.cpp	/^double PRIOR_MU_A = 0.0;$/;"	v
+PRIOR_MU_AX	main.cpp	/^double PRIOR_MU_AX = 0;$/;"	v
+PRIOR_MU_AY	main.cpp	/^double PRIOR_MU_AY = 0;$/;"	v
+PRIOR_MU_V	main_test_bfl.cpp	/^double PRIOR_MU_V = 0.0;$/;"	v
+PRIOR_MU_VX	main.cpp	/^double PRIOR_MU_VX = 0;$/;"	v
+PRIOR_MU_VY	main.cpp	/^double PRIOR_MU_VY = 0;$/;"	v
+PRIOR_MU_X	main.cpp	/^double PRIOR_MU_X = 328;$/;"	v
+PRIOR_MU_X	main_test_bfl.cpp	/^double PRIOR_MU_X = 1.5;$/;"	v
+PRIOR_MU_Y	main.cpp	/^double PRIOR_MU_Y = 211;$/;"	v
 R	circle_packer.cpp	/^  double R = d_mid_i > d_mid_ii ? d_mid_i+a.radius : d_mid_ii+b.radius;$/;"	l
 RandomNormalPair	Utilties.cpp	/^void RandomNormalPair( reals& x, reals& y )$/;"	f	signature:( reals& x, reals& y )
+SIGMA_MEAS_NOISE	main.cpp	/^double SIGMA_MEAS_NOISE = 0.25;$/;"	v
+SIGMA_MEAS_NOISE	main_test_bfl.cpp	/^double SIGMA_MEAS_NOISE = 0.0001;$/;"	v
+SIGMA_SYSTEM_NOISE_A	main_test_bfl.cpp	/^double SIGMA_SYSTEM_NOISE_A = 0.0001;$/;"	v
+SIGMA_SYSTEM_NOISE_V	main_test_bfl.cpp	/^double SIGMA_SYSTEM_NOISE_V = 0.0001;$/;"	v
+SIGMA_SYSTEM_NOISE_X	main.cpp	/^double SIGMA_SYSTEM_NOISE_X = 0.001;$/;"	v
+SIGMA_SYSTEM_NOISE_X	main_test_bfl.cpp	/^double SIGMA_SYSTEM_NOISE_X = 0.0001;$/;"	v
+SIGMA_SYSTEM_NOISE_Y	main.cpp	/^double SIGMA_SYSTEM_NOISE_Y = 0.001;$/;"	v
 SOURCE_EXTENSIONS	.ycm_extra_conf.py	/^SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.m', '.mm' ]$/;"	v
+STATE_SIZE	main.cpp	/^int STATE_SIZE=4;$/;"	v
+STATE_SIZE	main_test_bfl.cpp	/^const int STATE_SIZE=3;$/;"	v
 Sigma	Utilties.cpp	/^reals Sigma (Data& data, CircleFit& circle)$/;"	f	signature:(Data& data, CircleFit& circle)
 SigmaReduced	Utilties.cpp	/^reals SigmaReduced (Data& data, CircleFit& circle)$/;"	f	signature:(Data& data, CircleFit& circle)
 SigmaReducedForCenteredScaled	Utilties.cpp	/^reals SigmaReducedForCenteredScaled (Data& data, CircleFit& circle)$/;"	f	signature:(Data& data, CircleFit& circle)
 SigmaReducedNearLinearCase	Utilties.cpp	/^reals SigmaReducedNearLinearCase (Data& data, CircleFit& circle)$/;"	f	signature:(Data& data, CircleFit& circle)
 SimulateArc	Utilties.cpp	/^void SimulateArc(Data& data, reals a, reals b, reals R, reals theta1, reals theta2, reals sigma)$/;"	f	signature:(Data& data, reals a, reals b, reals R, reals theta1, reals theta2, reals sigma)
 SimulateRandom	Utilties.cpp	/^void SimulateRandom(Data& data, reals Window)$/;"	f	signature:(Data& data, reals Window)
+StampedTransform	main_laser_frame.cpp	/^  br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "base_link", "laser"));$/;"	p	file:	signature:(transform, ros::Time::now(), Ó, Ó)
 UTILITIES_CPP	Utilties.cpp	2;"	d	file:
+Update	main.cpp	/^  ekf->Update(sys_model, u);$/;"	p	file:	signature:(sys_model, u)
 Utility	utility.cpp	/^Utility::Utility() {$/;"	f	class:Utility	signature:()
 Utility::Utility	utility.cpp	/^Utility::Utility() {$/;"	f	class:Utility	signature:()
 Utility::displaceAngle	utility.cpp	/^const double Utility::displaceAngle(const double a1, double a2) const {$/;"	f	class:Utility	signature:(const double a1, double a2) const
@@ -104,41 +155,64 @@ Utility::positionDistance	utility.cpp	/^const double Utility::positionDistance(c
 Utility::positionDistance	utility.cpp	/^const double Utility::positionDistance(const std::vector<double> a, const std::vector<double> b) const $/;"	f	class:Utility	signature:(const std::vector<double> a, const std::vector<double> b) const
 Utility::toString	utility.cpp	/^const std::string Utility::toString(const ramp_msgs::Path path) const {$/;"	f	class:Utility	signature:(const ramp_msgs::Path path) const
 Vector3	main.cpp	/^      temp.setOrigin( tf::Vector3(conf.at(0), conf.at(1), 0));$/;"	p	file:	signature:(conf.at(0), conf.at(1), 0)
+Velocity	main.cpp	/^struct Velocity$/;"	s	file:
+Velocity::vx	main.cpp	/^  double vx, vy;$/;"	m	struct:Velocity	file:	access:public
+Velocity::vy	main.cpp	/^  double vx, vy;$/;"	m	struct:Velocity	file:	access:public
 W	Utilties.cpp	/^  reals a0,b0,del,s,c,x,y,z,p,t,g,W,Z;$/;"	l
 Y	data.cpp	/^  for (int i=0; i<n-1; i++) std::cout << std::setprecision(7) << "(" << X[i] << ","<< Y[i] << "), ";$/;"	l
 Y	data.cpp	/^  std::cout << "(" << X[n-1] << ","<< Y[n-1] << ")\\n";$/;"	l
 Z	Utilties.cpp	/^  reals a0,b0,del,s,c,x,y,z,p,t,g,W,Z;$/;"	l
 a	utility.cpp	/^  std::vector<double> a, b;$/;"	l
 a0	Utilties.cpp	/^  reals a0,b0,del,s,c,x,y,z,p,t,g,W,Z;$/;"	l
+a00	blob_detector.cpp	/^  double a00 = 0, a10 = 0, a01 = 0, a20 = 0, a11 = 0, a02 = 0, a30 = 0, a21 = 0, a12 = 0, a03 = 0;$/;"	l
+a01	blob_detector.cpp	/^  double a00 = 0, a10 = 0, a01 = 0, a20 = 0, a11 = 0, a02 = 0, a30 = 0, a21 = 0, a12 = 0, a03 = 0;$/;"	l
+a02	blob_detector.cpp	/^  double a00 = 0, a10 = 0, a01 = 0, a20 = 0, a11 = 0, a02 = 0, a30 = 0, a21 = 0, a12 = 0, a03 = 0;$/;"	l
+a03	blob_detector.cpp	/^  double a00 = 0, a10 = 0, a01 = 0, a20 = 0, a11 = 0, a02 = 0, a30 = 0, a21 = 0, a12 = 0, a03 = 0;$/;"	l
+a10	blob_detector.cpp	/^  double a00 = 0, a10 = 0, a01 = 0, a20 = 0, a11 = 0, a02 = 0, a30 = 0, a21 = 0, a12 = 0, a03 = 0;$/;"	l
+a11	blob_detector.cpp	/^  double a00 = 0, a10 = 0, a01 = 0, a20 = 0, a11 = 0, a02 = 0, a30 = 0, a21 = 0, a12 = 0, a03 = 0;$/;"	l
+a12	blob_detector.cpp	/^  double a00 = 0, a10 = 0, a01 = 0, a20 = 0, a11 = 0, a02 = 0, a30 = 0, a21 = 0, a12 = 0, a03 = 0;$/;"	l
+a20	blob_detector.cpp	/^  double a00 = 0, a10 = 0, a01 = 0, a20 = 0, a11 = 0, a02 = 0, a30 = 0, a21 = 0, a12 = 0, a03 = 0;$/;"	l
+a21	blob_detector.cpp	/^  double a00 = 0, a10 = 0, a01 = 0, a20 = 0, a11 = 0, a02 = 0, a30 = 0, a21 = 0, a12 = 0, a03 = 0;$/;"	l
+a30	blob_detector.cpp	/^  double a00 = 0, a10 = 0, a01 = 0, a20 = 0, a11 = 0, a02 = 0, a30 = 0, a21 = 0, a12 = 0, a03 = 0;$/;"	l
 addNorm	main.cpp	/^NormalDist1D addNorm(const NormalDist1D n1, const NormalDist1D n2)$/;"	f	signature:(const NormalDist1D n1, const NormalDist1D n2)
 angular_vs	main.cpp	/^  std::vector<double> angular_vs;$/;"	l
 at	GridMap2D.cpp	/^        m_binaryMap.at<uchar>(i,j) = FREE;$/;"	p	file:	signature:(i,j)
 at	GridMap2D.cpp	/^        m_binaryMap.at<uchar>(i,j) = OCCUPIED;$/;"	p	file:	signature:(i,j)
 at	utility.cpp	/^      result<<", "<<path.points.at(i).motionState.positions.at(k);$/;"	p	file:	signature:(k)
+average	main.cpp	/^  double min=predicted_velocities.at(0), max = min, average=min;$/;"	l
 ax	circle_packer.cpp	/^    double ax = v0.x - v1.x;$/;"	l
 ay	circle_packer.cpp	/^    double ay = -( v0.y - v1.y );$/;"	l
 b	utility.cpp	/^  std::vector<double> a, b;$/;"	l
 b0	Utilties.cpp	/^  reals a0,b0,del,s,c,x,y,z,p,t,g,W,Z;$/;"	l
+binarizedImage	blob_detector.cpp	/^    Mat binarizedImage;$/;"	l
 binaryMapAt	GridMap2D.cpp	/^uchar GridMap2D::binaryMapAt(double wx, double wy) const{$/;"	f	class:gridmap_2d::GridMap2D	signature:(double wx, double wy) const
 binaryMapAtCell	GridMap2D.cpp	/^uchar GridMap2D::binaryMapAtCell(unsigned int mx, unsigned int my) const{$/;"	f	class:gridmap_2d::GridMap2D	signature:(unsigned int mx, unsigned int my) const
 binaryMapAtCell	GridMap2D.cpp	/^uchar& GridMap2D::binaryMapAtCell(unsigned int mx, unsigned int my){$/;"	f	class:gridmap_2d::GridMap2D	signature:(unsigned int mx, unsigned int my)
+blobs_detector	circle_packer.cpp	/^  cv::Ptr<cv::SimpleBlobDetector> blobs_detector = cv::SimpleBlobDetector::create(params);   $/;"	l
+br	main_laser_frame.cpp	/^  static tf::TransformBroadcaster br;$/;"	l	file:
+buildMoment_contour	blob_detector.cpp	/^Moments BlobDetector::buildMoment_contour(Mat contour)$/;"	f	class:BlobDetector	signature:(Mat contour)
 bx	circle_packer.cpp	/^    double bx = v2.x - v1.x;$/;"	l
 by	circle_packer.cpp	/^    double by = -( v2.y - v1.y );$/;"	l
 by	circle_packer.cpp	/^    std::cout<<"\\nax: "<<ax<<" ay: "<<ay<<" bx: "<<bx<<" by: "<<by;$/;"	l
 c	Utilties.cpp	/^  reals a0,b0,del,s,c,x,y,z,p,t,g,W,Z;$/;"	l
+c	blob_detector.cpp	/^    Mat c = Mat(contours[contourIdx]);$/;"	l
 c	circle_packer.cpp	/^      Cell c = updated_pq.top();$/;"	l
 c	main.cpp	/^  CirclePacker c(grid);$/;"	p	file:	signature:(grid)
-cc	main.cpp	/^      std::vector<double> cc;$/;"	l
 cell	circle_packer.cpp	/^      Cell& cell = reduced_cells[i];$/;"	l
 cellInPoly	circle_packer.cpp	/^bool CirclePacker::cellInPoly(Polygon poly, cv::Point cell)$/;"	f	class:CirclePacker	signature:(Polygon poly, cv::Point cell)
 cells	circle_packer.cpp	/^  std::vector<Cell> cells;$/;"	l
+center	blob_detector.cpp	/^    Center center;$/;"	l
 center	data.cpp	/^void Data::center(void)$/;"	f	class:Data	signature:(void)
 center	main.cpp	/^  std::vector<double> center;$/;"	l
+centers	blob_detector.cpp	/^  std::vector < std::vector<Center> > centers;$/;"	l
 ci	circle_packer.cpp	/^    Circle ci = cs[i];$/;"	l
 cir_prev_cen_index	main.cpp	/^  std::vector<int> cir_prev_cen_index;$/;"	l
+circle_ekf	main.cpp	/^CircleFilter* circle_ekf = 0;$/;"	v
 cirs	main.cpp	/^  std::vector<Circle> cirs = c.go();$/;"	l
 cirs_from_sets	circle_packer.cpp	/^  std::vector<Circle> cirs_from_sets = getCirclesFromEdgeSets(edge_sets);$/;"	l
 cj	circle_packer.cpp	/^      Circle cj = cs[j];$/;"	l
+clear	blob_detector.cpp	/^  centers.clear();$/;"	p	file:	signature:()
+clear	blob_detector.cpp	/^  keypoints.clear();$/;"	p	file:	signature:()
 clear	circle_packer.cpp	/^      reduced_cells.clear();$/;"	p	file:	signature:()
 clear	main.cpp	/^  obs.clear();$/;"	p	file:	signature:()
 clear	obstacle.cpp	/^  ms.accelerations.clear();$/;"	p	file:	signature:()
@@ -151,17 +225,29 @@ combineTwoCircles	circle_packer.cpp	/^void CirclePacker::combineTwoCircles(const
 compilation_database_folder	.ycm_extra_conf.py	/^compilation_database_folder = ''$/;"	v
 computeNormal	circle_packer.cpp	/^Normal CirclePacker::computeNormal(Edge e)$/;"	f	class:CirclePacker	signature:(Edge e)
 conf	main.cpp	/^      std::vector<double> conf;$/;"	l
+consolidateCostmaps	main.cpp	/^void consolidateCostmaps(const nav_msgs::OccupancyGrid g1, const nav_msgs::OccupancyGrid g2, nav_msgs::OccupancyGrid& result)$/;"	f	signature:(const nav_msgs::OccupancyGrid g1, const nav_msgs::OccupancyGrid g2, nav_msgs::OccupancyGrid& result)
+consolidateCostmaps	main.cpp	/^void consolidateCostmaps(const nav_msgs::OccupancyGrid gi, const std::vector<nav_msgs::OccupancyGrid> prev_grids, nav_msgs::OccupancyGrid& result)$/;"	f	signature:(const nav_msgs::OccupancyGrid gi, const std::vector<nav_msgs::OccupancyGrid> prev_grids, nav_msgs::OccupancyGrid& result)
+contours	blob_detector.cpp	/^  std::vector< std::vector<Point> > contours;$/;"	l
+convertOGtoMat	blob_detector.cpp	/^void BlobDetector::convertOGtoMat(nav_msgs::OccupancyGridConstPtr g)$/;"	f	class:BlobDetector	signature:(nav_msgs::OccupancyGridConstPtr g)
 convertOGtoMat	circle_packer.cpp	/^void CirclePacker::convertOGtoMat(nav_msgs::OccupancyGridConstPtr g)$/;"	f	class:CirclePacker	signature:(nav_msgs::OccupancyGridConstPtr g)
 convertObsToMarkers	main.cpp	/^std::vector<visualization_msgs::Marker> convertObsToMarkers()$/;"	f	signature:()
 copyTo	circle_packer.cpp	/^  src.copyTo( dst, detected_edges);$/;"	p	file:	signature:( dst, detected_edges)
 costmapCb	main.cpp	/^void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)$/;"	f	signature:(const nav_msgs::OccupancyGridConstPtr grid)
+count	main.cpp	/^  int count=0;$/;"	l
 count	main.cpp	/^int count;$/;"	v
 cout	main.cpp	/^  std::cout<<"\\nExiting Normally\\n";$/;"	m	class:std	file:
 cout	main.cpp	/^  std::cout<<"\\nSpinning\\n";$/;"	m	class:std	file:
+cout	main.cpp	/^  std::cout<<"\\nWaiting for requests...\\n";$/;"	m	class:std	file:
 cout	main_alone.cpp	/^  std::cout<<"\\nExiting Normally\\n";$/;"	m	class:std	file:
 cout	main_alone.cpp	/^  std::cout<<"\\nSpinning\\n";$/;"	m	class:std	file:
+cout	main_test_bfl.cpp	/^  std::cout<<"\\nExiting Normally\\n";$/;"	m	class:std	file:
+cout	main_test_bfl.cpp	/^  std::cout<<"\\nSpinning\\n";$/;"	m	class:std	file:
+cout	main_test_bfl.cpp	/^  std::cout<<"\\nWaiting for requests...\\n";$/;"	m	class:std	file:
+cov	main.cpp	/^  MatrixWrapper::SymmetricMatrix cov = posterior->CovarianceGet();$/;"	l
+cov	main_test_bfl.cpp	/^  MatrixWrapper::SymmetricMatrix cov = posterior->CovarianceGet();$/;"	l
 create	circle_packer.cpp	/^  dst.create( src.size(), src.type() );$/;"	p	file:	signature:( src.size(), src.type() )
 createQuaternionFromYaw	main.cpp	/^      temp.setRotation(tf::createQuaternionFromYaw(conf.at(2)));$/;"	p	file:	signature:(conf.at(2))
+curCenters	blob_detector.cpp	/^    std::vector<Center> curCenters;$/;"	l
 cv::Canny	circle_packer.cpp	/^  cv::Canny( detected_edges, detected_edges, lowThreshold, lowThreshold*ratio, kernel_size );$/;"	p	class:cv	file:	signature:( detected_edges, detected_edges, lowThreshold, lowThreshold*ratio, kernel_size )
 cv::findContours	circle_packer.cpp	/^  cv::findContours(detected_edges, detected_contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);$/;"	p	class:cv	file:	signature:(detected_edges, detected_contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE)
 d	circle_packer.cpp	/^      double d = utility_.positionDistance(ci.center.x, ci.center.y, cj.center.x, cj.center.y);$/;"	l
@@ -170,33 +256,47 @@ d	circle_packer.cpp	/^    double d = poly.normals[i].a*cell.x + poly.normals[i].
 d_elapsed	main.cpp	/^  ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;$/;"	l
 d_mid_i	circle_packer.cpp	/^  double d_mid_i = utility_.positionDistance(midpoint[0], midpoint[1], a.center.x, a.center.y);$/;"	l
 d_mid_ii	circle_packer.cpp	/^  double d_mid_ii = utility_.positionDistance(midpoint[0], midpoint[1], b.center.x, b.center.y);$/;"	l
+d_prev	main.cpp	/^        ros::Duration d_prev = ros::Time::now() - prev_times[i];$/;"	l
 d_x	utility.cpp	/^  double d_x = b.at(0) - a.at(0);$/;"	l
 d_y	utility.cpp	/^  double d_y = b.at(1) - a.at(1);$/;"	l
 database	.ycm_extra_conf.py	/^  database = None$/;"	v
 database	.ycm_extra_conf.py	/^  database = ycm_core.CompilationDatabase( compilation_database_folder )$/;"	v
+db1_12	blob_detector.cpp	/^      double db1_2, db1_6, db1_12, db1_24, db1_20, db1_60;$/;"	l
+db1_2	blob_detector.cpp	/^      double db1_2, db1_6, db1_12, db1_24, db1_20, db1_60;$/;"	l
+db1_20	blob_detector.cpp	/^      double db1_2, db1_6, db1_12, db1_24, db1_20, db1_60;$/;"	l
+db1_24	blob_detector.cpp	/^      double db1_2, db1_6, db1_12, db1_24, db1_20, db1_60;$/;"	l
+db1_6	blob_detector.cpp	/^      double db1_2, db1_6, db1_12, db1_24, db1_20, db1_60;$/;"	l
+db1_60	blob_detector.cpp	/^      double db1_2, db1_6, db1_12, db1_24, db1_20, db1_60;$/;"	l
 default_flags	.ycm_extra_conf.py	/^default_flags = [$/;"	v
 del	Utilties.cpp	/^  reals a0,b0,del,s,c,x,y,z,p,t,g,W,Z;$/;"	l
 deleteCellsInCir	circle_packer.cpp	/^void CirclePacker::deleteCellsInCir(const std::vector<Cell>& cells, const Circle cir, std::vector<Cell>& result)$/;"	f	class:CirclePacker	signature:(const std::vector<Cell>& cells, const Circle cir, std::vector<Cell>& result)
 delimiter	main.cpp	/^    std::string delimiter = ",";$/;"	l
 delta_x	circle_packer.cpp	/^    double delta_x = temp.radius*cos(psi);$/;"	l
 delta_y	circle_packer.cpp	/^    double delta_y = temp.radius*sin(psi);$/;"	l
+detect	blob_detector.cpp	/^void BlobDetector::detect(std::vector<KeyPoint>& keypoints)$/;"	f	class:BlobDetector	signature:(std::vector<KeyPoint>& keypoints)
+detect	circle_packer.cpp	/^  blobs_detector->detect(src, keypoints);$/;"	p	file:	signature:(src, keypoints)
 detected_contours	circle_packer.cpp	/^  std::vector< std::vector<cv::Point> > detected_contours;$/;"	l
-dfGet	nonlinearanalyticconditionalgaussian.cpp	/^  Matrix NonLinearAnalyticConditionalGaussianOdo::dfGet(unsigned int i) const$/;"	f	class:BFL::NonLinearAnalyticConditionalGaussianOdo	signature:(unsigned int i) const
+dfGet	nonlinearanalyticconditionalgaussian.cpp	/^Matrix NonLinearAnalyticConditionalGaussianMobile::dfGet(unsigned int i) const$/;"	f	class:BFL::NonLinearAnalyticConditionalGaussianMobile	signature:(unsigned int i) const
 diff	main.cpp	/^    double diff = pow(points[i] - mean,2);$/;"	l
 difference	utility.cpp	/^  double difference = a2 - a1;$/;"	l
 displaceAngle	utility.cpp	/^const double Utility::displaceAngle(const double a1, double a2) const {$/;"	f	class:Utility	signature:(const double a1, double a2) const
 dist	circle_packer.cpp	/^    double dist = sqrt( pow( cell.p.x - cirs[i].center.x, 2) + pow( cell.p.y - cirs[i].center.y, 2) );$/;"	l
 dist	circle_packer.cpp	/^    double dist = sqrt( pow(edges[i].end.x - edges[i].start.x, 2) + pow(edges[i].end.y - edges[i].start.y, 2) );$/;"	l
+dist	circle_packer.cpp	/^    double dist = utility_.positionDistance(pixels[i].x, pixels[i].y, center.x, center.y);$/;"	l
+dist	main.cpp	/^        double dist = util.positionDistance(prev_valid_cirs[index].center.x, prev_valid_cirs[index].center.y, cirs[i].center.x, cirs[i].center.y);$/;"	l
 dist	main.cpp	/^    double dist = util.positionDistance(center, prev_center);$/;"	l
+dist	main.cpp	/^  double dist = util.positionDistance(cir_i.center.x, cir_i.center.y, cir_prev.center.x, cir_prev.center.y);$/;"	l
 distanceMapAt	GridMap2D.cpp	/^float GridMap2D::distanceMapAt(double wx, double wy) const{$/;"	f	class:gridmap_2d::GridMap2D	signature:(double wx, double wy) const
 distanceMapAtCell	GridMap2D.cpp	/^float GridMap2D::distanceMapAtCell(unsigned int mx, unsigned int my) const{$/;"	f	class:gridmap_2d::GridMap2D	signature:(unsigned int mx, unsigned int my) const
 distanceTransform	GridMap2D.cpp	/^  cv::distanceTransform(m_binaryMap, m_distMap, CV_DIST_L2, CV_DIST_MASK_PRECISE);$/;"	p	class:gridmap_2d::cv	file:	signature:(m_binaryMap, m_distMap, CV_DIST_L2, CV_DIST_MASK_PRECISE)
+dists	blob_detector.cpp	/^    std::vector<double> dists;$/;"	l
 doTF	obstacle.cpp	/^void Obstacle::doTF()$/;"	f	class:Obstacle	signature:()
 dx	Utilties.cpp	/^    reals Mr=0.,dx,dy;$/;"	l
 dx	Utilties.cpp	/^    reals sum=0.,dx,dy,r,D[n];$/;"	l
 dx	Utilties.cpp	/^    reals sum=0.,dx,dy,r;$/;"	l
 dx	Utilties.cpp	/^    reals sum=0.,dx,dy;$/;"	l
 dx	Utilties.cpp	/^  int N=data.n; reals theta,dx,dy;$/;"	l
+dxy	blob_detector.cpp	/^  double xi, yi, xi2, yi2, xi_1, yi_1, xi_12, yi_12, dxy, xii_1, yii_1;$/;"	l
 dy	Utilties.cpp	/^    reals Mr=0.,dx,dy;$/;"	l
 dy	Utilties.cpp	/^    reals sum=0.,dx,dy,r,D[n];$/;"	l
 dy	Utilties.cpp	/^    reals sum=0.,dx,dy,r;$/;"	l
@@ -205,17 +305,23 @@ dy	Utilties.cpp	/^  int N=data.n; reals theta,dx,dy;$/;"	l
 edge_mid	circle_packer.cpp	/^    std::vector<double> edge_mid;$/;"	l
 edge_sets	circle_packer.cpp	/^  std::vector< std::vector<Edge> > edge_sets;$/;"	l
 edges	circle_packer.cpp	/^  std::vector<Edge> edges;$/;"	l
+ekf	main.cpp	/^BFL::ExtendedKalmanFilter* ekf = 0;$/;"	v
+ekf	main_test_bfl.cpp	/^BFL::ExtendedKalmanFilter* ekf = 0;$/;"	v
 endl	circle.cpp	/^     << r << "  sigma " << s << "  gradient " << g << "  iter "<< i << "  inner " << j << std::endl;$/;"	m	class:std	file:
 endl	circle.cpp	/^  std::cout << std::endl;$/;"	m	class:std	file:
 endl	data.cpp	/^  std::cout << std::endl << "The data set has " << n << " points with coordinates :"<< std::endl;$/;"	m	class:std	file:
 erase	circle_packer.cpp	/^        cs.erase(cs.begin()+j, cs.begin()+j+1);$/;"	p	file:	signature:(cs.begin()+j, cs.begin()+j+1)
 euc_dist	utility.cpp	/^  double euc_dist = sqrt( pow(d_x,2) + pow(d_y,2) );$/;"	l
 findAngleFromAToB	utility.cpp	/^const double Utility::findAngleFromAToB(const std::vector<double> a, const std::vector<double> b) const $/;"	f	class:Utility	signature:(const std::vector<double> a, const std::vector<double> b) const
+findBlobs	blob_detector.cpp	/^void BlobDetector::findBlobs(std::vector<Center>& centers)$/;"	f	class:BlobDetector	signature:(std::vector<Center>& centers)
+findCenterOfPixels	circle_packer.cpp	/^Point CirclePacker::findCenterOfPixels(const std::vector<cv::Point> pixels) const$/;"	f	class:CirclePacker	signature:(const std::vector<cv::Point> pixels) const
 findContours	circle_packer.cpp	/^  cv::findContours(detected_edges, detected_contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);$/;"	p	class:cv	file:	signature:(detected_edges, detected_contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE)
 findDistanceBetweenAngles	utility.cpp	/^const double Utility::findDistanceBetweenAngles(const double a1, const double a2) const $/;"	f	class:Utility	signature:(const double a1, const double a2) const
 fitNormal	main.cpp	/^NormalDist1D fitNormal(const std::vector<double> points)$/;"	f	signature:(const std::vector<double> points)
 flags	.ycm_extra_conf.py	/^flags = default_flags + GetRosIncludeFlags()$/;"	v
 g	Utilties.cpp	/^  reals a0,b0,del,s,c,x,y,z,p,t,g,W,Z;$/;"	l
+getCircleFromKeypoint	circle_packer.cpp	/^    result.push_back(getCircleFromKeypoint(keypoints[i]));$/;"	p	file:	signature:(keypoints[i])
+getCircleFromKeypoint	circle_packer.cpp	/^Circle CirclePacker::getCircleFromKeypoint(const cv::KeyPoint k) const$/;"	f	class:CirclePacker	signature:(const cv::KeyPoint k) const
 getCirclesFromEdgeSets	circle_packer.cpp	/^std::vector<Circle> CirclePacker::getCirclesFromEdgeSets(const std::vector< std::vector<Edge> > edge_sets)$/;"	f	class:CirclePacker	signature:(const std::vector< std::vector<Edge> > edge_sets)
 getCirclesFromEdges	circle_packer.cpp	/^std::vector<Circle> CirclePacker::getCirclesFromEdges(const std::vector<Edge> edges, const cv::Point robot_cen)$/;"	f	class:CirclePacker	signature:(const std::vector<Edge> edges, const cv::Point robot_cen)
 getCirclesFromPoly	circle_packer.cpp	/^std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)$/;"	f	class:CirclePacker	signature:(Polygon poly)
@@ -224,9 +330,12 @@ getMedian	circle_packer.cpp	/^double CirclePacker::getMedian(const std::vector<d
 getMinDistToCirs	circle_packer.cpp	/^double CirclePacker::getMinDistToCirs(const std::vector<Circle>& cirs, const Cell& cell)$/;"	f	class:CirclePacker	signature:(const std::vector<Circle>& cirs, const Cell& cell)
 getMinDistToPoly	circle_packer.cpp	/^double CirclePacker::getMinDistToPoly(const Polygon& poly, const Cell& cell)$/;"	f	class:CirclePacker	signature:(const Polygon& poly, const Cell& cell)
 getSamples	main.cpp	/^std::vector<double> getSamples(const std::vector<double> vels, const int N)$/;"	f	signature:(const std::vector<double> vels, const int N)
+getWeights	circle_packer.cpp	/^std::vector<double> CirclePacker::getWeights(const std::vector<cv::Point> pixels, const Point center) const$/;"	f	class:CirclePacker	signature:(const std::vector<cv::Point> pixels, const Point center) const
 global_grid	main.cpp	/^nav_msgs::OccupancyGrid global_grid;$/;"	v
+gmap	blob_detector.cpp	/^  gridmap_2d::GridMap2D gmap(g, false);$/;"	p	file:	signature:(g, false)
 gmap	circle_packer.cpp	/^  gridmap_2d::GridMap2D gmap(g, false);$/;"	p	file:	signature:(g, false)
 go	circle_packer.cpp	/^std::vector<Circle> CirclePacker::go()$/;"	f	class:CirclePacker	signature:()
+grayscaleImage	blob_detector.cpp	/^  Mat grayscaleImage;$/;"	l
 grid_resolution	main.cpp	/^  double grid_resolution = grid->info.resolution; $/;"	l
 gridmap_2d	GridMap2D.cpp	/^namespace gridmap_2d{$/;"	n	file:
 gridmap_2d::GridMap2D::GridMap2D	GridMap2D.cpp	/^GridMap2D::GridMap2D()$/;"	f	class:gridmap_2d::GridMap2D	signature:()
@@ -261,11 +370,13 @@ gridmap_2d::my	GridMap2D.cpp	/^  unsigned mx, my;$/;"	l
 gridmap_2d::resize	GridMap2D.cpp	/^  msg.data.resize(msg.info.height*msg.info.width);$/;"	p	file:	signature:(msg.info.height*msg.info.width)
 handle	main.cpp	/^  ros::NodeHandle handle;$/;"	l
 handle	main_alone.cpp	/^  ros::NodeHandle handle;$/;"	l
+handle	main_laser_frame.cpp	/^  ros::NodeHandle handle;$/;"	l
+handle	main_test_bfl.cpp	/^  ros::NodeHandle handle;$/;"	l
 hierarchy	circle_packer.cpp	/^  std::vector<cv::Vec4i> hierarchy;$/;"	l
 i	Utilties.cpp	/^    int i,n=data.n;$/;"	l
 i	circle_packer.cpp	/^  int i=0,j=0;$/;"	l
 i	data.cpp	/^  int i;$/;"	l
-i	nonlinearanalyticconditionalgaussian.cpp	/^    cerr << "The df is not implemented for the" <<i << "th conditional argument\\n";$/;"	l
+i	nonlinearanalyticconditionalgaussian.cpp	/^      cerr << "The df is not implemented for the" <<i << "th conditional argument\\n";$/;"	l
 i	utility.cpp	/^    result<<"\\n  "<<i<<": (";$/;"	l
 i_reflex	circle_packer.cpp	/^  std::vector<int> i_reflex;$/;"	l
 inMapBounds	GridMap2D.cpp	/^bool GridMap2D::inMapBounds(double wx, double wy) const{$/;"	f	class:gridmap_2d::GridMap2D	signature:(double wx, double wy) const
@@ -277,48 +388,91 @@ inflate	circle_packer.cpp	/^    double inflate = 7.5;$/;"	l
 inflateMap	GridMap2D.cpp	/^void GridMap2D::inflateMap(double inflationRadius){$/;"	f	class:gridmap_2d::GridMap2D	signature:(double inflationRadius)
 init	main.cpp	/^  ros::init(argc, argv, "ramp_sensing");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 init	main_alone.cpp	/^  ros::init(argc, argv, "ramp_sensing");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
+init	main_laser_frame.cpp	/^  ros::init(argc, argv, "my_tf_broadcaster");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
+init	main_test_bfl.cpp	/^  ros::init(argc, argv, "test_bfl");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 init_bel	main.cpp	/^NormalDist1D init_bel;$/;"	v
+init_ekf	main.cpp	/^void init_ekf()$/;"	f	signature:()
+init_ekf	main_test_bfl.cpp	/^void init_ekf()$/;"	f	signature:()
+init_linear_system_model	main.cpp	/^void init_linear_system_model()$/;"	f	signature:()
+init_measurement_model	main.cpp	/^void init_measurement_model()$/;"	f	signature:()
+init_measurement_model	main_test_bfl.cpp	/^void init_measurement_model()$/;"	f	signature:()
+init_nonlinear_system_model	main.cpp	/^void init_nonlinear_system_model()$/;"	f	signature:()
+init_nonlinear_system_model	main_test_bfl.cpp	/^void init_nonlinear_system_model()$/;"	f	signature:()
+init_prior_model	main.cpp	/^void init_prior_model()$/;"	f	signature:()
+init_prior_model	main_test_bfl.cpp	/^void init_prior_model()$/;"	f	signature:()
 isOccupiedAt	GridMap2D.cpp	/^bool GridMap2D::isOccupiedAt(double wx, double wy) const{$/;"	f	class:gridmap_2d::GridMap2D	signature:(double wx, double wy) const
 isOccupiedAtCell	GridMap2D.cpp	/^bool GridMap2D::isOccupiedAtCell(unsigned int mx, unsigned int my) const{$/;"	f	class:gridmap_2d::GridMap2D	signature:(unsigned int mx, unsigned int my) const
+is_float	blob_detector.cpp	/^  int is_float = contour.depth() == CV_32F;$/;"	l
 j	circle_packer.cpp	/^  int i=0,j=0;$/;"	l
+jump	main.cpp	/^bool jump(const Circle cir_i, const Circle cir_prev, double threshold)$/;"	f	signature:(const Circle cir_i, const Circle cir_prev, double threshold)
+jump_threshold	main.cpp	/^double jump_threshold = 0.5;$/;"	v
+jump_threshold_inc	main.cpp	/^double jump_threshold_inc = 0.25;$/;"	v
+jump_thresholds	main.cpp	/^std::vector<double> jump_thresholds;$/;"	v
+keypoints	circle_packer.cpp	/^  std::vector<cv::KeyPoint> keypoints;$/;"	l
 l	circle_packer.cpp	/^    double l = sqrt( pow(poly.normals[n].a,2) + pow(poly.normals[n].b,2) );$/;"	l
 length_count	circle_packer.cpp	/^  int length_count = (MAX_LENGTH - MIN_LENGTH) \/ round;$/;"	l
 line	main.cpp	/^    std::string line;$/;"	l
-linear_system_model	main.cpp	/^void linear_system_model()$/;"	f	signature:()
-linear_v	main.cpp	/^      double linear_v = (util.positionDistance(pc, cc) \/ d_elapsed.toSec()) * grid_resolution;$/;"	l
+linear_v	main.cpp	/^        double linear_v = (dist \/ d_prev.toSec()) * grid_resolution;$/;"	l
 linear_vs	main.cpp	/^  std::vector<double> linear_vs;$/;"	l
 list	main.cpp	/^ramp_msgs::ObstacleList list;$/;"	v
 list	main_alone.cpp	/^ramp_msgs::ObstacleList list;$/;"	v
 loadObstacleTF	main.cpp	/^void loadObstacleTF()$/;"	f	signature:()
+lpt	blob_detector.cpp	/^  int lpt = contour.checkVector(2);$/;"	l
+m	blob_detector.cpp	/^  Moments m;$/;"	l
 main	main.cpp	/^int main(int argc, char** argv) $/;"	f	signature:(int argc, char** argv)
 main	main_alone.cpp	/^int main(int argc, char** argv) $/;"	f	signature:(int argc, char** argv)
+main	main_laser_frame.cpp	/^int main(int argc, char** argv){$/;"	f	signature:(int argc, char** argv)
+main	main_test_bfl.cpp	/^int main(int argc, char** argv) $/;"	f	signature:(int argc, char** argv)
+makeFilter	main_test_bfl.cpp	/^BFL::ExtendedKalmanFilter makeFilter(BFL::Gaussian prior)$/;"	f	signature:(BFL::Gaussian prior)
 mapDataIter	GridMap2D.cpp	/^  std::vector<signed char>::const_iterator mapDataIter = grid_map->data.begin();$/;"	l
 mapDataIter	GridMap2D.cpp	/^  std::vector<signed char>::iterator mapDataIter = msg.data.begin();$/;"	l
 mapToWorld	GridMap2D.cpp	/^void GridMap2D::mapToWorld(unsigned int mx, unsigned int my, double& wx, double& wy) const {$/;"	f	class:gridmap_2d::GridMap2D	signature:(unsigned int mx, unsigned int my, double& wx, double& wy) const
 map_occ_thres	GridMap2D.cpp	/^  unsigned char map_occ_thres = 70;$/;"	l
 marker	main.cpp	/^    visualization_msgs::Marker marker;$/;"	l
 markers	main.cpp	/^  std::vector<visualization_msgs::Marker> markers = convertObsToMarkers();$/;"	l
+matches	main.cpp	/^    std::vector<int> matches(cirs.size(), 0);$/;"	p	file:	signature:(cirs.size(), 0)
+max	main.cpp	/^  double min=predicted_velocities.at(0), max = min, average=min;$/;"	l
 max_r	circle_packer.cpp	/^      double max_r = ci.radius > cj.radius ? ci.radius : cj.radius;$/;"	l
+mean	main.cpp	/^    MatrixWrapper::ColumnVector mean = posterior->ExpectedValueGet(); $/;"	l
+mean	main.cpp	/^  MatrixWrapper::ColumnVector mean = posterior->ExpectedValueGet();$/;"	l
 mean	main.cpp	/^  double mean = points[0];$/;"	l
 mean	main.cpp	/^  double mean;$/;"	m	struct:NormalDist1D	file:	access:public
+mean	main_test_bfl.cpp	/^  MatrixWrapper::ColumnVector mean = posterior->ExpectedValueGet();$/;"	l
 mean_result	main.cpp	/^  double mean_result = ( (n1.variance \/ n1.mean) + (n2.variance \/ n2.mean) ) * var_result;$/;"	l
 means	circle_packer.cpp	/^  std::vector<Point> means;$/;"	l
 means	data.cpp	/^void Data::means(void)$/;"	f	class:Data	signature:(void)
-meas_pdf	main.cpp	/^  BFL::LinearAnalyticConditionalGaussian meas_pdf(H, measurement_uncertainty);$/;"	p	file:	signature:(H, measurement_uncertainty)
-measurement_model	main.cpp	/^void measurement_model(Circle temp)$/;"	f	signature:(Circle temp)
+meas_model	main.cpp	/^BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model = 0;$/;"	v
+meas_model	main_test_bfl.cpp	/^BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model = 0;$/;"	v
+meas_noise_cov	main.cpp	/^  MatrixWrapper::SymmetricMatrix meas_noise_cov(STATE_SIZE);$/;"	p	file:	signature:(STATE_SIZE)
+meas_noise_mu	main.cpp	/^  BFL::ColumnVector meas_noise_mu(STATE_SIZE);$/;"	p	file:	signature:(STATE_SIZE)
+meas_pdf	main.cpp	/^BFL::LinearAnalyticConditionalGaussian* meas_pdf = 0;$/;"	v
+meas_pdf	main_test_bfl.cpp	/^BFL::LinearAnalyticConditionalGaussian* meas_pdf = 0;$/;"	v
 measurement_uncertainty	main.cpp	/^  BFL::Gaussian measurement_uncertainty(meas_noise_mu, meas_noise_cov);$/;"	p	file:	signature:(meas_noise_mu, meas_noise_cov)
+measurement_uncertainty	main_test_bfl.cpp	/^  BFL::Gaussian measurement_uncertainty(meas_noise_mu, meas_noise_cov);$/;"	p	file:	signature:(meas_noise_mu, meas_noise_cov)
+measurements	main_test_bfl.cpp	/^  double measurements[] = {1.5, 1.65, 1.32, 1.45, 1.24};$/;"	l
+measurements_vec	main_test_bfl.cpp	/^  std::vector<double> measurements_vec(measurements, measurements + sizeof(measurements) \/ sizeof(measurements[0]));$/;"	p	file:	signature:(measurements, measurements + sizeof(measurements) / sizeof(measurements[0]))
 midpoint	circle_packer.cpp	/^  std::vector<double> vec, midpoint;$/;"	l
+min	main.cpp	/^  double min=predicted_velocities.at(0), max = min, average=min;$/;"	l
 min_cir	circle_packer.cpp	/^      double min_cir=getMinDistToCirs(result,cell);$/;"	l
 min_d	circle_packer.cpp	/^      double min_d=getMinDistToPoly(poly, cell);$/;"	l
 min_index	main.cpp	/^  int min_index = 0;$/;"	l
+moms	blob_detector.cpp	/^    Moments moms = moments(Mat(contours[contourIdx]));$/;"	l
 ms	obstacle.cpp	/^  ramp_msgs::MotionState ms;$/;"	l
 msg	GridMap2D.cpp	/^  nav_msgs::OccupancyGrid msg;$/;"	l
 multiplyNorm	main.cpp	/^NormalDist1D multiplyNorm(const NormalDist1D n1, const NormalDist1D n2)$/;"	f	signature:(const NormalDist1D n1, const NormalDist1D n2)
 mx	GridMap2D.cpp	/^  unsigned mx, my;$/;"	l
 my	GridMap2D.cpp	/^  unsigned mx, my;$/;"	l
 n	Utilties.cpp	/^    int i,n=data.n;$/;"	l
-norm	main.cpp	/^      NormalDist1D norm = fitNormal(points);$/;"	l
+nl_sys_model	main.cpp	/^BFL::AnalyticSystemModelGaussianUncertainty* nl_sys_model = 0;$/;"	v
+nl_sys_model	main_test_bfl.cpp	/^BFL::AnalyticSystemModelGaussianUncertainty* nl_sys_model = 0;$/;"	v
+nl_sys_pdf	main.cpp	/^BFL::NonLinearAnalyticConditionalGaussianMobile* nl_sys_pdf = 0;$/;"	v
+nl_sys_pdf	main_test_bfl.cpp	/^BFL::NonLinearAnalyticConditionalGaussianMobile* nl_sys_pdf = 0;$/;"	v
+norm	blob_detector.cpp	/^        dists.push_back(norm(center.location - pt));$/;"	p	file:	signature:(center.location - pt)
+norm	main.cpp	/^        NormalDist1D norm = fitNormal(points);$/;"	l
+now	main.cpp	/^    prev_times.push_back(ros::Time::now());$/;"	p	file:	signature:()
+num_costmaps	main.cpp	/^int num_costmaps=0;$/;"	v
 o	main.cpp	/^    Obstacle o; $/;"	l
+ob_filters	main.cpp	/^std::vector<CircleFilter*> ob_filters;$/;"	v
 ob_odoms	main.cpp	/^std::vector< std::string > ob_odoms;$/;"	v
 ob_odoms	main_alone.cpp	/^std::vector< std::string > ob_odoms;$/;"	v
 ob_tfs	main.cpp	/^std::vector<tf::Transform> ob_tfs;$/;"	v
@@ -329,25 +483,45 @@ p	Utilties.cpp	/^  reals a0,b0,del,s,c,x,y,z,p,t,g,W,Z;$/;"	l
 p_st	obstacle.cpp	/^  tf::Vector3 p_st(odom_t.pose.pose.position.x, odom_t.pose.pose.position.y, 0); $/;"	p	file:	signature:(odom_t.pose.pose.position.x, odom_t.pose.pose.position.y, 0)
 p_st_tf	obstacle.cpp	/^  tf::Vector3 p_st_tf = T_w_init_ * p_st;$/;"	l
 pairs	circle_packer.cpp	/^  int pairs=0;$/;"	l
-pc	main.cpp	/^      std::vector<double> pc;$/;"	l
+params	circle_packer.cpp	/^  cv::SimpleBlobDetector::Params params;$/;"	l
 phi	circle_packer.cpp	/^    double phi = utility_.displaceAngle(PI, theta);$/;"	l
 phi	obstacle.cpp	/^  double phi    = ms.positions.at(2);$/;"	l
 points	main.cpp	/^  std::vector<double> points; $/;"	l
 pos	main.cpp	/^      size_t pos = 0;$/;"	l
 positionDistance	utility.cpp	/^const double Utility::positionDistance(const double ax, const double ay, const double bx, const double by) const$/;"	f	class:Utility	signature:(const double ax, const double ay, const double bx, const double by) const
 positionDistance	utility.cpp	/^const double Utility::positionDistance(const std::vector<double> a, const std::vector<double> b) const $/;"	f	class:Utility	signature:(const std::vector<double> a, const std::vector<double> b) const
+posterior	main.cpp	/^BFL::Pdf<MatrixWrapper::ColumnVector>* posterior;$/;"	v
+posterior	main_test_bfl.cpp	/^BFL::Pdf<MatrixWrapper::ColumnVector>* posterior;$/;"	v
+predicted_velocities	main.cpp	/^std::vector<double> predicted_velocities;$/;"	v
+prediction	main.cpp	/^void prediction(BFL::SystemModel<MatrixWrapper::ColumnVector>* const sys_model, const MatrixWrapper::ColumnVector& u)$/;"	f	signature:(BFL::SystemModel<MatrixWrapper::ColumnVector>* const sys_model, const MatrixWrapper::ColumnVector& u)
 prev_center	main.cpp	/^    std::vector<double> prev_center;$/;"	l
 prev_cirs	main.cpp	/^std::vector<Circle> prev_cirs;$/;"	v
+prev_grids	main.cpp	/^std::vector<nav_msgs::OccupancyGrid> prev_grids;$/;"	v
 prev_size	main.cpp	/^size_t prev_size;$/;"	v
+prev_times	main.cpp	/^std::vector<ros::Time> prev_times;$/;"	v
+prev_valid_cirs	main.cpp	/^std::vector<Circle> prev_valid_cirs;$/;"	v
 prev_velocities	main.cpp	/^std::vector< std::vector<double> > prev_velocities;$/;"	v
 print	circle.cpp	/^void CircleFit::print(void)$/;"	f	class:CircleFit	signature:(void)
 print	data.cpp	/^void Data::print(void)$/;"	f	class:Data	signature:(void)
-prior	main.cpp	/^  BFL::Gaussian prior(prior_mu, prior_cov);$/;"	p	file:	signature:(prior_mu, prior_cov)
-prior_model	main.cpp	/^void prior_model()$/;"	f	signature:()
+printPosterior	main.cpp	/^void printPosterior()$/;"	f	signature:()
+printPosterior	main_test_bfl.cpp	/^void printPosterior()$/;"	f	signature:()
+prior	main.cpp	/^        BFL::Gaussian* prior = new BFL::Gaussian(prior_mu, prior_cov);$/;"	l
+prior	main.cpp	/^BFL::Gaussian* prior = 0;$/;"	v
+prior	main_test_bfl.cpp	/^BFL::Gaussian* prior = 0;$/;"	v
+prior_cov	main.cpp	/^        MatrixWrapper::SymmetricMatrix prior_cov(STATE_SIZE);$/;"	p	file:	signature:(STATE_SIZE)
+prior_cov	main.cpp	/^  MatrixWrapper::SymmetricMatrix prior_cov(STATE_SIZE);$/;"	p	file:	signature:(STATE_SIZE)
+prior_cov	main_test_bfl.cpp	/^  MatrixWrapper::SymmetricMatrix prior_cov(STATE_SIZE);$/;"	p	file:	signature:(STATE_SIZE)
+prior_mu	main.cpp	/^        BFL::ColumnVector prior_mu(STATE_SIZE);$/;"	p	file:	signature:(STATE_SIZE)
+prior_mu	main.cpp	/^  BFL::ColumnVector prior_mu(STATE_SIZE);$/;"	p	file:	signature:(STATE_SIZE)
+prior_mu	main_test_bfl.cpp	/^  BFL::ColumnVector prior_mu(STATE_SIZE);$/;"	p	file:	signature:(STATE_SIZE)
 psi	circle_packer.cpp	/^    double psi = utility_.displaceAngle(phi, PI);$/;"	l
-pub_obj	main.cpp	/^ros::Publisher pub_obj, pub_rviz;$/;"	v
+pt	blob_detector.cpp	/^        Point2d pt = contours[contourIdx][pointIdx];$/;"	l
+ptsf	blob_detector.cpp	/^  const Point2f* ptsf = contour.ptr<Point2f>();$/;"	l
+ptsi	blob_detector.cpp	/^  const Point* ptsi = contour.ptr<Point>();$/;"	l
+pub_cons_costmap	main.cpp	/^ros::Publisher pub_obj, pub_rviz, pub_cons_costmap;$/;"	v
+pub_obj	main.cpp	/^ros::Publisher pub_obj, pub_rviz, pub_cons_costmap;$/;"	v
 pub_obj	main_alone.cpp	/^ros::Publisher pub_obj;$/;"	v
-pub_rviz	main.cpp	/^ros::Publisher pub_obj, pub_rviz;$/;"	v
+pub_rviz	main.cpp	/^ros::Publisher pub_obj, pub_rviz, pub_cons_costmap;$/;"	v
 publish	main.cpp	/^  pub_obj.publish(list);$/;"	p	file:	signature:(list)
 publish	main.cpp	/^  pub_rviz.publish(result);$/;"	p	file:	signature:(result)
 publish	main_alone.cpp	/^  pub_obj.publish(list);$/;"	p	file:	signature:(list)
@@ -355,6 +529,7 @@ publishList	main.cpp	/^void publishList(const ros::TimerEvent& e) $/;"	f	signatu
 publishList	main_alone.cpp	/^void publishList(const ros::TimerEvent& e) $/;"	f	signature:(const ros::TimerEvent& e)
 publishMarkers	main.cpp	/^void publishMarkers(const ros::TimerEvent& e)$/;"	f	signature:(const ros::TimerEvent& e)
 push	circle_packer.cpp	/^      updated_pq.push(cell);$/;"	p	file:	signature:(cell)
+push_back	blob_detector.cpp	/^    centers.push_back(center);$/;"	p	file:	signature:(center)
 push_back	circle_packer.cpp	/^        cells.push_back(temp);$/;"	p	file:	signature:(temp)
 push_back	circle_packer.cpp	/^        result.push_back(temp);$/;"	p	file:	signature:(temp)
 push_back	circle_packer.cpp	/^      edges.push_back(temp);$/;"	p	file:	signature:(temp)
@@ -371,6 +546,7 @@ push_back	circle_packer.cpp	/^    r.push_back(poly.edges[n].start.x - cell.p.x);
 push_back	circle_packer.cpp	/^    r.push_back(poly.edges[n].start.y - cell.p.y);$/;"	p	file:	signature:(poly.edges[n].start.y - cell.p.y)
 push_back	circle_packer.cpp	/^    result.push_back(cirs_from_sets[i]);$/;"	p	file:	signature:(cirs_from_sets[i])
 push_back	circle_packer.cpp	/^    result.push_back(temp);$/;"	p	file:	signature:(temp)
+push_back	circle_packer.cpp	/^    result.push_back(weight * dist); $/;"	p	file:	signature:(weight * dist)
 push_back	circle_packer.cpp	/^    rob_cen.push_back(robot_cen.x); $/;"	p	file:	signature:(robot_cen.x)
 push_back	circle_packer.cpp	/^    rob_cen.push_back(robot_cen.y);$/;"	p	file:	signature:(robot_cen.y)
 push_back	circle_packer.cpp	/^    set.push_back(temp);$/;"	p	file:	signature:(temp)
@@ -380,23 +556,24 @@ push_back	circle_packer.cpp	/^  midpoint.push_back( a.center.x + (0.5*vec[0]) );
 push_back	circle_packer.cpp	/^  midpoint.push_back( a.center.y + (0.5*vec[1]) ); $/;"	p	file:	signature:( a.center.y + (0.5*vec[1]) )
 push_back	circle_packer.cpp	/^  vec.push_back( b.center.x - a.center.x );$/;"	p	file:	signature:( b.center.x - a.center.x )
 push_back	circle_packer.cpp	/^  vec.push_back( b.center.y - a.center.y );$/;"	p	file:	signature:( b.center.y - a.center.y )
-push_back	main.cpp	/^        points.push_back(prev_velocities[j][i]);$/;"	p	file:	signature:(prev_velocities[j][i])
-push_back	main.cpp	/^      cc.push_back(cirs[i].center.x);$/;"	p	file:	signature:(cirs[i].center.x)
-push_back	main.cpp	/^      cc.push_back(cirs[i].center.y);$/;"	p	file:	signature:(cirs[i].center.y)
+push_back	main.cpp	/^          points.push_back(prev_velocities[j][i]);$/;"	p	file:	signature:(prev_velocities[j][i])
+push_back	main.cpp	/^          prev_valid_cirs.push_back(cirs[i]);$/;"	p	file:	signature:(cirs[i])
+push_back	main.cpp	/^        predicted_velocities.push_back(linear_v);$/;"	p	file:	signature:(linear_v)
+push_back	main.cpp	/^        result.push_back(linear_v);$/;"	p	file:	signature:(linear_v)
+push_back	main.cpp	/^        x_y_velocities.push_back(temp);$/;"	p	file:	signature:(temp)
 push_back	main.cpp	/^      cir_prev_cen_index.push_back(index);$/;"	p	file:	signature:(index)
 push_back	main.cpp	/^      ob_tfs.push_back(temp);$/;"	p	file:	signature:(temp)
-push_back	main.cpp	/^      pc.push_back(prev_cirs[index].center.x);$/;"	p	file:	signature:(prev_cirs[index].center.x)
-push_back	main.cpp	/^      pc.push_back(prev_cirs[index].center.y);$/;"	p	file:	signature:(prev_cirs[index].center.y)
-push_back	main.cpp	/^      result.push_back(linear_v);$/;"	p	file:	signature:(linear_v)
 push_back	main.cpp	/^    list.obstacles.push_back(temp.msg_);$/;"	p	file:	signature:(temp.msg_)
 push_back	main.cpp	/^    obs.push_back(o);$/;"	p	file:	signature:(o)
 push_back	main.cpp	/^    obs.push_back(temp);$/;"	p	file:	signature:(temp)
 push_back	main.cpp	/^    prev_center.push_back(N.at(0).center.x);$/;"	p	file:	signature:(N.at(0).center.x)
 push_back	main.cpp	/^    prev_center.push_back(N.at(0).center.y);$/;"	p	file:	signature:(N.at(0).center.y)
+push_back	main.cpp	/^    prev_valid_cirs.push_back(temp);$/;"	p	file:	signature:(temp)
+push_back	main.cpp	/^    prev_velocities.push_back(velocities);$/;"	p	file:	signature:(velocities)
 push_back	main.cpp	/^    result.push_back(marker);$/;"	p	file:	signature:(marker)
 push_back	main.cpp	/^  center.push_back(m.center.x);$/;"	p	file:	signature:(m.center.x)
 push_back	main.cpp	/^  center.push_back(m.center.y);$/;"	p	file:	signature:(m.center.y)
-push_back	main.cpp	/^  prev_velocities.push_back(velocities);$/;"	p	file:	signature:(velocities)
+push_back	main.cpp	/^  ob_filters.push_back(circle_ekf);$/;"	p	file:	signature:(circle_ekf)
 push_back	main_alone.cpp	/^        list.obstacles.push_back(ob.buildObstacleMsg());$/;"	p	file:	signature:(ob.buildObstacleMsg())
 push_back	main_alone.cpp	/^        obs.push_back(ob);$/;"	p	file:	signature:(ob)
 push_back	main_alone.cpp	/^    list.obstacles.push_back(temp.buildObstacleMsg());$/;"	p	file:	signature:(temp.buildObstacleMsg())
@@ -412,22 +589,28 @@ push_back	utility.cpp	/^  a.push_back(ax);$/;"	p	file:	signature:(ax)
 push_back	utility.cpp	/^  a.push_back(ay);$/;"	p	file:	signature:(ay)
 push_back	utility.cpp	/^  b.push_back(bx);$/;"	p	file:	signature:(bx)
 push_back	utility.cpp	/^  b.push_back(by);$/;"	p	file:	signature:(by)
+q	main_laser_frame.cpp	/^  tf::Quaternion q;$/;"	l
 r	Utilties.cpp	/^    reals sum=0.,dx,dy,r,D[n];$/;"	l
 r	Utilties.cpp	/^    reals sum=0.,dx,dy,r;$/;"	l
 r	circle_packer.cpp	/^    double r = x_diff > y_diff ? x_diff\/2.f : y_diff\/2.f;$/;"	l
 r	circle_packer.cpp	/^    std::vector<double> r;$/;"	l
+r_offset	main.cpp	/^    int r_offset = g1.info.width*r;$/;"	l
 radius	main.cpp	/^    double radius = obs[i].cir_.radius * global_grid.info.resolution;$/;"	l
 rand1	Utilties.cpp	/^    reals rand1,rand2,wrand;$/;"	l
 rand2	Utilties.cpp	/^    reals rand1,rand2,wrand;$/;"	l
 rate	main.cpp	/^double rate;$/;"	v
 rate	main_alone.cpp	/^double rate;$/;"	v
 reduced_cells	circle_packer.cpp	/^  std::vector<Cell> reduced_cells = cells;$/;"	l
+reportPredictedVelocity	main.cpp	/^void reportPredictedVelocity(int sig)$/;"	f	signature:(int sig)
 resize	GridMap2D.cpp	/^  msg.data.resize(msg.info.height*msg.info.width);$/;"	p	file:	signature:(msg.info.height*msg.info.width)
+result	circle_packer.cpp	/^  Circle result;$/;"	l
 result	circle_packer.cpp	/^  Normal result;$/;"	l
+result	circle_packer.cpp	/^  Point result;$/;"	l
 result	circle_packer.cpp	/^  double result = 100000;$/;"	l
 result	circle_packer.cpp	/^  double result=10000;$/;"	l
 result	circle_packer.cpp	/^  std::vector<Circle> result;$/;"	l
 result	circle_packer.cpp	/^  std::vector<Triangle> result;$/;"	l
+result	circle_packer.cpp	/^  std::vector<double> result;$/;"	l
 result	main.cpp	/^  NormalDist1D result;$/;"	l
 result	main.cpp	/^  std::vector<double> result;$/;"	l
 result	main.cpp	/^  std::vector<visualization_msgs::Marker> result;$/;"	l
@@ -437,8 +620,12 @@ result	utility.cpp	/^  std::ostringstream result;$/;"	l
 rob_cen	circle_packer.cpp	/^    std::vector<double> rob_cen; $/;"	l
 ros::init	main.cpp	/^  ros::init(argc, argv, "ramp_sensing");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 ros::init	main_alone.cpp	/^  ros::init(argc, argv, "ramp_sensing");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
-ros::spin	main.cpp	/^  ros::spin();$/;"	p	class:ros	file:	signature:()
+ros::init	main_laser_frame.cpp	/^  ros::init(argc, argv, "my_tf_broadcaster");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
+ros::init	main_test_bfl.cpp	/^  ros::init(argc, argv, "test_bfl");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 ros::spin	main_alone.cpp	/^  ros::spin();$/;"	p	class:ros	file:	signature:()
+ros::spin	main_laser_frame.cpp	/^  ros::spin();$/;"	p	class:ros	file:	signature:()
+ros::waitForShutdown	main.cpp	/^  ros::waitForShutdown();$/;"	p	class:ros	file:	signature:()
+ros::waitForShutdown	main_test_bfl.cpp	/^  ros::waitForShutdown();$/;"	p	class:ros	file:	signature:()
 round	circle_packer.cpp	/^  double round = 1;$/;"	l
 s	Utilties.cpp	/^  reals a0,b0,del,s,c,x,y,z,p,t,g,W,Z;$/;"	l
 sX	data.cpp	/^  reals sX=0.,sY=0.;  $/;"	l
@@ -447,37 +634,55 @@ sY	data.cpp	/^  reals sX=0.,sY=0.;  $/;"	l
 sYY	data.cpp	/^  reals sXX=0.,sYY=0.,scaling;  $/;"	l
 scale	data.cpp	/^void Data::scale(void)$/;"	f	class:Data	signature:(void)
 scaling	data.cpp	/^  reals sXX=0.,sYY=0.,scaling;  $/;"	l
+sendTF	main_laser_frame.cpp	/^void sendTF(const ros::TimerEvent& e)$/;"	f	signature:(const ros::TimerEvent& e)
 set	circle_packer.cpp	/^    std::vector<Edge> set;$/;"	l
 setMap	GridMap2D.cpp	/^void GridMap2D::setMap(const cv::Mat& binaryMap){$/;"	f	class:gridmap_2d::GridMap2D	signature:(const cv::Mat& binaryMap)
 setMap	GridMap2D.cpp	/^void GridMap2D::setMap(const nav_msgs::OccupancyGridConstPtr& grid_map, bool unknown_as_obstacle){$/;"	f	class:gridmap_2d::GridMap2D	signature:(const nav_msgs::OccupancyGridConstPtr& grid_map, bool unknown_as_obstacle)
-spin	main.cpp	/^  ros::spin();$/;"	p	class:ros	file:	signature:()
+setRotation	main_laser_frame.cpp	/^  transform.setRotation(q);$/;"	p	file:	signature:(q)
+sort	blob_detector.cpp	/^    std::sort(dists.begin(), dists.end());$/;"	p	class:std	file:	signature:(dists.begin(), dists.end())
 spin	main_alone.cpp	/^  ros::spin();$/;"	p	class:ros	file:	signature:()
+spin	main_laser_frame.cpp	/^  ros::spin();$/;"	p	class:ros	file:	signature:()
+start	main.cpp	/^  spinner.start();$/;"	p	file:	signature:()
+start	main_test_bfl.cpp	/^  spinner.start();$/;"	p	file:	signature:()
 start_x	circle_packer.cpp	/^  double start_x = MIN_WIDTH + round\/2.f;$/;"	l
 start_y	circle_packer.cpp	/^  double start_y = MIN_LENGTH + round\/2.f;$/;"	l
 state	nonlinearanalyticconditionalgaussian.cpp	/^    ColumnVector state = ConditionalArgumentGet(0);$/;"	l
 std	main.cpp	/^  double std=0;$/;"	l
 std::cout	main.cpp	/^  std::cout<<"\\nExiting Normally\\n";$/;"	m	class:std	file:
 std::cout	main.cpp	/^  std::cout<<"\\nSpinning\\n";$/;"	m	class:std	file:
+std::cout	main.cpp	/^  std::cout<<"\\nWaiting for requests...\\n";$/;"	m	class:std	file:
 std::cout	main_alone.cpp	/^  std::cout<<"\\nExiting Normally\\n";$/;"	m	class:std	file:
 std::cout	main_alone.cpp	/^  std::cout<<"\\nSpinning\\n";$/;"	m	class:std	file:
+std::cout	main_test_bfl.cpp	/^  std::cout<<"\\nExiting Normally\\n";$/;"	m	class:std	file:
+std::cout	main_test_bfl.cpp	/^  std::cout<<"\\nSpinning\\n";$/;"	m	class:std	file:
+std::cout	main_test_bfl.cpp	/^  std::cout<<"\\nWaiting for requests...\\n";$/;"	m	class:std	file:
 std::endl	circle.cpp	/^     << r << "  sigma " << s << "  gradient " << g << "  iter "<< i << "  inner " << j << std::endl;$/;"	m	class:std	file:
 std::endl	circle.cpp	/^  std::cout << std::endl;$/;"	m	class:std	file:
 std::endl	data.cpp	/^  std::cout << std::endl << "The data set has " << n << " points with coordinates :"<< std::endl;$/;"	m	class:std	file:
+std::sort	blob_detector.cpp	/^    std::sort(dists.begin(), dists.end());$/;"	p	class:std	file:	signature:(dists.begin(), dists.end())
 stod	main.cpp	/^        conf.push_back(std::stod(token));$/;"	p	file:	signature:(token)
 stod	main.cpp	/^      conf.push_back(std::stod(line));$/;"	p	file:	signature:(line)
+stop	main.cpp	/^  timer_markers.stop();$/;"	p	file:	signature:()
 sub_costmap	main.cpp	/^  ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("\/costmap_node\/costmap\/costmap", 1, &costmapCb);$/;"	l
 sub_ob	main_alone.cpp	/^ros::Subscriber sub_ob;$/;"	v
 sum	Utilties.cpp	/^    reals sum=0.,dx,dy,r,D[n];$/;"	l
 sum	Utilties.cpp	/^    reals sum=0.,dx,dy,r;$/;"	l
 sum	Utilties.cpp	/^    reals sum=0.,dx,dy;$/;"	l
-sys_pdf	main.cpp	/^  BFL::LinearAnalyticConditionalGaussian sys_pdf(AB, system_uncertainty);$/;"	p	file:	signature:(AB, system_uncertainty)
-system_uncertainty	main.cpp	/^  BFL::Gaussian system_uncertainty(sys_noise_mu, sys_noise_cov);$/;"	p	file:	signature:(sys_noise_mu, sys_noise_cov)
+sys_model	main.cpp	/^BFL::LinearAnalyticSystemModelGaussianUncertainty* sys_model=0;$/;"	v
+sys_model	main_test_bfl.cpp	/^BFL::LinearAnalyticSystemModelGaussianUncertainty* sys_model=0;$/;"	v
+sys_noise_Cov	main.cpp	/^  MatrixWrapper::SymmetricMatrix sys_noise_Cov(STATE_SIZE);$/;"	p	file:	signature:(STATE_SIZE)
+sys_noise_Cov	main_test_bfl.cpp	/^  MatrixWrapper::SymmetricMatrix sys_noise_Cov(STATE_SIZE);$/;"	p	file:	signature:(STATE_SIZE)
+sys_noise_Mu	main.cpp	/^  MatrixWrapper::ColumnVector sys_noise_Mu(STATE_SIZE);$/;"	p	file:	signature:(STATE_SIZE)
+sys_noise_Mu	main_test_bfl.cpp	/^  MatrixWrapper::ColumnVector sys_noise_Mu(STATE_SIZE);$/;"	p	file:	signature:(STATE_SIZE)
+sys_pdf	main.cpp	/^BFL::LinearAnalyticConditionalGaussian* sys_pdf=0;$/;"	v
+sys_pdf	main_test_bfl.cpp	/^BFL::LinearAnalyticConditionalGaussian* sys_pdf=0;$/;"	v
+system_Uncertainty	main.cpp	/^  BFL::Gaussian system_Uncertainty(sys_noise_Mu, sys_noise_Cov);$/;"	p	file:	signature:(sys_noise_Mu, sys_noise_Cov)
+system_Uncertainty	main_test_bfl.cpp	/^  BFL::Gaussian system_Uncertainty(sys_noise_Mu, sys_noise_Cov);$/;"	p	file:	signature:(sys_noise_Mu, sys_noise_Cov)
 t	Utilties.cpp	/^  reals a0,b0,del,s,c,x,y,z,p,t,g,W,Z;$/;"	l
 t_final	circle_packer.cpp	/^    double t_final = fmodf(ta - tb, 6.28);$/;"	l
 t_final	circle_packer.cpp	/^    std::cout<<"\\nt_final: "<<t_final;$/;"	l
 t_last_costmap	main.cpp	/^ros::Time t_last_costmap;$/;"	v
 t_start_cirs_from_sets	circle_packer.cpp	/^  ros::Time t_start_cirs_from_sets = ros::Time::now();$/;"	l
-t_start_contour	circle_packer.cpp	/^  ros::Time t_start_contour = ros::Time::now();$/;"	l
 t_start_edge_detect	circle_packer.cpp	/^  ros::Time t_start_edge_detect = ros::Time::now();$/;"	l
 ta	circle_packer.cpp	/^    double ta = atan2(ay , ax);$/;"	l
 tb	circle_packer.cpp	/^    double tb = atan2(by , bx);$/;"	l
@@ -488,24 +693,37 @@ temp	circle_packer.cpp	/^      Circle temp;$/;"	l
 temp	circle_packer.cpp	/^      Edge temp;$/;"	l
 temp	circle_packer.cpp	/^    Circle temp;$/;"	l
 temp	circle_packer.cpp	/^    Edge temp;$/;"	l
+temp	main.cpp	/^        Velocity temp;$/;"	l
 temp	main.cpp	/^      tf::Transform temp;$/;"	l
+temp	main.cpp	/^    Circle temp;$/;"	l
+temp	main.cpp	/^    nav_msgs::OccupancyGrid temp = gi;$/;"	l
 temp	obstacle.cpp	/^  nav_msgs::Odometry temp;$/;"	l
 temp	utility.cpp	/^    ramp_msgs::Range temp;$/;"	l
+tempBinaryImage	blob_detector.cpp	/^  Mat tempBinaryImage = src.clone();$/;"	l
 temp_center	circle_packer.cpp	/^    Point temp_center;$/;"	l
 testObstacleCallback	main_alone.cpp	/^void testObstacleCallback(const nav_msgs::Odometry::ConstPtr& o) $/;"	f	signature:(const nav_msgs::Odometry::ConstPtr& o)
+tf_timer	main_laser_frame.cpp	/^  ros::Timer tf_timer = handle.createTimer(ros::Duration(0.1), &sendTF);$/;"	l
 theta	Utilties.cpp	/^  int N=data.n; reals theta,dx,dy;$/;"	l
 theta	circle_packer.cpp	/^    double theta = utility_.findAngleFromAToB(rob_cen, edge_mid); $/;"	l
-theta	main.cpp	/^      double theta = util.findAngleFromAToB(pc, cc);$/;"	l
+theta	main.cpp	/^        double theta = atan2(y_dist, x_dist);$/;"	l
 theta	obstacle.cpp	/^  double theta  = utility_.findAngleFromAToB(zero, ms.positions);$/;"	l
 threshold	circle_packer.cpp	/^    double threshold = 0.;$/;"	l
 timer	main_alone.cpp	/^    ros::Timer timer = handle.createTimer(ros::Duration(1.f \/ 5.f), publishList);$/;"	l
-timer_markers	main.cpp	/^  ros::Timer timer_markers = handle.createTimer(ros::Duration(1.f\/10.f), publishMarkers);$/;"	l
+timer_markers	main.cpp	/^ros::Timer timer_markers;$/;"	v
 toOccupancyGridMsg	GridMap2D.cpp	/^nav_msgs::OccupancyGrid GridMap2D::toOccupancyGridMsg() const{$/;"	f	class:gridmap_2d::GridMap2D	signature:() const
 toString	utility.cpp	/^const std::string Utility::toString(const ramp_msgs::Path path) const {$/;"	f	class:Utility	signature:(const ramp_msgs::Path path) const
 token	main.cpp	/^      std::string token;$/;"	l
 topic_index_map	main.cpp	/^std::map< std::string, uint8_t > topic_index_map;$/;"	v
 topic_index_map	main_alone.cpp	/^std::map< std::string, uint8_t > topic_index_map;$/;"	v
+transform	main_laser_frame.cpp	/^  tf::Transform transform;$/;"	l
 triangulatePolygon	circle_packer.cpp	/^std::vector<Triangle> CirclePacker::triangulatePolygon(const Polygon& poly)$/;"	f	class:CirclePacker	signature:(const Polygon& poly)
+turtle_name	main_laser_frame.cpp	/^std::string turtle_name;$/;"	v
+u	main.cpp	/^MatrixWrapper::ColumnVector u(STATE_SIZE);$/;"	p	file:	signature:(STATE_SIZE)
+u	main_test_bfl.cpp	/^    MatrixWrapper::ColumnVector u(STATE_SIZE);$/;"	p	file:	signature:(STATE_SIZE)
+update	circle_filter.cpp	/^void CircleFilter::update(MatrixWrapper::ColumnVector u, MatrixWrapper::ColumnVector y)$/;"	f	class:CircleFilter	signature:(MatrixWrapper::ColumnVector u, MatrixWrapper::ColumnVector y)
+update	main.cpp	/^  ob_filters[0]->update(u, y);$/;"	p	file:	signature:(u, y)
+update	main.cpp	/^void update(BFL::SystemModel<MatrixWrapper::ColumnVector>* const sys_model, const MatrixWrapper::ColumnVector& u, BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model, const MatrixWrapper::ColumnVector& y)$/;"	f	signature:(BFL::SystemModel<MatrixWrapper::ColumnVector>* const sys_model, const MatrixWrapper::ColumnVector& u, BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model, const MatrixWrapper::ColumnVector& y)
+update	main_test_bfl.cpp	/^void update(BFL::SystemModel<MatrixWrapper::ColumnVector>* const sys_model, const MatrixWrapper::ColumnVector& u, BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model, const MatrixWrapper::ColumnVector& y)$/;"	f	signature:(BFL::SystemModel<MatrixWrapper::ColumnVector>* const sys_model, const MatrixWrapper::ColumnVector& u, BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model, const MatrixWrapper::ColumnVector& y)
 update	obstacle.cpp	/^void Obstacle::update(const Circle c)$/;"	f	class:Obstacle	signature:(const Circle c)
 update	obstacle.cpp	/^void Obstacle::update(const nav_msgs::Odometry o) $/;"	f	class:Obstacle	signature:(const nav_msgs::Odometry o)
 updateDistanceMap	GridMap2D.cpp	/^void GridMap2D::updateDistanceMap(){$/;"	f	class:gridmap_2d::GridMap2D	signature:()
@@ -522,11 +740,16 @@ var_result	main.cpp	/^  double var_result = 1.f \/ ((1.f\/n1.mean) + (1.f\/n2.me
 variance	main.cpp	/^  double variance;$/;"	m	struct:NormalDist1D	file:	access:public
 vec	circle_packer.cpp	/^  std::vector<double> vec, midpoint;$/;"	l
 vel	nonlinearanalyticconditionalgaussian.cpp	/^    ColumnVector vel  = ConditionalArgumentGet(1);$/;"	l
-vel_trans	nonlinearanalyticconditionalgaussian.cpp	/^  double vel_trans = ConditionalArgumentGet(1)(1);$/;"	l
-velocities	main.cpp	/^  std::vector<double> velocities = velocityFromNPrev(cirs, prev_cirs, d_elapsed, grid_resolution, N);$/;"	l
-velocityFromNPrev	main.cpp	/^std::vector<double> velocityFromNPrev(const std::vector<Circle> cirs, const std::vector<Circle> prev_cirs, const ros::Duration d_elapsed, const double grid_resolution, int N)$/;"	f	signature:(const std::vector<Circle> cirs, const std::vector<Circle> prev_cirs, const ros::Duration d_elapsed, const double grid_resolution, int N)
+vel_trans	nonlinearanalyticconditionalgaussian.cpp	/^    double vel_trans = ConditionalArgumentGet(1)(1);$/;"	l
+velocities	main.cpp	/^    std::vector<double> velocities = velocityFromNPrev(cirs, d_elapsed, grid_resolution, N);$/;"	l
+velocityFromNPrev	main.cpp	/^std::vector<double> velocityFromNPrev(const std::vector<Circle> cirs, const ros::Duration d_elapsed, const double grid_resolution, int N)$/;"	f	signature:(const std::vector<Circle> cirs, const ros::Duration d_elapsed, const double grid_resolution, int N)
 velocityFromOnePrev	main.cpp	/^std::vector<double> velocityFromOnePrev(const std::vector<Circle> cirs, const std::vector<Circle> prev_cirs, const ros::Duration d_elapsed, const double grid_resolution)$/;"	f	signature:(const std::vector<Circle> cirs, const std::vector<Circle> prev_cirs, const ros::Duration d_elapsed, const double grid_resolution)
 vertices	circle_packer.cpp	/^  std::vector<cv::Point> vertices;$/;"	l
+vx	main.cpp	/^  double vx, vy;$/;"	m	struct:Velocity	file:	access:public
+vy	main.cpp	/^  double vx, vy;$/;"	m	struct:Velocity	file:	access:public
+waitForShutdown	main.cpp	/^  ros::waitForShutdown();$/;"	p	class:ros	file:	signature:()
+waitForShutdown	main_test_bfl.cpp	/^  ros::waitForShutdown();$/;"	p	class:ros	file:	signature:()
+weight	circle_packer.cpp	/^  int weight = 2;$/;"	l
 width_count	circle_packer.cpp	/^  int width_count = (MAX_WIDTH - MIN_WIDTH) \/ round;$/;"	l
 worldToMap	GridMap2D.cpp	/^bool GridMap2D::worldToMap(double wx, double wy, unsigned int& mx, unsigned int& my) const {$/;"	f	class:gridmap_2d::GridMap2D	signature:(double wx, double wy, unsigned int& mx, unsigned int& my) const
 worldToMapNoBounds	GridMap2D.cpp	/^void GridMap2D::worldToMapNoBounds(double wx, double wy, unsigned int& mx, unsigned int& my) const {$/;"	f	class:gridmap_2d::GridMap2D	signature:(double wx, double wy, unsigned int& mx, unsigned int& my) const
@@ -536,26 +759,46 @@ x	circle_packer.cpp	/^      double x = start_x + (round * (i)); $/;"	l
 x	main.cpp	/^    double x = (obs[i].cir_.center.x + x_origin) * global_grid.info.resolution;$/;"	l
 x_cen	circle_packer.cpp	/^    double x_cen = x_mid + delta_x;$/;"	l
 x_diff	circle_packer.cpp	/^    double x_diff = fabs(x_max - x_min);$/;"	l
+x_dist	main.cpp	/^        double x_dist = cirs[i].center.x - prev_valid_cirs[index].center.x;$/;"	l
+x_max	circle_packer.cpp	/^    int x_min = pixels[0].x, y_min = pixels[0].y, x_max = x_min, y_max = y_min;$/;"	l
 x_max	circle_packer.cpp	/^    x_max = x_min, $/;"	l
 x_mean	circle_packer.cpp	/^    int x_mean = edge_sets[i][0].start.x;$/;"	l
 x_mid	circle_packer.cpp	/^    double x_mid = (edges[i].end.x + edges[i].start.x) \/ 2.f;$/;"	l
 x_min	circle_packer.cpp	/^    int x_min = edge_sets[i][0].start.x, $/;"	l
+x_min	circle_packer.cpp	/^    int x_min = pixels[0].x, y_min = pixels[0].y, x_max = x_min, y_max = y_min;$/;"	l
 x_origin	main.cpp	/^  double x_origin = global_grid.info.origin.position.x;$/;"	l
+x_y_velocities	main.cpp	/^std::vector<Velocity> x_y_velocities;$/;"	v
+xi	blob_detector.cpp	/^  double xi, yi, xi2, yi2, xi_1, yi_1, xi_12, yi_12, dxy, xii_1, yii_1;$/;"	l
+xi2	blob_detector.cpp	/^  double xi, yi, xi2, yi2, xi_1, yi_1, xi_12, yi_12, dxy, xii_1, yii_1;$/;"	l
+xi_1	blob_detector.cpp	/^  double xi, yi, xi2, yi2, xi_1, yi_1, xi_12, yi_12, dxy, xii_1, yii_1;$/;"	l
+xi_12	blob_detector.cpp	/^  double xi, yi, xi2, yi2, xi_1, yi_1, xi_12, yi_12, dxy, xii_1, yii_1;$/;"	l
+xii_1	blob_detector.cpp	/^  double xi, yi, xi2, yi2, xi_1, yi_1, xi_12, yi_12, dxy, xii_1, yii_1;$/;"	l
 y	Utilties.cpp	/^  reals a0,b0,del,s,c,x,y,z,p,t,g,W,Z;$/;"	l
 y	circle_packer.cpp	/^      double y = start_y + (round * (j));$/;"	l
+y	main.cpp	/^    MatrixWrapper::ColumnVector y(STATE_SIZE);$/;"	p	file:	signature:(STATE_SIZE)
 y	main.cpp	/^    double y = (obs[i].cir_.center.y + y_origin) * global_grid.info.resolution;$/;"	l
 y_cen	circle_packer.cpp	/^    double y_cen = y_mid + delta_y;$/;"	l
 y_diff	circle_packer.cpp	/^    double y_diff = fabs(y_max - y_min);$/;"	l
+y_dist	main.cpp	/^        double y_dist = cirs[i].center.y - prev_valid_cirs[index].center.y;$/;"	l
+y_max	circle_packer.cpp	/^    int x_min = pixels[0].x, y_min = pixels[0].y, x_max = x_min, y_max = y_min;$/;"	l
 y_max	circle_packer.cpp	/^    y_max = y_min; $/;"	l
 y_mean	circle_packer.cpp	/^    int y_mean = edge_sets[i][0].start.y;$/;"	l
 y_mid	circle_packer.cpp	/^    double y_mid = (edges[i].end.y + edges[i].start.y) \/ 2.f;$/;"	l
+y_min	circle_packer.cpp	/^    int x_min = pixels[0].x, y_min = pixels[0].y, x_max = x_min, y_max = y_min;$/;"	l
 y_min	circle_packer.cpp	/^    y_min = edge_sets[i][0].start.y, $/;"	l
 y_origin	main.cpp	/^  double y_origin = global_grid.info.origin.position.y;$/;"	l
-yaw	nonlinearanalyticconditionalgaussian.cpp	/^  double yaw = ConditionalArgumentGet(0)(6);$/;"	l
+yaw	nonlinearanalyticconditionalgaussian.cpp	/^    double yaw = ConditionalArgumentGet(0)(6);$/;"	l
+yi	blob_detector.cpp	/^  double xi, yi, xi2, yi2, xi_1, yi_1, xi_12, yi_12, dxy, xii_1, yii_1;$/;"	l
+yi2	blob_detector.cpp	/^  double xi, yi, xi2, yi2, xi_1, yi_1, xi_12, yi_12, dxy, xii_1, yii_1;$/;"	l
+yi_1	blob_detector.cpp	/^  double xi, yi, xi2, yi2, xi_1, yi_1, xi_12, yi_12, dxy, xii_1, yii_1;$/;"	l
+yi_12	blob_detector.cpp	/^  double xi, yi, xi2, yi2, xi_1, yi_1, xi_12, yi_12, dxy, xii_1, yii_1;$/;"	l
+yii_1	blob_detector.cpp	/^  double xi, yi, xi2, yi2, xi_1, yi_1, xi_12, yi_12, dxy, xii_1, yii_1;$/;"	l
 z	Utilties.cpp	/^  reals a0,b0,del,s,c,x,y,z,p,t,g,W,Z;$/;"	l
 zero	obstacle.cpp	/^  std::vector<double> zero; zero.push_back(0); zero.push_back(0); $/;"	l
+~BlobDetector	blob_detector.cpp	/^BlobDetector::~BlobDetector() {}$/;"	f	class:BlobDetector	signature:()
+~CircleFilter	circle_filter.cpp	/^CircleFilter::~CircleFilter() $/;"	f	class:CircleFilter	signature:()
 ~CirclePacker	circle_packer.cpp	/^CirclePacker::~CirclePacker() {}$/;"	f	class:CirclePacker	signature:()
 ~Data	data.cpp	/^Data::~Data()$/;"	f	class:Data	signature:()
 ~GridMap2D	GridMap2D.cpp	/^GridMap2D::~GridMap2D() {$/;"	f	class:gridmap_2d::GridMap2D	signature:()
-~NonLinearAnalyticConditionalGaussianOdo	nonlinearanalyticconditionalgaussian.cpp	/^  NonLinearAnalyticConditionalGaussianOdo::~NonLinearAnalyticConditionalGaussianOdo(){}$/;"	f	class:BFL::NonLinearAnalyticConditionalGaussianOdo	signature:()
+~NonLinearAnalyticConditionalGaussianMobile	nonlinearanalyticconditionalgaussian.cpp	/^  NonLinearAnalyticConditionalGaussianMobile::~NonLinearAnalyticConditionalGaussianMobile(){}$/;"	f	class:BFL::NonLinearAnalyticConditionalGaussianMobile	signature:()
 ~Obstacle	obstacle.cpp	/^Obstacle::~Obstacle() {}$/;"	f	class:Obstacle	signature:()
