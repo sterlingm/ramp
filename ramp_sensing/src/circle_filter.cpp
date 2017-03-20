@@ -11,27 +11,10 @@ CircleFilter::CircleFilter(uint8_t state_size, BFL::Gaussian* prior, BFL::Linear
 
 CircleFilter::~CircleFilter() 
 {
-  printf("\nIn ~CircleFilter\n");
-  if(prior)
-  {
-    delete prior;
-    printf("\nDeleted prior\n");
-  }
-  if(sys_model)
-  {
-    //delete sys_model;
-    printf("\nDeleted sys_model\n");
-  }
-  if(meas_model)
-  {
-    //delete meas_model;
-    printf("\nDeleted meas_model\n");
-  }
-  if(posterior)
-  {
-    delete posterior;
-    printf("\nDeleted posterior\n");
-  }
+  // delete statements commented out. 
+  // The base class destructor cause a seg fault with these statements included
+  //delete prior;
+  //delete posterior;
 }
   
 

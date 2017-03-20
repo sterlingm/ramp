@@ -32,13 +32,12 @@ struct CircleOb
   CircleOb() {}
   ~CircleOb()
   {
-    if(kf)
-    {
-      delete kf;
-    }
+    delete kf;
   }
   Circle cir;
-  CircleFilter* kf=0;
+  CircleFilter* kf;
+
+  double speed;
 };
 
 struct Velocity
@@ -836,6 +835,61 @@ void consolidateCostmaps(const nav_msgs::OccupancyGrid gi, const std::vector<nav
   }
 }
 
+
+
+std::vector<int> matchCircles(std::vector<Circle> cirs, std::vector<Circle> targets)
+{
+  ROS_INFO("In matchCircles");
+  ROS_INFO("cirs.size(): %i targets.size(): %i", (int)cirs.size(), (int)targets.size());
+  
+  size_t resultSize = targets.size();
+
+  // Make an array of 0's for the list of targets
+  std::vector<int> result(resultSize);
+  ROS_INFO("result.size(): %i", (int)result.size());
+
+  // Match each one, and mark that value in the array as 1
+  for(int i=0;i<cirs.size();i++)
+  {
+    int index = getClosestPrev(cirs[i], targets);
+    result[index] = 1;
+  }
+
+  return result;
+}
+
+void editNumObstacles(std::vector<Circle> cirs, bool add)
+{
+  
+  // Match the previous circles to the new ones (to prevent matching more than 1 to the same target)
+  std::vector<int> matches = add ? matchCircles(prev_valid_cirs, cirs) : matchCircles(cirs, prev_valid_cirs);
+  
+  // Go through the matches and get the indices whose elements are equal to 0
+  // That means that the circles are new
+  for(int i=0;i<matches.size();i++)
+  {
+    ROS_INFO("i: %i cirs.size(): %i", i, (int)cirs.size());
+    // If the circle was not matched, create a new CircleOb
+    if(!matches[i])
+    {
+      if(add)
+      {
+        CircleOb* temp = createCircleOb(cirs[i]);
+        cir_obs.push_back(temp);
+      }
+      else
+      {
+        delete cir_obs[i];
+        cir_obs.erase(cir_obs.begin()+i);
+      }
+    }
+  } // end for matched_cirs
+  
+
+}
+
+
+
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
   ROS_INFO("**************************************************");
@@ -912,17 +966,47 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    ********************************************
    */
   
+
+  /*
+   * Circle positions for this time event are finalized
+   */
+
+  ROS_INFO("Checking if any circles were added or removed");
+
+  /*
+   * Account for changes in the number of obstacles
+   */
+  // If there are new circles
+  if(cirs.size() >= prev_valid_cirs.size())
+  {
+    ROS_INFO("More circles");
+  
+    editNumObstacles(cirs, true);
+    
+    ROS_INFO("After adding, cir_obs.size(): %i", (int)cir_obs.size());
+  }
+
+  // Else If some circles disappeared
+  else if(cirs.size() <= prev_valid_cirs.size())
+  {
+    ROS_INFO("Fewer circles, cirs.size(): %i prev_valid_cirs.size(): %i", (int)cirs.size(), (int)prev_valid_cirs.size());
+
+    editNumObstacles(cirs, false);
+
+    ROS_INFO("After removing, cir_obs.size(): %i", (int)cir_obs.size());
+  }
+
+  ROS_INFO("cirs.size(): %i obs.size(): %i", (int)cirs.size(), (int)obs.size());
+
   
   /*
    * Call the Kalman filter
    */
-  /*ROS_INFO("ob_filters.size(): %i", (int)ob_filters.size());
-  for(int i=0;i<ob_filters.size();i++)
-  {
-    ROS_INFO("Running ob_filter %i", i);
-    ROS_INFO("Posterior before update:");
-    ob_filters[i]->printPosterior();
 
+  for(int i=0;i<cir_obs.size();i++)
+  {
+    ROS_INFO("Updating circle filter %i", i);
+    
     // Prediction
     if(x_y_velocities.size() > 0)
     {
@@ -933,114 +1017,34 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     }
     else
     {
-      u[0] = 0.2;
-      u[1] = 0.2;
+      u[0] = 0.;
+      u[1] = 0.;
       u[2] = 0;
       u[3] = 0;
     }
     
     // Measurement 
     MatrixWrapper::ColumnVector y(STATE_SIZE);
-    y[0] = cirs[i].center.x;
-    y[1] = cirs[i].center.y;
+    y[0] = cir_obs[i]->cir.center.x;
+    y[1] = cir_obs[i]->cir.center.y;
     for(int i=2;i<STATE_SIZE;i++)
     {
       y[i] = 0;
     }
-  
-    ob_filters[i]->update(u, y);
+
+    cir_obs[i]->kf->update(u, y);
     ROS_INFO("Posterior after update:");
-    ob_filters[i]->printPosterior();
-
-    MatrixWrapper::ColumnVector mean = ob_filters[i]->posterior->ExpectedValueGet(); 
-    cirs[i].center.x = mean[0];
-    cirs[i].center.y = mean[1];
-  }*/
-
-  /*
-   * Done updating Kalman Filters
-   * Circle positions for this time event are finalized
-   */
-
-  ROS_INFO("Checking if any circles were added or removed");
-
-  /*
-   * Determine which circles are pre-existing and which ones are new
-   */
-  // If the same number of circles
-  if(cirs.size() == prev_valid_cirs.size())
-  {
-    ROS_INFO("Same number of circles!");
-  }
-  // Else If there are new circles
-  else if(cirs.size() >= prev_valid_cirs.size())
-  {
-    ROS_INFO("New circles, cirs.size(): %i prev_valid_cirs.size(): %i", (int)cirs.size(), (int)prev_valid_cirs.size());
-    ROS_INFO("cir_obs.size(): %i", (int)cir_obs.size());
-    // Figure out which circles are new
-    // Match the PREVIOUS circles to the new list
-    // and see which of the new circles have not been matched to a previous circle
-    int matched_cirs[cirs.size()] = {0};
-    for(int i=0;i<prev_valid_cirs.size();i++)
-    {
-      int index = getClosestPrev(prev_valid_cirs[i], cirs);
-      matched_cirs[index] = 1;
-    }
-
-    ROS_INFO("Done matching");
-
-    // Go through matched_cirs and get the indices whose elements are equal to 0
-    for(int i=0;i<cirs.size();i++)
-    {
-      ROS_INFO("i: %i cirs.size(): %i", i, (int)cirs.size());
-      // If the circle was not matched, create a new CircleOb
-      if(!matched_cirs[i])
-      {
-        CircleOb* temp = createCircleOb(cirs[i]);
-        ROS_INFO("temp created");
-        cir_obs.push_back(temp);
-        ROS_INFO("Done pushing on new CircleOb");
-      }
-    } // end for matched_cirs
+    cir_obs[i]->kf->printPosterior();
     
-    ROS_INFO("After adding, cir_obs.size(): %i", (int)cir_obs.size());
+    MatrixWrapper::ColumnVector mean = cir_obs[i]->kf->posterior->ExpectedValueGet();
+    cir_obs[i]->cir.center.x = mean[0];
+    cir_obs[i]->cir.center.y = mean[1];
   }
-  // Else If some circles disappeared
-  else
-  {
-    ROS_INFO("Fewer circles, cirs.size(): %i prev_valid_cirs.size(): %i", (int)cirs.size(), (int)prev_valid_cirs.size());
-    ROS_INFO("cir_obs.size(): %i", (int)cir_obs.size());
-    // Go through cirs and match them to prev cirs
-    int matched_cirs[prev_valid_cirs.size()] = {0};
-    for(int i=0;i<cirs.size();i++)
-    {
-      int index = getClosestPrev(cirs[i], prev_valid_cirs);
-      matched_cirs[index] = 1;
-    }
-    
-    // Go through matched_cirs and get the indices whose elements are equal to 0
-    for(int i=0;i<prev_valid_cirs.size();i++)
-    {
-      ROS_INFO("matched_cirs[%i]: %i", i, matched_cirs[i]);
-      // If the circle was not matched, delete that CircleOb
-      if(!matched_cirs[i])
-      {
-        cir_obs.erase(cir_obs.begin()+i);
-      }
-    } // end for matched_cirs
-    
-    ROS_INFO("After removing, cir_obs.size(): %i", (int)cir_obs.size());
-  }
-
-
-
-  ROS_INFO("cirs.size(): %i obs.size(): %i", (int)cirs.size(), (int)obs.size());
-  /*std::vector<double> velocities = velocityFromOnePrev(cirs, prev_cirs, d_elapsed, grid_resolution);
-  ROS_INFO("Velocities returned from going back one cycle:");*/
-
+  
+  
   /*
    * Predict velocities
-   
+   */
   int N = 0;
   std::vector<double> velocities = velocityFromNPrev(cirs, d_elapsed, grid_resolution, N);
   
@@ -1049,7 +1053,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     ROS_INFO("Velocity %i: %f", i, velocities[i]);
   }
 
-  prev_velocities.push_back(velocities);*/
+  prev_velocities.push_back(velocities);
 
   
   // Set prev_cirs variable!
