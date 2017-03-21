@@ -17,6 +17,10 @@ CircleFilter::~CircleFilter()
   //delete posterior;
 }
   
+void CircleFilter::update(MatrixWrapper::ColumnVector y)
+{
+}
+
 
 
 void CircleFilter::update(MatrixWrapper::ColumnVector u, MatrixWrapper::ColumnVector y)

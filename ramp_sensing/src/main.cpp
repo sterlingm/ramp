@@ -38,12 +38,14 @@ struct CircleOb
   CircleFilter* kf;
 
   std::vector<Circle> prevCirs;
-  double speed;
+  std::vector<double> prevTheta;
+  double vx, vy, v;
+  double theta, w;
 };
 
 struct Velocity
 {
-  double vx, vy;
+  double v, vx, vy, w;
 };
 
 std::vector<CircleOb*> cir_obs;
@@ -63,7 +65,7 @@ std::vector<tf::Transform> ob_tfs;
 std::vector<Circle> prev_cirs;
 
 // prev_velocities[cycle][circle]
-std::vector< std::vector<double> > prev_velocities;
+std::vector< std::vector<Velocity> > prev_velocities;
 
 size_t prev_size;
 
@@ -83,7 +85,7 @@ double jump_threshold = 0.5;
 double jump_threshold_inc = 0.25;
 
 
-std::vector<double> predicted_velocities;
+std::vector<Velocity> predicted_velocities;
 std::vector<Velocity> x_y_velocities;
 
 ros::Timer timer_markers;
@@ -549,11 +551,11 @@ bool jump(const Circle cir_i, const Circle cir_prev, double threshold)
 }
 
 
-std::vector<double> predictVelocities(const ros::Duration d_elapsed)
+std::vector<Velocity> predictVelocities(const ros::Duration d_elapsed)
 {
   ROS_INFO("In predictVelocities");
 
-  std::vector<double> result;
+  std::vector<Velocity> result;
   double grid_resolution=0.01;
 
   // For each circle obstacle,
@@ -562,6 +564,8 @@ std::vector<double> predictVelocities(const ros::Duration d_elapsed)
     ROS_INFO("CircleOb %i", i);
 
     ROS_INFO("Current: (%f, %f)", cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
+
+    Velocity temp;
 
     // If prevCir is set 
     if(cir_obs[i]->prevCirs.size() > 0)
@@ -574,28 +578,56 @@ std::vector<double> predictVelocities(const ros::Duration d_elapsed)
 
 
       double theta = atan2(y_dist, x_dist);
-          
+      double w = util.displaceAngle(theta, cir_obs[i]->prevTheta[i_prev]) / d_elapsed.toSec();
+
       double linear_v = (dist / d_elapsed.toSec()) * grid_resolution;
 
       // Xdot and Ydot should be based on overall linear speed
-      Velocity temp;
       temp.vx = linear_v*cos(theta);
       temp.vy = linear_v*sin(theta);
-      ROS_INFO("vx: %f vy: %f speed: %f theta: %f", temp.vx, temp.vy, linear_v, theta);
+      temp.v  = linear_v;
+      temp.w  = w;
+      ROS_INFO("vx: %f vy: %f speed: %f theta: %f w: %f", temp.vx, temp.vy, linear_v, theta, w);
 
       /*
        * This needs to be changed to work for N moving obstacles
        */
       x_y_velocities.push_back(temp);
       
-      result.push_back(linear_v);
-      predicted_velocities.push_back(linear_v);
+      predicted_velocities.push_back(temp);
     }
-    else
-    {
-      result.push_back(0);
-    }
+
+    result.push_back(temp);
   }
+
+  return result;
+}
+
+
+std::vector<double> predictTheta()
+{
+  std::vector<double> result;
+
+  // For each circle obstacle
+  for(int i=0;i<cir_obs.size();i++)
+  {
+    // This should be initialized better, no reason to assume 
+    // an obstacle starts at orientation 0
+    double theta=0;
+
+    // If prevCir is set
+    if(cir_obs[i]->prevCirs.size() > 0)
+    {
+      int i_prev = cir_obs[i]->prevCirs.size()-1;
+      ROS_INFO("Prev: (%f, %f)", cir_obs[i]->prevCirs[i_prev].center.x, cir_obs[i]->prevCirs[i_prev].center.y);
+      double x_dist = cir_obs[i]->cir.center.x - cir_obs[i]->prevCirs[i_prev].center.x;
+      double y_dist = cir_obs[i]->cir.center.y - cir_obs[i]->prevCirs[i_prev].center.y;
+
+      theta = atan2(y_dist, x_dist);
+    }
+    
+    result.push_back(theta); 
+  } // end for each circle obstacle
 
   return result;
 }
@@ -933,15 +965,20 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     cirs_pos.push_back(cir_obs[i]->cir);
   }
   
+  std::vector<double> thetas = predictTheta();
+  for(int i=0;i<thetas.size();i++)
+  {
+    cir_obs[i]->prevTheta.push_back(thetas[i]);
+  }
   
   /*
    * Predict velocities
    */
-  std::vector<double> velocities = predictVelocities(d_elapsed);
+  std::vector<Velocity> velocities = predictVelocities(d_elapsed);
   
   for(int i=0;i<velocities.size();i++)
   {
-    ROS_INFO("Velocity %i: %f", i, velocities[i]);
+    ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
   }
 
   prev_velocities.push_back(velocities);
@@ -980,29 +1017,29 @@ void reportPredictedVelocity(int sig)
   printf("\npredicted_velocities.size(): %i", (int)predicted_velocities.size());
   if(predicted_velocities.size() > 0)
   {
-    double min=predicted_velocities.at(0), max = min, average=min;
+    double min_v=predicted_velocities.at(0).v, max_v = min_v, average_v=min_v;
     int count=0;
     for(int i=1;i<predicted_velocities.size();i++)
     {
-      if(predicted_velocities[i] < min)
+      if(predicted_velocities[i].v < min_v)
       {
-        min = predicted_velocities[i];
+        min_v = predicted_velocities[i].v;
       }
-      if(predicted_velocities[i] > max)
+      if(predicted_velocities[i].v > max_v)
       {
-        max = predicted_velocities[i];
+        max_v = predicted_velocities[i].v;
       }
 
-      if (predicted_velocities[i] > 0)
+      if (predicted_velocities[i].v > 0)
       {
-        ROS_INFO("Adding %f", predicted_velocities[i]);
-        average += predicted_velocities[i];
+        ROS_INFO("Adding %f", predicted_velocities[i].v);
+        average_v += predicted_velocities[i].v;
         count++;
       }
     }
-    average /= count;
+    average_v /= count;
 
-    printf("\nPredicted Velocities range=[%f,%f], average: %f\n", min, max, average);
+    printf("\nPredicted Velocities range=[%f,%f], average: %f\n", min_v, max_v, average_v);
   }
 
   /*for(int i=0;i<cirs_pos.size();i++)

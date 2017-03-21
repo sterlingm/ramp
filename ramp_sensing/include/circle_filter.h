@@ -14,6 +14,7 @@ class CircleFilter : public BFL::ExtendedKalmanFilter
     CircleFilter(uint8_t state_size, BFL::Gaussian* prior, BFL::LinearAnalyticConditionalGaussian* sys_pdf, BFL::LinearAnalyticConditionalGaussian* meas_pdf);
     virtual ~CircleFilter();
 
+    void update(MatrixWrapper::ColumnVector y);
     void update(MatrixWrapper::ColumnVector u, MatrixWrapper::ColumnVector y);
     void printPosterior() const;
     
