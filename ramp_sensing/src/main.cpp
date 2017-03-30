@@ -483,11 +483,17 @@ void publishMarkers(const ros::TimerEvent& e)
 }
 
 
-int getClosestPrev(Circle m, std::vector<Circle> N)
+int getClosestPrev(Circle m, std::vector<Circle> N, std::vector<int> matched)
 {
-  ROS_INFO("In getClosestPrev");
-  ROS_INFO("N.size(): %i", (int)N.size());
+  //ROS_INFO("In getClosestPrev");
+  //ROS_INFO("N.size(): %i", (int)N.size());
   int min_index = 0;
+
+  // Don't start at index 0 if it's already been matched
+  while(matched[min_index])
+  {
+    min_index++;
+  }
 
   std::vector<double> center;
   center.push_back(m.center.x);
@@ -504,23 +510,24 @@ int getClosestPrev(Circle m, std::vector<Circle> N)
 
     double dist = util.positionDistance(center, prev_center);
     
-    ROS_INFO("Prev center: [%f, %f]", prev_center[0], prev_center[1]);
-    ROS_INFO("dist: %f", dist);
+    //ROS_INFO("Prev center: [%f, %f]", prev_center[0], prev_center[1]);
+    //ROS_INFO("dist: %f", dist);
 
     for(int i=1;i<N.size();i++)
     {
       prev_center.at(0) =  N[i].center.x;
       prev_center.at(1) =  N[i].center.y;
-      ROS_INFO("Prev center: [%f, %f] dist: %f", prev_center[0], prev_center[1], util.positionDistance(center, prev_center));
+      //ROS_INFO("Prev center: [%f, %f] dist: %f", prev_center[0], prev_center[1], util.positionDistance(center, prev_center));
 
-      if( util.positionDistance(center, prev_center) < dist )
+      // Compare distance with  min distance, and that the target has not already been matched
+      if( util.positionDistance(center, prev_center) < dist && !matched[i])
       {
         dist =  util.positionDistance(center, prev_center);
         min_index = i;
       }
     }
 
-    ROS_INFO("min_index: %i dist: %f", min_index, dist);
+    ROS_INFO("min_index: %i dist: %f matched[%i]: %i", min_index, dist, min_index, matched[min_index]);
   }
 
   else
@@ -600,6 +607,7 @@ std::vector<Velocity> predictVelocities(const ros::Duration d_elapsed)
     result.push_back(temp);
   }
 
+  ROS_INFO("Exiting predictVelocities");
   return result;
 }
 
@@ -665,49 +673,6 @@ CircleOb* createCircleOb(Circle temp)
 
 
 
-void update(BFL::SystemModel<MatrixWrapper::ColumnVector>* const sys_model, const MatrixWrapper::ColumnVector& u, BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model, const MatrixWrapper::ColumnVector& y)
-{
-  ROS_INFO("In update");
-  ROS_INFO("u: (%f,%f) y: (%f, %f, %f)", u[0], u[1], y[0], y[1], y[2]);
-  
-  ob_filters[0]->update(u, y);
-  posterior = ob_filters[0]->PostGet(); 
-  
-  //circle_ekf->update(u, y);
-  //posterior = circle_ekf->PostGet();
-  /*if(!ekf->Update(sys_model, u, meas_model, y))
-  //if(!ekf->Update(meas_model, y))
-  {
-    ROS_INFO("Problem updating filter!");
-  }
-  posterior = ekf->PostGet();*/
-  
-}
-
-void printPosterior()
-{
-  MatrixWrapper::ColumnVector mean = posterior->ExpectedValueGet();
-  MatrixWrapper::SymmetricMatrix cov = posterior->CovarianceGet();
-
-  // Print the mean
-  for(int i=0;i<STATE_SIZE;i++)
-  {
-    ROS_INFO("Mean[%i]: %f", i, mean[i]);
-  } 
-
-  ROS_INFO("cov.det: %f", cov.determinant());
-
-  // Print the covariance
-  /*for(int i=0;i<cov.rows();i++)
-  {
-    for(int j=0;j<cov.columns();j++)
-    {
-      ROS_INFO("cov[%i][%i]: %f", i, j, cov(i+1,j+1));
-    }
-  }*/
-}
-
-
 
 void consolidateCostmaps(const nav_msgs::OccupancyGrid g1, const nav_msgs::OccupancyGrid g2, nav_msgs::OccupancyGrid& result)
 {
@@ -765,8 +730,8 @@ std::vector<int> matchCircles(std::vector<Circle> cirs, std::vector<Circle> targ
   // Match each one, and mark that value in the array as 1
   for(int i=0;i<cirs.size();i++)
   {
-    int index = getClosestPrev(cirs[i], targets);
-    result[index] = 1;
+    int index = getClosestPrev(cirs[i], targets, result);
+    result[index]++;
   }
 
   return result;
@@ -774,15 +739,17 @@ std::vector<int> matchCircles(std::vector<Circle> cirs, std::vector<Circle> targ
 
 void editNumObstacles(std::vector<Circle> cirs, bool add)
 {
-  
+  ROS_INFO("In editNumObstacles");
+  ROS_INFO("add: %s", add ? "True" : "False"); 
   // Match the previous circles to the new ones (to prevent matching more than 1 to the same target)
   std::vector<int> matches = add ? matchCircles(prev_valid_cirs, cirs) : matchCircles(cirs, prev_valid_cirs);
   
   // Go through the matches and get the indices whose elements are equal to 0
   // That means that the circles are new
-  for(int i=0;i<matches.size();i++)
+  int i=0;
+  while(i < matches.size())
   {
-    ROS_INFO("i: %i cirs.size(): %i", i, (int)cirs.size());
+    ROS_INFO("i: %i matches[%i]: %i cirs.size(): %i cir_obs.size(): %i", i, i, matches[i], (int)cirs.size(), (int)cir_obs.size());
     // If the circle was not matched, create a new CircleOb
     if(!matches[i])
     {
@@ -795,11 +762,15 @@ void editNumObstacles(std::vector<Circle> cirs, bool add)
       {
         delete cir_obs[i];
         cir_obs.erase(cir_obs.begin()+i);
+        matches.erase(matches.begin()+i);
+        i--;
       }
     }
+
+    i++;
   } // end for matched_cirs
   
-
+  ROS_INFO("Exiting editNumObstacles");
 }
 
 
@@ -903,7 +874,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   // Else If some circles disappeared
   else if(cirs.size() < prev_valid_cirs.size())
   {
-    ROS_INFO("Fewer circles, cirs.size(): %i prev_valid_cirs.size(): %i", (int)cirs.size(), (int)prev_valid_cirs.size());
+    ROS_INFO("Fewer circles, cirs.size(): %i prev_valid_cirs.size(): %i cir_obs.size(): %i", (int)cirs.size(), (int)prev_valid_cirs.size(), (int)cir_obs.size());
 
     editNumObstacles(cirs, false);
 
@@ -920,6 +891,8 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   for(int i=0;i<cir_obs.size();i++)
   {
     ROS_INFO("Updating circle filter %i", i);
+    ROS_INFO("Updating circle filter %i", i);
+
     
     // Prediction
     if(x_y_velocities.size() > 0)
@@ -957,6 +930,12 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     MatrixWrapper::ColumnVector mean = cir_obs[i]->kf->posterior->ExpectedValueGet();
     cir_obs[i]->cir.center.x = mean[0];
     cir_obs[i]->cir.center.y = mean[1];
+
+    /*
+     * If no KF
+     */
+    //cir_obs[i]->cir.center.x = cirs[i].center.x;
+    //cir_obs[i]->cir.center.y = cirs[i].center.y;
 
     // Set the updated radius
     cir_obs[i]->cir.radius = cirs[i].radius;

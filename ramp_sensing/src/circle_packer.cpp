@@ -12,9 +12,9 @@ CirclePacker::CirclePacker(nav_msgs::OccupancyGridConstPtr g)
 
 CirclePacker::~CirclePacker() 
 {
-
-  dst.release();
+  src.release();
   detected_edges.release();
+  dst.release();
 }
 
 
@@ -34,26 +34,14 @@ void CirclePacker::convertOGtoMat(nav_msgs::OccupancyGridConstPtr g)
   // Use the GridMap2D library to convert from nav_msgs::OccupancyGrid to cv::Mat
   gridmap_2d::GridMap2D gmap(g, false);
 
-  // Create a window
-  //cv::namedWindow("testing", CV_WINDOW_AUTOSIZE);
-
+  // Set src
   src = gmap.binaryMap();
-
-  // Show the image
-  //cv::imshow("testing", src);
-
-  // PRESS ESC TO BEFORE CLOSING WINDOW, OTHERWISE THE PROGRAM WILL HANG
-  //cv::waitKey(0);
 }
 
 void CirclePacker::CannyThreshold(int, void*)
 {
   /// Reduce noise with a kernel 3x3
   blur( src, detected_edges, cv::Size(3,3) );
-
-  //std::cout<<"\nDetected Edges: "<<detected_edges;
-  //ROS_INFO("detected_edges type: %i", detected_edges.type());
-  //ROS_INFO("lowThreshold: %i", lowThreshold);
 
   // Somehow, lowThreshold is being converted to unsigned int before this point
   // its value is 32767 (-1 for unsigned 4-byte int)
@@ -737,7 +725,10 @@ std::vector<Circle> CirclePacker::go()
 
   // Detect blobs
   std::vector<cv::KeyPoint> keypoints;
+  ros::Time t_start = ros::Time::now();
   blobs_detector->detect(src, keypoints);
+  ros::Duration d_blobs = ros::Time::now() - t_start;
+  ROS_INFO("d_blobs: %f", d_blobs.toSec());
 
   ROS_INFO("Keypoints size: %i", (int)keypoints.size());
 
@@ -746,98 +737,5 @@ std::vector<Circle> CirclePacker::go()
     ROS_INFO("Keypoint %i: pt: (%f, %f) class_id: %i angle: %f size: %f", i, keypoints[i].pt.x, keypoints[i].pt.y, keypoints[i].class_id, keypoints[i].angle, keypoints[i].size);
     result.push_back(getCircleFromKeypoint(keypoints[i]));
   }
-  return result;
-
-  // Draw detected blobs as red circles.
-  // DrawMatchesFlags::DRAW_RICH_KEYPOINTS flag ensures the size of the circle corresponds to the size of blob
-  //cv::Mat im_with_keypoints;
-  //cv::drawKeypoints( src, keypoints, im_with_keypoints, cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
-   
-  // Show blobs
-  //cv::imshow("keypoints", im_with_keypoints );
-  //cv::waitKey(0);
-
-  
-  // Get the contour points
-  ros::Time t_start_contour = ros::Time::now();
-
-  std::vector< std::vector<cv::Point> > detected_contours;
-  std::vector<cv::Vec4i> hierarchy;
-  cv::findContours(detected_edges, detected_contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-  
-  ros::Duration d_contour(ros::Time::now() - t_start_contour);
-
-  //ROS_INFO("detected_contours size: %i", (int)detected_contours.size());
-
-  /*
-   * Get every edge in 1 vector, and make a circle for each edge
-   */
-
-  // Make Edges from detected contour points (endpoints of edges)
-  std::vector< std::vector<Edge> > edge_sets;
-  std::vector<Edge> edges;
-  for(int i=0;i<detected_contours.size();i++)
-  {
-    std::vector<Edge> set;
-    //ROS_INFO("detected_contours[%i].size(): %i", i, (int)detected_contours[i].size());
-    for(int j=0;j<detected_contours[i].size()-1;j++)
-    {
-      //ROS_INFO("detected_contours[%i][%i]: (%i, %i)", i, j, detected_contours[i][j].x, detected_contours[i][j].y);
-      Edge temp;
-      temp.start.x = detected_contours[i][j].x;
-      temp.start.y = detected_contours[i][j].y;
-
-      temp.end.x = detected_contours[i][j+1].x;
-      temp.end.y = detected_contours[i][j+1].y;
-
-      edges.push_back(temp);
-      set.push_back(temp);
-    }
-    
-    Edge temp;
-    temp.start.x = detected_contours[i][detected_contours[i].size()-1].x;
-    temp.start.y = detected_contours[i][detected_contours[i].size()-1].y;
-
-    temp.end.x = detected_contours[i][0].x;
-    temp.end.y = detected_contours[i][0].y;
-
-    edges.push_back(temp);
-    set.push_back(temp);
-
-    edge_sets.push_back(set);
-  }
-  //ROS_INFO("Edges.size(): %i", (int)edges.size());
-
-
-
-
-
-  /*ros::Time t_start_cirs_from_edges = ros::Time::now();
-  std::vector<Circle> cirs_from_edges = getCirclesFromEdges(edges, robo_cen);
-  ros::Duration d_cirs_from_edges(ros::Time::now() - t_start_cirs_from_edges);
-
-  //ROS_INFO("cirs_from_edges size: %i", (int)cirs_from_edges.size());
-  for(int i=0;i<cirs_from_edges.size();i++)
-  {
-    ROS_INFO("Circle %i - Center: (%i, %i) Radius: %f", i, cirs_from_edges[i].center.x, cirs_from_edges[i].center.y, cirs_from_edges[i].radius);
-  }*/
-
-  ros::Time t_start_cirs_from_sets = ros::Time::now();
-  std::vector<Circle> cirs_from_sets = getCirclesFromEdgeSets(edge_sets);
-  ros::Duration d_cirs_from_sets(ros::Time::now() - t_start_cirs_from_sets);
-
-  for(int i=0;i<cirs_from_sets.size();i++)
-  {
-    //ROS_INFO("Circle %i - Center: (%f, %f) Radius: %f", i, cirs_from_sets[i].center.x, cirs_from_sets[i].center.y, cirs_from_sets[i].radius);
-    result.push_back(cirs_from_sets[i]);
-  }
-
-
-  //ROS_INFO("d_edges_detect: %f", d_edges_detect.toSec());
-  //ROS_INFO("d_contour: %f", d_contour.toSec());
-  //ROS_INFO("d_cirs_from_edges: %f", d_cirs_from_edges.toSec());
-  //ROS_INFO("d_cirs_from_sets: %f", d_cirs_from_sets.toSec());
-
-  ROS_INFO("Leaving CirclePacker::go()");
   return result;
 }

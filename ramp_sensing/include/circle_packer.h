@@ -90,17 +90,13 @@ class CirclePacker
     
     std::vector<Triangle> triangulatePolygon(const Polygon&);
 
-
-    //CircleFit CircleFitFitByTaubin(Data& data);
-    //int CircleFitByLevenbergMarquardtFull (Data& data, CircleFit& circleIni, reals LambdaIni, CircleFit& circle);
-
     Circle getCircleFromKeypoint(const cv::KeyPoint k) const;
     std::vector<Circle> go();
   private:
 
     Utility utility_;
 
-    cv::Mat src, src_gray;
+    cv::Mat src;
     cv::Mat dst, detected_edges;
 
     nav_msgs::OccupancyGrid grid_;
