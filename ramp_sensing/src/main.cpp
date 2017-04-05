@@ -81,7 +81,7 @@ std::vector<nav_msgs::OccupancyGrid> prev_grids;
 std::vector<Circle> prev_valid_cirs;
 std::vector<ros::Time> prev_times;
 std::vector<double> jump_thresholds;
-double jump_threshold = 0.5;
+double jump_vel_threshold = 2.0;
 double jump_threshold_inc = 0.25;
 
 
@@ -407,7 +407,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
   {
     visualization_msgs::Marker marker;
     marker.header.stamp = ros::Time::now();
-    marker.header.frame_id = "/map";
+    marker.header.frame_id = "/map_rot";
     marker.ns = "basic_shapes";
     marker.id = i;
     
@@ -443,7 +443,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
     marker.color.g = 1;
     marker.color.b = 0;
     marker.color.a = 1;
-    marker.lifetime = ros::Duration(0.1);
+    marker.lifetime = ros::Duration(0.2);
 
     result.push_back(marker);
   }
@@ -548,7 +548,7 @@ bool jump(const Circle cir_i, const Circle cir_prev, double threshold)
   ROS_INFO("dist: %f", dist);
 
   // Convert distance to meters
-  dist /= 50;
+  dist /= 10;
   ROS_INFO("dist after conversion: %f", dist);
 
   ROS_INFO("cir_i center: (%f, %f), cir_prev center: (%f, %f) threshold: %f dist: %f", cir_i.center.x, cir_i.center.y, cir_prev.center.x, cir_prev.center.y, threshold, dist);
@@ -853,12 +853,6 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   
 
   /*
-   * Circle positions for this time event are finalized
-   */
-
-  ROS_INFO("Checking if any circles were added or removed");
-
-  /*
    * Account for changes in the number of obstacles
    */
   // If there are new circles
@@ -919,6 +913,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
       y[i] = 0;
     }
 
+    // Update the Kalman filter
     cir_obs[i]->kf->update(u, y);
     ROS_INFO("Posterior after update:");
     cir_obs[i]->kf->printPosterior();
@@ -942,6 +937,25 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
     // Push back center data for logging
     cirs_pos.push_back(cir_obs[i]->cir);
+  }
+
+  /*
+   * Circle positions are finalized at this point
+   */
+
+  /*
+   * Detect any "jumps"
+   */
+  for(int i=0;i<cir_obs.size();i++)
+  {
+    // If this is not a new circle,
+    if(cir_obs[i]->prevCirs.size() > 0)
+    {
+      // If a jump occurred
+      if( jump(cir_obs[i]->cir, cir_obs[i]->prevCirs[0], jump_thresholds[0]) )
+      {
+      }
+    }
   }
   
   std::vector<double> thetas = predictTheta();
