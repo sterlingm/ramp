@@ -403,7 +403,7 @@ void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector
     Circle ci = cs[i];
     ROS_INFO("ci - Center: (%f, %f) Radius: %f", ci.center.x, ci.center.y, ci.radius);
     j = i+1;
-    double inflate = 7.5;
+    double inflate = 20.0;
     double threshold = 0.;
 
     while(j<cs.size())
@@ -738,4 +738,86 @@ std::vector<Circle> CirclePacker::go()
     result.push_back(getCircleFromKeypoint(keypoints[i]));
   }
   return result;
+}
+
+
+std::vector<Circle> CirclePacker::goCorners()
+{
+  ROS_INFO("In CirclePacker::go()");
+  std::vector<Circle> result;
+
+  // Create a matrix of the same size and type as src
+  dst.create( src.size(), src.type() );
+  ROS_INFO("Done with dst.create");
+
+  // Convert to grayscale
+  //cvtColor(src, src_gray, CV_BGR2GRAY);
+
+  // Get the edges
+  ros::Time t_start_edge_detect = ros::Time::now();
+  CannyThreshold(0, 0);
+  ros::Duration d_edges_detect(ros::Time::now()-t_start_edge_detect);
+
+  /*
+   * Detect corners
+   */
+  int blockSize = 4;
+  int apertureSize = 9;
+  double k = 0.04;
+  ros::Time t_start_corner_detect = ros::Time::now();
+  cv::cornerHarris(src, dst, blockSize, apertureSize, k, cv::BORDER_DEFAULT);
+  ros::Duration d_corner_detect = ros::Time::now() - t_start_corner_detect;
+  ROS_INFO("d_corner_detect: %f", d_corner_detect.toSec());
+
+  ROS_INFO("dst.rows: %i dst.cols: %i", dst.rows, dst.cols);
+  for(int j=0;j<dst.rows;j++)
+  {
+    for(int i=0;i<dst.cols;i++)
+    {
+      if( (int) dst.at<float>(j,i) > 200)
+      {
+        Circle c;
+        c.center.x = j;
+        c.center.y = i;
+        c.radius = 10;
+        result.push_back(c);
+      }
+    }
+  }
+
+  return result;
+}
+
+
+std::vector<cv::RotatedRect> CirclePacker::goEllipse()
+{
+  ROS_INFO("In CirclePacker::go()");
+  std::vector<cv::RotatedRect> result;
+
+  // Create a matrix of the same size and type as src
+  dst.create( src.size(), src.type() );
+  ROS_INFO("Done with dst.create");
+
+  // Convert to grayscale
+  //cvtColor(src, src_gray, CV_BGR2GRAY);
+
+  // Get the edges
+  ros::Time t_start_edge_detect = ros::Time::now();
+  CannyThreshold(0, 0);
+  ros::Duration d_edges_detect(ros::Time::now()-t_start_edge_detect);
+
+  // Get contours
+  std::vector< std::vector<cv::Point> > contours;
+  std::vector<cv::Vec4i> hierarchy;
+  findContours( src, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
+
+  // Get ellipses
+  std::vector<cv::RotatedRect> minEllipse( contours.size() );
+  for(int i=0;i<contours.size();i++)
+  {
+    minEllipse[i] = fitEllipse(cv::Mat(contours[i]));
+    ROS_INFO("Ellipse %i: (%f, %f)", i, minEllipse[i].center.x, minEllipse[i].center.y);
+  }
+
+  return minEllipse;
 }

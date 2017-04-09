@@ -87,11 +87,14 @@ class CirclePacker
     std::vector<Circle> getCirclesFromPoly(Polygon);
     std::vector<Circle> getCirclesFromEdgeSets(const std::vector< std::vector<Edge> > edge_sets);
     std::vector<Circle> getCirclesFromEdges(const std::vector<Edge> edges, const cv::Point robot_cen);
+
     
     std::vector<Triangle> triangulatePolygon(const Polygon&);
 
     Circle getCircleFromKeypoint(const cv::KeyPoint k) const;
     std::vector<Circle> go();
+    std::vector<Circle> goCorners();
+    std::vector<cv::RotatedRect> goEllipse();
   private:
 
     Utility utility_;

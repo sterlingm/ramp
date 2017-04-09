@@ -119,7 +119,7 @@ double SIGMA_SYSTEM_NOISE_Y = 0.01;
 BFL::LinearAnalyticConditionalGaussian* meas_pdf = 0;
 BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model = 0;
 double MU_MEAS_NOISE = 0.00;
-double SIGMA_MEAS_NOISE = 0.01;
+double SIGMA_MEAS_NOISE = 0.1;
 
 // Input vector
 MatrixWrapper::ColumnVector u(STATE_SIZE);
@@ -460,26 +460,99 @@ void publishMarkers(const ros::TimerEvent& e)
   
   std::vector<visualization_msgs::Marker> markers = convertObsToMarkers();
 
-  //ROS_INFO("Publishing %i markers", (int)markers.size());
+  ROS_INFO("Publishing %i markers", (int)markers.size());
 
   result.markers = markers;
+  
+  std::vector<visualization_msgs::Marker> texts;
+  std::vector<visualization_msgs::Marker> arrows;
+
+  ROS_INFO("markers.size(): %i", (int)markers.size());
+  ROS_INFO("prev_velocities.size(): %i", (int)prev_velocities.size());
+
+  /*
+   * Make text to show the linear velocity value for each object
+   * Make an arrow to show the direction of the linear velocity
+   */
+  for(int i=0;i<markers.size();i++)
+  {
+    ROS_INFO("i: %i", i);
+    visualization_msgs::Marker text;
+    visualization_msgs::Marker arrow;
+
+    /*
+     * Set members for text and arrow markers
+     */
+    text.header.stamp   = ros::Time::now();
+    arrow.header.stamp  = ros::Time::now();
+
+    text.id   = markers.size()+i;
+    arrow.id  = markers.size()*(i+markers.size()+1);
+
+    text.header.frame_id  = "/map_rot";
+    arrow.header.frame_id = "/map_rot";
+
+    text.ns   = "basic_shapes";
+    arrow.ns  = "basic_shapes";
+    
+    text.type   = visualization_msgs::Marker::TEXT_VIEW_FACING;
+    arrow.type  = visualization_msgs::Marker::ARROW;
+
+    text.action   = visualization_msgs::Marker::ADD;
+    arrow.action  = visualization_msgs::Marker::ADD;
+    
+    // Set text value
+    if(prev_velocities[prev_velocities.size()-1].size() > 0)
+    {
+      text.text = std::to_string(prev_velocities[prev_velocities.size()-1][i].v);
+    }
+
+    // Set arrow points
+    arrow.scale.x = 0.25;
+    arrow.scale.y = 0.1;
+    arrow.pose.orientation.x = 0;
+    arrow.pose.orientation.y = 0;
+    arrow.pose.orientation.z = 0;
+    arrow.pose.orientation.w = 1;
+    
+    
+    
+
+    text.pose = markers[i].pose;
+    
+    text.pose.position.z = 1;
+    text.color.r = 0;
+    text.color.g = 0;
+    text.color.b = 1;
+    text.color.a = 1;
+    text.scale.z = 0.25;
+    text.lifetime = ros::Duration(0.2);
+
+    arrow.pose = text.pose;
+    tf::Quaternion q = tf::createQuaternionFromYaw(cir_obs[i]->prevTheta[cir_obs[i]->prevCirs.size()-1]);
+    tf::quaternionTFToMsg(q, arrow.pose.orientation);
+    
+   
+    arrow.color.r = 1;
+    arrow.color.g = 0;
+    arrow.color.b = 0;
+    arrow.color.a = 1;
+    arrow.lifetime = ros::Duration(0.2);
+    
+    // Push onto texts 
+    texts.push_back(text);
+    arrows.push_back(arrow);
+  }
+
+
+  ROS_INFO("texts.size(): %i", (int)texts.size());
+
+  result.markers.insert(std::end(result.markers), std::begin(texts), std::end(texts));  
+  result.markers.insert(std::end(result.markers), std::begin(arrows), std::end(arrows));  
+
+  ROS_INFO("result.markers.size(): %i", (int)result.markers.size());
 
   pub_rviz.publish(result);
-
-
-
-  //ROS_INFO("markers.size(): %i", (int)markers.size());
-  /*for(int i=0;i<result.markers.size();i++)
-  {
-    if(i==0 && result.markers.size() > 0)
-    {
-      ROS_INFO("result.markers.size(): %i", (int)result.markers.size());
-      for(int j=0;j<result.markers.size();j++)
-      {
-        ROS_INFO("Circle %i scale: %f, %f", j, result.markers[j].scale.x, result.markers[j].scale.y);
-      }
-    }
-  }*/
 }
 
 
@@ -974,6 +1047,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
   }
 
+  ROS_INFO("Pushing back velocities vector with size: %i", (int)velocities.size());
   prev_velocities.push_back(velocities);
 
   
