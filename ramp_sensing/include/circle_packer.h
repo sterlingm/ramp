@@ -94,6 +94,9 @@ class CirclePacker
     Circle getCircleFromKeypoint(const cv::KeyPoint k) const;
     std::vector<Circle> go();
     std::vector<Circle> goCorners();
+    std::vector<Circle> goHough();
+    std::vector<Circle> goMinEncCir();
+    std::vector<Circle> goMyBlobs();
     std::vector<cv::RotatedRect> goEllipse();
   private:
 

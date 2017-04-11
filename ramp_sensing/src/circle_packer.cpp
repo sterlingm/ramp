@@ -716,8 +716,8 @@ std::vector<Circle> CirclePacker::go()
   params.filterByConvexity = false;
   params.filterByColor = false;
   params.filterByCircularity = false;
-  params.filterByArea = false;
-  params.minArea = 10.f;
+  params.filterByArea = true;
+  params.minArea = 5.f;
   params.maxArea = 5000.0f;
 
   // Make object
@@ -820,4 +820,147 @@ std::vector<cv::RotatedRect> CirclePacker::goEllipse()
   }
 
   return minEllipse;
+}
+
+
+std::vector<Circle> CirclePacker::goHough()
+{
+  ROS_INFO("In CirclePacker::go()");
+  std::vector<Circle> result;
+
+  // Create a matrix of the same size and type as src
+  dst.create( src.size(), src.type() );
+  ROS_INFO("Done with dst.create");
+
+  // Convert to grayscale
+  //cvtColor(src, src_gray, CV_BGR2GRAY);
+
+  std::vector<cv::Vec3f> circles;
+  cv::HoughCircles(src, circles, CV_HOUGH_GRADIENT, 0.5, 5, 200, 10, 10, 0);
+
+  for(int i=0;i<circles.size();i++)
+  {
+    Circle temp;
+    temp.center.x = circles[i][1];
+    temp.center.y = circles[i][0];
+    temp.radius = circles[i][2];
+
+    result.push_back(temp);
+  }
+
+  return result;
+}
+
+
+std::vector<Circle> CirclePacker::goMinEncCir()
+{
+  std::vector<Circle> result;
+
+  dst.create( src.size(), src.type() );
+  
+  // Get the edges
+  ros::Time t_start_edge_detect = ros::Time::now();
+  CannyThreshold(0, 0);
+  ros::Duration d_edges_detect(ros::Time::now()-t_start_edge_detect);
+
+  // Get contours
+  std::vector< std::vector<cv::Point> > contours;
+  std::vector<cv::Vec4i> hierarchy;
+  findContours( src, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
+
+  std::vector<cv::Point2f> centers(contours.size());
+  std::vector<float> radii(contours.size());
+  // For each contour, find the minimum enclosing circle
+  for(int i=0;i<contours.size();i++)
+  {
+    cv::minEnclosingCircle(contours[i], centers[i], radii[i]);
+
+    Circle temp;
+    temp.center.x = centers[i].y;
+    temp.center.y = centers[i].x;
+    temp.radius = radii[i];
+    
+    result.push_back(temp);    
+  }
+
+
+  return result;
+}
+
+
+std::vector<Circle> CirclePacker::goMyBlobs()
+{
+  ROS_INFO("In CirclePacker::go()");
+  std::vector<Circle> result;
+
+  // Create a matrix of the same size and type as src
+  dst.create( src.size(), src.type() );
+  ROS_INFO("Done with dst.create");
+
+  // Convert to grayscale
+  //cvtColor(src, src_gray, CV_BGR2GRAY);
+
+  // Get the edges
+  ros::Time t_start_edge_detect = ros::Time::now();
+  CannyThreshold(0, 0);
+  ros::Duration d_edges_detect(ros::Time::now()-t_start_edge_detect);
+  ROS_INFO("Done with CannyThreshold");
+
+  /*
+   * Detect blobs
+   */
+  // Get contours
+  std::vector< std::vector<cv::Point> > contours;
+  std::vector<cv::Vec4i> hierarchy;
+  findContours( src, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
+
+  // Go through each set of contour points
+  for(int i=0;i<contours.size();i++)
+  {
+    Circle c;
+    std::vector<cv::Point2f> obs_points;
+    for(int j=0;j<contours[i].size();j++)
+    {
+      cv::Point2f p = contours[i][j];
+      int pixel = src.at<uchar>(p.y, p.x);
+
+      // If the value is less than some threshold for obstacle pixels
+      if(pixel < 100)
+      {
+        obs_points.push_back(p);
+      }
+    }
+
+
+    cv::Mat m(obs_points);
+    // After getting points, build a moments array
+    cv::Moments moms = moments(obs_points);
+    ROS_INFO("moms: m00: %f m10: %f m01: %f m10/m00: %f m01/m00: %f", moms.m00, moms.m01, moms.m10, moms.m10/moms.m00, moms.m01/moms.m00);
+
+    c.center.x = moms.m01 / moms.m00;
+    c.center.y = moms.m10 / moms.m00;
+    c.radius = moms.m00;
+    
+    
+    std::vector<double> dists;
+    for (size_t pointIdx = 0; pointIdx<obs_points.size(); pointIdx++)
+    {
+        cv::Point2f pt = obs_points[i];
+        double d = utility_.positionDistance(c.center.x, c.center.y, pt.y, pt.x);
+        ROS_INFO("d: %f", d);
+        dists.push_back(d);
+    }
+    std::sort(dists.begin(), dists.end());
+    c.radius = (dists[(dists.size() - 1) / 2] + dists[dists.size() / 2]) / 2.;
+
+
+    obs_points.clear();
+    dists.clear();
+    result.push_back(c);
+  }
+
+
+
+
+  return result;
 }
