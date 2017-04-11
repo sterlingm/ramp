@@ -90,6 +90,9 @@ std::vector<Velocity> x_y_velocities;
 
 ros::Timer timer_markers;
 
+
+std::vector<double> d_avg_values;
+
 /*********************************
  * Variables for BFL
  *********************************/
@@ -889,10 +892,20 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
   //CirclePacker c(cg_ptr); // (If using consolidated costmaps)
   CirclePacker c(grid);
-  //std::vector<Circle> cirs = c.go();
+  std::vector<Circle> cirs = c.go();
   //std::vector<Circle> cirs = c.goHough();
   //std::vector<Circle> cirs = c.goMinEncCir();
-  std::vector<Circle> cirs = c.goMyBlobs();
+  std::vector<Circle> cirs_myblobs = c.goMyBlobs();
+  
+  // Get distance between two circle detection methods
+  double d_avg=0;
+  for(int i=0;i<cirs.size();i++)
+  {
+    d_avg += util.positionDistance(cirs[i].center.x, cirs[i].center.y, cirs_myblobs[i].center.x, cirs_myblobs[i].center.y);
+  }
+  d_avg /= cirs.size();
+  d_avg_values.push_back(d_avg);
+  ROS_INFO("Average difference: %f", d_avg);
 
   /*
    * Use custom BlobDetector
@@ -1111,6 +1124,16 @@ void reportPredictedVelocity(int sig)
 
     printf("\nPredicted Velocities range=[%f,%f], average: %f\n", min_v, max_v, average_v);
   }
+
+  ROS_INFO("Average differences in circle detection");
+  double d=0;
+  for(int i=0;i<d_avg_values.size();i++)
+  {
+    ROS_INFO("d_avg_values[%i]: %f", i, d_avg_values[i]);
+    d+=d_avg_values[i];
+  }
+  d/=d_avg_values.size();
+  ROS_INFO("Final average difference: %f", d);
 
   /*for(int i=0;i<cirs_pos.size();i++)
   {
