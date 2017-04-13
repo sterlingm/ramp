@@ -66,6 +66,7 @@ std::vector<Circle> prev_cirs;
 
 // prev_velocities[cycle][circle]
 std::vector< std::vector<Velocity> > prev_velocities;
+std::vector< std::vector<Velocity> > x_y_velocities;
 
 size_t prev_size;
 
@@ -86,7 +87,6 @@ double jump_threshold_inc = 0.25;
 
 
 std::vector<Velocity> predicted_velocities;
-std::vector<Velocity> x_y_velocities;
 
 ros::Timer timer_markers;
 
@@ -638,6 +638,7 @@ std::vector<Velocity> predictVelocities(const ros::Duration d_elapsed)
 
   std::vector<Velocity> result;
   double grid_resolution=0.01;
+  
 
   // For each circle obstacle,
   for(int i=0;i<cir_obs.size();i++)
@@ -669,15 +670,11 @@ std::vector<Velocity> predictVelocities(const ros::Duration d_elapsed)
       temp.v  = linear_v;
       temp.w  = w;
       //ROS_INFO("vx: %f vy: %f speed: %f theta: %f w: %f", temp.vx, temp.vy, linear_v, theta, w);
-
-      /*
-       * This needs to be changed to work for N moving obstacles
-       */
-      x_y_velocities.push_back(temp);
       
       predicted_velocities.push_back(temp);
     }
 
+    // Push the circle's velocity onto the result
     result.push_back(temp);
   }
 
@@ -975,10 +972,10 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
     
     // Prediction
-    if(x_y_velocities.size() > 0)
+    if(x_y_velocities.size() > 0 && x_y_velocities[x_y_velocities.size()-1].size() > i)
     {
-      u[0] = x_y_velocities[x_y_velocities.size()-1].vx;
-      u[1] = x_y_velocities[x_y_velocities.size()-1].vy;
+      u[0] = x_y_velocities[x_y_velocities.size()-1][i].vx;
+      u[1] = x_y_velocities[x_y_velocities.size()-1][i].vy;
       u[2] = 0;
       u[3] = 0;
     }
@@ -1055,6 +1052,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    * Predict velocities
    */
   std::vector<Velocity> velocities = predictVelocities(d_elapsed);
+  x_y_velocities.push_back(velocities);
   
   for(int i=0;i<velocities.size();i++)
   {
