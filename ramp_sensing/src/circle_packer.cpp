@@ -920,6 +920,14 @@ std::vector<Circle> CirclePacker::goMyBlobs()
     Circle c;
     std::vector<cv::Point2f> obs_points;
 
+    // Check that there are at least a min number of contour points
+    // This is because we usually get massive circles (radius>1000) when there
+    // are only a few points
+    if(contours[i].size() < 10)
+    {
+      continue;
+    }
+
     /*
      *  Get all the points within the contour region that are obstacle pixels
      */
@@ -994,23 +1002,31 @@ std::vector<Circle> CirclePacker::goMyBlobs()
 
     c.center.x = y;
     c.center.y = x;
+
+    
     
     
     std::vector<double> dists;
     for (size_t pointIdx = 0; pointIdx<obs_points.size(); pointIdx++)
     {
-        cv::Point2f pt = obs_points[i];
+        cv::Point2f pt = obs_points[pointIdx];
         double d = utility_.positionDistance(c.center.x, c.center.y, pt.y, pt.x);
         //ROS_INFO("d: %f", d);
         dists.push_back(d);
     }
     std::sort(dists.begin(), dists.end());
-    c.radius = (dists[(dists.size() - 1) / 2] + dists[dists.size() / 2]) / 2.;
+    //c.radius = (dists[(dists.size() - 1) / 2] + dists[dists.size() / 2]) / 2.;
+    c.radius = dists[dists.size()-1];
 
 
     obs_points.clear();
     dists.clear();
-    result.push_back(c);
+
+    // Only push on circles that are above a size threshold
+    if(c.radius > 20.0)
+    {
+      result.push_back(c);
+    }
   }
 
 

@@ -90,6 +90,7 @@ std::vector<Velocity> x_y_velocities;
 
 ros::Timer timer_markers;
 
+double coll_radius = 0.25;
 
 std::vector<double> d_avg_values;
 
@@ -404,10 +405,11 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
   x_origin /= global_grid.info.resolution;
   y_origin /= global_grid.info.resolution;
   
-  ////ROS_INFO("After translate: x_origin: %f y_origin: %f", x_origin, y_origin);
+  ROS_INFO("After translate: x_origin: %f y_origin: %f", x_origin, y_origin);
 
   for(int i=0;i<obs.size();i++)
   {
+    ROS_INFO("i: %i obs.size(): %i", i, (int)obs.size());
     visualization_msgs::Marker marker;
     marker.header.stamp = ros::Time::now();
     marker.header.frame_id = "/map_rot";
@@ -421,7 +423,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
     double x = (obs[i].cir_.center.x + x_origin) * global_grid.info.resolution;
     double y = (obs[i].cir_.center.y + y_origin) * global_grid.info.resolution;
     
-    ////ROS_INFO("Before translation: (%f, %f) After translation: (%f, %f)", obs[i].cir_.center.x, obs[i].cir_.center.y, x, y);
+    //ROS_INFO("Before translation: (%f, %f) After translation: (%f, %f)", obs[i].cir_.center.x, obs[i].cir_.center.y, x, y);
     
 
     marker.pose.position.x = x;
@@ -432,12 +434,13 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
     marker.pose.orientation.z = 0.0;
     marker.pose.orientation.w = 1.0;
 
-    double radius = obs[i].cir_.radius * global_grid.info.resolution;
+    double radius = (obs[i].cir_.radius) * global_grid.info.resolution;
+    radius += coll_radius;
     //ROS_INFO("x: %f y: %f radius: %f", x, y, radius);
     
-    obs[i].cir_.center.x = x;
+    /*obs[i].cir_.center.x = x;
     obs[i].cir_.center.y = y;
-    obs[i].cir_.radius = radius;
+    obs[i].cir_.radius = radius;*/
     
     marker.scale.x = radius;
     marker.scale.y = radius;
@@ -479,7 +482,8 @@ void publishMarkers(const ros::TimerEvent& e)
    */
   for(int i=0;i<markers.size();i++)
   {
-    //ROS_INFO("i: %i", i);
+    ROS_INFO("Creating text and arrow for marker i: %i", i);
+    ROS_INFO("Marker %i position: (%f, %f) v: %f", i, markers[i].pose.position.x, markers[i].pose.position.y, prev_velocities[prev_velocities.size()-1][i].v);
     visualization_msgs::Marker text;
     visualization_msgs::Marker arrow;
 
@@ -513,12 +517,6 @@ void publishMarkers(const ros::TimerEvent& e)
     // Set arrow points
     arrow.scale.x = prev_velocities[prev_velocities.size()-1][i].v < 0.25 ? 0.25 : prev_velocities[prev_velocities.size()-1][i].v;
     arrow.scale.y = 0.1;
-    arrow.pose.orientation.x = 0;
-    arrow.pose.orientation.y = 0;
-    arrow.pose.orientation.z = 0;
-    arrow.pose.orientation.w = 1;
-    
-    
     
     // Set poses
     text.pose = markers[i].pose;
@@ -892,10 +890,10 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
   //CirclePacker c(cg_ptr); // (If using consolidated costmaps)
   CirclePacker c(grid);
-  std::vector<Circle> cirs = c.go();
+  std::vector<Circle> cirs_myblobs = c.go();
   //std::vector<Circle> cirs = c.goHough();
   //std::vector<Circle> cirs = c.goMinEncCir();
-  std::vector<Circle> cirs_myblobs = c.goMyBlobs();
+  std::vector<Circle> cirs = c.goMyBlobs();
   
   // Get distance between two circle detection methods
   double d_avg=0;
@@ -973,8 +971,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
   for(int i=0;i<cir_obs.size();i++)
   {
-    //ROS_INFO("Updating circle filter %i", i);
-    //ROS_INFO("Updating circle filter %i", i);
+    ROS_INFO("Updating circle filter %i", i);
 
     
     // Prediction
@@ -1001,10 +998,11 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     {
       y[i] = 0;
     }
+    ROS_INFO("Measurement: (%f, %f)", y[0], y[1]);
 
     // Update the Kalman filter
     cir_obs[i]->kf->update(u, y);
-    //ROS_INFO("Posterior after update:");
+    ROS_INFO("Posterior after update:");
     cir_obs[i]->kf->printPosterior();
     
     // Set previous circle
@@ -1060,7 +1058,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   
   for(int i=0;i<velocities.size();i++)
   {
-    //ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
+    ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
   }
 
   //ROS_INFO("Pushing back velocities vector with size: %i", (int)velocities.size());
@@ -1127,12 +1125,17 @@ void reportPredictedVelocity(int sig)
 
   ROS_INFO("Average differences in circle detection");
   double d=0;
+  int count=0;
   for(int i=0;i<d_avg_values.size();i++)
   {
     ROS_INFO("d_avg_values[%i]: %f", i, d_avg_values[i]);
-    d+=d_avg_values[i];
+    if(!std::isnan(d_avg_values[i]))
+    {
+      d+=d_avg_values[i];
+      count++;
+    }
   }
-  d/=d_avg_values.size();
+  d/=count;
   ROS_INFO("Final average difference: %f", d);
 
   /*for(int i=0;i<cirs_pos.size();i++)
