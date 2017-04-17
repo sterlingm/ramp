@@ -676,7 +676,7 @@ std::vector<Velocity> predictVelocities(const ros::Duration d_elapsed)
 
     // Push the circle's velocity onto the result
     result.push_back(temp);
-  }
+  } // end for
 
   //ROS_INFO("Exiting predictVelocities");
   return result;
