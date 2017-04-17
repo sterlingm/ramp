@@ -178,6 +178,34 @@ void loadParameters(const ros::NodeHandle handle)
   }
 
 
+  if(handle.hasParam("/costmap_node/costmap/width"))
+  {
+    ROS_INFO("Found /costmap_node/costmap/width");
+    double x_max;
+    handle.getParam("/costmap_node/costmap/width", x_max);
+    ranges.clear();
+    Range x_range(0, x_max);
+    ranges.push_back(x_range);
+  }
+  else
+  {
+    ROS_ERROR("/costmap_node/costmap/width param not found!");
+  }
+  
+  if(handle.hasParam("/costmap_node/costmap/height"))
+  {
+    ROS_INFO("Found /costmap_node/costmap/height");
+    double y_max;
+    handle.getParam("/costmap_node/costmap/height", y_max);
+    Range y_range(0, y_max);
+    ranges.push_back(y_range);
+  }
+  else
+  {
+    ROS_ERROR("/costmap_node/costmap/width param not found!");
+  }
+
+
 
 
   std::cout<<"\n------- Done loading parameters -------\n";
