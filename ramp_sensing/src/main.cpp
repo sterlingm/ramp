@@ -48,6 +48,20 @@ struct Velocity
   double v, vx, vy, w;
 };
 
+
+struct CircleMatch
+{
+  int i_cirs;
+  int i_prevCir;
+  double dist;
+  double delta_r;
+
+};
+bool myfunction (const CircleMatch& a, const CircleMatch& b)
+{
+  return a.dist < b.dist;
+}
+
 std::vector<CircleOb*> cir_obs;
 std::vector<Circle> cirs_pos;
 
@@ -93,6 +107,9 @@ ros::Timer timer_markers;
 double coll_radius = 0.25;
 
 std::vector<double> d_avg_values;
+
+double dist_threshold = 0.5;
+double radius_threshold = 0.25;
 
 /*********************************
  * Variables for BFL
@@ -562,6 +579,7 @@ int getClosestPrev(Circle m, std::vector<Circle> N, std::vector<int> matched)
   ////ROS_INFO("In getClosestPrev");
   ////ROS_INFO("N.size(): %i", (int)N.size());
   int min_index = 0;
+  double dist_threshold = 0.2;
 
   // Don't start at index 0 if it's already been matched
   while(matched[min_index])
@@ -575,19 +593,22 @@ int getClosestPrev(Circle m, std::vector<Circle> N, std::vector<int> matched)
 
   ////ROS_INFO("center: [%f, %f]", center[0], center[1]);
 
+  // If there are circles left to match
   if(N.size() > 0)
   {
 
+    // Get center and dist used as the initial minimum
     std::vector<double> prev_center;
-    prev_center.push_back(N.at(0).center.x);
-    prev_center.push_back(N.at(0).center.y);
+    prev_center.push_back(N.at(min_index).center.x);
+    prev_center.push_back(N.at(min_index).center.y);
 
     double dist = util.positionDistance(center, prev_center);
     
     ////ROS_INFO("Prev center: [%f, %f]", prev_center[0], prev_center[1]);
     ////ROS_INFO("dist: %f", dist);
 
-    for(int i=1;i<N.size();i++)
+    // Go through remaining potential matches, find min dist
+    for(int i=min_index;i<N.size();i++)
     {
       prev_center.at(0) =  N[i].center.x;
       prev_center.at(1) =  N[i].center.y;
@@ -599,10 +620,16 @@ int getClosestPrev(Circle m, std::vector<Circle> N, std::vector<int> matched)
         dist =  util.positionDistance(center, prev_center);
         min_index = i;
       }
-    }
+    } // end for each potential match
 
     //ROS_INFO("min_index: %i dist: %f matched[%i]: %i", min_index, dist, min_index, matched[min_index]);
-  }
+    
+    // Check if distance is greater than the distance threshold
+    if(dist > dist_threshold)
+    {
+      return -1;
+    }
+  } // end if N.size() > 0
 
   else
   {
@@ -801,9 +828,17 @@ std::vector<int> matchCircles(std::vector<Circle> cirs, std::vector<Circle> targ
   // Match each one, and mark that value in the array as 1
   for(int i=0;i<cirs.size();i++)
   {
+    // index < 0 if no match, 0<=index<result.size() if there is a match
     int index = getClosestPrev(cirs[i], targets, result);
-    result[index]++;
-  }
+    if(index > -1)
+    {
+      result[index]++;
+    }
+    else
+    {
+      ROS_INFO("Index: %i Could not find match for circle %i", index, i);
+    }
+  } // end for each circle to match
 
   return result;
 }
@@ -811,7 +846,7 @@ std::vector<int> matchCircles(std::vector<Circle> cirs, std::vector<Circle> targ
 void editNumObstacles(std::vector<Circle> cirs, bool add)
 {
   //ROS_INFO("In editNumObstacles");
-  //ROS_INFO("add: %s", add ? "True" : "False"); 
+  //ROS_INFO("add: %s", add ? "True" : "False");
   // Match the previous circles to the new ones (to prevent matching more than 1 to the same target)
   std::vector<int> matches = add ? matchCircles(prev_valid_cirs, cirs) : matchCircles(cirs, prev_valid_cirs);
   
@@ -844,6 +879,104 @@ void editNumObstacles(std::vector<Circle> cirs, bool add)
   //ROS_INFO("Exiting editNumObstacles");
 }
 
+/*
+ * Rename to matchCircles when done
+ */
+std::vector<CircleMatch> matchCirclesPair(std::vector<Circle> cirs, std::vector<Circle> targets)
+{
+  ROS_INFO("In matchCirclesPair");
+  ROS_INFO("cirs.size(): %i targets.size(): %i", (int)cirs.size(), (int)targets.size());
+  std::vector<CircleMatch> result;
+  std::vector<int> matched_targets(targets.size());
+  std::vector<CircleMatch> initial;
+
+  // 2D array for dists of each cir to each target
+  // [target][cir i dist]
+  std::vector< std::vector<double> > dists;
+
+  std::vector<CircleMatch> all_dists;
+
+  // Initial matching
+  for(int i=0;i<targets.size();i++)
+  {
+    std::vector<double> target_dists;
+    for(int j=0;j<cirs.size();j++)
+    {
+      target_dists.push_back(util.positionDistance(cirs[j].center.x, cirs[j].center.y, targets[i].center.x, targets[i].center.y));
+      CircleMatch temp;
+      temp.i_cirs = j;
+      temp.i_prevCir = i;
+      temp.dist = util.positionDistance(cirs[j].center.x, cirs[j].center.y, targets[i].center.x, targets[i].center.y);
+      temp.delta_r = fabs(cirs[j].radius - targets[i].radius);
+
+      all_dists.push_back(temp);
+    }
+
+    dists.push_back(target_dists);
+  } // end getting dist values
+
+  ROS_INFO("all_dists.size(): %i", (int)all_dists.size());
+
+  // Sort dist values
+  std::sort(all_dists.begin(), all_dists.end(), myfunction);
+  for(int i=0;i<all_dists.size();i++)
+  {
+    ROS_INFO("all_dists %i: i_cirs: %i targets: %i dist: %f delta_r: %f", i, all_dists[i].i_cirs, all_dists[i].i_prevCir, all_dists[i].dist, all_dists[i].delta_r);
+  }
+    
+  ROS_INFO("Entering while loop...");
+  int i=0;
+  while(i < all_dists.size())
+  {
+    ROS_INFO("all_dists %i: i_cirs: %i targets: %i dist: %f delta_r: %f", i, all_dists[i].i_cirs, all_dists[i].i_prevCir, all_dists[i].dist, all_dists[i].delta_r);
+
+    // Check if this is a legitimate match based on dist and radius change
+    if(all_dists[i].dist < dist_threshold && all_dists[i].delta_r < radius_threshold)
+    {
+      ROS_INFO("Legitimate match");
+
+      // Now check that the target or circle hasn't been matched already
+      bool prev_matched = false;
+      for(int r=0;r<result.size();r++)
+      {
+        ROS_INFO("r: %i result[%i].i_cirs: %i result[%i]: %i", r, r, result[r].i_cirs, r, result[r].i_cirs);
+        if(result[r].i_cirs == all_dists[i].i_cirs || result[r].i_prevCir == all_dists[i].i_prevCir)
+        {
+          ROS_INFO("Previously matched!");
+          prev_matched = true;
+          break;
+        }
+      } // end for
+
+      if(!prev_matched)
+      {
+        ROS_INFO("Not previously matched!");
+        result.push_back(all_dists[i]);
+        all_dists.erase(all_dists.begin()+i);
+        i--;
+      }
+    } // end if legitimate match
+    else
+    {
+      ROS_INFO("Match not legitimate");
+    }
+
+    i++;
+  } // end for all_dists values
+
+
+  ROS_INFO("Exiting matchCirclesPair");
+  return result;
+}
+
+
+/*
+ * Compare new circles to old circles and determine matches
+ */
+void dataAssociation()
+{
+  //std::vector<int> matches = add ? matchCircles(prev_valid_cirs, cirs) : matchCircles(cirs, prev_valid_cirs);
+}
 
 
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
@@ -934,6 +1067,35 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    * Done finding circles on latest costmap
    ********************************************
    */
+
+  /*
+   * Data association
+   */
+   
+  std::vector<CircleMatch> cm = matchCirclesPair(cirs, prev_valid_cirs);
+  ROS_INFO("Matching result:");
+  for(int i=0;i<cm.size();i++)
+  {
+    ROS_INFO("Match %i: i_cirs: %i i_prevCir: %i dist: %f delta_r: %f", i, cm[i].i_cirs, cm[i].i_prevCir, cm[i].dist, cm[i].delta_r);
+  }
+
+  // If we need to add and/or delete obstacles
+  if(cm.size() != cirs.size())
+  {
+    ROS_INFO("cm size != cirs size, cm.size(): %i cirs.size(): %i", (int)cm.size(), (int)cirs.size());
+    
+    int matched[cirs.size()] = {0};
+    for(int i=0;i<cm.size();i++)
+    {
+      matched[ cm[i].i_cirs ]++;
+    }
+    // Create new filters
+    for(int i=0;i<cirs.size();i++)
+    {
+      CircleOb* temp = createCircleOb(cirs[i]);
+      cir_obs.insert(cir_obs.begin()+i, temp);
+    }
+  }
   
 
   /*
