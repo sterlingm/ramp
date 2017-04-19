@@ -1000,12 +1000,81 @@ std::vector<CircleMatch> matchCirclesPair(std::vector<Circle> cirs, std::vector<
 }
 
 
+void deleteOldObs(std::vector<CircleMatch> cm)
+{
+  // Detect whether any targets could not be matched
+  std::vector<int> matched_tar(prev_valid_cirs.size(), 0);
+  ROS_INFO("Created matched_tar");
+  for(int j=0;j<cm.size();j++)
+  {
+    matched_tar[ cm[j].i_prevCir ]++;
+  }
+  int i=0;
+  int index_cir_obs=0;
+  ROS_INFO("prev_valid_cirs.size(): %i", (int)prev_valid_cirs.size());
+  ROS_INFO("cir_obs.size(): %i", (int)cir_obs.size());
+  for(int i=0;i<prev_valid_cirs.size();i++)
+  {
+    if(i < matched_tar.size() && !matched_tar[i])
+    {
+      ROS_INFO("matched_tar[%i]: %i", i, matched_tar[i]);
+      ROS_INFO("Deleting filter at index %i!", index_cir_obs);
+      delete cir_obs[index_cir_obs];
+      cir_obs.erase(cir_obs.begin()+index_cir_obs);
+
+      // Don't decrement i because we are looping through matched_tar, not cir_obs
+      index_cir_obs--;
+    }
+    index_cir_obs++;
+  }
+}
+
+void addNewObs(std::vector<CircleMatch> cm, std::vector<Circle> cirs)
+{
+  // Determine if we need to modify cir_obs
+  // If any new circles could not be matched
+  ROS_INFO("Before declaring matched_cirs");
+  std::vector<int> matched_cirs(cirs.size(), 0);
+  ROS_INFO("Check each matching result");
+  for(int i=0;i<cm.size();i++)
+  {
+    matched_cirs[ cm[i].i_cirs ]++;
+  }
+  // Create new filters
+  for(int i=0;i<cirs.size();i++)
+  {
+    ROS_INFO("matched_cirs[%i]: %i", i, matched_cirs[i]);
+    if(!matched_cirs[i])
+    {
+      ROS_INFO("Creating new filter!");
+      CircleOb* temp = createCircleOb(cirs[i]);
+      cir_obs.insert(cir_obs.begin()+i, temp);
+    }
+  }
+  ROS_INFO("Done creating new obstacles");
+}
+
+
 /*
  * Compare new circles to old circles and determine matches
  */
-void dataAssociation()
+void dataAssociation(std::vector<Circle> cirs)
 {
-  //std::vector<int> matches = add ? matchCircles(prev_valid_cirs, cirs) : matchCircles(cirs, prev_valid_cirs);
+  ROS_INFO("Starting data association");
+  ROS_INFO("cirs.size(): %i prev_valid_cirs: %i cir_obs: %i", (int)cirs.size(), (int)prev_valid_cirs.size(), (int)cir_obs.size());
+   
+  std::vector<CircleMatch> cm = matchCirclesPair(cirs, prev_valid_cirs);
+  ROS_INFO("cm.size(): %i", (int)cm.size());
+  ROS_INFO("Matching result:");
+  for(int i=0;i<cm.size();i++)
+  {
+    ROS_INFO("Match %i: i_cirs: %i i_prevCir: %i dist: %f delta_r: %f", i, cm[i].i_cirs, cm[i].i_prevCir, cm[i].dist, cm[i].delta_r);
+  }
+  
+  deleteOldObs(cm); 
+  addNewObs(cm, cirs);
+
+  ROS_INFO("Done with data association, cir_obs.size(): %i", (int)cir_obs.size());
 }
 
 
@@ -1101,97 +1170,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   /*
    * Data association
    */
-  ROS_INFO("Starting data association");
-  ROS_INFO("cirs.size(): %i prev_valid_cirs: %i cir_obs: %i", (int)cirs.size(), (int)prev_valid_cirs.size(), (int)cir_obs.size());
-   
-  std::vector<CircleMatch> cm = matchCirclesPair(cirs, prev_valid_cirs);
-  ROS_INFO("cm.size(): %i", (int)cm.size());
-  ROS_INFO("Matching result:");
-  for(int i=0;i<cm.size();i++)
-  {
-    ROS_INFO("Match %i: i_cirs: %i i_prevCir: %i dist: %f delta_r: %f", i, cm[i].i_cirs, cm[i].i_prevCir, cm[i].dist, cm[i].delta_r);
-  }
-  
-  
-  // Detect whether any targets could not be matched
-  std::vector<int> matched_tar(prev_valid_cirs.size(), 0);
-  ROS_INFO("Created matched_tar");
-  for(int j=0;j<cm.size();j++)
-  {
-    matched_tar[ cm[j].i_prevCir ]++;
-  }
-  int i=0;
-  int index_cir_obs=0;
-  ROS_INFO("prev_valid_cirs.size(): %i", (int)prev_valid_cirs.size());
-  ROS_INFO("cir_obs.size(): %i", (int)cir_obs.size());
-  //while(i<cir_obs.size())
-  while(i<prev_valid_cirs.size())
-  //for(int i=0;i<prev_valid_cirs.size();i++)
-  {
-    if(i < matched_tar.size() && !matched_tar[i])
-    {
-      ROS_INFO("matched_tar[%i]: %i", i, matched_tar[i]);
-      ROS_INFO("Deleting filter at index %i!", index_cir_obs);
-      delete cir_obs[index_cir_obs];
-      cir_obs.erase(cir_obs.begin()+index_cir_obs);
-      // Don't decrement i because we are looping through matched_tar, not cir_obs
-      index_cir_obs--;
-    }
-    index_cir_obs++;
-    i++;
-  }
-
-  // Determine if we need to modify cir_obs
-  // If any new circles could not be matched
-  ROS_INFO("Before declaring matched_cirs");
-  std::vector<int> matched_cirs(cirs.size(), 0);
-  ROS_INFO("Check each matching result");
-  for(int i=0;i<cm.size();i++)
-  {
-    matched_cirs[ cm[i].i_cirs ]++;
-  }
-  // Create new filters
-  for(int i=0;i<cirs.size();i++)
-  {
-    ROS_INFO("matched_cirs[%i]: %i", i, matched_cirs[i]);
-    if(!matched_cirs[i])
-    {
-      ROS_INFO("Creating new filter!");
-      CircleOb* temp = createCircleOb(cirs[i]);
-      cir_obs.insert(cir_obs.begin()+i, temp);
-    }
-  }
-  ROS_INFO("Done creating new obstacles");
-
- 
-  ROS_INFO("Done with data association, cir_obs.size(): %i", (int)cir_obs.size());
-
-
-
-
-
-    /*
-     * Account for changes in the number of obstacles
-     */
-    // If there are new circles
-    /*if(cirs.size() > prev_valid_cirs.size())
-    {
-      //ROS_INFO("More circles");
-    
-      editNumObstacles(cirs, true);
-      
-      //ROS_INFO("After adding, cir_obs.size(): %i", (int)cir_obs.size());
-    }
-
-    // Else If some circles disappeared
-    else if(cirs.size() < prev_valid_cirs.size())
-    {
-      //ROS_INFO("Fewer circles, cirs.size(): %i prev_valid_cirs.size(): %i cir_obs.size(): %i", (int)cirs.size(), (int)prev_valid_cirs.size(), (int)cir_obs.size());
-
-      editNumObstacles(cirs, false);
-
-      //ROS_INFO("After removing, cir_obs.size(): %i", (int)cir_obs.size());
-    }*/
+   dataAssociation(cirs);
 
 
   
