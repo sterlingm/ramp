@@ -433,6 +433,7 @@ void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector
         // Replace i by setting it to temp, erase the circle at j
         result.push_back(temp);
         cs[i] = temp;
+        ci = temp;
         cs.erase(cs.begin()+j, cs.begin()+j+1);
         //result.erase(cs.begin()+j, cs.begin()+j+1);
 
@@ -984,11 +985,11 @@ std::vector<Circle> CirclePacker::goMyBlobs()
     cv::Mat m(obs_points);
     // After getting points, build a moments array
     //cv::Moments moms = moments(obs_points);
-    cv::Moments moms = moments(m);
-    ROS_INFO("moms: m00: %f m10: %f m01: %f m10/m00: %f m01/m00: %f", moms.m00, moms.m01, moms.m10, moms.m10/moms.m00, moms.m01/moms.m00);
+    //cv::Moments moms = moments(m);
+    //ROS_INFO("moms: m00: %f m10: %f m01: %f m10/m00: %f m01/m00: %f", moms.m00, moms.m01, moms.m10, moms.m10/moms.m00, moms.m01/moms.m00);
 
-    c.center.x = moms.m01 / moms.m00;
-    c.center.y = moms.m10 / moms.m00;
+    //c.center.x = moms.m01 / moms.m00;
+    //c.center.y = moms.m10 / moms.m00;
 
     int x=0, y=0;
     for(int j=0;j<obs_points.size();j++)

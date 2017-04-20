@@ -48,6 +48,20 @@ struct Velocity
   double v, vx, vy, w;
 };
 
+
+struct CircleMatch
+{
+  int i_cirs;
+  int i_prevCir;
+  double dist;
+  double delta_r;
+
+};
+bool myfunction (const CircleMatch& a, const CircleMatch& b)
+{
+  return a.dist < b.dist;
+}
+
 std::vector<CircleOb*> cir_obs;
 std::vector<Circle> cirs_pos;
 
@@ -93,6 +107,9 @@ ros::Timer timer_markers;
 double coll_radius = 0.25;
 
 std::vector<double> d_avg_values;
+
+double dist_threshold = 100;
+double radius_threshold = 35;
 
 /*********************************
  * Variables for BFL
@@ -449,7 +466,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
     marker.color.g = 1;
     marker.color.b = 0;
     marker.color.a = 1;
-    marker.lifetime = ros::Duration(0.2);
+    marker.lifetime = ros::Duration(0.1);
 
     result.push_back(marker);
   }
@@ -527,7 +544,7 @@ void publishMarkers(const ros::TimerEvent& e)
     text.color.b = 1;
     text.color.a = 1;
     text.scale.z = 0.25;
-    text.lifetime = ros::Duration(0.2);
+    text.lifetime = ros::Duration(0.1);
 
     arrow.pose = text.pose;
     tf::Quaternion q = tf::createQuaternionFromYaw(cir_obs[i]->prevTheta[cir_obs[i]->prevCirs.size()-1]);
@@ -538,7 +555,7 @@ void publishMarkers(const ros::TimerEvent& e)
     arrow.color.g = 0;
     arrow.color.b = 0;
     arrow.color.a = 1;
-    arrow.lifetime = ros::Duration(0.2);
+    arrow.lifetime = ros::Duration(0.1);
     
     // Push onto texts 
     texts.push_back(text);
@@ -551,6 +568,32 @@ void publishMarkers(const ros::TimerEvent& e)
   result.markers.insert(std::end(result.markers), std::begin(texts), std::end(texts));  
   result.markers.insert(std::end(result.markers), std::begin(arrows), std::end(arrows));  
 
+  // Create a text marker to show the size of cir_obs
+  visualization_msgs::Marker text;
+  text.header.stamp   = ros::Time::now();
+  text.id   = result.markers.size()+1;
+  text.header.frame_id  = "/map_rot";
+  text.ns   = "basic_shapes";
+  text.type   = visualization_msgs::Marker::TEXT_VIEW_FACING;
+  text.action   = visualization_msgs::Marker::ADD;
+  std::stringstream num_obs;
+  num_obs<<"Number of obstacles: "<<(int)cir_obs.size();
+  text.text = num_obs.str();
+
+  // Set poses
+  text.pose.position.x = 2;
+  text.pose.position.y = 3;
+  text.pose.position.z = 0.1;
+  text.color.r = 0;
+  text.color.g = 0;
+  text.color.b = 0;
+  text.color.a = 1;
+  text.scale.z = 0.75;
+  text.lifetime = ros::Duration(0.2);
+
+  result.markers.push_back(text);
+  
+
   //ROS_INFO("result.markers.size(): %i", (int)result.markers.size());
 
   pub_rviz.publish(result);
@@ -562,6 +605,7 @@ int getClosestPrev(Circle m, std::vector<Circle> N, std::vector<int> matched)
   ////ROS_INFO("In getClosestPrev");
   ////ROS_INFO("N.size(): %i", (int)N.size());
   int min_index = 0;
+  double dist_threshold = 0.2;
 
   // Don't start at index 0 if it's already been matched
   while(matched[min_index])
@@ -575,19 +619,22 @@ int getClosestPrev(Circle m, std::vector<Circle> N, std::vector<int> matched)
 
   ////ROS_INFO("center: [%f, %f]", center[0], center[1]);
 
+  // If there are circles left to match
   if(N.size() > 0)
   {
 
+    // Get center and dist used as the initial minimum
     std::vector<double> prev_center;
-    prev_center.push_back(N.at(0).center.x);
-    prev_center.push_back(N.at(0).center.y);
+    prev_center.push_back(N.at(min_index).center.x);
+    prev_center.push_back(N.at(min_index).center.y);
 
     double dist = util.positionDistance(center, prev_center);
     
     ////ROS_INFO("Prev center: [%f, %f]", prev_center[0], prev_center[1]);
     ////ROS_INFO("dist: %f", dist);
 
-    for(int i=1;i<N.size();i++)
+    // Go through remaining potential matches, find min dist
+    for(int i=min_index;i<N.size();i++)
     {
       prev_center.at(0) =  N[i].center.x;
       prev_center.at(1) =  N[i].center.y;
@@ -599,10 +646,16 @@ int getClosestPrev(Circle m, std::vector<Circle> N, std::vector<int> matched)
         dist =  util.positionDistance(center, prev_center);
         min_index = i;
       }
-    }
+    } // end for each potential match
 
     //ROS_INFO("min_index: %i dist: %f matched[%i]: %i", min_index, dist, min_index, matched[min_index]);
-  }
+    
+    // Check if distance is greater than the distance threshold
+    /*if(dist > dist_threshold)
+    {
+      return -1;
+    }*/
+  } // end if N.size() > 0
 
   else
   {
@@ -634,7 +687,7 @@ bool jump(const Circle cir_i, const Circle cir_prev, double threshold)
 
 std::vector<Velocity> predictVelocities(const ros::Duration d_elapsed)
 {
-  //ROS_INFO("In predictVelocities");
+  ROS_INFO("In predictVelocities");
 
   std::vector<Velocity> result;
   double grid_resolution=0.01;
@@ -643,9 +696,9 @@ std::vector<Velocity> predictVelocities(const ros::Duration d_elapsed)
   // For each circle obstacle,
   for(int i=0;i<cir_obs.size();i++)
   {
-    //ROS_INFO("CircleOb %i", i);
+    ROS_INFO("CircleOb %i prevCirs.size(): %i", i, (int)cir_obs[i]->prevCirs.size());
 
-    //ROS_INFO("Current: (%f, %f)", cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
+    ROS_INFO("Current: (%f, %f)", cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
 
     Velocity temp;
 
@@ -653,7 +706,7 @@ std::vector<Velocity> predictVelocities(const ros::Duration d_elapsed)
     if(cir_obs[i]->prevCirs.size() > 0)
     {
       int i_prev = cir_obs[i]->prevCirs.size()-1;
-      //ROS_INFO("Prev: (%f, %f)", cir_obs[i]->prevCirs[i_prev].center.x, cir_obs[i]->prevCirs[i_prev].center.y);
+      ROS_INFO("Prev: (%f, %f)", cir_obs[i]->prevCirs[i_prev].center.x, cir_obs[i]->prevCirs[i_prev].center.y);
       double x_dist = cir_obs[i]->cir.center.x - cir_obs[i]->prevCirs[i_prev].center.x;
       double y_dist = cir_obs[i]->cir.center.y - cir_obs[i]->prevCirs[i_prev].center.y;
       double dist = util.positionDistance(cir_obs[i]->prevCirs[i_prev].center.x, cir_obs[i]->prevCirs[i_prev].center.y, cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
@@ -669,16 +722,20 @@ std::vector<Velocity> predictVelocities(const ros::Duration d_elapsed)
       temp.vy = linear_v*sin(theta);
       temp.v  = linear_v;
       temp.w  = w;
-      //ROS_INFO("vx: %f vy: %f speed: %f theta: %f w: %f", temp.vx, temp.vy, linear_v, theta, w);
+      ROS_INFO("vx: %f vy: %f speed: %f theta: %f w: %f", temp.vx, temp.vy, linear_v, theta, w);
       
       predicted_velocities.push_back(temp);
+    }
+    else
+    {
+      ROS_INFO("No previous circles");
     }
 
     // Push the circle's velocity onto the result
     result.push_back(temp);
   } // end for
 
-  //ROS_INFO("Exiting predictVelocities");
+  ROS_INFO("Exiting predictVelocities");
   return result;
 }
 
@@ -801,9 +858,17 @@ std::vector<int> matchCircles(std::vector<Circle> cirs, std::vector<Circle> targ
   // Match each one, and mark that value in the array as 1
   for(int i=0;i<cirs.size();i++)
   {
+    // index < 0 if no match, 0<=index<result.size() if there is a match
     int index = getClosestPrev(cirs[i], targets, result);
-    result[index]++;
-  }
+    if(index > -1)
+    {
+      result[index]++;
+    }
+    else
+    {
+      ROS_INFO("Index: %i Could not find match for circle %i", index, i);
+    }
+  } // end for each circle to match
 
   return result;
 }
@@ -811,7 +876,7 @@ std::vector<int> matchCircles(std::vector<Circle> cirs, std::vector<Circle> targ
 void editNumObstacles(std::vector<Circle> cirs, bool add)
 {
   //ROS_INFO("In editNumObstacles");
-  //ROS_INFO("add: %s", add ? "True" : "False"); 
+  //ROS_INFO("add: %s", add ? "True" : "False");
   // Match the previous circles to the new ones (to prevent matching more than 1 to the same target)
   std::vector<int> matches = add ? matchCircles(prev_valid_cirs, cirs) : matchCircles(cirs, prev_valid_cirs);
   
@@ -844,6 +909,173 @@ void editNumObstacles(std::vector<Circle> cirs, bool add)
   //ROS_INFO("Exiting editNumObstacles");
 }
 
+/*
+ * Rename to matchCircles when done
+ */
+std::vector<CircleMatch> matchCirclesPair(std::vector<Circle> cirs, std::vector<Circle> targets)
+{
+  ROS_INFO("In matchCirclesPair");
+  ROS_INFO("cirs.size(): %i targets.size(): %i", (int)cirs.size(), (int)targets.size());
+  std::vector<CircleMatch> result;
+  std::vector<int> matched_targets(targets.size());
+  std::vector<CircleMatch> initial;
+
+  // 2D array for dists of each cir to each target
+  // [target][cir i dist]
+  std::vector< std::vector<double> > dists;
+
+  std::vector<CircleMatch> all_dists;
+
+  // Initial matching
+  for(int i=0;i<targets.size();i++)
+  {
+    std::vector<double> target_dists;
+    for(int j=0;j<cirs.size();j++)
+    {
+      target_dists.push_back(util.positionDistance(cirs[j].center.x, cirs[j].center.y, targets[i].center.x, targets[i].center.y));
+      CircleMatch temp;
+      temp.i_cirs = j;
+      temp.i_prevCir = i;
+      temp.dist = util.positionDistance(cirs[j].center.x, cirs[j].center.y, targets[i].center.x, targets[i].center.y);
+      temp.delta_r = fabs(cirs[j].radius - targets[i].radius);
+
+      all_dists.push_back(temp);
+    }
+
+    dists.push_back(target_dists);
+  } // end getting dist values
+
+  ROS_INFO("all_dists.size(): %i", (int)all_dists.size());
+
+  // Sort dist values
+  std::sort(all_dists.begin(), all_dists.end(), myfunction);
+  for(int i=0;i<all_dists.size();i++)
+  {
+    ROS_INFO("all_dists %i: i_cirs: %i targets: %i dist: %f delta_r: %f", i, all_dists[i].i_cirs, all_dists[i].i_prevCir, all_dists[i].dist, all_dists[i].delta_r);
+  }
+    
+  ROS_INFO("Entering while loop...");
+  int i=0;
+  while(i < all_dists.size())
+  {
+    ROS_INFO("all_dists %i: i_cirs: %i targets: %i dist: %f delta_r: %f", i, all_dists[i].i_cirs, all_dists[i].i_prevCir, all_dists[i].dist, all_dists[i].delta_r);
+
+    // Check if this is a legitimate match based on dist and radius change
+    if(all_dists[i].dist < dist_threshold && all_dists[i].delta_r < radius_threshold)
+    {
+      ROS_INFO("Legitimate match");
+
+      // Now check that the target or circle hasn't been matched already
+      bool prev_matched = false;
+      for(int r=0;r<result.size();r++)
+      {
+        ROS_INFO("r: %i result[%i].i_cirs: %i result[%i]: %i", r, r, result[r].i_cirs, r, result[r].i_cirs);
+        if(result[r].i_cirs == all_dists[i].i_cirs || result[r].i_prevCir == all_dists[i].i_prevCir)
+        {
+          ROS_INFO("Previously matched!");
+          prev_matched = true;
+          break;
+        }
+      } // end for
+
+      if(!prev_matched)
+      {
+        ROS_INFO("Not previously matched!");
+        result.push_back(all_dists[i]);
+        all_dists.erase(all_dists.begin()+i);
+        i--;
+      }
+    } // end if legitimate match
+    else
+    {
+      ROS_INFO("Match not legitimate");
+    }
+
+    i++;
+  } // end for all_dists values
+
+
+  ROS_INFO("Exiting matchCirclesPair");
+  return result;
+}
+
+
+void deleteOldObs(std::vector<CircleMatch> cm)
+{
+  // Detect whether any targets could not be matched
+  std::vector<int> matched_tar(prev_valid_cirs.size(), 0);
+  ROS_INFO("Created matched_tar");
+  for(int j=0;j<cm.size();j++)
+  {
+    matched_tar[ cm[j].i_prevCir ]++;
+  }
+  int i=0;
+  int index_cir_obs=0;
+  ROS_INFO("prev_valid_cirs.size(): %i", (int)prev_valid_cirs.size());
+  ROS_INFO("cir_obs.size(): %i", (int)cir_obs.size());
+  for(int i=0;i<prev_valid_cirs.size();i++)
+  {
+    if(i < matched_tar.size() && !matched_tar[i])
+    {
+      ROS_INFO("matched_tar[%i]: %i", i, matched_tar[i]);
+      ROS_INFO("Deleting filter at index %i!", index_cir_obs);
+      delete cir_obs[index_cir_obs];
+      cir_obs.erase(cir_obs.begin()+index_cir_obs);
+
+      // Don't decrement i because we are looping through matched_tar, not cir_obs
+      index_cir_obs--;
+    }
+    index_cir_obs++;
+  }
+}
+
+void addNewObs(std::vector<CircleMatch> cm, std::vector<Circle> cirs)
+{
+  // Determine if we need to modify cir_obs
+  // If any new circles could not be matched
+  ROS_INFO("Before declaring matched_cirs");
+  std::vector<int> matched_cirs(cirs.size(), 0);
+  ROS_INFO("Check each matching result");
+  for(int i=0;i<cm.size();i++)
+  {
+    matched_cirs[ cm[i].i_cirs ]++;
+  }
+  // Create new filters
+  for(int i=0;i<cirs.size();i++)
+  {
+    ROS_INFO("matched_cirs[%i]: %i", i, matched_cirs[i]);
+    if(!matched_cirs[i])
+    {
+      ROS_INFO("Creating new filter!");
+      CircleOb* temp = createCircleOb(cirs[i]);
+      cir_obs.insert(cir_obs.begin()+i, temp);
+    }
+  }
+  ROS_INFO("Done creating new obstacles");
+}
+
+
+/*
+ * Compare new circles to old circles and determine matches
+ */
+void dataAssociation(std::vector<Circle> cirs)
+{
+  ROS_INFO("Starting data association");
+  ROS_INFO("cirs.size(): %i prev_valid_cirs: %i cir_obs: %i", (int)cirs.size(), (int)prev_valid_cirs.size(), (int)cir_obs.size());
+   
+  std::vector<CircleMatch> cm = matchCirclesPair(cirs, prev_valid_cirs);
+  ROS_INFO("cm.size(): %i", (int)cm.size());
+  ROS_INFO("Matching result:");
+  for(int i=0;i<cm.size();i++)
+  {
+    ROS_INFO("Match %i: i_cirs: %i i_prevCir: %i dist: %f delta_r: %f", i, cm[i].i_cirs, cm[i].i_prevCir, cm[i].dist, cm[i].delta_r);
+  }
+  
+  deleteOldObs(cm); 
+  addNewObs(cm, cirs);
+
+  ROS_INFO("Done with data association, cir_obs.size(): %i", (int)cir_obs.size());
+}
 
 
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
@@ -934,38 +1166,19 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    * Done finding circles on latest costmap
    ********************************************
    */
-  
 
   /*
-   * Account for changes in the number of obstacles
+   * Data association
    */
-  // If there are new circles
-  if(cirs.size() > prev_valid_cirs.size())
-  {
-    //ROS_INFO("More circles");
-  
-    editNumObstacles(cirs, true);
-    
-    //ROS_INFO("After adding, cir_obs.size(): %i", (int)cir_obs.size());
-  }
+   dataAssociation(cirs);
 
-  // Else If some circles disappeared
-  else if(cirs.size() < prev_valid_cirs.size())
-  {
-    //ROS_INFO("Fewer circles, cirs.size(): %i prev_valid_cirs.size(): %i cir_obs.size(): %i", (int)cirs.size(), (int)prev_valid_cirs.size(), (int)cir_obs.size());
-
-    editNumObstacles(cirs, false);
-
-    //ROS_INFO("After removing, cir_obs.size(): %i", (int)cir_obs.size());
-  }
-
-  //ROS_INFO("cirs.size(): %i obs.size(): %i", (int)cirs.size(), (int)obs.size());
 
   
   /*
    * Call the Kalman filter
    */
 
+  std::vector<Circle> prevCirs;
   for(int i=0;i<cir_obs.size();i++)
   {
     ROS_INFO("Updating circle filter %i", i);
@@ -1003,12 +1216,14 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     cir_obs[i]->kf->printPosterior();
     
     // Set previous circle
-    cir_obs[i]->prevCirs.push_back(cir_obs[i]->cir);
+    //cir_obs[i]->prevCirs.push_back(cir_obs[i]->cir);
 
     // Set new circle center
     MatrixWrapper::ColumnVector mean = cir_obs[i]->kf->posterior->ExpectedValueGet();
     cir_obs[i]->cir.center.x = mean[0];
     cir_obs[i]->cir.center.y = mean[1];
+
+    prevCirs.push_back(cir_obs[i]->cir);
 
     /*
      * If no KF
@@ -1057,6 +1272,12 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   for(int i=0;i<velocities.size();i++)
   {
     ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
+  }
+
+  // Set previous circles
+  for(int i=0;i<cir_obs.size();i++)
+  {
+    cir_obs[i]->prevCirs.push_back(prevCirs[i]);
   }
 
   //ROS_INFO("Pushing back velocities vector with size: %i", (int)velocities.size());
