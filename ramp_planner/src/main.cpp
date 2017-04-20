@@ -22,12 +22,15 @@ int                 pop_type;
 TrajectoryType      pt;
 std::vector<std::string> ob_topics;
 
+int costmap_width, costmap_height, costmap_origin_x, costmap_origin_y;
+
 
 // Initializes a vector of Ranges that the Planner is initialized with
 void initDOF(const std::vector<double> dof_min, const std::vector<double> dof_max) 
 {
   
-  for(unsigned int i=0;i<dof_min.size();i++) {
+  for(unsigned int i=0;i<dof_min.size();i++) 
+  {
     Range temp(dof_min.at(i), dof_max.at(i));
     ranges.push_back(temp); 
   }
@@ -88,11 +91,43 @@ void loadParameters(const ros::NodeHandle handle)
     handle.getParam("robot_info/DOF_min", dof_min); 
     handle.getParam("robot_info/DOF_max", dof_max); 
 
-    initDOF(dof_min, dof_max);
+    //initDOF(dof_min, dof_max);
   }
   else 
   {
     ROS_ERROR("Did not find parameters robot_info/DOF_min, robot_info/DOF_max");
+  }
+
+  /*
+   * Check for all costmap parameters!
+   */
+  if( handle.hasParam("costmap_node/costmap/width")     &&
+      handle.hasParam("costmap_node/costmap/height")    &&
+      handle.hasParam("costmap_node/costmap/origin_x")  &&
+      handle.hasParam("costmap_node/costmap/origin_y") )
+  {
+    handle.getParam("costmap_node/costmap/width", costmap_width);
+    handle.getParam("costmap_node/costmap/height", costmap_height);
+    handle.getParam("costmap_node/costmap/origin_x", costmap_origin_x);
+    handle.getParam("costmap_node/costmap/origin_y", costmap_origin_y);
+
+    ROS_INFO("Got costmap parameters. w: %i h: %i x: %i y: %i", costmap_width, costmap_height, costmap_origin_x, costmap_origin_y);
+
+    int x_max = costmap_width + costmap_origin_x;
+    int x_min = costmap_origin_x;
+    int y_max = costmap_height + costmap_origin_y;
+    int y_min = costmap_origin_y;
+    
+    std::vector<double> dof_min, dof_max;
+    dof_min.push_back(x_min);
+    dof_min.push_back(y_min);
+    dof_max.push_back(x_max);
+    dof_max.push_back(y_max);
+
+    dof_min.push_back(-PI);
+    dof_max.push_back(PI);
+
+    initDOF(dof_min, dof_max); 
   }
 
 
@@ -176,35 +211,6 @@ void loadParameters(const ros::NodeHandle handle)
     handle.getParam("ramp/error_reduction", errorReduction);
     ROS_INFO("errorReduction: %s", errorReduction ? "True" : "False");
   }
-
-
-  if(handle.hasParam("/costmap_node/costmap/width"))
-  {
-    ROS_INFO("Found /costmap_node/costmap/width");
-    double x_max;
-    handle.getParam("/costmap_node/costmap/width", x_max);
-    ranges.clear();
-    Range x_range(0, x_max);
-    ranges.push_back(x_range);
-  }
-  else
-  {
-    ROS_ERROR("/costmap_node/costmap/width param not found!");
-  }
-  
-  if(handle.hasParam("/costmap_node/costmap/height"))
-  {
-    ROS_INFO("Found /costmap_node/costmap/height");
-    double y_max;
-    handle.getParam("/costmap_node/costmap/height", y_max);
-    Range y_range(0, y_max);
-    ranges.push_back(y_range);
-  }
-  else
-  {
-    ROS_ERROR("/costmap_node/costmap/width param not found!");
-  }
-
 
 
 
