@@ -1294,6 +1294,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
  
   // After finding velocities, populate Obstacle list
   obs.clear();
+  list.obstacles.clear();
 
   ROS_INFO("Setting obstacles");
   for(int i=0;i<cirs.size();i++)
@@ -1302,14 +1303,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     o.update(cir_obs[i]->cir, velocities[i].vx, velocities[i].vy, cir_obs[i]->prevTheta[cir_obs[i]->prevCirs.size()-1]);
     obs.push_back(o);
     ROS_INFO("i: %i list.obstacles.size(): %i", i, (int)list.obstacles.size());
-    if(list.obstacles.size() > i)
-    {
-      list.obstacles[i] = o.msg_;
-    }
-    else
-    {
-      list.obstacles.push_back(o.msg_);
-    }
+    list.obstacles.push_back(o.msg_);
   }
   ROS_INFO("Done setting obstacles");
 
