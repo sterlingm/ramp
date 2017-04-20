@@ -31,16 +31,24 @@ void Obstacle::update(const nav_msgs::Odometry o)
 }
 
 
-void Obstacle::update(const Circle c)
+void Obstacle::update(const Circle c, const double theta)
 {
   cir_ = c;
 
-  // Do I need to call doTF()?
+  // Call doTF to update ms
+  doTF(false);
+
+  ramp_msgs::MotionState ms;
+  ms.positions.push_back((c.center.x * 0.01) + -7);
+  ms.positions.push_back((c.center.y * 0.01) + -1.7);
+  ms.positions.push_back(theta);
+
+  msg_.ob_ms = ms;
   
   last_updated_ = ros::Time::now();
 }
 
-void Obstacle::doTF()
+void Obstacle::doTF(bool odom)
 {
   ramp_msgs::MotionState ms;
   ms.positions.clear();
@@ -52,39 +60,47 @@ void Obstacle::doTF()
   /*
    * Comment out for system-level testing
    */
-  tf::Vector3 p_st_tf = T_w_init_ * p_st;
-
-  ms.positions.push_back(p_st_tf.getX());
-  ms.positions.push_back(p_st_tf.getY());
-   
-
-  ms.positions.push_back(utility_.displaceAngle( tf::getYaw(T_w_init_.getRotation()), tf::getYaw(odom_t.pose.pose.orientation)));
-
-  ms.velocities.push_back(odom_t.twist.twist.linear.x);
-  ms.velocities.push_back(odom_t.twist.twist.linear.y);
-  ms.velocities.push_back(odom_t.twist.twist.angular.z);
-
-  std::vector<double> zero; zero.push_back(0); zero.push_back(0); 
-  double theta  = utility_.findAngleFromAToB(zero, ms.positions);
-  double phi    = ms.positions.at(2);
-  double v      = ms.velocities.at(0);
-
-  //////ROS_INFO("teta: %f phi: %f v: %f", teta, phi, v);
-
-
-  /*
-   * Comment out for system-level testing
-   */
-  ms.velocities.at(0) = v*cos(phi);
-  ms.velocities.at(1) = v*sin(phi);
-
-
-  /*
-   * Comment out for system-level testing
-   */
-  if(v < 0) 
+  if(odom)
   {
-    ms.positions.at(2) = utility_.displaceAngle(ms.positions.at(2), PI);
+    tf::Vector3 p_st_tf = T_w_init_ * p_st;
+
+    ms.positions.push_back(p_st_tf.getX());
+    ms.positions.push_back(p_st_tf.getY());
+     
+
+    ms.positions.push_back(utility_.displaceAngle( tf::getYaw(T_w_init_.getRotation()), tf::getYaw(odom_t.pose.pose.orientation)));
+
+    ms.velocities.push_back(odom_t.twist.twist.linear.x);
+    ms.velocities.push_back(odom_t.twist.twist.linear.y);
+    ms.velocities.push_back(odom_t.twist.twist.angular.z);
+
+    std::vector<double> zero; zero.push_back(0); zero.push_back(0); 
+    double theta  = utility_.findAngleFromAToB(zero, ms.positions);
+    double phi    = ms.positions.at(2);
+    double v      = ms.velocities.at(0);
+
+    //////ROS_INFO("teta: %f phi: %f v: %f", teta, phi, v);
+
+
+    /*
+     * Comment out for system-level testing
+     */
+    ms.velocities.at(0) = v*cos(phi);
+    ms.velocities.at(1) = v*sin(phi);
+
+
+    /*
+     * Comment out for system-level testing
+     */
+    if(v < 0) 
+    {
+      ms.positions.at(2) = utility_.displaceAngle(ms.positions.at(2), PI);
+    }
+  }
+
+  // Transform based on costmap parameters
+  else
+  {
   }
 
   msg_.ob_ms = ms;

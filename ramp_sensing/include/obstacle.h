@@ -34,9 +34,9 @@ class Obstacle
 
     void update(const nav_msgs::Odometry o);
 
-    void update(const Circle c);
+    void update(const Circle c, const double theta);
 
-    void doTF();
+    void doTF(bool odom=true);
 
   private:
     Utility utility_;

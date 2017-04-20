@@ -66,7 +66,7 @@ std::vector<CircleOb*> cir_obs;
 std::vector<Circle> cirs_pos;
 
 Utility util;
-double rate;
+double rate=10;
 ros::Publisher pub_obj, pub_rviz, pub_cons_costmap;
 std::vector< Obstacle> obs;
 ramp_msgs::ObstacleList list;
@@ -383,7 +383,7 @@ void updateOtherRobotCb(const nav_msgs::Odometry::ConstPtr& o, const std::string
   ////ROS_INFO("topic: %s", topic.c_str());
   int index = topic_index_map[topic];
   ////ROS_INFO("index: %i", index);
-  
+
   if(obs.size() < index+1)
   {
     ////ROS_INFO("In if obs.size() < index");
@@ -405,7 +405,6 @@ void updateOtherRobotCb(const nav_msgs::Odometry::ConstPtr& o, const std::string
 /** Publish the list of objects */
 void publishList(const ros::TimerEvent& e) 
 {
-  //pub_obj.publish(obstacle.buildObstacleMsg());
   pub_obj.publish(list);
 } //End sendList
 
@@ -1296,12 +1295,23 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   // After finding velocities, populate Obstacle list
   obs.clear();
 
+  ROS_INFO("Setting obstacles");
   for(int i=0;i<cirs.size();i++)
   {
     Obstacle o; 
-    o.cir_ = cir_obs[i]->cir;
+    o.update(cir_obs[i]->cir, cir_obs[i]->prevTheta[cir_obs[i]->prevCirs.size()-1]);
     obs.push_back(o);
+    ROS_INFO("i: %i list.obstacles.size(): %i", i, (int)list.obstacles.size());
+    if(list.obstacles.size() > i)
+    {
+      list.obstacles[i] = o.msg_;
+    }
+    else
+    {
+      list.obstacles.push_back(o.msg_);
+    }
   }
+  ROS_INFO("Done setting obstacles");
 
   num_costmaps++;
   ////ROS_INFO("obs.size(): %i", (int)obs.size());
@@ -1468,7 +1478,7 @@ int main(int argc, char** argv)
   pub_cons_costmap = handle.advertise<nav_msgs::OccupancyGrid>("consolidated_costmap", 1);
 
   //Timers
-  //ros::Timer timer = handle.createTimer(ros::Duration(1.f / rate), publishList);
+  ros::Timer timer = handle.createTimer(ros::Duration(1.f / rate), publishList);
   timer_markers = handle.createTimer(ros::Duration(1.f/10.f), publishMarkers);
 
   init_bel.mean = 0;
