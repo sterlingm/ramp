@@ -5,7 +5,6 @@
 #include <bfl/model/linearanalyticmeasurementmodel_gaussianuncertainty.h>
 #include <bfl/pdf/linearanalyticconditionalgaussian.h>
 #include <bfl/pdf/analyticconditionalgaussian.h>
-#include "nonlinearanalyticconditionalgaussian.h"
 #include <ros/console.h>
 
 class CircleFilter : public BFL::ExtendedKalmanFilter

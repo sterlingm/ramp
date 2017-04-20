@@ -22,7 +22,6 @@
 #include <bfl/model/linearanalyticmeasurementmodel_gaussianuncertainty.h>
 #include <bfl/pdf/linearanalyticconditionalgaussian.h>
 #include <bfl/pdf/analyticconditionalgaussian.h>
-#include "nonlinearanalyticconditionalgaussian.h"
 //using namespace MatrixWrapper; comment out to compile
 //using namespace BFL; ambiguation on ramp_msgs::ObstacleList list
 
@@ -122,11 +121,6 @@ double radius_threshold = 35;
 BFL::LinearAnalyticConditionalGaussian* sys_pdf=0;
 BFL::LinearAnalyticSystemModelGaussianUncertainty* sys_model=0;
 
-/*
- * NonLinear System
- */
-BFL::NonLinearAnalyticConditionalGaussianMobile* nl_sys_pdf = 0;
-BFL::AnalyticSystemModelGaussianUncertainty* nl_sys_model = 0;
 int STATE_SIZE=4;
 double MU_SYSTEM_NOISE_X = 0.01;
 double MU_SYSTEM_NOISE_Y = 0.01;
@@ -296,40 +290,11 @@ void init_prior_model()
 
 
 /*
- * Initialize the nonlinear system model
- */
-void init_nonlinear_system_model()
-{
-  //ROS_INFO("In init_nonlinear_system_model");
-
-  MatrixWrapper::ColumnVector sys_noise_Mu(STATE_SIZE);
-  for(int i=1;i<=STATE_SIZE;i++)
-  {
-    sys_noise_Mu(i) = MU_SYSTEM_NOISE_X;
-  }
-
-
-  MatrixWrapper::SymmetricMatrix sys_noise_Cov(STATE_SIZE);
-  sys_noise_Cov = 0.0;
-  for(int i=1;i<=STATE_SIZE;i++)
-  {
-    sys_noise_Cov(i,i) = SIGMA_SYSTEM_NOISE_X;
-  }
-    
-
-  BFL::Gaussian system_Uncertainty(sys_noise_Mu, sys_noise_Cov);
-
-  nl_sys_pdf = new BFL::NonLinearAnalyticConditionalGaussianMobile(system_Uncertainty);
-  
-  //nl_sys_model = new BFL::AnalyticSystemModelGaussianUncertainty(nl_sys_pdf);
-}
-
-/*
  * Initialize a linear system model
  */
 void init_linear_system_model()
 {
-  //ROS_INFO("In init_nonlinear_system_model");
+  //ROS_INFO("In init_linear_system_model");
 
   MatrixWrapper::ColumnVector sys_noise_Mu(STATE_SIZE);
   for(int i=1;i<=STATE_SIZE;i++)
@@ -872,42 +837,6 @@ std::vector<int> matchCircles(std::vector<Circle> cirs, std::vector<Circle> targ
   return result;
 }
 
-void editNumObstacles(std::vector<Circle> cirs, bool add)
-{
-  //ROS_INFO("In editNumObstacles");
-  //ROS_INFO("add: %s", add ? "True" : "False");
-  // Match the previous circles to the new ones (to prevent matching more than 1 to the same target)
-  std::vector<int> matches = add ? matchCircles(prev_valid_cirs, cirs) : matchCircles(cirs, prev_valid_cirs);
-  
-  // Go through the matches and get the indices whose elements are equal to 0
-  // That means that the circles are new
-  int i=0;
-  while(i < matches.size())
-  {
-    //ROS_INFO("i: %i matches[%i]: %i cirs.size(): %i cir_obs.size(): %i", i, i, matches[i], (int)cirs.size(), (int)cir_obs.size());
-    // If the circle was not matched, create a new CircleOb
-    if(!matches[i])
-    {
-      if(add)
-      {
-        CircleOb* temp = createCircleOb(cirs[i]);
-        cir_obs.insert(cir_obs.begin()+i, temp);
-      }
-      else
-      {
-        delete cir_obs[i];
-        cir_obs.erase(cir_obs.begin()+i);
-        matches.erase(matches.begin()+i);
-        i--;
-      }
-    }
-
-    i++;
-  } // end for matched_cirs
-  
-  //ROS_INFO("Exiting editNumObstacles");
-}
-
 /*
  * Rename to matchCircles when done
  */
@@ -1077,6 +1006,77 @@ void dataAssociation(std::vector<Circle> cirs)
 }
 
 
+void updateKalmanFilters(std::vector<Circle> cirs)
+{
+  std::vector<Circle> prevCirs;
+  for(int i=0;i<cir_obs.size();i++)
+  {
+    ROS_INFO("Updating circle filter %i", i);
+
+    
+    // Prediction
+    if(x_y_velocities.size() > 0 && x_y_velocities[x_y_velocities.size()-1].size() > i)
+    {
+      u[0] = x_y_velocities[x_y_velocities.size()-1][i].vx;
+      u[1] = x_y_velocities[x_y_velocities.size()-1][i].vy;
+      u[2] = 0;
+      u[3] = 0;
+    }
+    else
+    {
+      u[0] = 0;
+      u[1] = 0;
+      u[2] = 0;
+      u[3] = 0;
+    }
+    
+    // Measurement 
+    MatrixWrapper::ColumnVector y(STATE_SIZE);
+    y[0] = cirs[i].center.x;
+    y[1] = cirs[i].center.y;
+    for(int i=2;i<STATE_SIZE;i++)
+    {
+      y[i] = 0;
+    }
+    ROS_INFO("Measurement: (%f, %f)", y[0], y[1]);
+
+    // Update the Kalman filter
+    cir_obs[i]->kf->update(u, y);
+    ROS_INFO("Posterior after update:");
+    cir_obs[i]->kf->printPosterior();
+    
+    // Set previous circle
+    //cir_obs[i]->prevCirs.push_back(cir_obs[i]->cir);
+
+    // Set new circle center
+    MatrixWrapper::ColumnVector mean = cir_obs[i]->kf->posterior->ExpectedValueGet();
+    cir_obs[i]->cir.center.x = mean[0];
+    cir_obs[i]->cir.center.y = mean[1];
+
+    prevCirs.push_back(cir_obs[i]->cir);
+
+    /*
+     * If no KF
+     */
+    //cir_obs[i]->cir.center.x = cirs[i].center.x;
+    //cir_obs[i]->cir.center.y = cirs[i].center.y;
+
+    // Set the updated radius
+    cir_obs[i]->cir.radius = cirs[i].radius;
+
+    // Push back center data for logging
+    cirs_pos.push_back(cir_obs[i]->cir);
+  }
+  
+  // Set previous circles
+  for(int i=0;i<cir_obs.size();i++)
+  {
+    cir_obs[i]->prevCirs.push_back(prevCirs[i]);
+  }
+
+}
+
+
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
   //ROS_INFO("**************************************************");
@@ -1176,87 +1176,18 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   /*
    * Call the Kalman filter
    */
+   updateKalmanFilters(cirs);
 
-  std::vector<Circle> prevCirs;
-  for(int i=0;i<cir_obs.size();i++)
-  {
-    ROS_INFO("Updating circle filter %i", i);
-
-    
-    // Prediction
-    if(x_y_velocities.size() > 0 && x_y_velocities[x_y_velocities.size()-1].size() > i)
-    {
-      u[0] = x_y_velocities[x_y_velocities.size()-1][i].vx;
-      u[1] = x_y_velocities[x_y_velocities.size()-1][i].vy;
-      u[2] = 0;
-      u[3] = 0;
-    }
-    else
-    {
-      u[0] = 0;
-      u[1] = 0;
-      u[2] = 0;
-      u[3] = 0;
-    }
-    
-    // Measurement 
-    MatrixWrapper::ColumnVector y(STATE_SIZE);
-    y[0] = cirs[i].center.x;
-    y[1] = cirs[i].center.y;
-    for(int i=2;i<STATE_SIZE;i++)
-    {
-      y[i] = 0;
-    }
-    ROS_INFO("Measurement: (%f, %f)", y[0], y[1]);
-
-    // Update the Kalman filter
-    cir_obs[i]->kf->update(u, y);
-    ROS_INFO("Posterior after update:");
-    cir_obs[i]->kf->printPosterior();
-    
-    // Set previous circle
-    //cir_obs[i]->prevCirs.push_back(cir_obs[i]->cir);
-
-    // Set new circle center
-    MatrixWrapper::ColumnVector mean = cir_obs[i]->kf->posterior->ExpectedValueGet();
-    cir_obs[i]->cir.center.x = mean[0];
-    cir_obs[i]->cir.center.y = mean[1];
-
-    prevCirs.push_back(cir_obs[i]->cir);
-
-    /*
-     * If no KF
-     */
-    //cir_obs[i]->cir.center.x = cirs[i].center.x;
-    //cir_obs[i]->cir.center.y = cirs[i].center.y;
-
-    // Set the updated radius
-    cir_obs[i]->cir.radius = cirs[i].radius;
-
-    // Push back center data for logging
-    cirs_pos.push_back(cir_obs[i]->cir);
-  }
-
+   
   /*
    * Circle positions are finalized at this point
    */
 
-  /*
-   * Detect any "jumps"
-   */
-  for(int i=0;i<cir_obs.size();i++)
-  {
-    // If this is not a new circle,
-    if(cir_obs[i]->prevCirs.size() > 0)
-    {
-      // If a jump occurred
-      if( jump(cir_obs[i]->cir, cir_obs[i]->prevCirs[0], jump_thresholds[0]) )
-      {
-      }
-    }
-  }
+   /*
+    * Compute orientations
+    */
   
-  std::vector<double> thetas = predictTheta();
+   std::vector<double> thetas = predictTheta();
   for(int i=0;i<thetas.size();i++)
   {
     cir_obs[i]->prevTheta.push_back(thetas[i]);
@@ -1273,12 +1204,6 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
   }
 
-  // Set previous circles
-  for(int i=0;i<cir_obs.size();i++)
-  {
-    cir_obs[i]->prevCirs.push_back(prevCirs[i]);
-  }
-
   //ROS_INFO("Pushing back velocities vector with size: %i", (int)velocities.size());
   prev_velocities.push_back(velocities);
 
@@ -1287,10 +1212,6 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   prev_valid_cirs = cirs;
 
 
-  /*
-   *  Compute Circle velocity
-   */
-  // Create Obstacle for each circle?
  
   // After finding velocities, populate Obstacle list
   obs.clear();
@@ -1302,7 +1223,6 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     Obstacle o; 
     o.update(cir_obs[i]->cir, velocities[i].vx, velocities[i].vy, cir_obs[i]->prevTheta[cir_obs[i]->prevCirs.size()-1]);
     obs.push_back(o);
-    ROS_INFO("i: %i list.obstacles.size(): %i", i, (int)list.obstacles.size());
     list.obstacles.push_back(o.msg_);
   }
   ROS_INFO("Done setting obstacles");
@@ -1449,7 +1369,6 @@ int main(int argc, char** argv)
 
 
   // Initialize the Kalman Filter
-  //init_nonlinear_system_model();
   init_linear_system_model();
   //ROS_INFO("Done initializing linear system model");
   init_measurement_model();
