@@ -51,10 +51,6 @@ int num_costmaps=0;
 std::vector<nav_msgs::OccupancyGrid> prev_grids;
 
 std::vector<Circle> prev_valid_cirs;
-std::vector<ros::Time> prev_times;
-std::vector<double> jump_thresholds;
-double jump_vel_threshold = 2.0;
-double jump_threshold_inc = 0.25;
 
 
 // Vector to store velocities to report data after execution
@@ -569,24 +565,6 @@ int getClosestPrev(Circle m, std::vector<Circle> N, std::vector<int> matched)
   return min_index;
 }
 
-
-bool jump(const Circle cir_i, const Circle cir_prev, double threshold)
-{
-  //ROS_INFO("In jump");
-
-  // Get distance in pixels
-  double dist = util.positionDistance(cir_i.center.x, cir_i.center.y, cir_prev.center.x, cir_prev.center.y);
-  //ROS_INFO("dist: %f", dist);
-
-  // Convert distance to meters
-  dist /= 10;
-  //ROS_INFO("dist after conversion: %f", dist);
-
-  //ROS_INFO("cir_i center: (%f, %f), cir_prev center: (%f, %f) threshold: %f dist: %f", cir_i.center.x, cir_i.center.y, cir_prev.center.x, cir_prev.center.y, threshold, dist);
-
-
-  return dist > threshold;
-}
 
 
 std::vector<Velocity> predictVelocities(const ros::Duration d_elapsed)
@@ -1285,12 +1263,6 @@ int main(int argc, char** argv)
   init_prior_model();
   //ROS_INFO("Done initializing prior model");
 
-  // Initialize this in a better way later on...
-  for(int i=0;i<3;i++)
-  {
-    prev_times.push_back(ros::Time::now());
-    jump_thresholds.push_back(1);
-  }
 
   ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);
 
