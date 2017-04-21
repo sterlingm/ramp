@@ -31,7 +31,7 @@ void Obstacle::update(const nav_msgs::Odometry o)
 }
 
 
-void Obstacle::update(const Circle c, const double vx, const double vy, const double theta)
+void Obstacle::update(const Circle c, const Velocity& v, const double theta)
 {
   cir_ = c;
 
@@ -43,8 +43,8 @@ void Obstacle::update(const Circle c, const double vx, const double vy, const do
   ms.positions.push_back((c.center.y * 0.01) + -1.7);
   ms.positions.push_back(theta);
 
-  ms.velocities.push_back(vx);
-  ms.velocities.push_back(vy);
+  ms.velocities.push_back(v.vx);
+  ms.velocities.push_back(v.vy);
   ms.velocities.push_back(0);
 
   msg_.ob_ms = ms;

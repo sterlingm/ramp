@@ -1,62 +1,10 @@
 #ifndef CIRCLE_PACKER
 #define CIRCLE_PACKER
 #include "utility.h"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/features2d.hpp"
 #include "GridMap2D.h"
 #include <nav_msgs/OccupancyGrid.h>
 #include <queue>
 #include <visualization_msgs/Marker.h>
-
-struct Edge
-{
-  cv::Point start;
-  cv::Point end;
-};
-
-struct Normal
-{
-  double a, b, c;
-};
-
-struct Triangle
-{
-  std::vector<Edge> edges;
-};
-
-
-struct Polygon
-{
-  std::vector<Edge> edges;
-  std::vector<Normal> normals;
-};
-
-struct Cell
-{
-  cv::Point p;
-  double dist;
-};
-
-struct Point
-{
-  double x;
-  double y;
-};
-
-struct Circle
-{
-  Point center;
-  double radius;
-};
-
-struct CompareDist
-{
-  bool operator()(const Cell& c1, const Cell& c2)
-  {
-    return c1.dist < c2.dist;
-  }
-};
 
 
 class CirclePacker 

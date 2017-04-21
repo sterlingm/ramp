@@ -22,44 +22,7 @@
 #include <bfl/model/linearanalyticmeasurementmodel_gaussianuncertainty.h>
 #include <bfl/pdf/linearanalyticconditionalgaussian.h>
 #include <bfl/pdf/analyticconditionalgaussian.h>
-//using namespace MatrixWrapper; comment out to compile
-//using namespace BFL; ambiguation on ramp_msgs::ObstacleList list
 
-
-struct CircleOb
-{
-  CircleOb() {}
-  ~CircleOb()
-  {
-    delete kf;
-  }
-  Circle cir;
-  CircleFilter* kf;
-
-  std::vector<Circle> prevCirs;
-  std::vector<double> prevTheta;
-  double vx, vy, v;
-  double theta, w;
-};
-
-struct Velocity
-{
-  double v, vx, vy, w;
-};
-
-
-struct CircleMatch
-{
-  int i_cirs;
-  int i_prevCir;
-  double dist;
-  double delta_r;
-
-};
-bool myfunction (const CircleMatch& a, const CircleMatch& b)
-{
-  return a.dist < b.dist;
-}
 
 std::vector<CircleOb*> cir_obs;
 std::vector<Circle> cirs_pos;
@@ -79,13 +42,8 @@ std::vector<Circle> prev_cirs;
 
 // prev_velocities[cycle][circle]
 std::vector< std::vector<Velocity> > prev_velocities;
-std::vector< std::vector<Velocity> > x_y_velocities;
-
-size_t prev_size;
 
 ros::Time t_last_costmap;
-
-int count;
 
 int num_costmaps=0;
 
@@ -99,6 +57,7 @@ double jump_vel_threshold = 2.0;
 double jump_threshold_inc = 0.25;
 
 
+// Vector to store velocities to report data after execution
 std::vector<Velocity> predicted_velocities;
 
 ros::Timer timer_markers;
@@ -165,17 +124,6 @@ BFL::Pdf<MatrixWrapper::ColumnVector>* posterior;
 std::vector<CircleFilter*> ob_filters;
 
 
-
-
-struct NormalDist1D
-{
-  double mean;
-  double variance;
-};
-
-
-// Initial belief
-NormalDist1D init_bel;
 
 
 void loadObstacleTF()
@@ -388,7 +336,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
   
   ROS_INFO("After translate: x_origin: %f y_origin: %f", x_origin, y_origin);
 
-  for(int i=0;i<obs.size();i++)
+  for(int i=0;i<cir_obs.size();i++)
   {
     ROS_INFO("i: %i obs.size(): %i", i, (int)obs.size());
     visualization_msgs::Marker marker;
@@ -401,8 +349,8 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
     marker.action = visualization_msgs::Marker::ADD;
 
     // This needs to be generalized to the costmap resolution
-    double x = (obs[i].cir_.center.x + x_origin) * global_grid.info.resolution;
-    double y = (obs[i].cir_.center.y + y_origin) * global_grid.info.resolution;
+    double x = (cir_obs[i]->cir.center.x + x_origin) * global_grid.info.resolution;
+    double y = (cir_obs[i]->cir.center.y + y_origin) * global_grid.info.resolution;
     
     //ROS_INFO("Before translation: (%f, %f) After translation: (%f, %f)", obs[i].cir_.center.x, obs[i].cir_.center.y, x, y);
     
@@ -415,7 +363,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
     marker.pose.orientation.z = 0.0;
     marker.pose.orientation.w = 1.0;
 
-    double radius = (obs[i].cir_.radius) * global_grid.info.resolution;
+    double radius = (cir_obs[i]->cir.radius) * global_grid.info.resolution;
     radius += coll_radius;
     //ROS_INFO("x: %f y: %f radius: %f", x, y, radius);
     
@@ -611,14 +559,6 @@ int getClosestPrev(Circle m, std::vector<Circle> N, std::vector<int> matched)
         min_index = i;
       }
     } // end for each potential match
-
-    //ROS_INFO("min_index: %i dist: %f matched[%i]: %i", min_index, dist, min_index, matched[min_index]);
-    
-    // Check if distance is greater than the distance threshold
-    /*if(dist > dist_threshold)
-    {
-      return -1;
-    }*/
   } // end if N.size() > 0
 
   else
@@ -807,42 +747,12 @@ void consolidateCostmaps(const nav_msgs::OccupancyGrid gi, const std::vector<nav
 }
 
 
-
-std::vector<int> matchCircles(std::vector<Circle> cirs, std::vector<Circle> targets)
-{
-  //ROS_INFO("In matchCircles");
-  //ROS_INFO("cirs.size(): %i targets.size(): %i", (int)cirs.size(), (int)targets.size());
-  
-  size_t resultSize = targets.size();
-
-  // Make an array of 0's for the list of targets
-  std::vector<int> result(resultSize);
-  //ROS_INFO("result.size(): %i", (int)result.size());
-
-  // Match each one, and mark that value in the array as 1
-  for(int i=0;i<cirs.size();i++)
-  {
-    // index < 0 if no match, 0<=index<result.size() if there is a match
-    int index = getClosestPrev(cirs[i], targets, result);
-    if(index > -1)
-    {
-      result[index]++;
-    }
-    else
-    {
-      ROS_INFO("Index: %i Could not find match for circle %i", index, i);
-    }
-  } // end for each circle to match
-
-  return result;
-}
-
 /*
  * Rename to matchCircles when done
  */
-std::vector<CircleMatch> matchCirclesPair(std::vector<Circle> cirs, std::vector<Circle> targets)
+std::vector<CircleMatch> matchCircles(std::vector<Circle> cirs, std::vector<Circle> targets)
 {
-  ROS_INFO("In matchCirclesPair");
+  ROS_INFO("In matchCircles");
   ROS_INFO("cirs.size(): %i targets.size(): %i", (int)cirs.size(), (int)targets.size());
   std::vector<CircleMatch> result;
   std::vector<int> matched_targets(targets.size());
@@ -876,7 +786,7 @@ std::vector<CircleMatch> matchCirclesPair(std::vector<Circle> cirs, std::vector<
   ROS_INFO("all_dists.size(): %i", (int)all_dists.size());
 
   // Sort dist values
-  std::sort(all_dists.begin(), all_dists.end(), myfunction);
+  std::sort(all_dists.begin(), all_dists.end(), util.compareCircleMatches);
   for(int i=0;i<all_dists.size();i++)
   {
     ROS_INFO("all_dists %i: i_cirs: %i targets: %i dist: %f delta_r: %f", i, all_dists[i].i_cirs, all_dists[i].i_prevCir, all_dists[i].dist, all_dists[i].delta_r);
@@ -923,7 +833,7 @@ std::vector<CircleMatch> matchCirclesPair(std::vector<Circle> cirs, std::vector<
   } // end for all_dists values
 
 
-  ROS_INFO("Exiting matchCirclesPair");
+  ROS_INFO("Exiting matchCircles");
   return result;
 }
 
@@ -991,7 +901,7 @@ void dataAssociation(std::vector<Circle> cirs)
   ROS_INFO("Starting data association");
   ROS_INFO("cirs.size(): %i prev_valid_cirs: %i cir_obs: %i", (int)cirs.size(), (int)prev_valid_cirs.size(), (int)cir_obs.size());
    
-  std::vector<CircleMatch> cm = matchCirclesPair(cirs, prev_valid_cirs);
+  std::vector<CircleMatch> cm = matchCircles(cirs, prev_valid_cirs);
   ROS_INFO("cm.size(): %i", (int)cm.size());
   ROS_INFO("Matching result:");
   for(int i=0;i<cm.size();i++)
@@ -1015,10 +925,10 @@ void updateKalmanFilters(std::vector<Circle> cirs)
 
     
     // Prediction
-    if(x_y_velocities.size() > 0 && x_y_velocities[x_y_velocities.size()-1].size() > i)
+    if(prev_velocities.size() > 0 && prev_velocities[prev_velocities.size()-1].size() > i)
     {
-      u[0] = x_y_velocities[x_y_velocities.size()-1][i].vx;
-      u[1] = x_y_velocities[x_y_velocities.size()-1][i].vy;
+      u[0] = prev_velocities[prev_velocities.size()-1][i].vx;
+      u[1] = prev_velocities[prev_velocities.size()-1][i].vy;
       u[2] = 0;
       u[3] = 0;
     }
@@ -1197,7 +1107,6 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    * Predict velocities
    */
   std::vector<Velocity> velocities = predictVelocities(d_elapsed);
-  x_y_velocities.push_back(velocities);
   
   for(int i=0;i<velocities.size();i++)
   {
@@ -1221,7 +1130,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   for(int i=0;i<cirs.size();i++)
   {
     Obstacle o; 
-    o.update(cir_obs[i]->cir, velocities[i].vx, velocities[i].vy, cir_obs[i]->prevTheta[cir_obs[i]->prevCirs.size()-1]);
+    o.update(cir_obs[i]->cir, velocities[i], cir_obs[i]->prevTheta[cir_obs[i]->prevCirs.size()-1]);
     obs.push_back(o);
     list.obstacles.push_back(o.msg_);
   }
@@ -1394,20 +1303,18 @@ int main(int argc, char** argv)
   ros::Timer timer = handle.createTimer(ros::Duration(1.f / rate), publishList);
   timer_markers = handle.createTimer(ros::Duration(1.f/10.f), publishMarkers);
 
-  init_bel.mean = 0;
-  init_bel.variance = 5;
-
-  signal(SIGINT, reportPredictedVelocity);
   
+  // Set function to run at shutdown
+  signal(SIGINT, reportPredictedVelocity);
    
 
-  std::cout<<"\nSpinning\n";
+  printf("\nSpinning\n");
 
   ros::AsyncSpinner spinner(8);
-  std::cout<<"\nWaiting for requests...\n";
+  printf("\nWaiting for requests...\n");
   spinner.start();
   ros::waitForShutdown();
 
-  std::cout<<"\nExiting Normally\n";
+  printf("\nExiting normally\n");
   return 0;
 }

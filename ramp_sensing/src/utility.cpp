@@ -122,6 +122,10 @@ const double Utility::displaceAngle(const double a1, double a2) const {
 } // End displaceAngle
 
 
+bool Utility::compareCircleMatches(const CircleMatch& a, const CircleMatch& b)
+{
+  return a.dist < b.dist;
+}
 
 
 const std::string Utility::toString(const ramp_msgs::Path path) const {

@@ -36,7 +36,7 @@ class Obstacle
 
     void update(const nav_msgs::Odometry o);
 
-    void update(const Circle c, const double vx, const double vy, const double theta);
+    void update(const Circle c, const Velocity& v, const double theta);
 
     void doTF(bool odom=true);
 
