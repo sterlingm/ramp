@@ -62,7 +62,7 @@ double coll_radius = 0.25;
 
 std::vector<double> d_avg_values;
 
-double dist_threshold = 100;
+double dist_threshold = 50;
 double radius_threshold = 35;
 
 /*********************************
@@ -337,7 +337,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
     ROS_INFO("i: %i obs.size(): %i", i, (int)obs.size());
     visualization_msgs::Marker marker;
     marker.header.stamp = ros::Time::now();
-    marker.header.frame_id = "/map_rot";
+    marker.header.frame_id = "/map";
     marker.ns = "basic_shapes";
     marker.id = i;
     
@@ -421,8 +421,8 @@ void publishMarkers(const ros::TimerEvent& e)
     text.id   = markers.size()+i;
     arrow.id  = markers.size()*(i+markers.size()+1);
 
-    text.header.frame_id  = "/map_rot";
-    arrow.header.frame_id = "/map_rot";
+    text.header.frame_id  = "/map";
+    arrow.header.frame_id = "/map";
 
     text.ns   = "basic_shapes";
     arrow.ns  = "basic_shapes";
@@ -480,7 +480,7 @@ void publishMarkers(const ros::TimerEvent& e)
   visualization_msgs::Marker text;
   text.header.stamp   = ros::Time::now();
   text.id   = result.markers.size()+1;
-  text.header.frame_id  = "/map_rot";
+  text.header.frame_id  = "/map";
   text.ns   = "basic_shapes";
   text.type   = visualization_msgs::Marker::TEXT_VIEW_FACING;
   text.action   = visualization_msgs::Marker::ADD;
@@ -567,9 +567,9 @@ int getClosestPrev(Circle m, std::vector<Circle> N, std::vector<int> matched)
 
 
 
-std::vector<Velocity> predictVelocities(const ros::Duration d_elapsed)
+std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const ros::Duration d_elapsed)
 {
-  ROS_INFO("In predictVelocities");
+  ROS_INFO("In predictVelocities, d_elapsed: %f", d_elapsed.toSec());
 
   std::vector<Velocity> result;
   double grid_resolution=0.01;
@@ -578,20 +578,34 @@ std::vector<Velocity> predictVelocities(const ros::Duration d_elapsed)
   // For each circle obstacle,
   for(int i=0;i<cir_obs.size();i++)
   {
+    int index_prev_cir=-1;
+    // Get the prev circle that this circle was matched with
+    for(int c=0;c<cm.size();c++)
+    {
+      if( cm[i].i_cirs == i )
+      {
+        index_prev_cir=cm[i].i_prevCir;
+        break;
+      }
+    }
+    ROS_INFO("index_prev_cir: %i cir_obs.size(): %i", index_prev_cir, (int)cir_obs.size());
     ROS_INFO("CircleOb %i prevCirs.size(): %i", i, (int)cir_obs[i]->prevCirs.size());
 
     ROS_INFO("Current: (%f, %f)", cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
 
     Velocity temp;
 
+    index_prev_cir = i;
+
     // If prevCir is set 
-    if(cir_obs[i]->prevCirs.size() > 0)
+    //if(cir_obs[i]->prevCirs.size() > 0)
+    if(index_prev_cir > -1 && cir_obs[index_prev_cir]->prevCirs.size() > 0)
     {
-      int i_prev = cir_obs[i]->prevCirs.size()-1;
-      ROS_INFO("Prev: (%f, %f)", cir_obs[i]->prevCirs[i_prev].center.x, cir_obs[i]->prevCirs[i_prev].center.y);
-      double x_dist = cir_obs[i]->cir.center.x - cir_obs[i]->prevCirs[i_prev].center.x;
-      double y_dist = cir_obs[i]->cir.center.y - cir_obs[i]->prevCirs[i_prev].center.y;
-      double dist = util.positionDistance(cir_obs[i]->prevCirs[i_prev].center.x, cir_obs[i]->prevCirs[i_prev].center.y, cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
+      int i_prev = cir_obs[index_prev_cir]->prevCirs.size()-1;
+      ROS_INFO("Prev: (%f, %f)", cir_obs[index_prev_cir]->prevCirs[i_prev].center.x, cir_obs[index_prev_cir]->prevCirs[i_prev].center.y);
+      double x_dist = cir_obs[i]->cir.center.x - cir_obs[index_prev_cir]->prevCirs[i_prev].center.x;
+      double y_dist = cir_obs[i]->cir.center.y - cir_obs[index_prev_cir]->prevCirs[i_prev].center.y;
+      double dist = sqrt( pow(x_dist,2) + pow(y_dist,2) );
 
 
       double theta = atan2(y_dist, x_dist);
@@ -611,6 +625,10 @@ std::vector<Velocity> predictVelocities(const ros::Duration d_elapsed)
     else
     {
       ROS_INFO("No previous circles");
+      temp.vx = 0;
+      temp.vy = 0;
+      temp.v = 0;
+      temp.w = 0;
     }
 
     // Push the circle's velocity onto the result
@@ -864,7 +882,8 @@ void addNewObs(std::vector<CircleMatch> cm, std::vector<Circle> cirs)
     {
       ROS_INFO("Creating new filter!");
       CircleOb* temp = createCircleOb(cirs[i]);
-      cir_obs.insert(cir_obs.begin()+i, temp);
+      //cir_obs.insert(cir_obs.begin()+i, temp);
+      cir_obs.push_back(temp);
     }
   }
   ROS_INFO("Done creating new obstacles");
@@ -874,33 +893,79 @@ void addNewObs(std::vector<CircleMatch> cm, std::vector<Circle> cirs)
 /*
  * Compare new circles to old circles and determine matches
  */
-void dataAssociation(std::vector<Circle> cirs)
+std::vector<CircleMatch> dataAssociation(std::vector<Circle> cirs)
 {
   ROS_INFO("Starting data association");
   ROS_INFO("cirs.size(): %i prev_valid_cirs: %i cir_obs: %i", (int)cirs.size(), (int)prev_valid_cirs.size(), (int)cir_obs.size());
-   
+  
+  ROS_INFO("Before data association, cir_obs.size(): %i", (int)cir_obs.size());
+  for(int i=0;i<cir_obs.size();i++)
+  {
+    ROS_INFO("cir_obs[%i] circle: (%f,%f)", i, cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
+    if(cir_obs[i]->prevCirs.size()>0)
+    {
+      ROS_INFO("Prev: (%f,%f)", cir_obs[i]->prevCirs[cir_obs[i]->prevCirs.size()-1].center.x, cir_obs[i]->prevCirs[cir_obs[i]->prevCirs.size()-1].center.y);
+    }
+    else
+    {
+      ROS_INFO("No prev");
+    }
+  }
+
   std::vector<CircleMatch> cm = matchCircles(cirs, prev_valid_cirs);
   ROS_INFO("cm.size(): %i", (int)cm.size());
   ROS_INFO("Matching result:");
+ 
+  std::vector<Circle> copy = cirs;
   for(int i=0;i<cm.size();i++)
   {
     ROS_INFO("Match %i: i_cirs: %i i_prevCir: %i dist: %f delta_r: %f", i, cm[i].i_cirs, cm[i].i_prevCir, cm[i].dist, cm[i].delta_r);
+    if(cm[i].i_cirs != cm[i].i_prevCir)
+    {
+      ROS_INFO("cir_obs.size(): %i cm[%i].i_cirs: %i cm[%i].i_prevCir: %i", (int)cir_obs.size(), i, cm[i].i_cirs, i, cm[i].i_prevCir);
+      cir_obs[cm[i].i_prevCir]->cir = copy[cm[i].i_cirs];
+    }
   }
-  
+ 
   deleteOldObs(cm); 
   addNewObs(cm, cirs);
 
+
   ROS_INFO("Done with data association, cir_obs.size(): %i", (int)cir_obs.size());
+  for(int i=0;i<cir_obs.size();i++)
+  {
+    ROS_INFO("cir_obs[%i] circle: (%f,%f)", i, cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
+    if(cir_obs[i]->prevCirs.size()>0)
+    {
+      ROS_INFO("Prev: (%f,%f)", cir_obs[i]->prevCirs[cir_obs[i]->prevCirs.size()-1].center.x, cir_obs[i]->prevCirs[cir_obs[i]->prevCirs.size()-1].center.y);
+    }
+    else
+    {
+      ROS_INFO("No prev");
+    }
+  }
+
+  return cm;
 }
 
 
-void updateKalmanFilters(std::vector<Circle> cirs)
+std::vector<Circle> updateKalmanFilters(std::vector<Circle> cirs, std::vector<CircleMatch> cm)
 {
-  std::vector<Circle> prevCirs;
+  std::vector<Circle> result;
   for(int i=0;i<cir_obs.size();i++)
   {
     ROS_INFO("Updating circle filter %i", i);
 
+    // Get index of matching circle
+    int index_cir = i;
+    for(int c=0;c<cm.size();c++)
+    {
+      if( cm[c].i_prevCir == i )
+      {
+        index_cir = cm[c].i_cirs;
+        break;
+      }
+    }
     
     // Prediction
     if(prev_velocities.size() > 0 && prev_velocities[prev_velocities.size()-1].size() > i)
@@ -918,15 +983,19 @@ void updateKalmanFilters(std::vector<Circle> cirs)
       u[3] = 0;
     }
     
+    index_cir = i;
     // Measurement 
     MatrixWrapper::ColumnVector y(STATE_SIZE);
-    y[0] = cirs[i].center.x;
-    y[1] = cirs[i].center.y;
+    //y[0] = cirs[index_cir].center.x;
+    //y[1] = cirs[index_cir].center.y;
+    y[0] = cir_obs[i]->cir.center.x;
+    y[1] = cir_obs[i]->cir.center.y;
     for(int i=2;i<STATE_SIZE;i++)
     {
       y[i] = 0;
     }
     ROS_INFO("Measurement: (%f, %f)", y[0], y[1]);
+
 
     // Update the Kalman filter
     cir_obs[i]->kf->update(u, y);
@@ -941,7 +1010,7 @@ void updateKalmanFilters(std::vector<Circle> cirs)
     cir_obs[i]->cir.center.x = mean[0];
     cir_obs[i]->cir.center.y = mean[1];
 
-    prevCirs.push_back(cir_obs[i]->cir);
+    result.push_back(cir_obs[i]->cir);
 
     /*
      * If no KF
@@ -955,13 +1024,8 @@ void updateKalmanFilters(std::vector<Circle> cirs)
     // Push back center data for logging
     cirs_pos.push_back(cir_obs[i]->cir);
   }
-  
-  // Set previous circles
-  for(int i=0;i<cir_obs.size();i++)
-  {
-    cir_obs[i]->prevCirs.push_back(prevCirs[i]);
-  }
 
+  return result;
 }
 
 
@@ -1057,15 +1121,15 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   /*
    * Data association
    */
-   dataAssociation(cirs);
+  std::vector<CircleMatch> cm = dataAssociation(cirs);
 
 
   
   /*
    * Call the Kalman filter
    */
-   updateKalmanFilters(cirs);
-
+   std::vector<Circle> circles_current = updateKalmanFilters(cirs, cm);
+  
    
   /*
    * Circle positions are finalized at this point
@@ -1075,7 +1139,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     * Compute orientations
     */
   
-   std::vector<double> thetas = predictTheta();
+  std::vector<double> thetas = predictTheta();
   for(int i=0;i<thetas.size();i++)
   {
     cir_obs[i]->prevTheta.push_back(thetas[i]);
@@ -1084,7 +1148,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   /*
    * Predict velocities
    */
-  std::vector<Velocity> velocities = predictVelocities(d_elapsed);
+  std::vector<Velocity> velocities = predictVelocities(cm, d_elapsed);
   
   for(int i=0;i<velocities.size();i++)
   {
@@ -1093,10 +1157,46 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
   //ROS_INFO("Pushing back velocities vector with size: %i", (int)velocities.size());
   prev_velocities.push_back(velocities);
+  
+  ROS_INFO("circles_current:");
+  for(int i=0;i<circles_current.size();i++)
+  {
+    ROS_INFO("Circle %i: (%f,%f)", i, circles_current[i].center.x, circles_current[i].center.y);
+  }
+  
+  // Set previous circles
+  for(int i=0;i<cir_obs.size();i++)
+  {
+    /*if(i < cm.size())
+    {
+      ROS_INFO("i: %i cm.size(): %i", i, (int)cm.size());
+      ROS_INFO("cm[%i].i_prevCir: %i cm[%i].i_cirs: %i", i, cm[i].i_prevCir, i, cm[i].i_cirs);
+      cir_obs[ cm[i].i_prevCir ]->prevCirs.push_back( circles_current[ cm[i].i_cirs ] );
+    }
+    else
+    {
+      ROS_INFO("i: %i > cm.size(): %i", i, (int)cm.size());
+      ROS_INFO("circles_current.size(): %i", (int)circles_current.size());
+      cir_obs[i]->prevCirs.push_back(circles_current[i]);
+    }*/
+
+    cir_obs[i]->prevCirs.push_back(cir_obs[i]->cir);
+  }
+
+  ROS_INFO("CIRCLE OBSTACLES ARRAY:");
+  for(int i=0;i<cir_obs.size();i++)
+  {
+    ROS_INFO("cir_obs[%i]: Circle: (%f,%f), Previous Circles:", i, cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
+    for(int j=0;j<cir_obs[i]->prevCirs.size() && j<5;j++)
+    {
+      ROS_INFO("Prev Cir %i: (%f, %f)", i, cir_obs[i]->prevCirs[j].center.x, cir_obs[i]->prevCirs[j].center.y);
+    }
+  }
+
 
   
   // Set prev_cirs variable!
-  prev_valid_cirs = cirs;
+  prev_valid_cirs = circles_current;
 
 
  

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ramp_sensing)
 
-find_package(catkin REQUIRED COMPONENTS map_msgs message_generation nav_msgs ramp_msgs roscpp tf)
+find_package(catkin REQUIRED COMPONENTS geometry_msgs map_msgs message_generation nav_msgs ramp_msgs roscpp tf)
 find_package(OpenCV REQUIRED)
 find_package(PkgConfig)
 pkg_check_modules(BFL REQUIRED orocos-bfl)
@@ -38,3 +38,6 @@ target_link_libraries(pub_laser_tf ${catkin_LIBRARIES})
 
 add_executable(pub_map_new_tf src/main_map_rotate.cpp)
 target_link_libraries(pub_map_new_tf ${catkin_LIBRARIES})
+
+add_executable(clear_obs src/main_clearing.cpp)
+target_link_libraries(clear_obs ${catkin_LIBRARIES})
