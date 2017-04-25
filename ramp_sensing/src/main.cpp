@@ -13,7 +13,6 @@
 #include "circle_packer.h"
 #include <visualization_msgs/MarkerArray.h>
 #include "utility.h"
-#include "blob_detector.h"
 #include "circle_filter.h"
 
 
