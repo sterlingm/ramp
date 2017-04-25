@@ -386,48 +386,38 @@ void CirclePacker::combineTwoCircles(const Circle a, const Circle b, Circle& res
 void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector<Circle>& result) const
 {
   ROS_INFO("In combineOverlappingCircles");
-  for(int i=0;i<cs.size();i++)
-  {
-    ROS_INFO("Circle %i - Center: (%f, %f) Radius: %f", i, cs[i].center.x, cs[i].center.y, cs[i].radius);
-  }
-  int pairs=0;
-
-  //result = cs;
-
-  int i=0,j=0;
+  int pairs, i=0, j=0;
 
   while(i<cs.size()-1)
   {
-    ROS_INFO("i: %i", i);
-    ROS_INFO("cs.size(): %i", (int)cs.size());
+    //ROS_INFO("i: %i", i);
     Circle ci = cs[i];
-    ROS_INFO("ci - Center: (%f, %f) Radius: %f", ci.center.x, ci.center.y, ci.radius);
+    //ROS_INFO("ci - Center: (%f, %f) Radius: %f", ci.center.x, ci.center.y, ci.radius);
+    
     j = i+1;
     double inflate = 20.0;
     double threshold = 0.;
 
     while(j<cs.size())
     {
-      ROS_INFO("j: %i", j);
+      //ROS_INFO("j: %i", j);
 
       // Check if they overlap
       Circle cj = cs[j];
-      ROS_INFO("cj - Center: (%f, %f) Radius: %f", cj.center.x, cj.center.y, cj.radius);
+      //ROS_INFO("cj - Center: (%f, %f) Radius: %f", cj.center.x, cj.center.y, cj.radius);
      
       double max_r = ci.radius > cj.radius ? ci.radius : cj.radius;
       threshold = max_r + inflate;
 
       double d = utility_.positionDistance(ci.center.x, ci.center.y, cj.center.x, cj.center.y);
-      ROS_INFO("d: %f threshold: %f", d, threshold);
+      //ROS_INFO("d: %f threshold: %f", d, threshold);
 
       if(d < threshold)
       {
-        ROS_INFO("Combining the Circles!");
-
         // Combine them
         Circle temp;
         combineTwoCircles(ci, cj, temp);
-        ROS_INFO("Result - Center: (%f, %f) Radius: %f", temp.center.x, temp.center.y, temp.radius);
+        //ROS_INFO("Result - Center: (%f, %f) Radius: %f", temp.center.x, temp.center.y, temp.radius);
 
         // If combined, replace both circles with overlapping circle
         // Replace i by setting it to temp, erase the circle at j
@@ -448,25 +438,9 @@ void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector
   } // end outter while
 
   result = cs;
-  ROS_INFO("After Overlapping:");
-  /*for(int i=0;i<cs.size();i++)
-  {
-    ROS_INFO("Circle %i - Center: (%f, %f) Radius: %f", i, cs[i].center.x, cs[i].center.y, cs[i].radius);
-    result.push_back(cs[i]);
-  }*/
 } // End combineOverlappingCircles
 
 
-
-
-double CirclePacker::getMedian(const std::vector<double> points) const
-{
-  // Sort points
-  
-
-  // Take the middle element
-
-}
 
 
 Point CirclePacker::findCenterOfPixels(const std::vector<cv::Point> pixels) const
@@ -723,13 +697,13 @@ std::vector<Circle> CirclePacker::go()
 
   // Make object
   // Ptr line works with my work machine, but I get an error about the create(params) method on my laptop
-  //cv::Ptr<cv::SimpleBlobDetector> blobs_detector = cv::SimpleBlobDetector::create(params);   
-  cv::SimpleBlobDetector blobs_detector(params);   
+  cv::Ptr<cv::SimpleBlobDetector> blobs_detector = cv::SimpleBlobDetector::create(params);   
+  //cv::SimpleBlobDetector blobs_detector(params);   
 
   // Detect blobs
   std::vector<cv::KeyPoint> keypoints;
   ros::Time t_start = ros::Time::now();
-  blobs_detector.detect(src, keypoints);
+  blobs_detector->detect(src, keypoints);
   ros::Duration d_blobs = ros::Time::now() - t_start;
   ROS_INFO("d_blobs: %f", d_blobs.toSec());
 
@@ -893,21 +867,16 @@ std::vector<Circle> CirclePacker::goMinEncCir()
 
 std::vector<Circle> CirclePacker::goMyBlobs()
 {
-  ROS_INFO("In CirclePacker::go()");
+  ROS_INFO("In CirclePacker::goMyBlobs()");
   std::vector<Circle> result;
 
   // Create a matrix of the same size and type as src
   dst.create( src.size(), src.type() );
-  ROS_INFO("Done with dst.create");
-
-  // Convert to grayscale
-  //cvtColor(src, src_gray, CV_BGR2GRAY);
 
   // Get the edges
   ros::Time t_start_edge_detect = ros::Time::now();
   CannyThreshold(0, 0);
   ros::Duration d_edges_detect(ros::Time::now()-t_start_edge_detect);
-  ROS_INFO("Done with CannyThreshold");
 
   /*
    * Detect blobs
@@ -936,7 +905,6 @@ std::vector<Circle> CirclePacker::goMyBlobs()
      */
 
     // Get min and max values
-    ROS_INFO("contours[%i].size(): %i", i, (int)contours[i].size());
     int x_min = contours[i][0].x, x_max=x_min, y_min = contours[i][0].y, y_max=y_min;
     for(int j=0;j<contours[i].size();j++)
     {
@@ -958,9 +926,11 @@ std::vector<Circle> CirclePacker::goMyBlobs()
       {
         y_max = p.y;
       }
-    }
+    } // end for each contour point
 
-    ROS_INFO("x_min: %i x_max: %i y_min: %i y_max: %i", x_min, x_max, y_min, y_max);
+    /*
+     * Go through the region and collect all obstacle pixels
+     */
     int num_ob=0, num_free=0;
     for(int x=x_min;x<x_max;x++)
     {
@@ -979,19 +949,8 @@ std::vector<Circle> CirclePacker::goMyBlobs()
           num_ob++;
         }
         else num_free++;
-      }
-    }
-
-    ROS_INFO("num_ob: %i num_free: %i", num_ob, num_free);
-    ROS_INFO("obs_points.size(): %i", (int)obs_points.size());
-    cv::Mat m(obs_points);
-    // After getting points, build a moments array
-    //cv::Moments moms = moments(obs_points);
-    //cv::Moments moms = moments(m);
-    //ROS_INFO("moms: m00: %f m10: %f m01: %f m10/m00: %f m01/m00: %f", moms.m00, moms.m01, moms.m10, moms.m10/moms.m00, moms.m01/moms.m00);
-
-    //c.center.x = moms.m01 / moms.m00;
-    //c.center.y = moms.m10 / moms.m00;
+      } // end inner for
+    } // end for each pixel in region
 
     int x=0, y=0;
     for(int j=0;j<obs_points.size();j++)
@@ -1003,37 +962,42 @@ std::vector<Circle> CirclePacker::goMyBlobs()
     y /= obs_points.size();
     ROS_INFO("Average center: (%i,%i)", x, y);
 
+    // Set the center value
     c.center.x = y;
     c.center.y = x;
-
     
     
-    
+    /*
+     * Get the dist of each pixel to the center
+     */
     std::vector<double> dists;
+    double max_dist = -1;
     for (size_t pointIdx = 0; pointIdx<obs_points.size(); pointIdx++)
     {
-        cv::Point2f pt = obs_points[pointIdx];
-        double d = utility_.positionDistance(c.center.x, c.center.y, pt.y, pt.x);
-        //ROS_INFO("d: %f", d);
-        dists.push_back(d);
-    }
-    std::sort(dists.begin(), dists.end());
-    //c.radius = (dists[(dists.size() - 1) / 2] + dists[dists.size() / 2]) / 2.;
-    c.radius = dists[dists.size()-1];
+      cv::Point2f pt = obs_points[pointIdx];
+      double d = utility_.positionDistance(c.center.x, c.center.y, pt.y, pt.x);
+      dists.push_back(d);
 
+      if(d > max_dist)
+      {
+        max_dist = d;
+      }
+    } // end for
+
+    // Compute the radius based on the dist
+    //std::sort(dists.begin(), dists.end());
+    //c.radius = (dists[(dists.size() - 1) / 2] + dists[dists.size() / 2]) / 2.;
+    c.radius = max_dist;
 
     obs_points.clear();
     dists.clear();
 
     // Only push on circles that are above a size threshold
-    if(c.radius > 20.0)
+    if(c.radius > obSizeThreshold)
     {
       result.push_back(c);
     }
-  }
-
-
-
+  } // end for each set of contour points
 
   return result;
 }

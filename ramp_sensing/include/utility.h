@@ -59,6 +59,11 @@ struct Circle
   double radius;
 };
 
+struct Velocity
+{
+  double v, vx, vy, w;
+};
+
 struct CompareDist
 {
   bool operator()(const Cell& c1, const Cell& c2)
@@ -66,7 +71,6 @@ struct CompareDist
     return c1.dist < c2.dist;
   }
 };
-
 
 struct CircleOb
 {
@@ -80,14 +84,11 @@ struct CircleOb
 
   std::vector<Circle> prevCirs;
   std::vector<double> prevTheta;
+  Velocity vel;
   double vx, vy, v;
   double theta, w;
 };
 
-struct Velocity
-{
-  double v, vx, vy, w;
-};
 
 
 struct CircleMatch

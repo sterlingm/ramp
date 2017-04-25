@@ -27,7 +27,6 @@ class CirclePacker
     void combineTwoCircles(const Circle a, const Circle b, Circle& result) const;
     void combineOverlappingCircles(std::vector<Circle> cs, std::vector<Circle>& result) const;
 
-    double getMedian(const std::vector<double> points) const;
 
     Point findCenterOfPixels(const std::vector<cv::Point> pixels) const;
     std::vector<double> getWeights(const std::vector<cv::Point> pixels, const Point center) const;
@@ -64,6 +63,7 @@ class CirclePacker
     int kernel_size = 3;
     std::string window_name = "Edge Map";
 
+    double obSizeThreshold = 20.0;
 };
 
 #endif
