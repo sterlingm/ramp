@@ -63,7 +63,7 @@ class CirclePacker
     int kernel_size = 3;
     std::string window_name = "Edge Map";
 
-    double obSizeThreshold = 20.0;
+    double obSizeThreshold = 15.0;
 };
 
 #endif

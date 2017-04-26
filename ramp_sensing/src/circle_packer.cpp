@@ -966,7 +966,6 @@ std::vector<Circle> CirclePacker::goMyBlobs()
     c.center.x = y;
     c.center.y = x;
     
-    
     /*
      * Get the dist of each pixel to the center
      */
