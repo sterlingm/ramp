@@ -1139,7 +1139,8 @@ void reportPredictedVelocity(int sig)
   if(predicted_velocities.size() > 0)
   {
     double min_v=predicted_velocities.at(0).v, max_v = min_v, average_v=min_v;
-    int count=0;
+    double min_w=predicted_velocities.at(0).w, max_w = min_w, average_w=min_w;
+    int count_v=0, count_w=0;
     for(int i=1;i<predicted_velocities.size();i++)
     {
       if(predicted_velocities[i].v < min_v)
@@ -1151,16 +1152,34 @@ void reportPredictedVelocity(int sig)
         max_v = predicted_velocities[i].v;
       }
 
-      if (predicted_velocities[i].v > 0)
+      if(predicted_velocities[i].v > 0)
       {
         //ROS_INFO("Adding %f", predicted_velocities[i].v);
         average_v += predicted_velocities[i].v;
-        count++;
+        count_v++;
+      }
+      
+      if(predicted_velocities[i].w < min_w)
+      {
+        min_w = predicted_velocities[i].w;
+      }
+      if(predicted_velocities[i].w > max_w)
+      {
+        max_w = predicted_velocities[i].w;
+      }
+
+      if(predicted_velocities[i].w > 0)
+      {
+        ROS_INFO("Adding %f", predicted_velocities[i].w);
+        average_w += predicted_velocities[i].w;
+        count_w++;
       }
     }
-    average_v /= count;
+    average_v /= count_v;
+    average_w /= count_w;
 
     printf("\nPredicted Velocities range=[%f,%f], average: %f\n", min_v, max_v, average_v);
+    printf("\nPredicted Velocities range=[%f,%f], average: %f\n", min_w, max_w, average_w);
   }
 
   ROS_INFO("Average differences in circle detection");

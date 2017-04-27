@@ -1541,8 +1541,9 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const bool sub_populations, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool errorReduction) {
-  ////////ROS_INFO("In Planner::init");
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const bool sub_populations, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool errorReduction) 
+{
+  ROS_INFO("In Planner::init");
 
   // Set ID
   id_ = i;
@@ -1558,10 +1559,6 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   controlCycleTimer_  = h.createTimer(ros::Duration(controlCycle_), 
                                      &Planner::controlCycleCallback, this);
   controlCycleTimer_.stop();
-
-  //planningCycle_      = ros::Duration(1.f/t_pc_rate);
-  //planningCycleTimer_ = h.createTimer(ros::Duration(planningCycle_), &Planner::planningCycleCallback, this);
-  //planningCycleTimer_.stop();
 
   imminentCollisionTimer_ = h.createTimer(ros::Duration(imminentCollisionCycle_), 
                                           &Planner::imminentCollisionCallback, this);
@@ -1591,6 +1588,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   t_fixed_cc_           = t_fixed_cc;
   errorReduction_       = errorReduction;
   generationsPerCC_     = controlCycle_.toSec() / planningCycle_.toSec();
+  ROS_INFO("Exiting Planner::init");
 } // End init
 
 
