@@ -6,8 +6,8 @@
  *****************************************************/
 
 Planner::Planner() : resolutionRate_(1.f / 10.f), ob_dists_timer_dur_(0.1), generation_(0), i_rt(1), goalThreshold_(0.4), num_ops_(6), D_(1.5f), 
-  cc_started_(false), c_pc_(0), transThreshold_(1./50.), num_cc_(0), L_(0.33), h_traj_req_(0), h_eval_req_(0), h_control_(0), modifier_(0), 
- delta_t_switch_(0.1), stop_(false), moving_on_coll_(false), log_enter_exit_(true), log_switching_(true)
+  cc_started_(false), c_pc_(0), transThreshold_(1./50.), num_cc_(0), L_(0.33), h_traj_req_(0), h_eval_req_(0), h_control_(0), h_rviz_(0), modifier_(0), 
+ delta_t_switch_(0.1), stop_(false), moving_on_coll_(false), log_enter_exit_(true), log_switching_(true), only_sensing_(0)
 {
   imminentCollisionCycle_ = ros::Duration(1.f / 20.f);
   generationsPerCC_       = controlCycle_.toSec() / planningCycle_.toSec();
@@ -21,26 +21,32 @@ Planner::Planner() : resolutionRate_(1.f / 10.f), ob_dists_timer_dur_(0.1), gene
 
 Planner::~Planner() 
 {
-  if(h_traj_req_!= 0) 
+  if(h_traj_req_) 
   {
     delete h_traj_req_;
     h_traj_req_= 0;
   }
 
 
-  if(h_control_ != 0) 
+  if(h_control_) 
   {
     delete h_control_;
     h_control_ = 0;
   }
 
-  if(h_eval_req_ != 0) 
+  if(h_eval_req_) 
   {
     delete h_eval_req_;
     h_eval_req_ = 0;
   }
+
+  if(h_rviz_)
+  {
+    delete h_rviz_;
+    h_rviz_ = 0;
+  }
   
-  if(modifier_!= 0) 
+  if(modifier_) 
   {
     delete modifier_;  
     modifier_= 0;
@@ -220,6 +226,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   ros::Time start = ros::Time::now();
   ros::Duration d(start - t_prevCC_);
   
+  ob_trajectory_.clear();
 
   Population pop_obs;
   Population copy = population_;
@@ -330,6 +337,21 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   sc_durs_.push_back( ros::Time::now() - start );
   
   sendPopulation(copy);
+
+  // Send trajectories to rviz
+  if(ob_trajectory_.size() > 0)
+  {
+    visualization_msgs::MarkerArray ma;
+    for(int i=0;i<ob_trajectory_.size();i++)
+    {
+      visualization_msgs::Marker ob_trj;
+      buildLineList(ob_trajectory_[i], ob_trj);
+      ma.markers.push_back(ob_trj);
+      ROS_INFO("Line List %i size: %i", i, (int)ob_trj.points.size());
+    }
+    ROS_INFO("ma.size(): %i", (int)ma.markers.size());
+    h_rviz_->sendMarkerArray(ma);
+  }
   
   /*//ROS_INFO("Pausing in Sensing Cycle");
   ros::Duration d(1);
@@ -1541,7 +1563,7 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const bool sub_populations, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool errorReduction) 
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const bool sub_populations, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool errorReduction) 
 {
   ROS_INFO("In Planner::init");
 
@@ -1552,6 +1574,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   h_traj_req_ = new TrajectoryRequestHandler(h);
   h_control_  = new ControlHandler(h);
   h_eval_req_ = new EvaluationRequestHandler(h);
+  h_rviz_     = new RvizHandler(h);
   modifier_   = new Modifier(h, num_ops_);
 
   // Initialize the timers, but don't start them yet
@@ -1586,6 +1609,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   pop_type_             = pop_type;
   generationsBeforeCC_  = gens_before_cc;
   t_fixed_cc_           = t_fixed_cc;
+  only_sensing_         = only_sensing;
   errorReduction_       = errorReduction;
   generationsPerCC_     = controlCycle_.toSec() / planningCycle_.toSec();
   ROS_INFO("Exiting Planner::init");
@@ -3476,6 +3500,36 @@ void Planner::displayTrajectory(const ramp_msgs::RampTrajectory traj) const
 
 
 
+void Planner::buildLineList(const RampTrajectory& trajec, visualization_msgs::Marker& result) const
+{
+  result.id = 10005;
+  result.header.stamp = ros::Time::now();
+  result.header.frame_id = "/map_rot";
+  result.ns = "basic_shapes";
+
+  result.type = visualization_msgs::Marker::LINE_STRIP;
+  result.action = visualization_msgs::Marker::ADD;
+
+  result.color.a = 1;
+  result.color.r = 0;
+  result.color.g = 0;
+  result.color.b = 1;
+
+  // Push on all the trajectory points
+  for(int i=0;i<trajec.msg_.trajectory.points.size();i++)
+  {
+    //ROS_INFO("Point %i: (%f,%f,%f)", i, trajec.msg_.trajectory.points[i].positions[0], trajec.msg_.trajectory.points[i].positions[1], trajec.msg_.trajectory.points[i].positions[2]);
+    geometry_msgs::Point p;
+    p.x = trajec.msg_.trajectory.points[i].positions[0];
+    p.y = trajec.msg_.trajectory.points[i].positions[1];
+    p.z = 0;
+
+    result.points.push_back(p);
+  }
+  result.lifetime = ros::Duration(0.2);
+
+  result.scale.x = 0.1;
+}
 
 
 
@@ -3917,9 +3971,12 @@ void Planner::go()
   diff_ = diff_.zero(3);
   
   // Start the control cycles
-  controlCycleTimer_.start();
-  imminentCollisionTimer_.start();
-  ob_dists_timer_.start();
+  if(!only_sensing_)
+  {
+    controlCycleTimer_.start();
+    imminentCollisionTimer_.start();
+    ob_dists_timer_.start();
+  }
 
   //////ROS_INFO("CCs started");
 
@@ -3930,7 +3987,10 @@ void Planner::go()
   goalThreshold_ = 0.25;
   while( (latestUpdate_.comparePosition(goal_, false) > goalThreshold_) && ros::ok()) 
   {
-    planningCycleCallback();
+    if(!only_sensing_)
+    {
+      planningCycleCallback();
+    }
     r.sleep();
     ros::spinOnce(); 
   } // end while

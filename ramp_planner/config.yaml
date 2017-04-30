@@ -2,11 +2,13 @@ population_size: 5
 
 sub_populations: false 
 
-modifications: true
+modifications: false
 
-evaluations: true
+evaluations: false
 
 seed_population: false 
+
+only_sensing: true
 
 gens_before_control_cycle: 20
 

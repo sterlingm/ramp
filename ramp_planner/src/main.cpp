@@ -17,6 +17,7 @@ bool                modifications;
 bool                evaluations;
 bool                seedPopulation;
 bool                errorReduction;
+bool                only_sensing;
 double              t_cc_rate;
 double              t_pc_rate;
 int                 pop_type;
@@ -181,6 +182,12 @@ void loadParameters(const ros::NodeHandle handle)
     std::cout<<"\nseed_population: "<<seedPopulation;
   }
   
+  if(handle.hasParam("ramp/only_sensing"))
+  {
+    handle.getParam("ramp/only_sensing", only_sensing);
+    std::cout<<"\nonly_sensing: "<<only_sensing;
+  }
+
   if(handle.hasParam("ramp/gens_before_control_cycle")) 
   {
     handle.getParam("ramp/gens_before_control_cycle", gensBeforeCC);

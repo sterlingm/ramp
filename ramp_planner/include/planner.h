@@ -10,6 +10,7 @@
 #include "modifier.h"
 #include "population.h"
 #include "control_handler.h"
+#include "rviz_handler.h"
 #include "parameter_handler.h"
 #include "bezier_curve.h"
 #include <type_traits>
@@ -115,6 +116,7 @@ class Planner {
               const int                 gens_before_cc=0,
               const double              t_pc_rate=2.,
               const double              t_fixed_cc=2.,
+              const bool                only_sensing=0,
               const bool                errorReduction=0);
     
     // Send the best trajectory to the control package
@@ -123,6 +125,7 @@ class Planner {
     // Send the whole population to the trajectory viewer
     void sendPopulation(const Population& pop) const;
     void displayTrajectory(const ramp_msgs::RampTrajectory traj) const;
+    void buildLineList(const RampTrajectory& trajec, visualization_msgs::Marker& result) const;
 
     // Evaluate the population 
     void evaluateTrajectory(RampTrajectory& t, bool full=true) const;
@@ -425,6 +428,7 @@ class Planner {
     TrajectoryRequestHandler*   h_traj_req_;
     EvaluationRequestHandler*   h_eval_req_;
     ControlHandler*             h_control_;
+    RvizHandler*                h_rviz_;
     Modifier*                   modifier_;
 
     // Parameter handler
@@ -482,6 +486,9 @@ class Planner {
     bool log_switching_;
     int num_mods_;
     int num_succ_mods_;
+
+
+    bool only_sensing_;
 };
 
 #endif

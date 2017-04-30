@@ -18,6 +18,10 @@
 #include <tf/transform_datatypes.h>
 #include <ros/console.h>
 
+/*
+ * Change this class to a singleton pattern
+ */
+
 #define PI 3.14159f
 
 enum TrajectoryType 

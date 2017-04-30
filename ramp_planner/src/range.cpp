@@ -3,7 +3,7 @@
 Range::Range() {}
 
 Range::Range(const float min, const float max) {
-  ROS_INFO("Creating Range object with min: %f max: %f", min, max);
+  //ROS_INFO("Creating Range object with min: %f max: %f", min, max);
   msg_.min = min;
   msg_.max = max;
 }
