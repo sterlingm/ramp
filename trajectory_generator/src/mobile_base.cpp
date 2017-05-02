@@ -1289,7 +1289,7 @@ const trajectory_msgs::JointTrajectoryPoint MobileBase::spinOnce(bool vertical_l
   /** Build the JointTrajectoryPoint object that will be used to build the trajectory */
   trajectory_msgs::JointTrajectoryPoint point = buildTrajectoryPoint(reflexxesData_, vertical_line);
 
-  printReflexxesSpinInfo();
+  //printReflexxesSpinInfo();
 
 
   // The input of the next iteration is the output of this one
@@ -2020,8 +2020,8 @@ bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
         {
 
           trajectory_msgs::JointTrajectoryPoint p = spinOnce();
-          ROS_INFO("p: %s", utility_.toString(p).c_str());
-          ROS_INFO("result: %i", reflexxesData_.resultValue);
+          //ROS_INFO("p: %s", utility_.toString(p).c_str());
+          //ROS_INFO("result: %i", reflexxesData_.resultValue);
           if(reflexxesData_.resultValue == -100)
           {
             //////ROS_ERROR("An error occurred in Reflexxes, setting res.error=1 and returning");

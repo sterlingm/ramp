@@ -1,14 +1,14 @@
-population_size: 5
+population_size: 15
 
 sub_populations: false 
 
-modifications: false
+modifications: true
 
 evaluations: false
 
 seed_population: false 
 
-only_sensing: true
+only_sensing: false
 
 gens_before_control_cycle: 20
 
@@ -18,7 +18,7 @@ fixed_control_cycle_rate: 2
 
 sensing_cycle_rate: 15
 
-error_reduction: true
+error_reduction: false
 
 # Turtlebot obstacle topics
 #obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom', '/obstacle_3/odom']

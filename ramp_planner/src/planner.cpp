@@ -2524,7 +2524,7 @@ void Planner::getTransitionTrajectory(const RampTrajectory& trj_movingOn, const 
 /** Modify a Path */
 const std::vector<Path> Planner::modifyPath() 
 { 
-  ROS_INFO("About to modify a path, pop is: %s\n%s", population_.get(0).toString().c_str(), population_.get(1).toString().c_str());
+  //ROS_INFO("About to modify a path, pop is: %s\n%s", population_.get(0).toString().c_str(), population_.get(1).toString().c_str());
   return modifier_->perform(population_, imminent_collision_);
 }
 
@@ -2859,27 +2859,6 @@ void Planner::planningCycleCallback()
     mutate_durs_.push_back(ros::Time::now() - t);
     ROS_INFO("Done with modification");
     //////ROS_INFO("*****************************");
-
-
-    // cc_started needed? still want to replace if they haven't started, only need cc_started when switching 
-    // TODO: cc_started used to be a predicate here
-    /*if(mod.i_modified_.size() > 0) 
-        //&& !population_.get(0).path_.at(0).motionState_.equals(goal_))
-    {
-      //////ROS_INFO("In if trajectory added");
-      population_       = mod.popNew_;
-      
-      controlCycle_ = population_.getEarliestStartTime();
-      controlCycleTimer_.setPeriod(controlCycle_, false);
-      //controlCycle_ = population_.getBest().msg_.t_start;
-      //controlCycleTimer_.setPeriod(population_.getBest().msg_.t_start, false);
-      //////ROS_INFO("Modification: new CC timer: %f", population_.getBest().msg_.t_start.toSec());
-    } // end if trajectory added*/
-    /*else
-    {
-      ////ROS_INFO("No trajectory added");
-    }*/
-    //ROS_INFO("Modification complete");
   } // end if modifications
 
 
@@ -2910,8 +2889,8 @@ void Planner::planningCycleCallback()
     copy.trajectories_.push_back(ob_trajectory_[i]);
   }
 
-  //sendPopulation(population_);
-  sendPopulation(copy);
+  sendPopulation(population_);
+  //sendPopulation(copy, true);
   
   ros::Duration d = ros::Time::now() - t_start; 
   ////ROS_INFO("d: %f EC: %s mod_worked: %s modded_two: %s", d.toSec(), EC ? "True" : "False", mod_worked ? "True" : "False", modded_two ? "True" : "False");
@@ -3562,7 +3541,7 @@ void Planner::requestEvaluation(std::vector<RampTrajectory>& trajecs)
   }
   else
   {
-    ////ROS_ERROR("An error occurred when evaluating a trajectory");
+    ROS_ERROR("An error occurred when evaluating a trajectory");
   }
 }
 
@@ -3582,7 +3561,7 @@ void Planner::requestEvaluation(ramp_msgs::EvaluationRequest& request) const
   }
   else
   {
-    ////ROS_ERROR("An error occurred when evaluating a trajectory");
+    ROS_ERROR("An error occurred when evaluating a trajectory");
   }
   ////ROS_INFO("Exiting Planner::requestEvaluation(EvaluationRequest&)");
 }
@@ -3904,21 +3883,8 @@ void Planner::go()
   initPopulation();
   evaluatePopulation();
   ROS_INFO("Population initialized");
-
-  // Publish each trajectory to rviz individually
-  for(int i=0;i<population_.size();i++)
-  {
-    Population temp;
-    temp.paths_.push_back(population_.paths_[i]);
-    temp.trajectories_.push_back(population_.trajectories_[i]);
-    ROS_INFO("Path %i: %s", i, population_.paths_.at(i).toString().c_str());
-    ROS_INFO("Trajectory %i: %s", i, population_.trajectories_.at(i).toString().c_str());
-    sendPopulation(temp, true);
-    std::cin.get();
-  }
   sendPopulation(population_, true);
-  std::cout<<"\ntransPopulation initialized! Press enter to continue\n";
-  //std::cin.get();
+  std::cin.get();
  
 
 
@@ -3970,13 +3936,17 @@ void Planner::go()
     //////ROS_WARN("num_pc is less than zero: %i - Setting num_pc = 0", num_pc);
     num_pc = 0;
   }
-  ////ROS_INFO("generationsBeforeCC_: %i generationsPerCC_: %i num_pc: %i", generationsBeforeCC_, generationsPerCC_, num_pc);
+  ROS_INFO("generationsBeforeCC_: %i generationsPerCC_: %i num_pc: %i", generationsBeforeCC_, generationsPerCC_, num_pc);
 
   ros::Rate r(20);
   // Wait for the specified number of generations before starting CC's
-  while(generation_ < num_pc) {planningCycleCallback(); r.sleep(); ros::spinOnce();}
+  while(generation_ < num_pc) 
+  {
+    ROS_INFO("In first while");
+    planningCycleCallback(); ROS_INFO("Done with PC Callback"); r.sleep(); ROS_INFO("Slept, now spinning"); ros::spinOnce(); ROS_INFO("Done spinning once");
+  }
  
-  ////ROS_INFO("Starting CCs at t: %f", ros::Time::now().toSec());
+  ROS_INFO("Starting CCs at t: %f", ros::Time::now().toSec());
 
   // Right before starting CC, make sure transtransPopulation is updated
   population_ = population_;
