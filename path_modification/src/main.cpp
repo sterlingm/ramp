@@ -5,6 +5,10 @@
 
 Utility u;
 
+int costmap_width, costmap_height;
+float costmap_origin_x, costmap_origin_y, costmap_res;
+
+
 bool handleRequest(ramp_msgs::ModificationRequest::Request& req,
                    ramp_msgs::ModificationRequest::Response& res)
 {
@@ -42,6 +46,28 @@ bool handleRequest(ramp_msgs::ModificationRequest::Request& req,
 
   return true;
 }
+
+
+void loadParameters(const ros::NodeHandle& handle)
+{
+  /*
+   * Check for all costmap parameters!
+   */
+  if( handle.hasParam("costmap_node/costmap/width")     &&
+      handle.hasParam("costmap_node/costmap/height")    &&
+      handle.hasParam("costmap_node/costmap/origin_x")  &&
+      handle.hasParam("costmap_node/costmap/origin_y") )
+  {
+    handle.getParam("costmap_node/costmap/width", costmap_width);
+    handle.getParam("costmap_node/costmap/height", costmap_height);
+    handle.getParam("costmap_node/costmap/origin_x", costmap_origin_x);
+    handle.getParam("costmap_node/costmap/origin_y", costmap_origin_y);
+    handle.getParam("costmap_node/costmap/resolution", costmap_res);
+
+    ROS_INFO("Got costmap parameters. w: %i h: %i x: %f y: %f res: %f", costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res);
+  }
+}
+
 
 
 
