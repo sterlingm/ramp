@@ -24,14 +24,13 @@ int                 pop_type;
 TrajectoryType      pt;
 std::vector<std::string> ob_topics;
 
-int costmap_width, costmap_height, costmap_origin_x, costmap_origin_y;
+float costmap_width, costmap_height, costmap_origin_x, costmap_origin_y;
 ros::Publisher pub_rviz;
 
 
 // Initializes a vector of Ranges that the Planner is initialized with
 void initDOF(const std::vector<double> dof_min, const std::vector<double> dof_max) 
 {
-  
   for(unsigned int i=0;i<dof_min.size();i++) 
   {
     Range temp(dof_min.at(i), dof_max.at(i));
@@ -114,12 +113,13 @@ void loadParameters(const ros::NodeHandle handle)
     handle.getParam("costmap_node/costmap/origin_x", costmap_origin_x);
     handle.getParam("costmap_node/costmap/origin_y", costmap_origin_y);
 
-    ROS_INFO("Got costmap parameters. w: %i h: %i x: %i y: %i", costmap_width, costmap_height, costmap_origin_x, costmap_origin_y);
+    ROS_INFO("Got costmap parameters. w: %f h: %f x: %f y: %f", costmap_width, costmap_height, costmap_origin_x, costmap_origin_y);
 
-    int x_max = costmap_width + costmap_origin_x;
-    int x_min = costmap_origin_x;
-    int y_max = costmap_height + costmap_origin_y;
-    int y_min = costmap_origin_y;
+    float x_max = costmap_width + costmap_origin_x;
+    float x_min = costmap_origin_x;
+    float y_max = costmap_height + costmap_origin_y;
+    float y_min = costmap_origin_y;
+    ROS_INFO("x_max: %f x_min: %f y_max: %f y_min: %f", x_max, x_min, y_max, y_min);
     
     std::vector<double> dof_min, dof_max;
     dof_min.push_back(x_min);
