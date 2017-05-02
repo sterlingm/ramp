@@ -114,6 +114,29 @@ double PRIOR_COV_AY = 0.01;
 BFL::Pdf<MatrixWrapper::ColumnVector>* posterior;
 
 
+int costmap_width, costmap_height;
+float costmap_origin_x, costmap_origin_y, costmap_res;
+
+void loadParameters(const ros::NodeHandle& handle)
+{
+  /*
+   * Check for all costmap parameters!
+   */
+  if( handle.hasParam("costmap_node/costmap/width")     &&
+      handle.hasParam("costmap_node/costmap/height")    &&
+      handle.hasParam("costmap_node/costmap/origin_x")  &&
+      handle.hasParam("costmap_node/costmap/origin_y") )
+  {
+    handle.getParam("costmap_node/costmap/width", costmap_width);
+    handle.getParam("costmap_node/costmap/height", costmap_height);
+    handle.getParam("costmap_node/costmap/origin_x", costmap_origin_x);
+    handle.getParam("costmap_node/costmap/origin_y", costmap_origin_y);
+    handle.getParam("costmap_node/costmap/resolution", costmap_res);
+
+    ROS_INFO("Got costmap parameters. w: %i h: %i x: %f y: %f res: %f", costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res);
+  }
+}
+
 
 
 void loadObstacleTF()
@@ -1117,7 +1140,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   ROS_INFO("Setting obstacles");
   for(int i=0;i<cirs.size();i++)
   {
-    Obstacle o; 
+    Obstacle o(costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res); 
     o.update(cir_obs[i]->cir, velocities[i], cir_obs[i]->prevTheta[cir_obs[i]->prevCirs.size()-1]);
     obs.push_back(o);
     list.obstacles.push_back(o.msg_);
@@ -1284,6 +1307,8 @@ int main(int argc, char** argv)
     ros::Subscriber sub_ob = handle.subscribe<nav_msgs::Odometry>(ob_odoms.at(i), 1, boost::bind(updateOtherRobotCb, _1, ob_odoms.at(i)));
     subs_obs.push_back(sub_ob);
   } // end for*/
+
+  loadParameters(handle);
 
 
   // Initialize the Kalman Filter

@@ -65,7 +65,7 @@ void initStartGoal(const std::vector<float> s, const std::vector<float> g)
 
 /** Loads all of the ros parameters from .yaml 
  *  Calls initDOF, initStartGoal */
-void loadParameters(const ros::NodeHandle handle) 
+void loadParameters(const ros::NodeHandle handle)
 {
   std::cout<<"\nLoading parameters\n";
   std::cout<<"\nHandle NS: "<<handle.getNamespace();

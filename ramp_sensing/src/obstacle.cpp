@@ -11,6 +11,19 @@ Obstacle::Obstacle(const nav_msgs::Odometry o)
   odom_t      = o;
 }
 
+Obstacle::Obstacle(int costmap_width, int costmap_height, float costmap_origin_x, float costmap_origin_y, float costmap_res) 
+  : costmap_width_(costmap_width), costmap_height_(costmap_height), costmap_origin_x_(costmap_origin_x), costmap_origin_y_(costmap_origin_y), costmap_res_(costmap_res)
+{
+  float x_max = costmap_width_ + costmap_origin_x_;
+  float x_min = x_max - costmap_width_;
+  float y_max = costmap_height_ + costmap_origin_y_;
+  float y_min = y_max - costmap_height_;
+
+  x_translate_costmap_ = x_min;
+  y_translate_costmap_ = y_min;
+  ROS_INFO("width: %i height: %i o_x: %f o_y: %f x_max: %f x_min: %f y_max: %f y_min: %f", costmap_width_, costmap_height_, costmap_origin_x_, costmap_origin_y_, x_max, x_min, y_max, y_min);
+}
+
 Obstacle::~Obstacle() {}
 
 
@@ -39,8 +52,8 @@ void Obstacle::update(const Circle c, const Velocity& v, const double theta)
   doTF(false);
 
   ramp_msgs::MotionState ms;
-  ms.positions.push_back((c.center.x * 0.01) + -7);
-  ms.positions.push_back((c.center.y * 0.01) + -1.7);
+  ms.positions.push_back((c.center.x * costmap_res_) + x_translate_costmap_);
+  ms.positions.push_back((c.center.y * costmap_res_) + y_translate_costmap_);
   ms.positions.push_back(theta);
 
   ms.velocities.push_back(v.vx);

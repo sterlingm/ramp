@@ -14,6 +14,7 @@ class Obstacle
   public:
     Obstacle();
     Obstacle(const nav_msgs::Odometry p);
+    Obstacle(int costmap_width, int costmap_height, float costmap_origin_x, float costmap_origin_y, float costmap_res);
     ~Obstacle(); 
 
     /** Data Members */
@@ -41,6 +42,13 @@ class Obstacle
     void doTF(bool odom=true);
 
   private:
+    int costmap_width_;
+    int costmap_height_;
+    float costmap_origin_x_;
+    float costmap_origin_y_;
+    float costmap_res_;
+    float x_translate_costmap_;
+    float y_translate_costmap_;
     Utility utility_;
 };
 

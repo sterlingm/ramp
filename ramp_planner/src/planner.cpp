@@ -7,7 +7,7 @@
 
 Planner::Planner() : resolutionRate_(1.f / 10.f), ob_dists_timer_dur_(0.1), generation_(0), i_rt(1), goalThreshold_(0.4), num_ops_(6), D_(1.5f), 
   cc_started_(false), c_pc_(0), transThreshold_(1./50.), num_cc_(0), L_(0.33), h_traj_req_(0), h_eval_req_(0), h_control_(0), h_rviz_(0), modifier_(0), 
- delta_t_switch_(0.1), stop_(false), moving_on_coll_(false), log_enter_exit_(true), log_switching_(true), only_sensing_(0)
+ delta_t_switch_(0.1), stop_(false), moving_on_coll_(false), log_enter_exit_(true), log_switching_(true), only_sensing_(0), id_line_list_(10000)
 {
   imminentCollisionCycle_ = ros::Duration(1.f / 20.f);
   generationsPerCC_       = controlCycle_.toSec() / planningCycle_.toSec();
@@ -341,16 +341,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   // Send trajectories to rviz
   if(ob_trajectory_.size() > 0)
   {
-    visualization_msgs::MarkerArray ma;
-    for(int i=0;i<ob_trajectory_.size();i++)
-    {
-      visualization_msgs::Marker ob_trj;
-      buildLineList(ob_trajectory_[i], ob_trj);
-      ma.markers.push_back(ob_trj);
-      ROS_INFO("Line List %i size: %i", i, (int)ob_trj.points.size());
-    }
-    ROS_INFO("ma.size(): %i", (int)ma.markers.size());
-    h_rviz_->sendMarkerArray(ma);
+    sendPopulation(copy, true);
   }
   
   /*//ROS_INFO("Pausing in Sensing Cycle");
@@ -1992,22 +1983,16 @@ const std::vector<RampTrajectory> Planner::getTrajectories(std::vector<ramp_msgs
  **/
 void Planner::initPopulation() 
 { 
-  ////ROS_INFO("In Planner::initPopulation");
+  ROS_INFO("In Planner::initPopulation");
 
   population_ = getPopulation(latestUpdate_, goal_, false);
-  /*for(uint8_t i=0;i<population_.size();i++)
-  {
-    RampTrajectory temp = population_.get(i);
-    temp.msg_.t_start = ros::Duration(0);
-    population_.replace(i, temp);
-  }*/
 
-  ////ROS_INFO("Pop paths_ size: %i", (int)population_.paths_.size());
+  ROS_INFO("Pop paths_ size: %i", (int)population_.paths_.size());
   for(uint8_t i=0;i<population_.paths_.size();i++)
   {
-    ////ROS_INFO("Path %i: %s", i, population_.paths_.at(i).toString().c_str());
+    ROS_INFO("Path %i: %s", i, population_.paths_.at(i).toString().c_str());
   }
-  ////ROS_INFO("Exiting Planner::initPopulation");
+  ROS_INFO("Exiting Planner::initPopulation");
 } // End init_population
 
 
@@ -3460,35 +3445,51 @@ void Planner::sendBest() {
 
 
 /** Send the whole population of trajectories to the trajectory viewer */
-void Planner::sendPopulation(const Population& pop) const 
+void Planner::sendPopulation(const Population& pop, bool rviz)
 {
-  ramp_msgs::Population msg;
-
-  /*if(subPopulations_) 
+  if(!rviz)
   {
-    Population temp(pop.getNumSubPops());
-    std::vector<RampTrajectory> trajecs = pop.getBestFromSubPops();
-    for(uint8_t i=0;i<trajecs.size();i++) 
+    ramp_msgs::Population msg;
+
+    /*if(subPopulations_) 
     {
-      temp.add(trajecs.at(i));
-    }
+      Population temp(pop.getNumSubPops());
+      std::vector<RampTrajectory> trajecs = pop.getBestFromSubPops();
+      for(uint8_t i=0;i<trajecs.size();i++) 
+      {
+        temp.add(trajecs.at(i));
+      }
 
-    temp.calcBestIndex();
-    msg = temp.populationMsg();
-  }*/
-  //else 
-  //{
-    msg = pop.populationMsg();
-  //}
-  /*for(uint8_t i=0;i<ob_trajectory_.size();i++)
+      temp.calcBestIndex();
+      msg = temp.populationMsg();
+    }*/
+    //else 
+    //{
+      msg = pop.populationMsg();
+    //}
+    /*for(uint8_t i=0;i<ob_trajectory_.size();i++)
+    {
+      msg.population.push_back(ob_trajectory_.at(i).msg_);
+    }*/
+
+    msg.robot_id = id_;
+
+    msg.population.push_back(movingOn_.msg_);
+    h_control_->sendPopulation(msg);
+  }
+  else
   {
-    msg.population.push_back(ob_trajectory_.at(i).msg_);
-  }*/
-
-  msg.robot_id = id_;
-
-  msg.population.push_back(movingOn_.msg_);
-  h_control_->sendPopulation(msg);
+    visualization_msgs::MarkerArray ma;
+    for(int i=0;i<pop.trajectories_.size();i++)
+    {
+      visualization_msgs::Marker ob_trj;
+      buildLineList(pop.trajectories_[i], ++id_line_list_, ob_trj);
+      ma.markers.push_back(ob_trj);
+      ROS_INFO("Line List %i size: %i", i, (int)ob_trj.points.size());
+    }
+    ROS_INFO("ma.size(): %i", (int)ma.markers.size());
+    h_rviz_->sendMarkerArray(ma);
+  }
 }
 
 void Planner::displayTrajectory(const ramp_msgs::RampTrajectory traj) const 
@@ -3500,9 +3501,9 @@ void Planner::displayTrajectory(const ramp_msgs::RampTrajectory traj) const
 
 
 
-void Planner::buildLineList(const RampTrajectory& trajec, visualization_msgs::Marker& result) const
+void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_msgs::Marker& result) const
 {
-  result.id = 10005;
+  result.id = id;
   result.header.stamp = ros::Time::now();
   result.header.frame_id = "/map_rot";
   result.ns = "basic_shapes";
@@ -3528,7 +3529,8 @@ void Planner::buildLineList(const RampTrajectory& trajec, visualization_msgs::Ma
   }
   result.lifetime = ros::Duration(0.2);
 
-  result.scale.x = 0.1;
+  // Width of the lines
+  result.scale.x = 0.01;
 }
 
 
@@ -3901,9 +3903,20 @@ void Planner::go()
   // initialize population
   initPopulation();
   evaluatePopulation();
-  ////ROS_INFO("Population Initialized");
-  std::cin.get();
-  sendPopulation(population_);
+  ROS_INFO("Population initialized");
+
+  // Publish each trajectory to rviz individually
+  for(int i=0;i<population_.size();i++)
+  {
+    Population temp;
+    temp.paths_.push_back(population_.paths_[i]);
+    temp.trajectories_.push_back(population_.trajectories_[i]);
+    ROS_INFO("Path %i: %s", i, population_.paths_.at(i).toString().c_str());
+    ROS_INFO("Trajectory %i: %s", i, population_.trajectories_.at(i).toString().c_str());
+    sendPopulation(temp, true);
+    std::cin.get();
+  }
+  sendPopulation(population_, true);
   std::cout<<"\ntransPopulation initialized! Press enter to continue\n";
   //std::cin.get();
  

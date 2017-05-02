@@ -123,9 +123,9 @@ class Planner {
     void sendBest();
     
     // Send the whole population to the trajectory viewer
-    void sendPopulation(const Population& pop) const;
+    void sendPopulation(const Population& pop, bool rviz=false);
     void displayTrajectory(const ramp_msgs::RampTrajectory traj) const;
-    void buildLineList(const RampTrajectory& trajec, visualization_msgs::Marker& result) const;
+    void buildLineList(const RampTrajectory& trajec, int id, visualization_msgs::Marker& result) const;
 
     // Evaluate the population 
     void evaluateTrajectory(RampTrajectory& t, bool full=true) const;
@@ -489,6 +489,7 @@ class Planner {
 
 
     bool only_sensing_;
+    int id_line_list_;
 };
 
 #endif
