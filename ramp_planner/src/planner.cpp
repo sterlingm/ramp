@@ -2757,7 +2757,7 @@ void Planner::planningCycleCallback()
   ////ROS_INFO("*************************************************");
   ROS_INFO("Planning cycle occurring, generation %i", generation_);
   //////ROS_INFO("  e.last_expected: %f\n  e.last_real: %f\n  current_expected: %f\n  current_real: %f\n  profile.last_duration: %f", e.last_expected.toSec(), e.last_real.toSec(), e.current_expected.toSec(), e.current_real.toSec(), e.profile.last_duration.toSec());
-  //////ROS_INFO("Time since last: %f", (e.current_real - e.last_real).toSec());
+  //ROS_INFO("Time since last: %f", (e.current_real - e.last_real).toSec());
   ////ROS_INFO("*************************************************");
  
   //////ROS_INFO("Time since last CC: %f", (ros::Time::now()-t_prevCC_).toSec());
@@ -2896,7 +2896,7 @@ void Planner::planningCycleCallback()
   ////ROS_INFO("d: %f EC: %s mod_worked: %s modded_two: %s", d.toSec(), EC ? "True" : "False", mod_worked ? "True" : "False", modded_two ? "True" : "False");
   pc_durs_.push_back(d);
   //////ROS_INFO("********************************************************************");
-  ROS_INFO("Generation %i completed", (generation_-1));
+  ROS_INFO("Generation %i completed, time elapse: %f", (generation_-1), (ros::Time::now() - t_start).toSec());
   //////ROS_INFO("********************************************************************");
 } // End planningCycleCallback
 

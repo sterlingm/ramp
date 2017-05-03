@@ -1,0 +1,5 @@
+<launch>
+
+<node pkg="ramp_sensing" type="ramp_sensing" name="ramp_sensing" launch-prefix="valgrind" output="screen" /> 
+
+</launch>
