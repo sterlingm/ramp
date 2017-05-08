@@ -27,7 +27,7 @@ void sendTF(const ros::TimerEvent& e)
   ROS_INFO("Time::now(): %f", ros::Time::now().toSec());
 
   // Broadcast to tf
-  br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", "map_rot"));
+  br.sendTransform(tf::StampedTransform(transform, ros::Time::now()+ros::Duration(0.05), "map", "map_rot"));
 }
 
 int main(int argc, char** argv) 

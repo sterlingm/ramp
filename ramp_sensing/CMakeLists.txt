@@ -41,3 +41,11 @@ target_link_libraries(pub_map_new_tf ${catkin_LIBRARIES})
 
 add_executable(clear_obs src/main_clearing.cpp)
 target_link_libraries(clear_obs ${catkin_LIBRARIES})
+
+
+add_executable(pub_bf_bl src/main_tf_basefp_baselink.cpp)
+target_link_libraries(pub_bf_bl ${catkin_LIBRARIES})
+
+
+add_executable(pub_tf_missing_turtlebot_gazebo src/main_pub_tf_missing_turtlebot_gazebo.cpp)
+target_link_libraries(pub_tf_missing_turtlebot_gazebo ${catkin_LIBRARIES})
