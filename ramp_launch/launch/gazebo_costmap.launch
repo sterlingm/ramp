@@ -1,0 +1,7 @@
+<launch>
+
+<include file="$(find ramp_sensing)/launch/costmap_amcl.launch" />
+
+<include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_static_obs.launch" />
+
+</launch>
