@@ -104,10 +104,6 @@ void setTFs()
 
 void sendTF(const ros::TimerEvent& e)
 {
-  ROS_INFO("In sendTF");
-
-  ROS_INFO("Time::now(): %f", ros::Time::now().toSec());
-
   /*
    * Create broadcasters
    * br_parent_child
@@ -126,17 +122,11 @@ void sendTF(const ros::TimerEvent& e)
    * sendTransform( StampedTransform, time(now+0.5), "parent", "child")
    */
   br_bf_bl.sendTransform(tf::StampedTransform(tf_bf_bl, ros::Time::now()+ros::Duration(0.05), "base_footprint", "base_link"));
-  ROS_INFO("Sent tf1");
   br_bl_crf.sendTransform(tf::StampedTransform(tf_bl_crf, ros::Time::now()+ros::Duration(0.05), "base_link", "camera_rgb_frame"));
-  ROS_INFO("Sent tf2");
   br_crf_cdf.sendTransform(tf::StampedTransform(tf_crf_cdf, ros::Time::now()+ros::Duration(0.05), "camera_rgb_frame", "camera_depth_frame"));
-  ROS_INFO("Sent tf3");
   br_cdf_cdof.sendTransform(tf::StampedTransform(tf_cdf_cdof, ros::Time::now()+ros::Duration(0.05), "camera_depth_frame", "camera_depth_optical_frame"));
-  ROS_INFO("Sent tf4");
   br_crf_cl.sendTransform(tf::StampedTransform(tf_crf_cl, ros::Time::now()+ros::Duration(0.05), "camera_rgb_frame", "camera_link"));
-  ROS_INFO("Sent tf5");
   br_crf_crof.sendTransform(tf::StampedTransform(tf_crf_crof, ros::Time::now()+ros::Duration(0.05), "camera_rgb_frame", "camera_rgb_optical_frame"));
-  ROS_INFO("Sent tf6");
 }
 
 int main(int argc, char** argv) 
@@ -151,6 +141,7 @@ int main(int argc, char** argv)
   ros::Timer tf_timer = handle.createTimer(ros::Duration(0.05), &sendTF);
 
   ROS_INFO("Timer created");
+  ROS_INFO("Publishing missing transforms");
 
   ros::spin();
   return 0;
