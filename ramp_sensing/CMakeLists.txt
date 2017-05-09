@@ -36,8 +36,8 @@ add_dependencies(${PROJECT_NAME} ramp_msgs_generate_messages_cpp)
 add_executable(pub_laser_tf src/main_laser_frame.cpp)
 target_link_libraries(pub_laser_tf ${catkin_LIBRARIES})
 
-add_executable(pub_map_new_tf src/main_map_rotate.cpp)
-target_link_libraries(pub_map_new_tf ${catkin_LIBRARIES})
+add_executable(pub_tf_costmap src/main_map_rotate.cpp)
+target_link_libraries(pub_tf_costmap ${catkin_LIBRARIES})
 
 add_executable(clear_obs src/main_clearing.cpp)
 target_link_libraries(clear_obs ${catkin_LIBRARIES})

@@ -21,13 +21,13 @@ void sendTF(const ros::TimerEvent& e)
 
   // Set rotation
   tf::Quaternion q;
-  q.setRPY(0, 0, 0.85);
+  q.setRPY(0, 0, 0.9);
   transform.setRotation(q);
 
   ROS_INFO("Time::now(): %f", ros::Time::now().toSec());
 
   // Broadcast to tf
-  br.sendTransform(tf::StampedTransform(transform, ros::Time::now()+ros::Duration(0.05), "map", "map_rot"));
+  br.sendTransform(tf::StampedTransform(transform, ros::Time::now()+ros::Duration(0.05), "map", "costmap"));
 }
 
 int main(int argc, char** argv) 
