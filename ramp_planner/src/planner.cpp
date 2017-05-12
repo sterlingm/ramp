@@ -1554,7 +1554,7 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const bool sub_populations, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool errorReduction) 
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const bool sub_populations, const std::string global_frame, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool errorReduction) 
 {
   ROS_INFO("In Planner::init");
 
@@ -1597,6 +1597,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   // Set misc members
   populationSize_       = population_size;
   subPopulations_       = sub_populations;
+  global_frame_         = global_frame;
   pop_type_             = pop_type;
   generationsBeforeCC_  = gens_before_cc;
   t_fixed_cc_           = t_fixed_cc;
@@ -1927,7 +1928,7 @@ const std::vector<RampTrajectory> Planner::getTrajectories(const std::vector<Pat
   // For each path
   for(unsigned int i=0;i<p.size();i++) 
   {
-    //////ROS_INFO("i: %i p.size(): %i", (int)i, (int)p.size());
+   // ROS_INFO("i: %i p.size(): %i", (int)i, (int)p.size());
     // Get a trajectory
     //RampTrajectory temp = requestTrajectory(p.at(i));
     //result.push_back(temp);
@@ -1943,10 +1944,10 @@ const std::vector<RampTrajectory> Planner::getTrajectories(const std::vector<Pat
 
   requestTrajectory(tr_srv, result);
   ////ROS_INFO("Done with requestTrajectory");
-  for(uint8_t i=0;i<result.size();i++)
+  /*for(uint8_t i=0;i<result.size();i++)
   {
     ////ROS_INFO("Path %i: %s", i, utility_.toString(result.at(i).msg_.holonomic_path).c_str());
-  }
+  }*/
 
   ////ROS_INFO("Exiting Planner::getTrajectories");
   return result;
@@ -3484,7 +3485,7 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
 {
   result.id = id;
   result.header.stamp = ros::Time::now();
-  result.header.frame_id = "/map_rot";
+  result.header.frame_id = global_frame_;
   result.ns = "basic_shapes";
 
   result.type = visualization_msgs::Marker::LINE_STRIP;
@@ -3498,7 +3499,7 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
   // Push on all the trajectory points
   for(int i=0;i<trajec.msg_.trajectory.points.size();i++)
   {
-    //ROS_INFO("Point %i: (%f,%f,%f)", i, trajec.msg_.trajectory.points[i].positions[0], trajec.msg_.trajectory.points[i].positions[1], trajec.msg_.trajectory.points[i].positions[2]);
+    ROS_INFO("Point %i: (%f,%f,%f)", i, trajec.msg_.trajectory.points[i].positions[0], trajec.msg_.trajectory.points[i].positions[1], trajec.msg_.trajectory.points[i].positions[2]);
     geometry_msgs::Point p;
     p.x = trajec.msg_.trajectory.points[i].positions[0];
     p.y = trajec.msg_.trajectory.points[i].positions[1];
@@ -3506,7 +3507,7 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
 
     result.points.push_back(p);
   }
-  result.lifetime = ros::Duration(0.2);
+  result.lifetime = ros::Duration(10.0);
 
   // Width of the lines
   result.scale.x = 0.01;
@@ -3970,12 +3971,15 @@ void Planner::go()
   goalThreshold_ = 0.25;
   while( (latestUpdate_.comparePosition(goal_, false) > goalThreshold_) && ros::ok()) 
   {
+    ROS_INFO("Top of main while");
     if(!only_sensing_)
     {
       planningCycleCallback();
     }
     r.sleep();
+    ROS_INFO("Done sleeping");
     ros::spinOnce(); 
+    ROS_INFO("Done spinning");
   } // end while
   ros::Duration t_execution = ros::Time::now() - t_start;
   reportData();

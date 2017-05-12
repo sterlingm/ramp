@@ -42,6 +42,10 @@ void CirclePacker::CannyThreshold(int, void*)
 {
   /// Reduce noise with a kernel 3x3
   blur( src, detected_edges, cv::Size(3,3) );
+  
+  imshow("after blur src", detected_edges);
+  cv::waitKey(0);
+
 
   // Somehow, lowThreshold is being converted to unsigned int before this point
   // its value is 32767 (-1 for unsigned 4-byte int)
@@ -59,7 +63,7 @@ void CirclePacker::CannyThreshold(int, void*)
   src.copyTo( dst, detected_edges);
   //cv::imshow("detected_edges", dst);
   //cv::waitKey(0);
-  //imshow( window_name, dst );
+  imshow( window_name, dst );
 }
 
 double CirclePacker::getMinDistToPoly(const Polygon& poly, const Cell& cell)
@@ -874,9 +878,9 @@ std::vector<Circle> CirclePacker::goMyBlobs()
   dst.create( src.size(), src.type() );
 
   // Get the edges
-  ros::Time t_start_edge_detect = ros::Time::now();
+  /*ros::Time t_start_edge_detect = ros::Time::now();
   CannyThreshold(0, 0);
-  ros::Duration d_edges_detect(ros::Time::now()-t_start_edge_detect);
+  ros::Duration d_edges_detect(ros::Time::now()-t_start_edge_detect);*/
 
   /*
    * Detect blobs
@@ -885,10 +889,12 @@ std::vector<Circle> CirclePacker::goMyBlobs()
   std::vector< std::vector<cv::Point> > contours;
   std::vector<cv::Vec4i> hierarchy;
   findContours( src, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
+  ROS_INFO("contours.size(): %i", (int)contours.size());
 
   // Go through each set of contour points
   for(int i=0;i<contours.size();i++)
   {
+    ROS_INFO("contours[%i].size(): %i", i, (int)contours[i].size());
     Circle c;
     std::vector<cv::Point2f> obs_points;
 
@@ -990,6 +996,8 @@ std::vector<Circle> CirclePacker::goMyBlobs()
 
     obs_points.clear();
     dists.clear();
+
+    ROS_INFO("c.radius: %f obSizeThreshold: %f", c.radius, obSizeThreshold);
 
     // Only push on circles that are above a size threshold
     if(c.radius > obSizeThreshold)

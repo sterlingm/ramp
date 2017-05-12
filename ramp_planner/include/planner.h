@@ -112,6 +112,7 @@ class Planner {
               const std::vector<Range>  r,                
               const int                 population_size, 
               const bool                sub_populations,  
+              const std::string         global_frame,
               const TrajectoryType      pop_type=HYBRID,
               const int                 gens_before_cc=0,
               const double              t_pc_rate=2.,
@@ -490,6 +491,8 @@ class Planner {
 
     bool only_sensing_;
     int id_line_list_;
+
+    std::string global_frame_;
 };
 
 #endif

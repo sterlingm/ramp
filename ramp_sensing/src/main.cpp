@@ -62,7 +62,7 @@ double coll_radius = 0.25;
 std::vector<double> d_avg_values;
 
 double dist_threshold = 100;
-double radius_threshold = 35;
+double radius_threshold = 5;
 
 /*********************************
  * Variables for BFL
@@ -350,7 +350,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       visualization_msgs::Marker marker;
       marker.header.stamp = ros::Time::now();
       //marker.header.frame_id = "/map";
-      marker.header.frame_id = "/map_rot";
+      marker.header.frame_id = "/costmap";
       marker.ns = "basic_shapes";
       marker.id = i;
       
@@ -438,8 +438,8 @@ void publishMarkers(const ros::TimerEvent& e)
 
     //text.header.frame_id  = "/map";
     //arrow.header.frame_id = "/map";
-    text.header.frame_id  = "/map_rot";
-    arrow.header.frame_id = "/map_rot";
+    text.header.frame_id  = "/costmap";
+    arrow.header.frame_id = "/costmap";
 
     text.ns   = "basic_shapes";
     arrow.ns  = "basic_shapes";
@@ -503,7 +503,7 @@ void publishMarkers(const ros::TimerEvent& e)
   text.header.stamp   = ros::Time::now();
   text.id   = result.markers.size()+1;
   //text.header.frame_id  = "/map";
-  text.header.frame_id  = "/map_rot";
+  text.header.frame_id  = "/costmap";
   text.ns   = "basic_shapes";
   text.type   = visualization_msgs::Marker::TEXT_VIEW_FACING;
   text.action   = visualization_msgs::Marker::ADD;
@@ -1016,6 +1016,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   double grid_resolution = grid->info.resolution; 
   global_grid = *grid;
 
+  ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
   // Consolidate this occupancy grid with prev ones
   /*nav_msgs::OccupancyGrid consolidated_grid;
   consolidateCostmaps(*grid, prev_grids, consolidated_grid);

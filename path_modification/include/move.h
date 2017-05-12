@@ -15,9 +15,9 @@ class Move {
     double dir_;
     double dist_;
 
+    Utility utility_;
   private:
     Constraints checkConstraints_;
-    Utility utility_;
 };
 
 #endif

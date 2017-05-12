@@ -2,7 +2,7 @@
 
 <!-- LOAD PARAMETERS -->
 
-<!-- <param name="use_sim_time" value="True"/> -->
+<!-- <param name="use_sim_time" value="False"/> -->
 
 <!-- Load the planner's config.yaml file and robot_0.yaml file -->
 <include file="$(find ramp_launch)/launch/planner_parameters.launch" />
@@ -10,10 +10,10 @@
 
 <!-- START NODES -->
 
-<!-- Costmap -->
+<!-- Costmap
 <node name="costmap_node" pkg="costmap_2d" type="costmap_2d_node" output="log" >
   <rosparam file="/opt/ros/kinetic/share/turtlebot_navigation/param/cleverm_static_costmap.yaml" command="load" />
-</node>
+</node> -->
 
 
 

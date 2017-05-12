@@ -1,4 +1,4 @@
-population_size: 15
+population_size: 5
 
 sub_populations: false 
 
@@ -19,6 +19,8 @@ fixed_control_cycle_rate: 2
 sensing_cycle_rate: 15
 
 error_reduction: false
+
+global_frame: "costmap"
 
 # Turtlebot obstacle topics
 #obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom', '/obstacle_3/odom']

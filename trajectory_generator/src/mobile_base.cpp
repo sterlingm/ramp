@@ -2082,7 +2082,6 @@ bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
       //////////////////ROS_INFO("Reached target: %s \nAt state: %s", utility_.toString(path_.points.at(i_kp_).motionState).c_str(), utility_.toString(res.trajectory.trajectory.points.at(res.trajectory.trajectory.points.size()-1)).c_str());
   } // end for each knot point (outer-most loop)
  
-  //////////////ROS_INFO("Outside of for");
   // Check that the last point is a knot point
   if(res.trajectory.trajectory.points.size()-1 != res.trajectory.i_knotPoints.at(res.trajectory.i_knotPoints.size()-1))
   {

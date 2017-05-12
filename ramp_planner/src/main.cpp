@@ -23,6 +23,7 @@ double              t_pc_rate;
 int                 pop_type;
 TrajectoryType      pt;
 std::vector<std::string> ob_topics;
+std::string         global_frame;
 
 float costmap_width, costmap_height, costmap_origin_x, costmap_origin_y;
 ros::Publisher pub_rviz;
@@ -93,7 +94,7 @@ void loadParameters(const ros::NodeHandle handle)
     handle.getParam("robot_info/DOF_min", dof_min); 
     handle.getParam("robot_info/DOF_max", dof_max); 
 
-    //initDOF(dof_min, dof_max);
+    initDOF(dof_min, dof_max);
   }
   else 
   {
@@ -103,7 +104,7 @@ void loadParameters(const ros::NodeHandle handle)
   /*
    * Check for all costmap parameters!
    */
-  if( handle.hasParam("costmap_node/costmap/width")     &&
+  /*if( handle.hasParam("costmap_node/costmap/width")     &&
       handle.hasParam("costmap_node/costmap/height")    &&
       handle.hasParam("costmap_node/costmap/origin_x")  &&
       handle.hasParam("costmap_node/costmap/origin_y") )
@@ -131,7 +132,7 @@ void loadParameters(const ros::NodeHandle handle)
     dof_max.push_back(PI);
 
     initDOF(dof_min, dof_max); 
-  }
+  }*/
 
 
   // Get the start and goal vectors
@@ -219,6 +220,17 @@ void loadParameters(const ros::NodeHandle handle)
   {
     handle.getParam("ramp/error_reduction", errorReduction);
     ROS_INFO("errorReduction: %s", errorReduction ? "True" : "False");
+  }
+
+
+  if(handle.hasParam("ramp/global_frame"))
+  {
+    handle.getParam("ramp/global_frame", global_frame);
+    ROS_INFO("global_frame: %s", global_frame.c_str());
+  }
+  else
+  {
+    ROS_ERROR("Could not find rosparam ramp/global_frame");
   }
 
 
@@ -355,7 +367,7 @@ int main(int argc, char** argv) {
  
   /** Initialize the Planner's handlers */ 
   ROS_INFO("Initializing Planner object");
-  my_planner.init(id, handle, start, goal, ranges, population_size, sub_populations, pt, gensBeforeCC, t_pc_rate, t_cc_rate, errorReduction); 
+  my_planner.init(id, handle, start, goal, ranges, population_size, sub_populations, global_frame, pt, gensBeforeCC, t_pc_rate, t_cc_rate, errorReduction); 
   my_planner.modifications_   = modifications;
   my_planner.evaluations_     = evaluations;
   my_planner.seedPopulation_  = seedPopulation;

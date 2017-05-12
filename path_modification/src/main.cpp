@@ -7,6 +7,11 @@ Utility u;
 
 int costmap_width, costmap_height;
 float costmap_origin_x, costmap_origin_y, costmap_res;
+std::vector<ramp_msgs::Range> ranges;
+std::vector<double> dof_min;
+std::vector<double> dof_max;
+
+
 
 
 bool handleRequest(ramp_msgs::ModificationRequest::Request& req,
@@ -22,6 +27,13 @@ bool handleRequest(ramp_msgs::ModificationRequest::Request& req,
   std::cout<<"\noperator: "<<req.op<<"\n";*/
 
   Modifier mod(req);
+
+  // Set the ranges
+  // do this in a better way eventually...
+  mod.in_.utility_.standardRanges_ = ranges; 
+  mod.chg_.utility_.standardRanges_ = ranges; 
+  mod.move_.utility_.standardRanges_ = ranges; 
+
   res.mod_paths = mod.perform();
   
   //Insert insert(req.paths.at(0));
@@ -48,12 +60,26 @@ bool handleRequest(ramp_msgs::ModificationRequest::Request& req,
 }
 
 
+// Initializes a vector of Ranges that the Planner is initialized with
+void initDOF(const std::vector<double> dof_min, const std::vector<double> dof_max) 
+{
+  for(unsigned int i=0;i<dof_min.size();i++) 
+  {
+    ramp_msgs::Range temp;
+    temp.min = dof_min.at(i);
+    temp.max = dof_max.at(i);
+    ranges.push_back(temp); 
+  }
+} // End initDOF
+
+
+
 void loadParameters(const ros::NodeHandle& handle)
 {
   /*
    * Check for all costmap parameters!
    */
-  if( handle.hasParam("costmap_node/costmap/width")     &&
+  /*if( handle.hasParam("costmap_node/costmap/width")     &&
       handle.hasParam("costmap_node/costmap/height")    &&
       handle.hasParam("costmap_node/costmap/origin_x")  &&
       handle.hasParam("costmap_node/costmap/origin_y") )
@@ -65,6 +91,22 @@ void loadParameters(const ros::NodeHandle& handle)
     handle.getParam("costmap_node/costmap/resolution", costmap_res);
 
     ROS_INFO("Got costmap parameters. w: %i h: %i x: %f y: %f res: %f", costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res);
+  }*/
+
+
+  // Get the dofs
+  if(handle.hasParam("robot_info/DOF_min") && 
+      handle.hasParam("robot_info/DOF_max")) 
+  {
+
+    handle.getParam("robot_info/DOF_min", dof_min); 
+    handle.getParam("robot_info/DOF_max", dof_max); 
+
+    initDOF(dof_min, dof_max);
+  }
+  else 
+  {
+    ROS_ERROR("Did not find parameters robot_info/DOF_min, robot_info/DOF_max");
   }
 }
 
@@ -80,7 +122,10 @@ int main(int argc, char** argv) {
 
   ros::ServiceServer service = handle.advertiseService("path_modification", handleRequest); 
 
+  loadParameters(handle);
+
   Utility u;
+  u.standardRanges_ = ranges; 
 
   ramp_msgs::Path p1;
   for(unsigned int i=0;i<10;i++) {

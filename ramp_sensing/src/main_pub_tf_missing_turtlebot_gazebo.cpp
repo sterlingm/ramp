@@ -121,12 +121,12 @@ void sendTF(const ros::TimerEvent& e)
    * Broadcast transforms
    * sendTransform( StampedTransform, time(now+0.5), "parent", "child")
    */
-  br_bf_bl.sendTransform(tf::StampedTransform(tf_bf_bl, ros::Time::now()+ros::Duration(0.05), "base_footprint", "base_link"));
-  br_bl_crf.sendTransform(tf::StampedTransform(tf_bl_crf, ros::Time::now()+ros::Duration(0.05), "base_link", "camera_rgb_frame"));
-  br_crf_cdf.sendTransform(tf::StampedTransform(tf_crf_cdf, ros::Time::now()+ros::Duration(0.05), "camera_rgb_frame", "camera_depth_frame"));
-  br_cdf_cdof.sendTransform(tf::StampedTransform(tf_cdf_cdof, ros::Time::now()+ros::Duration(0.05), "camera_depth_frame", "camera_depth_optical_frame"));
-  br_crf_cl.sendTransform(tf::StampedTransform(tf_crf_cl, ros::Time::now()+ros::Duration(0.05), "camera_rgb_frame", "camera_link"));
-  br_crf_crof.sendTransform(tf::StampedTransform(tf_crf_crof, ros::Time::now()+ros::Duration(0.05), "camera_rgb_frame", "camera_rgb_optical_frame"));
+  br_bf_bl.sendTransform(tf::StampedTransform(tf_bf_bl, ros::Time::now(), "base_footprint", "base_link"));
+  br_bl_crf.sendTransform(tf::StampedTransform(tf_bl_crf, ros::Time::now(), "base_link", "camera_rgb_frame"));
+  br_crf_cdf.sendTransform(tf::StampedTransform(tf_crf_cdf, ros::Time::now(), "camera_rgb_frame", "camera_depth_frame"));
+  br_cdf_cdof.sendTransform(tf::StampedTransform(tf_cdf_cdof, ros::Time::now(), "camera_depth_frame", "camera_depth_optical_frame"));
+  br_crf_cl.sendTransform(tf::StampedTransform(tf_crf_cl, ros::Time::now(), "camera_rgb_frame", "camera_link"));
+  br_crf_crof.sendTransform(tf::StampedTransform(tf_crf_crof, ros::Time::now(), "camera_rgb_frame", "camera_rgb_optical_frame"));
 }
 
 int main(int argc, char** argv) 
