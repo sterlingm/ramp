@@ -65,7 +65,7 @@ def main():
             # Get random position
             p.x = random.uniform(x_min, x_max)
             p.y = random.uniform(y_min, y_max)
-            p.z = 0
+            p.z = 0.1
             
             # Check if it is spaced out enough (stop trying after so many 
             # attempts)
