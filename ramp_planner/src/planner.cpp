@@ -7,7 +7,7 @@
 
 Planner::Planner() : resolutionRate_(1.f / 10.f), ob_dists_timer_dur_(0.1), generation_(0), i_rt(1), goalThreshold_(0.4), num_ops_(6), D_(1.5f), 
   cc_started_(false), c_pc_(0), transThreshold_(1./50.), num_cc_(0), L_(0.33), h_traj_req_(0), h_eval_req_(0), h_control_(0), h_rviz_(0), modifier_(0), 
- delta_t_switch_(0.1), stop_(false), moving_on_coll_(false), log_enter_exit_(true), log_switching_(true), only_sensing_(0), id_line_list_(10000)
+ delta_t_switch_(0.1), stop_(false), imminent_collision_(false), moving_on_coll_(false), log_enter_exit_(true), log_switching_(true), only_sensing_(0), id_line_list_(10000)
 {
   imminentCollisionCycle_ = ros::Duration(1.f / 20.f);
   generationsPerCC_       = controlCycle_.toSec() / planningCycle_.toSec();
@@ -1145,20 +1145,25 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
     result.imminent_collision = true;
   }*/
 
+  /*
+   * Set imminent collision
+   */
+  result.imminent_collision = imminent_collision_;
+
+  // If control cycles are happening, but the robot is stopped, toggle imminent collision for the evalution so that it does not consider the turning angle for the trajectory
   double v = sqrt( pow(latestUpdate_.msg_.velocities[2], 2) + pow(latestUpdate_.msg_.velocities[2],2) );
-  result.imminent_collision = imminent_collision_ || v < 0.1;
+  if(moving_robot_ && v < 0.1)
+  {
+    result.imminent_collision = true;
+  }
   result.coll_dist = COLL_DISTS[i_COLL_DISTS_];
 
   // full_eval is for predicting segments that are not generated
   result.full_eval = full;
 
-  // consider_trans for trajs including switches
-  result.consider_trans = true;
+  // consider_trans for trajs including switches if we're moving the robot
+  result.consider_trans = moving_robot_;
 
-  if(trajec.msg_.i_knotPoints.size() > 1)
-  {
-    //ROS_INFO("trajec.msg_.trajectory.points[0]: %s\n trajec.msg_.trajectory.points[i_knotpoints[1]]: %s", utility_.toString(trajec.msg_.trajectory.points[0]).c_str(), utility_.toString(trajec.msg_.trajectory.points[ trajec.msg_.i_knotPoints[1] ]).c_str());
-  }
   double nec_theta = utility_.findAngleFromAToB(trajec.msg_.trajectory.points[0].positions, trajec.msg_.trajectory.points[ trajec.msg_.i_knotPoints[1] ].positions);
 
   double end = movingOn_.msg_.trajectory.points.size() > 0 ? movingOn_.msg_.trajectory.points[ movingOn_.msg_.trajectory.points.size()-1 ].positions[2] : latestUpdate_.msg_.positions[2];
@@ -1554,7 +1559,7 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const bool sub_populations, const std::string global_frame, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool errorReduction) 
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const bool sub_populations, const std::string global_frame, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
 {
   ROS_INFO("In Planner::init");
 
@@ -1602,6 +1607,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   generationsBeforeCC_  = gens_before_cc;
   t_fixed_cc_           = t_fixed_cc;
   only_sensing_         = only_sensing;
+  moving_robot_         = moving_robot;
   errorReduction_       = errorReduction;
   generationsPerCC_     = controlCycle_.toSec() / planningCycle_.toSec();
   ROS_INFO("Exiting Planner::init");
@@ -1615,7 +1621,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
 /*
  * For testing, seed with a trajectory in direction of robot's orientation
  */
-void Planner::seedPopulation() 
+void Planner::seedPopulation()
 {
   //ROS_INFO("In seedPopulation");
 
@@ -2890,7 +2896,7 @@ void Planner::planningCycleCallback()
     copy.trajectories_.push_back(ob_trajectory_[i]);
   }
 
-  sendPopulation(population_);
+  sendPopulation(population_, true);
   //sendPopulation(copy, true);
   
   ros::Duration d = ros::Time::now() - t_start; 
@@ -3287,6 +3293,9 @@ void Planner::doControlCycle()
   // Find the transition (non-holonomic) population and set new control cycle time
   ros::Time t_startTrans = ros::Time::now();
 
+  /*
+   * Plan switching trajectories
+   */
   double t_start = getEarliestStartTime(movingOn_);
   ROS_INFO("t_start: %f", t_start);
   getTransPop(population_, movingOn_, t_start, population_);
@@ -3459,6 +3468,7 @@ void Planner::sendPopulation(const Population& pop, bool rviz)
   }
   else
   {
+    ROS_INFO("Sending population to rviz");
     visualization_msgs::MarkerArray ma;
     for(int i=0;i<pop.trajectories_.size();i++)
     {
@@ -3491,15 +3501,24 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
   result.type = visualization_msgs::Marker::LINE_STRIP;
   result.action = visualization_msgs::Marker::ADD;
 
+  if(trajec.msg_.feasible)
+  {
+    result.color.r = 0;
+    result.color.g = 0;
+    result.color.b = 1;
+  }
+  else
+  {
+    result.color.r = 1;
+    result.color.g = 0;
+    result.color.b = 0;
+  }
   result.color.a = 1;
-  result.color.r = 0;
-  result.color.g = 0;
-  result.color.b = 1;
 
   // Push on all the trajectory points
   for(int i=0;i<trajec.msg_.trajectory.points.size();i++)
   {
-    ROS_INFO("Point %i: (%f,%f,%f)", i, trajec.msg_.trajectory.points[i].positions[0], trajec.msg_.trajectory.points[i].positions[1], trajec.msg_.trajectory.points[i].positions[2]);
+    //ROS_INFO("Point %i: (%f,%f,%f)", i, trajec.msg_.trajectory.points[i].positions[0], trajec.msg_.trajectory.points[i].positions[1], trajec.msg_.trajectory.points[i].positions[2]);
     geometry_msgs::Point p;
     p.x = trajec.msg_.trajectory.points[i].positions[0];
     p.y = trajec.msg_.trajectory.points[i].positions[1];
@@ -3507,7 +3526,8 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
 
     result.points.push_back(p);
   }
-  result.lifetime = ros::Duration(10.0);
+  // Planning cycles are usually 20Hz, but put a little padding on there so rviz looks smoother and doesn't start blinking if there are any delays
+  result.lifetime = ros::Duration(0.08);
 
   // Width of the lines
   result.scale.x = 0.01;
@@ -3955,7 +3975,7 @@ void Planner::go()
   diff_ = diff_.zero(3);
   
   // Start the control cycles
-  if(!only_sensing_)
+  if(!only_sensing_ && moving_robot_)
   {
     controlCycleTimer_.start();
     imminentCollisionTimer_.start();

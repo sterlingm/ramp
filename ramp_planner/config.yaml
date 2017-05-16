@@ -4,11 +4,15 @@ sub_populations: false
 
 modifications: true
 
-evaluations: false
+evaluations: true
 
 seed_population: false 
 
+# If true, planning and control cycles are cut off
 only_sensing: false
+
+# If true, control cycles are cut off
+moving_robot: true
 
 gens_before_control_cycle: 20
 

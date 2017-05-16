@@ -376,14 +376,14 @@ void MobileRobot::moveOnTrajectory()
       // TODO: Works with Bezier curve?
       if(fabs(twist_.linear.x) > 0.0f && fabs(twist_.angular.z) < 0.0001f) 
       {
-        //ROS_INFO("initial_theta_: %f motion_state_.positions.at(2): %f", initial_theta_, motion_state_.positions.at(2));
+        ROS_INFO("initial_theta_: %f motion_state_.positions.at(2): %f", initial_theta_, motion_state_.positions.at(2));
         actual_theta = utility_.displaceAngle(initial_theta_, motion_state_.positions.at(2));
         dist = utility_.findDistanceBetweenAngles(actual_theta, orientations_.at(num_traveled_));
-        //ROS_INFO("actual_theta: %f orientations[%i]: %f dist: %f", actual_theta, num_traveled_, orientations_.at(num_traveled_), dist);
-        twist_.angular.z = dist/2.f;
+        ROS_INFO("actual_theta: %f orientations[%i]: %f dist: %f", actual_theta, num_traveled_, orientations_.at(num_traveled_), dist);
+        twist_.angular.z = dist;
       }
 
-      //ROS_INFO("twist.linear.x: %f twist.angular.z: %f", twist_.linear.x, twist_.angular.z);
+      ROS_INFO("twist.linear.x: %f twist.angular.z: %f", twist_.linear.x, twist_.angular.z);
 
       // Send the twist_message to move the robot
       sendTwist();

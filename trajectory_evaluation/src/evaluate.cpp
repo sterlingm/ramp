@@ -7,23 +7,31 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   ////ROS_INFO("In Evaluate::perform()");
   //ros::Time t_start = ros::Time::now();
   
+  /*
+   * Initialize some class memebers
+   */
   // Set orientation members
   orientation_.currentTheta_  = req.currentTheta;
   orientation_.theta_at_cc_   = req.theta_cc;
 
+  // Set imminent collision
   imminent_collision_ = req.imminent_collision;
   ////ROS_INFO("imminent_collision_: %s", imminent_collision_ ? "True" : "False");
-
 
   // Reset orientation_infeasible for new trajectory
   orientation_infeasible_ = false;
 
+  /*
+   * Compute feasibility
+   */
   performFeasibility(req);
-  ////ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
+
+  // Set response members
   req.trajectory.feasible = !qr_.collision_ && !orientation_infeasible_;
   res.feasible = !qr_.collision_ && !orientation_infeasible_;
   req.trajectory.feasible = res.feasible;
-  ////////ROS_INFO("performFeasibility: %f", (ros::Time::now()-t_start).toSec());
+  //ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
+  //ROS_INFO("performFeasibility: %f", (ros::Time::now()-t_start).toSec());
 
   if(qr_.collision_)
   {
@@ -37,16 +45,15 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   }
 
 
+  /*
+   * Compute fitness
+   */
   if(req.full_eval)
   {
-    //////ROS_INFO("Requesting fitness!");
+    ROS_INFO("Requesting fitness!");
     performFitness(req.trajectory, req.offset, res.fitness);
   }
-  else
-  {
-    //////ROS_INFO("NOT Requesting fitness!");
-  }
-  ////////ROS_INFO("performFitness: %f", (ros::Time::now()-t_start).toSec());
+  //ROS_INFO("performFitness: %f", (ros::Time::now()-t_start).toSec());
 }
 
 
@@ -54,7 +61,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
 // It's modiftying trj AND returning a value
 void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er) 
 {
-  ////ROS_INFO("In Evaluate::performFeasibility");
+  ROS_INFO("In Evaluate::performFeasibility");
   ros::Time t_start = ros::Time::now();
 
   // Check collision
@@ -63,7 +70,7 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
   ros::Duration d_numeric   = ros::Time::now() - t_numeric_start;
   t_numeric_.push_back(d_numeric);
 
-  ////ROS_INFO("result.collision: %s", qr_.collision_ ? "True" : "False");
+  ROS_INFO("result.collision: %s", qr_.collision_ ? "True" : "False");
   /*ros::Time t_analy_start = ros::Time::now();
   cd_.perform(er.trajectory, er.obstacle_trjs, qr_);
   ros::Duration d_analy = ros::Time::now() - t_analy_start;
@@ -80,47 +87,14 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
                 ? true 
                 : false;
 
-  // Use index 1 in case we are switching from a curve
-  // If we are switching from a curve, then we may be stopping to rotate right after the first point
-  /*bool moving_on_this_curve = 
-      er.trajectory.curves.size()     > 0 && 
-    ( er.trajectory.curves.at(0).u_0  > 0.000001 ||
-    (utility_.positionDistance(trj->trajectory.points.at(1).positions, 
-       er.trajectory.curves.at(0).controlPoints.at(0).positions) < 0.0001) ) 
-    ? true
-    : false;*/
-  //////ROS_INFO("t_moving_on_curve: %f", (ros::Time::now()-t_after).toSec());
-
-
-  ////ROS_INFO("qr_.collision: %s feasible: %s", qr_.collision_ ? "True" : "False", er.trajectory.feasible ? "True" : "False");
-  ////ROS_INFO("moving_forward: %s moving_on_this_curve: %s", moving_forward ? "True" : "False", moving_on_this_curve ? "True" : "False");
-  ////ROS_INFO("consider_trans: %s trans_possible: %s", er.consider_trans ? "True" : "False", er.trans_possible ? "True" : "False");
-  ////ROS_INFO("getDeltaTheta: %f", fabs(orientation_.getDeltaTheta(er.trajectory)));
-
-  // Check orientation for feasibility
-  /*if(moving_forward && fabs(orientation_.getDeltaTheta(er.trajectory)) > 0.25 && !moving_on_this_curve)
-  //if(fabs(orientation_.getDeltaTheta(er.trajectory)) > 0.25 && !moving_on_this_curve)
-  {
-    ////ROS_INFO("In if");
-    
-    if(er.trajectory.i_knotPoints.size() > 2 && er.trajectory.curves.size() < 2)
-    {
-      ////ROS_INFO("In inner if, i_knotPoints.size(): %i curves.size(): %i", (int)er.trajectory.i_knotPoints.size(), (int)er.trajectory.curves.size());
-      er.trajectory.feasible  = false;
-      orientation_infeasible_ = true;
-    }
-    else if(er.trajectory.i_knotPoints.size() == 2 && er.trajectory.curves.size() < 1)
-    {
-      ////ROS_INFO("In inner else if, i_knotPoints.size(): %i curves.size(): %i", (int)er.trajectory.i_knotPoints.size(), (int)er.trajectory.curves.size());
-      er.trajectory.feasible  = false;
-      orientation_infeasible_ = true;
-    }
-  }*/
-
   if(!er.imminent_collision && er.consider_trans && !er.trans_possible)
   {
-    ////ROS_INFO("In final if statement");
+    ROS_INFO("In final if statement");
     orientation_infeasible_ = true;
+  }
+  else
+  {
+    ROS_INFO("er.imminent_collision: %s er.consider_trans: %s er.trans_possible: %s", er.imminent_collision ? "True" : "False", er.consider_trans ? "True" : "False", er.trans_possible ? "True" : "False");
   }
   
   ////////ROS_INFO("performFeasibility time: %f", (ros::Time::now() - t_start).toSec());

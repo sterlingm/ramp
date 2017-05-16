@@ -118,6 +118,7 @@ class Planner {
               const double              t_pc_rate=2.,
               const double              t_fixed_cc=2.,
               const bool                only_sensing=0,
+              const bool                moving_robot=1,
               const bool                errorReduction=0);
     
     // Send the best trajectory to the control package
@@ -490,6 +491,7 @@ class Planner {
 
 
     bool only_sensing_;
+    bool moving_robot_;
     int id_line_list_;
 
     std::string global_frame_;

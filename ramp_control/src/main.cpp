@@ -26,7 +26,8 @@ void init_advertisers_subscribers(MobileRobot& robot, ros::NodeHandle& handle, b
   robot.pub_twist_ = handle.advertise<geometry_msgs::Twist>(MobileRobot::TOPIC_STR_TWIST, 1000);
   robot.pub_update_ = handle.advertise<ramp_msgs::MotionState>(MobileRobot::TOPIC_STR_UPDATE, 1000);
 
-  if(simulation) {
+  if(simulation) 
+  {
     robot.pub_cmd_vel_ = handle.advertise<geometry_msgs::Twist>("cmd_vel", 10);
   }
  
@@ -49,6 +50,8 @@ void reportData(int sig)
     sum += robot.t_points_[i].toSec();
   }
   ROS_INFO("Average point time: %f", (sum / robot.t_points_.size()));
+
+  ros::shutdown();
 }
 
 

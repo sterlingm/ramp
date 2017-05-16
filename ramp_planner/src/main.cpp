@@ -18,6 +18,7 @@ bool                evaluations;
 bool                seedPopulation;
 bool                errorReduction;
 bool                only_sensing;
+bool                moving_robot;
 double              t_cc_rate;
 double              t_pc_rate;
 int                 pop_type;
@@ -187,6 +188,12 @@ void loadParameters(const ros::NodeHandle handle)
   {
     handle.getParam("ramp/only_sensing", only_sensing);
     std::cout<<"\nonly_sensing: "<<only_sensing;
+  }
+
+  if(handle.hasParam("ramp/moving_robot"))
+  {
+    handle.getParam("ramp/moving_robot", moving_robot);
+    std::cout<<"\nmoving_robot: "<<moving_robot;
   }
 
   if(handle.hasParam("ramp/gens_before_control_cycle")) 
@@ -367,7 +374,7 @@ int main(int argc, char** argv) {
  
   /** Initialize the Planner's handlers */ 
   ROS_INFO("Initializing Planner object");
-  my_planner.init(id, handle, start, goal, ranges, population_size, sub_populations, global_frame, pt, gensBeforeCC, t_pc_rate, t_cc_rate, errorReduction); 
+  my_planner.init(id, handle, start, goal, ranges, population_size, sub_populations, global_frame, pt, gensBeforeCC, t_pc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
   my_planner.modifications_   = modifications;
   my_planner.evaluations_     = evaluations;
   my_planner.seedPopulation_  = seedPopulation;

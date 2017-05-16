@@ -7,7 +7,7 @@ BezierCurve::BezierCurve() : initialized_(false), deallocated_(false), reachedVM
   reflexxesData_.rml = 0;
   reflexxesData_.inputParameters  = 0;
   reflexxesData_.outputParameters = 0;
-  MAX_SPEED = 1.f;
+  MAX_SPEED = 0.33f;
 }
 
 BezierCurve::~BezierCurve() 
