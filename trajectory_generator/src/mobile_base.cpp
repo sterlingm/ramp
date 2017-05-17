@@ -598,321 +598,18 @@ const ramp_msgs::MotionState MobileBase::getMaxMS() const {
 }
 
 
-/** */
-const std::vector<BezierCurve> MobileBase::bezier(ramp_msgs::Path& p, const bool only_curve) 
-{
-  //ROS_INFO("Entered MobileBase::bezier");
 
-  std::vector<BezierCurve> result;
+
+void MobileBase::bezier(ramp_msgs::Path& p, bool only_curve, std::vector<BezierCurve>& result)
+{
+  ROS_INFO("Entered MobileBase::bezier");
 
   ramp_msgs::Path p_copy = p;
 
   // Set the index of which knot point to stop at
   //int stop = (req_.type == TRANSITION) ? 3 : 2; 
   int stop = req_.bezierCurves.size()+1;
-  //std::cout<<"\nstop: "<<stop;
-
-  // TODO: Add a check to see if a curve exists in the request to prevent index out of bounds crashes
-
-  // Find the first segment point for the curve
-  // Increment index until the two points are different
-  bool differentPoint = utility_.positionDistance(req_.bezierCurves.at(0).segmentPoints.at(0).positions, 
-          req_.bezierCurves.at(0).segmentPoints.at(1).positions) > 0.01;
-  int inc = 2;
-  while(!differentPoint && inc < p_copy.points.size()) {
-    /*std::cout<<"\nPoints 0 and 1 are the same";
-    std::cout<<"\nPath: "<<utility_.toString(p)<<"\n";
-    std::cout<<"\nSegment point 0: "<<utility_.toString(req_.bezierCurves.at(0).segmentPoints.at(0));
-    std::cout<<"\nSegment point 1: "<<utility_.toString(req_.bezierCurves.at(0).segmentPoints.at(1))<<"\n";*/
-    req_.bezierCurves.at(0).segmentPoints.at(1) = p_copy.points.at(inc).motionState;
-    differentPoint = utility_.positionDistance(req_.bezierCurves.at(0).segmentPoints.at(0).positions, 
-          req_.bezierCurves.at(0).segmentPoints.at(1).positions) > 0.01;
-    //std::cin.get();
-    inc++;
-
-    if(inc == p_copy.points.size()) 
-    {
-      //////////////ROS_INFO("Cannot plan Bezier, returning same path");
-      type_ = HOLONOMIC;
-      return result;
-    }
-  }
-
-  // Find the second segment point for the curve
-  // Increment index until the two points are different
-  differentPoint = utility_.positionDistance(req_.bezierCurves.at(0).segmentPoints.at(1).positions, 
-          req_.bezierCurves.at(0).segmentPoints.at(2).positions) > 0.01;
-  inc = 3;
-  while(!differentPoint && inc < p_copy.points.size()) 
-  {
-    /*std::cout<<"\nPoints 1 and 2 are the same";
-    std::cout<<"\nPath: "<<utility_.toString(p);
-    std::cout<<"\nSegment point 1: "<<utility_.toString(req_.bezierCurves.at(0).segmentPoints.at(1));
-    std::cout<<"\nSegment point 2: "<<utility_.toString(req_.bezierCurves.at(0).segmentPoints.at(2))<<"\n";*/
-    req_.bezierCurves.at(0).segmentPoints.at(2) = p_copy.points.at(inc).motionState;
-    //std::cin.get();
-    differentPoint = utility_.positionDistance(req_.bezierCurves.at(0).segmentPoints.at(1).positions, 
-          req_.bezierCurves.at(0).segmentPoints.at(2).positions) > 0.01;
-    inc++;
-
-    if(inc == p_copy.points.size()) 
-    {
-      //////////////ROS_INFO("Cannot plan Bezier, returning same path loop 2");
-      type_ = HOLONOMIC;
-      return result;
-    }
-  }
-
-  ////////////ROS_INFO("stop: %i", stop);
-
-  // Go through the path's knot points
-  //std::cout<<"\np.points.size(): "<<p.points.size()<<"\n";
-  for(uint8_t i=1;i<stop;i++) {
-    //std::cout<<"\n---i: "<<(int)i<<"---\n";
-
-    // Check that all of the points are different
-    if(utility_.positionDistance(req_.bezierCurves.at(i-1).segmentPoints.at(0).positions, 
-          req_.bezierCurves.at(i-1).segmentPoints.at(1).positions) > 0.01 &&
-        (utility_.positionDistance(req_.bezierCurves.at(i-1).segmentPoints.at(1).positions, 
-          req_.bezierCurves.at(i-1).segmentPoints.at(2).positions) > 0.01) )
-    {
-      //ROS_INFO("In if");
-
-      BezierCurve bc;
-      bc.print_ = print_;
-
-      // Set segment points
-      std::vector<ramp_msgs::MotionState> segment_points = 
-        req_.bezierCurves.at(i-1).segmentPoints;
-      
-      double theta = utility_.findAngleFromAToB(
-          segment_points.at(0).positions, segment_points.at(1).positions);
-      double lambda;
-
-      // If we are starting with a curve
-      // For transition trajectories, the segment points are the 
-      // control points, so we have all the info now
-      if(req_.bezierCurves.at(0).u_0 > 0 && i==1) 
-      {
-        //std::cout<<"\nIn if transition or bezierStart\n";
-        
-        ramp_msgs::MotionState ms_maxVA = getMaxMS();
-        
-        lambda = (req_.bezierCurves.at(i-1).controlPoints.size() > 0) ?  
-          req_.bezierCurves.at(i-1).l : getControlPointLambda(segment_points);
-
-
-        // TODO: Make a method to return a BezierInitializer
-        // TODO: Just use req_.bezierCurves?
-        ramp_msgs::BezierCurve bi;
-        bi.segmentPoints    = segment_points;
-        bi.controlPoints    = req_.bezierCurves.at(i-1).controlPoints;
-        bi.ms_maxVA         = ms_maxVA;
-        bi.u_0              = req_.bezierCurves.at(i-1).u_0;
-        bi.u_dot_0          = req_.bezierCurves.at(i-1).u_dot_0;
-        bi.u_dot_max        = req_.bezierCurves.at(i-1).u_dot_max;
-        bi.ms_begin         = p_copy.points.at(0).motionState;
-        bi.l                = lambda;
-
-        bc.init(bi, path_.points.at(0).motionState);
-      } // end if bezierStart
-
-      // If a "normal" bezier trajectory,
-      else 
-      {
-        //ROS_INFO("In else a normal trajectory");
-
-        // Get lambda value for segment points
-        lambda = (req_.bezierCurves.at(i-1).controlPoints.size() > 0) ?  req_.bezierCurves.at(i-1).l :
-                                                        getControlPointLambda(segment_points);
-        ////////////ROS_INFO("lambda: %f", lambda);
-
-        ramp_msgs::MotionState ms_maxVA = getMaxMS();
-
-        // TODO: Make a method to return a BezierInitializer
-        ramp_msgs::BezierCurve bi;
-        bi.segmentPoints  = segment_points;
-        bi.controlPoints  = req_.bezierCurves.at(i-1).controlPoints;
-        bi.l              = lambda;
-        bi.ms_maxVA       = ms_maxVA;
-
-       
-
-        bc.init(bi, path_.points.at(0).motionState);
-      } // end else "normal" trajectory
-
-
-      bool verified = bc.verify();
-      // TODO: Implement break in case of infinite loop, print error
-      while(lambdaOkay(bc.segmentPoints_, lambda) && lambda > 0.09 && lambda < 0.91 && !verified)
-      {
-        ////////////ROS_INFO("Lambda %f did not work", lambda);
-        if(req_.type == TRANSITION)
-        {
-          lambda += 0.05;
-        }
-        else
-        {
-          lambda -= 0.05;
-        }
-        //////////////////ROS_INFO("New lambda: %f", lambda);
-        ramp_msgs::BezierCurve bi;
-        ramp_msgs::MotionState ms_maxVA = getMaxMS();
-        bi.segmentPoints  = segment_points;
-        bi.controlPoints  = req_.bezierCurves.at(i-1).controlPoints;
-        bi.l              = lambda;
-        bi.ms_maxVA       = ms_maxVA;
-
-        bc.segmentPoints_.clear();
-        bc.controlPoints_.clear();
-        bc.init(bi, path_.points.at(0).motionState);
-       
-        
-        verified = bc.verify();
-      }
-
-      // Verify the curve
-      if(verified) 
-      {
-        //ROS_INFO("Curve is verified, generating points");
-
-        // Generate the curve
-        bc.generateCurveOOP();
-        result.push_back(bc);
-      }
-      
-      else if(type_ == TRANSITION) 
-      {
-        //ROS_INFO("Curve not verified, doing a transition so setting 0 velocity for KP: %s", utility_.toString(path_.points.at(1).motionState).c_str());
-
-        uint8_t num_dof = path_.points.at(1).motionState.velocities.size();
-        for(uint8_t i_v=0;i_v<num_dof;i_v++) 
-        {
-          path_.points.at(1).motionState.velocities.at(i_v) = 0;
-        }
-
-        type_ = HOLONOMIC;
-      } // end else if transition
-      else 
-      {
-        //ROS_INFO("Curve not verified, but not a transition trajectory");
-        type_ = HOLONOMIC;
-      }
-    } // end if
-    else 
-    {
-      //ROS_WARN("Two of the three segment points for Bezier curve are too close");
-      type_ = HOLONOMIC;
-    }
-  } // end for
-
-  //ROS_INFO("Outside of for");
-
-  // Set Path p's knot point indices
-  if(type_ != HOLONOMIC) 
-  {
-    if(type_ == TRANSITION) 
-    {
-      //ROS_INFO("In type == transition");
-      p.points.insert(p.points.begin()+1, utility_.getKnotPoint(result.at(0).points_.at(0)));
-      p.points.erase(p.points.begin()+2);
-      p.points.insert(p.points.begin()+2, 
-          utility_.getKnotPoint(result.at(0).points_.at(result.at(0).points_.size()-1)));
-    }
-
-    // If we have more than 1 curve
-    else if(req_.bezierCurves.size() > 1) 
-    {
-      //////////////////ROS_INFO("In else if bezierInfo.size()>1");
-
-      //////////////////ROS_INFO("Actually Erasing: %s", utility_.toString( *(p.points.begin()+2) ).c_str());
-      p.points.erase( p.points.begin()+2 );
-      //////////////////ROS_INFO("Actually Erasing: %s", utility_.toString( *(p.points.begin()+1) ).c_str());
-      p.points.erase( p.points.begin()+1 );
-      // Insert the 1st curve's last CP
-      p.points.insert( p.points.begin()+1, 
-          utility_.getKnotPoint( result.at(0).points_.at(result.at(0).points_.size()-1)));
-
-      //////////////////ROS_INFO("Path p: %s", utility_.toString(p).c_str());
-      
-      // Insert the 2nd curve's 1st and last CPs
-      p.points.insert(p.points.begin()+2, utility_.getKnotPoint(result.at(1).points_.at(0)));
-      p.points.insert(p.points.begin()+3, 
-          utility_.getKnotPoint(result.at(1).points_.at(result.at(1).points_.size()-1)));
-
-      if(!planning_full_)
-      {
-        segments_++;
-      }
-    }
-
-    // If already moving on curve
-    else if(req_.bezierCurves.at(0).u_0 > 0) 
-    {
-      //////////////////ROS_INFO("In else if bezierStart");
-      p.points.erase( p.points.begin() + 1 );
-      p.points.insert(p.points.begin()+1, 
-          utility_.getKnotPoint(result.at(0).points_.at(result.at(0).points_.size()-1)));
-    }
-
-    else if(utility_.positionDistance( p.points.at(1).motionState.positions, 
-          req_.bezierCurves.at(0).segmentPoints.at(1).positions) > 0.01)
-    {
-      //////////////////ROS_INFO("In else if Knot Point 1 != segment point 1");
-      //////////////////ROS_INFO("Knot Point 1: %s\nSegment Point 1: %s", utility_.toString(p.points.at(1).motionState).c_str(), utility_.toString(req_.bezierCurves.at(0).segmentPoints.at(1)).c_str());
-      // Don't erase anything
-      // Insert
-      p.points.insert(p.points.begin()+1, utility_.getKnotPoint(result.at(0).points_.at(0)));
-      p.points.insert(p.points.begin()+2, 
-          utility_.getKnotPoint(result.at(0).points_.at(result.at(0).points_.size()-1)));
-      
-      if(!planning_full_)
-      {
-        segments_++;
-        segments_++;
-      }
-    }
-
-    // Else not on a curve, but a curve exists on the trajectory
-    // Remove the 2nd knot point and replace it with start and end of the upcoming curve
-    else 
-    {
-      //////////////////ROS_INFO("In else");
-      //////////////////ROS_INFO("Erasing: %s", utility_.toString( *(p.points.begin()+1) ).c_str());
-      p.points.erase( p.points.begin() + 1 );
-
-
-      // Insert
-      p.points.insert(p.points.begin()+1, utility_.getKnotPoint(result.at(0).points_.at(0)));
-      p.points.insert(p.points.begin()+2, 
-          utility_.getKnotPoint(result.at(0).points_.at(result.at(0).points_.size()-1)));
-
-      if(!planning_full_)
-      {
-        segments_++;
-        segments_++;
-      }
-    }
-  } // end if not all straight segments
-
-  ////////////////ROS_INFO("Exiting MobileBase::bezier");
-  return result;
-} // End bezier
-
-
-
-
-
-void MobileBase::bezierOOP(ramp_msgs::Path& p, bool only_curve, std::vector<BezierCurve>& result)
-{
-  ////////////ROS_INFO("Entered MobileBase::bezier");
-
-  ramp_msgs::Path p_copy = p;
-
-  // Set the index of which knot point to stop at
-  //int stop = (req_.type == TRANSITION) ? 3 : 2; 
-  int stop = req_.bezierCurves.size()+1;
-  //std::cout<<"\nstop: "<<stop;
+  std::cout<<"\nstop: "<<stop;
 
   // TODO: Add a check to see if a curve exists in the request to prevent index out of bounds crashes
 
@@ -940,6 +637,8 @@ void MobileBase::bezierOOP(ramp_msgs::Path& p, bool only_curve, std::vector<Bezi
     }
   }
 
+  ROS_INFO("Past 1st while");
+
   // Find the second segment point for the curve
   // Increment index until the two points are different
   differentPoint = utility_.positionDistance(req_.bezierCurves.at(0).segmentPoints.at(1).positions, 
@@ -964,13 +663,15 @@ void MobileBase::bezierOOP(ramp_msgs::Path& p, bool only_curve, std::vector<Bezi
       return;
     }
   }
+  
+  ROS_INFO("Past 2nd while");
 
   ////////////ROS_INFO("stop: %i", stop);
 
   // Go through the path's knot points
-  //std::cout<<"\np.points.size(): "<<p.points.size()<<"\n";
-  for(uint8_t i=1;i<stop;i++) {
-    //std::cout<<"\n---i: "<<(int)i<<"---\n";
+  for(uint8_t i=1;i<stop;i++) 
+  {
+    ROS_INFO("Knot point %i", i);
 
     // Check that all of the points are different
     if(utility_.positionDistance(req_.bezierCurves.at(i-1).segmentPoints.at(0).positions, 
@@ -978,7 +679,7 @@ void MobileBase::bezierOOP(ramp_msgs::Path& p, bool only_curve, std::vector<Bezi
         (utility_.positionDistance(req_.bezierCurves.at(i-1).segmentPoints.at(1).positions, 
           req_.bezierCurves.at(i-1).segmentPoints.at(2).positions) > 0.01) )
     {
-      ////////////ROS_INFO("In if");
+      ROS_INFO("In if points i and i-1 are different");
 
       BezierCurve bc;
       bc.print_ = print_;
@@ -996,7 +697,7 @@ void MobileBase::bezierOOP(ramp_msgs::Path& p, bool only_curve, std::vector<Bezi
       // control points, so we have all the info now
       if(req_.bezierCurves.at(0).u_0 > 0 && i==1) 
       {
-        //std::cout<<"\nIn if transition or bezierStart\n";
+        ROS_INFO("In if starting on a curve");
         
         ramp_msgs::MotionState ms_maxVA = getMaxMS();
         
@@ -1022,12 +723,12 @@ void MobileBase::bezierOOP(ramp_msgs::Path& p, bool only_curve, std::vector<Bezi
       // If a "normal" bezier trajectory,
       else 
       {
-        ////////////ROS_INFO("In else a normal trajectory");
+        ROS_INFO("In else not starting on a curve");
 
         // Get lambda value for segment points
         lambda = (req_.bezierCurves.at(i-1).controlPoints.size() > 0) ?  req_.bezierCurves.at(i-1).l :
                                                         getControlPointLambda(segment_points);
-        ////////////ROS_INFO("lambda: %f", lambda);
+        ROS_INFO("lambda: %f", lambda);
 
         ramp_msgs::MotionState ms_maxVA = getMaxMS();
 
@@ -1048,7 +749,7 @@ void MobileBase::bezierOOP(ramp_msgs::Path& p, bool only_curve, std::vector<Bezi
       // TODO: Implement break in case of infinite loop, print error
       while(lambdaOkay(bc.segmentPoints_, lambda) && lambda > 0.09 && lambda < 0.91 && !verified)
       {
-        ////////////ROS_INFO("Lambda %f did not work", lambda);
+        ROS_INFO("Lambda %f did not work", lambda);
         if(req_.type == TRANSITION)
         {
           lambda += 0.05;
@@ -1057,7 +758,7 @@ void MobileBase::bezierOOP(ramp_msgs::Path& p, bool only_curve, std::vector<Bezi
         {
           lambda -= 0.05;
         }
-        //////////////////ROS_INFO("New lambda: %f", lambda);
+        ROS_INFO("New lambda: %f", lambda);
         ramp_msgs::BezierCurve bi;
         ramp_msgs::MotionState ms_maxVA = getMaxMS();
         bi.segmentPoints  = segment_points;
@@ -1073,10 +774,12 @@ void MobileBase::bezierOOP(ramp_msgs::Path& p, bool only_curve, std::vector<Bezi
         verified = bc.verify();
       }
 
+      ROS_INFO("Outside of lambda while loop");
+
       // Verify the curve
       if(verified) 
       {
-        ////////////ROS_INFO("Curve is verified, generating points");
+        ROS_INFO("Curve is verified, generating points");
 
         // Generate the curve
         bc.generateCurveOOP();
@@ -1085,7 +788,7 @@ void MobileBase::bezierOOP(ramp_msgs::Path& p, bool only_curve, std::vector<Bezi
       
       else if(type_ == TRANSITION) 
       {
-        ////////////ROS_INFO("Curve not verified, doing a transition so setting 0 velocity for KP: %s", utility_.toString(path_.points.at(1).motionState).c_str());
+        ROS_INFO("Curve not verified, doing a transition so setting 0 velocity for KP: %s", utility_.toString(path_.points.at(1).motionState).c_str());
 
         uint8_t num_dof = path_.points.at(1).motionState.velocities.size();
         for(uint8_t i_v=0;i_v<num_dof;i_v++) 
@@ -1097,18 +800,18 @@ void MobileBase::bezierOOP(ramp_msgs::Path& p, bool only_curve, std::vector<Bezi
       } // end else if transition
       else 
       {
-        ////////////ROS_INFO("Curve not verified, but not a transition trajectory");
+        ROS_INFO("Curve not verified, but not a transition trajectory");
         type_ = HOLONOMIC;
       }
     } // end if
     else 
     {
-      ////////ROS_WARN("Two of the three segment points for Bezier curve are too close");
+      ROS_WARN("Two of the three segment points for Bezier curve are too close");
       type_ = HOLONOMIC;
     }
   } // end for
 
-  ////////////ROS_INFO("Outside of for");
+  ROS_INFO("Outside of for");
 
   // Set Path p's knot point indices
   if(type_ != HOLONOMIC) 
@@ -1197,7 +900,7 @@ void MobileBase::bezierOOP(ramp_msgs::Path& p, bool only_curve, std::vector<Bezi
     }
   } // end if not all straight segments
 
-  ////////////////ROS_INFO("Exiting MobileBase::bezier");
+  ROS_INFO("Exiting MobileBase::bezier");
 }
 
 
@@ -1704,6 +1407,17 @@ bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
   {
     req.path.points.erase(req.path.points.begin());
   }
+
+  // If the first 3 points are a straight line, make the trajectory holonomic
+  if(req.path.points.size() > 2)
+  {
+    double theta1 = utility_.findAngleFromAToB(req.path.points[0].motionState.positions, req.path.points[1].motionState.positions);
+    double theta2 = utility_.findAngleFromAToB(req.path.points[1].motionState.positions, req.path.points[2].motionState.positions);
+    if(utility_.findDistanceBetweenAngles(theta1, theta2) < 0.1)
+    {
+      req.type = HOLONOMIC;
+    }
+  }
   
 
   // Initialize with request
@@ -1766,8 +1480,7 @@ bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
   if(type_ != HOLONOMIC) 
   {
     ROS_INFO("Path before Bezier: %s", utility_.toString(path_).c_str());
-    //curves = bezier(path_, type_ == TRANSITION);
-    bezierOOP(path_, type_ == TRANSITION, curves);
+    bezier(path_, type_ == TRANSITION, curves);
     ROS_INFO("Path after Bezier: %s", utility_.toString(path_).c_str());
     setInitialMotion();
 

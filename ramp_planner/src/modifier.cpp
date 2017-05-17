@@ -144,20 +144,20 @@ void Modifier::buildModificationRequest(const Population& pop, bool imminent_col
 /** This method performs all the tasks for path modification */
 const std::vector<Path> Modifier::perform(const Population& pop, bool imminent_collision) 
 {
-  //////ROS_INFO("In Modifier::perform");
+  ROS_INFO("In Modifier::perform");
   std::vector<Path> result;
  
   // Build a modification request srv 
   ros::Time t_b = ros::Time::now();
   ramp_msgs::ModificationRequest mr;
   buildModificationRequest(pop, imminent_collision, mr); 
-  //////ROS_INFO("ModificationResult built, pop size: %i # of paths: %i", (int)pop.size(), (int)mr.response.mod_paths.size()); 
+  ROS_INFO("ModificationResult built, pop size: %i # of paths: %i", (int)pop.size(), (int)mr.response.mod_paths.size()); 
 
-  //////ROS_INFO("Requesting modification");
+  ROS_INFO("Requesting modification");
   // If the request was successful
   if(h_mod_req_->request(mr)) 
   {
-    //////ROS_INFO("Got modification");
+    ROS_INFO("Got modification");
     ros::Time t_m = ros::Time::now();
     
     // Push on the modified paths
@@ -168,6 +168,6 @@ const std::vector<Path> Modifier::perform(const Population& pop, bool imminent_c
     }
   } // end inner if 
 
-  //////ROS_INFO("Exiting Modifier::perform");
+  ROS_INFO("Exiting Modifier::perform");
   return result;
 }

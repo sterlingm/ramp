@@ -20,8 +20,7 @@ public:
 
 
   // Get Bezier curves over the path
-  const std::vector<BezierCurve> bezier(ramp_msgs::Path& p, const bool only_curve);
-  void bezierOOP(ramp_msgs::Path& p, bool only_curve, std::vector<BezierCurve>& result);
+  void bezier(ramp_msgs::Path& p, bool only_curve, std::vector<BezierCurve>& result);
 
 
   TrajectoryType type_;

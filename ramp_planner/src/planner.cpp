@@ -2531,6 +2531,10 @@ void Planner::getTransitionTrajectory(const RampTrajectory& trj_movingOn, const 
 /** Modify a Path */
 const std::vector<Path> Planner::modifyPath() 
 { 
+  if(log_enter_exit_)
+  {
+    ROS_INFO("In modifyPath");
+  }
   //ROS_INFO("About to modify a path, pop is: %s\n%s", population_.get(0).toString().c_str(), population_.get(1).toString().c_str());
   return modifier_->perform(population_, imminent_collision_);
 }
@@ -2539,12 +2543,15 @@ const std::vector<Path> Planner::modifyPath()
 
 void Planner::modifyTrajec(std::vector<RampTrajectory>& result)
 {
-  //////ROS_INFO("In Planner::modifyTrajec");
+  if(log_enter_exit_)
+  {
+    ROS_INFO("In Planner::modifyTrajec");
+  }
 
   // The process begins by modifying one or more paths
   ros::Time t_p = ros::Time::now();
   std::vector<Path> modded_paths = modifyPath();
-  ////ROS_INFO("Number of modified paths: %i", (int)modded_paths.size());
+  ROS_INFO("Number of modified paths: %i", (int)modded_paths.size());
 
 
   ros::Time t_for = ros::Time::now();
@@ -2554,7 +2561,6 @@ void Planner::modifyTrajec(std::vector<RampTrajectory>& result)
     //std::cout<<"\nramp_planner: Modifying trajectory "<<(int)i;
     
     // Get trajectory
-    //RampTrajectory temp = requestTrajectory(modded_paths.at(i));
     ros::Time t_for = ros::Time::now();
     RampTrajectory traj;
     requestTrajectory(modded_paths[i], traj);
@@ -2563,7 +2569,10 @@ void Planner::modifyTrajec(std::vector<RampTrajectory>& result)
     ////ROS_INFO("t_mod_oop: %f", (t_a-t_for).toSec());
   } // end for
   
-  //////ROS_INFO("Exiting Planner::modifyTrajec");
+  if(log_enter_exit_)
+  {
+    ROS_INFO("Exiting Planner::modifyTrajec");
+  }
 }
 
 
@@ -2574,7 +2583,10 @@ void Planner::modifyTrajec(std::vector<RampTrajectory>& result)
 void Planner::modification()
 {
   ros::Time t_m = ros::Time::now();
-  ROS_INFO("In Planner::modification()");
+  if(log_enter_exit_)
+  {
+    ROS_INFO("In Planner::modification()");
+  }
   ModificationResult result;
 
   // Modify 1 or more trajectories
@@ -2583,10 +2595,10 @@ void Planner::modification()
   modifyTrajec(mod_trajec);
   ros::Time t_p = ros::Time::now();
   ////ROS_INFO("t_p: %f", (t_p-now).toSec());
-  ////ROS_INFO("Modification trajectories obtained: %i", (int)mod_trajec.size());
+  ROS_INFO("Modification trajectories obtained: %i", (int)mod_trajec.size());
   
-  if(mod_trajec.size()>1)
-    modded_two=true;
+  // Set boolean to signal more than 1 trajec was modified
+  modded_two = mod_trajec.size() > 1;
 
   ros::Time t_for = ros::Time::now();
   // Evaluate and add the modified trajectories to the population
@@ -2641,7 +2653,10 @@ void Planner::modification()
 
   num_mods_++;
   ////////ROS_INFO("After modification, pop now: %s", result.popNew_.toString().c_str());
-  ROS_INFO("Exiting Planner::modification");
+  if(log_enter_exit_)
+  {
+    ROS_INFO("Exiting Planner::modification");
+  }
 } // End modification
 
 
