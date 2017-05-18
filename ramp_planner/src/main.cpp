@@ -6,7 +6,6 @@
 Utility utility;
 
 
-Planner             my_planner; 
 int                 id;
 MotionState         start, goal;
 std::vector<Range>  ranges;
@@ -25,6 +24,7 @@ int                 pop_type;
 TrajectoryType      pt;
 std::vector<std::string> ob_topics;
 std::string         global_frame;
+std::string         update_topic;
 
 float costmap_width, costmap_height, costmap_origin_x, costmap_origin_y;
 ros::Publisher pub_rviz;
@@ -240,6 +240,15 @@ void loadParameters(const ros::NodeHandle handle)
     ROS_ERROR("Could not find rosparam ramp/global_frame");
   }
 
+  if(handle.hasParam("ramp/update_topic"))
+  {
+    handle.getParam("ramp/update_topic", update_topic);
+    ROS_INFO("update_topic: %s", update_topic.c_str());
+  }
+  else
+  {
+    ROS_ERROR("Could not find rosparam ramp/update_topic");
+  }
 
 
   std::cout<<"\n------- Done loading parameters -------\n";
@@ -349,19 +358,39 @@ int main(int argc, char** argv) {
   ros::param::set("ramp/cc_started", false);
   std::cout<<"\nHandle namespace: "<<handle.getNamespace();
   
-  ros::Subscriber sub_update_ = handle.subscribe("update", 1, &Planner::updateCallback, &my_planner);
+  // Load ros parameters
+  loadParameters(handle);
+
+  Planner my_planner; 
+  
+  // Use updateCallbackPose if the msg type is PoseWithCovarianceStamped
+  ros::Subscriber sub_updatePose_ = handle.subscribe(update_topic, 1, &Planner::updateCallbackPose, &my_planner);
+  ros::Subscriber sub_updateVel_ = handle.subscribe("update", 1, &Planner::updateCallbackVel, &my_planner);
   ros::Subscriber sub_sc_ = handle.subscribe("obstacles", 1, &Planner::sensingCycleCallback, &my_planner);
 
   pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 10);
 
+  /*
+   * Get the transform from map to the Planner's global_frame
+   */
 
+  // Sleep to wait for tf data
+  // Using the sleep in waitForTransform never works
+  ros::Duration d(0.5);
+  d.sleep();
 
-  // Load ros parameters
-  loadParameters(handle);
-
-  ROS_INFO("Parameters loaded. Please review them and press Enter to continue");
-  //std::cin.get();
+  // Wait for Transform from map to the planner's global_frame
+  // Since this is used to transform poses from amcl, how can I generalize this from "map"?
+  if(global_frame != "map")
+  {
+    tf::TransformListener listener_;
+    listener_.waitForTransform(global_frame, "map", ros::Time(0), d);
+    listener_.lookupTransform(global_frame, "map", ros::Time(0), my_planner.transform_to_global_);
+  }
   
+  /*
+   * Check that the start and goal are within specified ranges
+   */
   for(int i=0;i<ranges.size();i++)
   {
     if( start.msg_.positions[i] < ranges[i].msg_.min || start.msg_.positions[i] > ranges[i].msg_.max ||
@@ -371,9 +400,14 @@ int main(int argc, char** argv) {
       exit(1);
     }
   }
+
+  /*
+   * All parameters are loaded
+   */
+  ROS_INFO("Parameters loaded. Please review them and press Enter to continue");
+  //std::cin.get();
  
-  /** Initialize the Planner's handlers */ 
-  ROS_INFO("Initializing Planner object");
+  // Initialize the planner
   my_planner.init(id, handle, start, goal, ranges, population_size, sub_populations, global_frame, pt, gensBeforeCC, t_pc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
   my_planner.modifications_   = modifications;
   my_planner.evaluations_     = evaluations;
@@ -382,7 +416,8 @@ int main(int argc, char** argv) {
   std::cout<<"\nStart: "<<my_planner.start_.toString();
   std::cout<<"\nGoal: "<<my_planner.goal_.toString();
 
-  pubStartGoalMarkers();
+  //pubStartGoalMarkers();
+  //ROS_INFO("Done with pubStartGoalMarkers");
 
   
   //testSwitch();

@@ -1448,7 +1448,7 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
  * and transformes it by T_base_w because 
  * updates are relative to odometry frame
  * */
-void Planner::updateCallback(const ramp_msgs::MotionState& msg) 
+void Planner::updateCallbackVel(const ramp_msgs::MotionState& msg) 
 {
   t_prev_update_ = ros::Time::now();
   //ROS_INFO("In Planner::updateCallback");
@@ -1465,9 +1465,6 @@ void Planner::updateCallback(const ramp_msgs::MotionState& msg)
   {
     latestUpdate_ = msg;
 
-    // Transform configuration from odometry to world coordinates
-    latestUpdate_.transformBase(T_w_odom_);
-
     // Set proper velocity values
     latestUpdate_.msg_.velocities.at(0) = msg.velocities.at(0) * 
                                           cos(latestUpdate_.msg_.positions.at(2));
@@ -1480,7 +1477,7 @@ void Planner::updateCallback(const ramp_msgs::MotionState& msg)
     latestUpdate_.msg_.accelerations.at(1) = msg.accelerations.at(0) * 
                                              sin(latestUpdate_.msg_.positions.at(2));
 
-    //ROS_INFO("New latestUpdate_: %s", latestUpdate_.toString().c_str());
+    ROS_INFO("New latestUpdate_: %s", latestUpdate_.toString().c_str());
   } // end else
   
   ////ROS_INFO("Exiting Planner::updateCallback");
@@ -1488,6 +1485,37 @@ void Planner::updateCallback(const ramp_msgs::MotionState& msg)
 
 
 
+void Planner::updateCallbackPose(const geometry_msgs::PoseWithCovarianceStamped msg)
+{
+  t_prev_update_ = ros::Time::now();
+  ROS_INFO("In updateCallbackPose");
+  
+  latestUpdate_.msg_.positions.clear();
+
+  // Transform the pose if we need to
+  if(msg.header.frame_id != global_frame_)
+  {
+    ROS_INFO("Transforming pose");
+    ROS_INFO("msg: (%f, %f)", msg.pose.pose.position.x, msg.pose.pose.position.y);
+    
+    // Create a Vector3, transform it, set values back in Pose
+    tf::Vector3 v(msg.pose.pose.position.x, msg.pose.pose.position.y, 0.0);
+    tf::Vector3 msg_tf = transform_to_global_ * v;
+    ROS_INFO("msg_transform: (%f, %f)", msg_tf.getX(), msg_tf.getY());
+
+    latestUpdate_.msg_.positions.push_back(msg_tf.getX());
+    latestUpdate_.msg_.positions.push_back(msg_tf.getY());
+    latestUpdate_.msg_.positions.push_back(0.0);
+  }
+  else
+  {
+    latestUpdate_.msg_.positions.push_back(msg.pose.pose.position.x);
+    latestUpdate_.msg_.positions.push_back(msg.pose.pose.position.y);
+    latestUpdate_.msg_.positions.push_back(msg.pose.pose.position.z);
+  }
+  
+  ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
+}
 
 
 

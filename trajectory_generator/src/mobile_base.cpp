@@ -1402,13 +1402,14 @@ bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
     return true;
   }
 
+  // If the first two positions are the same, delete the first one
   if(utility_.getEuclideanDist( req.path.points.at(0).motionState.positions, 
         req.path.points.at(1).motionState.positions) < 0.001)
   {
     req.path.points.erase(req.path.points.begin());
   }
 
-  // If the first 3 points are a straight line, make the trajectory holonomic
+  // If the first 3 points are a straight line, make the request type holonomic
   if(req.path.points.size() > 2)
   {
     double theta1 = utility_.findAngleFromAToB(req.path.points[0].motionState.positions, req.path.points[1].motionState.positions);

@@ -20,6 +20,8 @@ void sendTF(const ros::TimerEvent& e)
   transform.setOrigin( tf::Vector3(0, 0, 0) );
 
   // Set rotation
+  // 0.9 is 51 degrees, it is determined by the map's orientation
+  // we want the costmap to have the same orientation as the map's hallway
   tf::Quaternion q;
   q.setRPY(0, 0, 0.9);
   transform.setRotation(q);

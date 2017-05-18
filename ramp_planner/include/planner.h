@@ -217,7 +217,8 @@ class Planner {
     const ramp_msgs::Path getObstaclePath(const ramp_msgs::Obstacle ob, const MotionType mt) const;
     
     void sensingCycleCallback     (const ramp_msgs::ObstacleList& msg);
-    void updateCallback(const ramp_msgs::MotionState& msg);
+    void updateCallbackPose(const geometry_msgs::PoseWithCovarianceStamped msg);
+    void updateCallbackVel(const ramp_msgs::MotionState& msg);
 
     /** Data */
 
@@ -495,6 +496,14 @@ class Planner {
     int id_line_list_;
 
     std::string global_frame_;
+    
+    // Using a TransformListener is too inconsistent to rely on
+    // because sometimes the tfs are there, sometimes it gives me the
+    // "have to extrapolate future data" error, so instead 
+    // store a transform and manually apply it since the tf is static
+    tf::StampedTransform transform_to_global_;
+    
+    tf::TransformListener listener_;
 };
 
 #endif

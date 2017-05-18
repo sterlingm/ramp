@@ -424,7 +424,7 @@ int main(int argc, char** argv) {
   ros::Rate r(100);
   
   ros::Subscriber sub_sc_     = handle.subscribe("obstacles", 1, &Planner::sensingCycleCallback,  &my_planner);
-  ros::Subscriber sub_update_ = handle.subscribe("update",    1, &Planner::updateCallback,        &my_planner);
+  ros::Subscriber sub_update_ = handle.subscribe("update",    1, &Planner::updateCallbackVel,        &my_planner);
 
   ros::ServiceClient client_reset = handle.serviceClient<std_srvs::Empty>("reset_positions");
   std_srvs::Empty reset_srv;

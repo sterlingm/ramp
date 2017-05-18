@@ -26,6 +26,8 @@ error_reduction: false
 
 global_frame: "costmap"
 
+update_topic: "amcl_pose"
+
 # Turtlebot obstacle topics
 #obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom', '/obstacle_3/odom']
 #obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity', '/obstacle_2/mobile_base/commands/velocity', '/obstacle_3/mobile_base/commands/velocity']

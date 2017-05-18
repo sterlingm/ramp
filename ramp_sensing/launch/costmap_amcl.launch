@@ -1,9 +1,6 @@
 <launch>
 
-<include file="$(find turtlebot_navigation)/launch/gazebo_static_costmap.launch" />
+<include file="$(find turtlebot_navigation)/launch/gazebo_amcl_static_costmap.launch" />
 <include file="$(find ramp_sensing)/launch/pub_tfs_gazebo_costmap.launch" />
-
-<!-- Launch node to filter laser scans
-<include file="$(find laser_filters)/launch/range_filter.launch" /> -->
 
 </launch>
