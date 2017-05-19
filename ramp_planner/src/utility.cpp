@@ -109,7 +109,7 @@ const double Utility::findAngleFromAToB(const std::vector<double> a, const std::
 
 
 /** This method returns distance between orientations a1 and a2. The distance is in the range [-PI, PI]. */
-const double Utility::findDistanceBetweenAngles(const double a1, const double a2) const 
+const double Utility::findDistanceBetweenAngles(const double a1, const double a2) const
 {
   double result;
   double difference = a2 - a1;
@@ -122,7 +122,7 @@ const double Utility::findDistanceBetweenAngles(const double a1, const double a2
   }
 
   // If difference < -pi, the result should be in [0,PI] range
-  else if(difference < -PI) 
+  else if(difference < -PI)
   {
     result = difference + (2*PI);
   }
@@ -138,8 +138,8 @@ const double Utility::findDistanceBetweenAngles(const double a1, const double a2
 
 
 
-const double Utility::displaceAngle(const double a1, double a2) const {
-
+const double Utility::displaceAngle(const double a1, double a2) const 
+{
   a2 = fmodf(a2, 2*PI);
 
   if(a2 > PI) 
@@ -335,8 +335,8 @@ const std::string Utility::toString(const ramp_msgs::RampTrajectory traj) const 
   result<<"\n Points:";
   //for(unsigned int i=15;i<27;i++) {
   //for(unsigned int i=0;i<7;i++) {
-  //for(unsigned int i=0;i<50 && i<traj.trajectory.points.size();i++) {
-  for(unsigned int i=0;i<traj.trajectory.points.size();i++) {
+  for(unsigned int i=0;i<50 && i<traj.trajectory.points.size();i++) {
+  //for(unsigned int i=0;i<traj.trajectory.points.size();i++) {
     result<<"\n\n   Point "<<i<<":";
     
     trajectory_msgs::JointTrajectoryPoint p = traj.trajectory.points.at(i);

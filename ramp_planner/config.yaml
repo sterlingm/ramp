@@ -1,4 +1,4 @@
-population_size: 5
+population_size: 3
 
 sub_populations: false 
 
@@ -8,10 +8,12 @@ evaluations: true
 
 seed_population: false 
 
+error_reduction: true
+
 # If true, planning and control cycles are cut off
 only_sensing: false
 
-# If true, control cycles are cut off
+# If false, control cycles are cut off
 moving_robot: true
 
 gens_before_control_cycle: 20
@@ -21,8 +23,6 @@ pop_traj_type: 1 #0=holonomic, 1=hybrid
 fixed_control_cycle_rate: 2
 
 sensing_cycle_rate: 15
-
-error_reduction: false
 
 global_frame: "costmap"
 

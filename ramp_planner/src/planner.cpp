@@ -15,6 +15,8 @@ Planner::Planner() : resolutionRate_(1.f / 10.f), ob_dists_timer_dur_(0.1), gene
   COLL_DISTS.push_back(0.42);
   COLL_DISTS.push_back(0.25);
 
+  i_COLL_DISTS_ = 0;
+
   // Set time to ignore delta theta in evaluation after IC occurs
   d_IC_ = ros::Duration(10);
 }
@@ -336,7 +338,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
 
   sc_durs_.push_back( ros::Time::now() - start );
   
-  sendPopulation(copy);
+  sendPopulation(copy, true);
 
   // Send trajectories to rviz
   if(ob_trajectory_.size() > 0)
@@ -1116,13 +1118,17 @@ void Planner::buildEvaluationSrv(const RampTrajectory& trajec, ramp_msgs::Evalua
 
 void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::EvaluationRequest& result, bool full) const
 {
-  ////ROS_INFO("In Planner::buildEvaluationRequest(const RampTrajectory&, EvaluationRequest&, bool)");
-  ////ROS_INFO("trajec: %s", trajec.toString().c_str());
+  ROS_INFO("In Planner::buildEvaluationRequest(const RampTrajectory&, EvaluationRequest&, bool)");
+  ROS_INFO("trajec: %s", trajec.toString().c_str());
   ////ROS_INFO("full: %s", full ? "True" : "False");
+  
+  ROS_INFO("latestUpdate_.msg_.positions.size(): %i", (int)latestUpdate_.msg_.positions.size());
+  ROS_INFO("latestUpdate_.msg_.velocities.size(): %i", (int)latestUpdate_.msg_.velocities.size());
 
   result.trajectory   = trajec.msg_;
   result.currentTheta = latestUpdate_.msg_.positions[2]; 
 
+  ROS_INFO("movingOn_.msg_.trajectory.points.size(): %i", (int)movingOn_.msg_.trajectory.points.size());
   if(movingOn_.msg_.trajectory.points.size() > 0)
   {
     result.theta_cc = 
@@ -1151,11 +1157,12 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
   result.imminent_collision = imminent_collision_;
 
   // If control cycles are happening, but the robot is stopped, toggle imminent collision for the evalution so that it does not consider the turning angle for the trajectory
-  double v = sqrt( pow(latestUpdate_.msg_.velocities[2], 2) + pow(latestUpdate_.msg_.velocities[2],2) );
+  double v = sqrt( pow(latestUpdate_.msg_.velocities[0], 2) + pow(latestUpdate_.msg_.velocities[1],2) );
   if(moving_robot_ && v < 0.1)
   {
     result.imminent_collision = true;
   }
+  ROS_INFO("i_COLL_DISTS_: %i COLL_DISTS.size(): %i", i_COLL_DISTS_, (int)COLL_DISTS.size());
   result.coll_dist = COLL_DISTS[i_COLL_DISTS_];
 
   // full_eval is for predicting segments that are not generated
@@ -1164,6 +1171,8 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
   // consider_trans for trajs including switches if we're moving the robot
   result.consider_trans = moving_robot_;
 
+  ROS_INFO("Setting nec_theta, end, etc.");
+  ROS_INFO("trajec.msg_.trajectory.size(): %i trajec.msg_.i_knotPoints.size(): %i", (int)trajec.msg_.trajectory.points.size(), (int)trajec.msg_.i_knotPoints.size());
   double nec_theta = utility_.findAngleFromAToB(trajec.msg_.trajectory.points[0].positions, trajec.msg_.trajectory.points[ trajec.msg_.i_knotPoints[1] ].positions);
 
   double end = movingOn_.msg_.trajectory.points.size() > 0 ? movingOn_.msg_.trajectory.points[ movingOn_.msg_.trajectory.points.size()-1 ].positions[2] : latestUpdate_.msg_.positions[2];
@@ -1183,7 +1192,7 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
   }
 
   ////ROS_INFO("transitionTraj: %s", utility_.toString(trajec.transitionTraj_).c_str());
-  ////ROS_INFO("Exiting Planner::buildEvaluationRequest(const RampTrajectory&, EvaluationRequest&, bool)");
+  ROS_INFO("Exiting Planner::buildEvaluationRequest(const RampTrajectory&, EvaluationRequest&, bool)");
 }
 
 
@@ -1448,10 +1457,10 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
  * and transformes it by T_base_w because 
  * updates are relative to odometry frame
  * */
-void Planner::updateCallbackVel(const ramp_msgs::MotionState& msg) 
+void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg) 
 {
   t_prev_update_ = ros::Time::now();
-  //ROS_INFO("In Planner::updateCallback");
+  ROS_INFO("In Planner::updateCbControlNode");
   ////ROS_INFO("Time since last: %f", (ros::Time::now()-t_prev_update_).toSec());
 
  
@@ -1464,8 +1473,13 @@ void Planner::updateCallbackVel(const ramp_msgs::MotionState& msg)
   else 
   {
     latestUpdate_ = msg;
+      
+    ROS_INFO("odom msg: (%f, %f)", msg.velocities[0], msg.velocities[1]);
 
-    // Set proper velocity values
+    /*
+     * Velocity values from ramp_control are [longitudal, 0, angular.z]
+     */
+    // Convert to [x_dot, y_dot, angular]
     latestUpdate_.msg_.velocities.at(0) = msg.velocities.at(0) * 
                                           cos(latestUpdate_.msg_.positions.at(2));
     latestUpdate_.msg_.velocities.at(1) = msg.velocities.at(0) * 
@@ -1477,6 +1491,23 @@ void Planner::updateCallbackVel(const ramp_msgs::MotionState& msg)
     latestUpdate_.msg_.accelerations.at(1) = msg.accelerations.at(0) * 
                                              sin(latestUpdate_.msg_.positions.at(2));
 
+    ROS_INFO("New latestUpdate_ relative to odom: %s", latestUpdate_.toString().c_str());
+
+    // Motion information is relative to odom
+    // so transform the velocity and acceleration values
+    if(global_frame_ != "odom")
+    {
+      tf::Vector3 v(latestUpdate_.msg_.velocities[0], latestUpdate_.msg_.velocities[1], 0);
+      tf::Vector3 v_tf = tf_global_odom_rot_ * v;
+      latestUpdate_.msg_.velocities[0] = v_tf.getX();
+      latestUpdate_.msg_.velocities[1] = v_tf.getY();
+      
+      tf::Vector3 a(msg.accelerations[0], msg.accelerations[1], 0);
+      tf::Vector3 a_tf = tf_global_odom_rot_ * a;
+      latestUpdate_.msg_.accelerations[0] = a_tf.getX();
+      latestUpdate_.msg_.accelerations[1] = a_tf.getY();
+    }
+
     ROS_INFO("New latestUpdate_: %s", latestUpdate_.toString().c_str());
   } // end else
   
@@ -1485,27 +1516,29 @@ void Planner::updateCallbackVel(const ramp_msgs::MotionState& msg)
 
 
 
-void Planner::updateCallbackPose(const geometry_msgs::PoseWithCovarianceStamped msg)
+void Planner::updateCbPose(const geometry_msgs::PoseWithCovarianceStamped msg)
 {
   t_prev_update_ = ros::Time::now();
-  ROS_INFO("In updateCallbackPose");
+  ROS_INFO("In updateCbPose");
   
   latestUpdate_.msg_.positions.clear();
 
   // Transform the pose if we need to
   if(msg.header.frame_id != global_frame_)
   {
-    ROS_INFO("Transforming pose");
-    ROS_INFO("msg: (%f, %f)", msg.pose.pose.position.x, msg.pose.pose.position.y);
+    //ROS_INFO("Transforming pose");
     
     // Create a Vector3, transform it, set values back in Pose
     tf::Vector3 v(msg.pose.pose.position.x, msg.pose.pose.position.y, 0.0);
-    tf::Vector3 msg_tf = transform_to_global_ * v;
-    ROS_INFO("msg_transform: (%f, %f)", msg_tf.getX(), msg_tf.getY());
+    tf::Vector3 msg_tf = tf_global_costmap_ * v;
 
     latestUpdate_.msg_.positions.push_back(msg_tf.getX());
     latestUpdate_.msg_.positions.push_back(msg_tf.getY());
-    latestUpdate_.msg_.positions.push_back(0.0);
+    //latestUpdate_.msg_.positions.push_back(0);
+    
+    double angle = tf::getYaw(msg.pose.pose.orientation);
+    angle = utility_.displaceAngle(angle, -tf_global_costmap_.getRotation().getAngle());
+    latestUpdate_.msg_.positions.push_back(angle);
   }
   else
   {
@@ -2827,63 +2860,47 @@ void Planner::planningCycleCallback()
       !(fabs(latestUpdate_.msg_.velocities.at(2)) > 0.1 && sqrt(pow(latestUpdate_.msg_.velocities[0],2) + pow(latestUpdate_.msg_.velocities[1],2)) > 0.01))
   {
     ros::Time t_start_error = ros::Time::now();
-
-    // TODO: Is this if statement needed? Isn't it essentially checking that we are not
-    // moving on a curve, which is what the previous one checks?
-    // If not first PC and best trajectory has no curve
-    // best curve has a curve and we aren't moving on it
-    /*if(population_.getBest().msg_.curves.size() == 0    || 
-        ( population_.getBest().msg_.curves.size() > 0  && 
-          population_.getBest().msg_.curves.at(0).u_0 < 0.0001))
-    {*/
-      ROS_INFO("Doing Adjustment");
-      //////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
       
-      // Do error correction
-      ros::Duration t_since_cc = ros::Time::now() - t_prevCC_;
-      ROS_INFO("t_since_cc: %f", t_since_cc.toSec());
-      //////ROS_INFO("movingOnCC_: %s", movingOnCC_.toString().c_str());
-     
-      diff = movingOnCC_.getPointAtTime(t_since_cc.toSec());
-      //diff = movingOn_.getPointAtTime(t_since_cc.toSec());
-      
-      ROS_INFO("movingOnCC_ at t_since_cc: %s", diff.toString().c_str());
-      ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
+    ROS_INFO("Doing Adjustment");
+    //////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
+    
+    // Do error correction
+    ros::Duration t_since_cc = ros::Time::now() - t_prevCC_;
+    ROS_INFO("t_since_cc: %f", t_since_cc.toSec());
+    //////ROS_INFO("movingOnCC_: %s", movingOnCC_.toString().c_str());
+   
+    diff = movingOnCC_.getPointAtTime(t_since_cc.toSec());
+    //diff = movingOn_.getPointAtTime(t_since_cc.toSec());
+    
+    ROS_INFO("movingOnCC_ at t_since_cc: %s", diff.toString().c_str());
+    ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
 
-      // Find offset for thisPC
-      diff = diff.subtractPosition(latestUpdate_, true);
-      MotionState temp = diff_.subtractPosition(diff);
-      
-      // diff_ is the overall offset of pop since last CC
-      diff_ = diff_.subtractPosition(temp);
-      ROS_INFO("diff_: %s diff: %s temp: %s", diff_.toString().c_str(), diff.toString().c_str(), temp.toString().c_str());
+    // Find offset for thisPC
+    diff = diff.subtractPosition(latestUpdate_, true);
+    MotionState temp = diff_.subtractPosition(diff);
+    
+    // diff_ is the overall offset of pop since last CC
+    diff_ = diff_.subtractPosition(temp);
+    ROS_INFO("diff_: %s diff: %s temp: %s", diff_.toString().c_str(), diff.toString().c_str(), temp.toString().c_str());
 
-      ROS_INFO("m_cc_: %s", m_cc_.toString().c_str());
-      startPlanning_ = m_cc_.add(temp);
+    ROS_INFO("m_cc_: %s", m_cc_.toString().c_str());
+    startPlanning_ = m_cc_.add(temp);
 
-      ROS_INFO("Adjusting movingOn");
-      movingOn_.offsetPositions(temp);
+    ROS_INFO("Adjusting movingOn");
+    movingOn_.offsetPositions(temp);
 
-      ROS_INFO("Corrected startPlanning_: %s", startPlanning_.toString().c_str());
-      ROS_INFO("Corrected movingOn_: %s", movingOn_.toString().c_str());
+    ROS_INFO("Corrected startPlanning_: %s", startPlanning_.toString().c_str());
+    ROS_INFO("Corrected movingOn_: %s", movingOn_.toString().c_str());
 
-      offsetPopulation(temp);
+    offsetPopulation(temp);
 
-      evaluatePopulation();
+    evaluatePopulation();
 
-      ROS_INFO("Pop after adjustment: %s", population_.toString().c_str());
+    ROS_INFO("Pop after adjustment: %s", population_.toString().c_str());
 
-      EC=true;
+    EC=true;
 
-      ROS_INFO("Done with Adjustment");
-
-    //} // end if doing error correction
-    //else
-    //{
-      //////ROS_INFO("Not doing error correction");
-      //////ROS_INFO("c_pc: %i population_.getBest().msg_.curves.size(): %i", c_pc_, (int)population_.getBest().msg_.curves.size());
-      //////ROS_INFO("population_.getBest().msg_.curves.at(0).u_0: %f", population_.getBest().msg_.curves.at(0).u_0); 
-    //}
+    ROS_INFO("Done with Adjustment");
 
     //error_correct_durs_.push_back(ros::Time::now() - t_start_error);
   } // end if doing error correction 
@@ -3270,7 +3287,7 @@ void Planner::doControlCycle()
     m_cc_ = latestUpdate_;
     startPlanning_ = m_cc_;
     controlCycle_ = ros::Duration(t_fixed_cc_);
-    sendPopulation(population_);
+    sendPopulation(population_, true);
     reset_ = false;
 
     // Set all of the trajectory t_start values to 0 b/c they would be starting now
@@ -3378,7 +3395,7 @@ void Planner::doControlCycle()
   }
  
   // Send the population to trajectory_visualization
-  sendPopulation(population_);
+  sendPopulation(population_, true);
   
   controlCycle_         = population_.getEarliestStartTime();
   controlCycleTimer_.setPeriod(controlCycle_, false);
@@ -3570,7 +3587,7 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
     result.points.push_back(p);
   }
   // Planning cycles are usually 20Hz, but put a little padding on there so rviz looks smoother and doesn't start blinking if there are any delays
-  result.lifetime = ros::Duration(0.08);
+  result.lifetime = ros::Duration(0.1);
 
   // Width of the lines
   result.scale.x = 0.01;
@@ -3945,8 +3962,9 @@ void Planner::go()
   
   // initialize population
   initPopulation();
-  evaluatePopulation();
   ROS_INFO("Population initialized");
+  evaluatePopulation();
+  ROS_INFO("Initial population evaluated");
   sendPopulation(population_, true);
   std::cin.get();
  

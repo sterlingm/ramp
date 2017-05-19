@@ -75,8 +75,8 @@ void reportData(int sig)
 
 
 
-int main(int argc, char** argv) {
-
+int main(int argc, char** argv) 
+{
   ros::init(argc, argv, "ramp_control");
 
 
@@ -102,8 +102,37 @@ int main(int argc, char** argv) {
   ROS_INFO("check_imminent_coll: %s", check_imminent_coll ? "True" : "False");
   robot.check_imminent_coll_ = check_imminent_coll;
 
+
+  std::string global_frame;
+  if(handle.hasParam("/ramp/global_frame"))
+  {
+    handle.getParam("/ramp/global_frame", global_frame);
+    ROS_INFO("global_frame: %s", global_frame.c_str());
+  }
+  else
+  {
+    ROS_ERROR("Could not find rosparam ramp/global_frame");
+  }
+
+
+  /*
+   * Get transform information from odom to the frame the planner uses
+   */
+  ros::Duration d(0.5);
+  d.sleep();
+
+  tf::TransformListener listen;
+  listen.waitForTransform(global_frame, "odom", ros::Time(0), ros::Duration(2.0));
+  listen.lookupTransform(global_frame, "odom", ros::Time(0), robot.tf_global_odom_);
+  ROS_INFO("(ramp_control) Odom tf: translate: (%f, %f) rotation: %f", robot.tf_global_odom_.getOrigin().getX(), robot.tf_global_odom_.getOrigin().getX(), robot.tf_global_odom_.getRotation().getAngle());
+  robot.tf_rot_ = robot.tf_global_odom_.getRotation().getAngle();
+  
+
+
+
   // Initialize publishers and subscribers
   init_advertisers_subscribers(robot, handle, sim);
+
 
 
   // Make a blank ramp_msgs::RampTrajectory

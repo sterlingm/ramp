@@ -217,8 +217,8 @@ class Planner {
     const ramp_msgs::Path getObstaclePath(const ramp_msgs::Obstacle ob, const MotionType mt) const;
     
     void sensingCycleCallback     (const ramp_msgs::ObstacleList& msg);
-    void updateCallbackPose(const geometry_msgs::PoseWithCovarianceStamped msg);
-    void updateCallbackVel(const ramp_msgs::MotionState& msg);
+    void updateCbPose(const geometry_msgs::PoseWithCovarianceStamped msg);
+    void updateCbControlNode(const ramp_msgs::MotionState& msg);
 
     /** Data */
 
@@ -501,9 +501,9 @@ class Planner {
     // because sometimes the tfs are there, sometimes it gives me the
     // "have to extrapolate future data" error, so instead 
     // store a transform and manually apply it since the tf is static
-    tf::StampedTransform transform_to_global_;
-    
-    tf::TransformListener listener_;
+    tf::StampedTransform tf_global_costmap_;
+    tf::StampedTransform tf_global_odom_;
+    tf::StampedTransform tf_global_odom_rot_;
 };
 
 #endif

@@ -364,8 +364,8 @@ int main(int argc, char** argv) {
   Planner my_planner; 
   
   // Use updateCallbackPose if the msg type is PoseWithCovarianceStamped
-  ros::Subscriber sub_updatePose_ = handle.subscribe(update_topic, 1, &Planner::updateCallbackPose, &my_planner);
-  ros::Subscriber sub_updateVel_ = handle.subscribe("update", 1, &Planner::updateCallbackVel, &my_planner);
+  ros::Subscriber sub_updatePose_ = handle.subscribe(update_topic, 1, &Planner::updateCbPose, &my_planner);
+  ros::Subscriber sub_updateVel_ = handle.subscribe("update", 1, &Planner::updateCbControlNode, &my_planner);
   ros::Subscriber sub_sc_ = handle.subscribe("obstacles", 1, &Planner::sensingCycleCallback, &my_planner);
 
   pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 10);
@@ -385,8 +385,21 @@ int main(int argc, char** argv) {
   {
     tf::TransformListener listener_;
     listener_.waitForTransform(global_frame, "map", ros::Time(0), d);
-    listener_.lookupTransform(global_frame, "map", ros::Time(0), my_planner.transform_to_global_);
+    listener_.lookupTransform(global_frame, "map", ros::Time(0), my_planner.tf_global_costmap_);
+    ROS_INFO("Costmap tf: translate: (%f, %f) rotation: %f", my_planner.tf_global_costmap_.getOrigin().getX(), my_planner.tf_global_costmap_.getOrigin().getX(), my_planner.tf_global_costmap_.getRotation().getAngle());
   }
+
+  d.sleep();
+  /*
+   * Get the transform from odom to global frame
+   */
+  tf::TransformListener listen;
+  listen.waitForTransform(global_frame, "odom", ros::Time(0), ros::Duration(2.0));
+  listen.lookupTransform(global_frame, "odom", ros::Time(0), my_planner.tf_global_odom_);
+  ROS_INFO("Odom tf: translate: (%f, %f) rotation: %f", my_planner.tf_global_odom_.getOrigin().getX(), my_planner.tf_global_odom_.getOrigin().getX(), my_planner.tf_global_odom_.getRotation().getAngle());
+  
+  my_planner.tf_global_odom_rot_ = my_planner.tf_global_odom_;
+  my_planner.tf_global_odom_rot_.setOrigin( tf::Vector3(0, 0, 0) );
   
   /*
    * Check that the start and goal are within specified ranges
