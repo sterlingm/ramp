@@ -968,7 +968,7 @@ void Planner::adaptPopulation(const MotionState& ms, const ros::Duration& d)
 {
   if(log_enter_exit_)
   {
-    //ROS_INFO("In adaptPopulation");
+    ROS_INFO("In adaptPopulation");
   }
 
   //std::vector<Path> paths = adaptPaths(population_, ms, d);
@@ -1472,8 +1472,6 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
   }
   else 
   {
-    latestUpdate_ = msg;
-      
     ROS_INFO("odom msg: (%f, %f)", msg.velocities[0], msg.velocities[1]);
 
     /*
