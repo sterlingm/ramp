@@ -210,6 +210,7 @@ class Planner {
     const std::vector<MotionState> setMi(const RampTrajectory& trj_current) const;
 
     std::vector<RampTrajectory> ob_trajectory_;
+    std::vector<double> ob_radii_;
 
 
     const MotionType findMotionType(const ramp_msgs::Obstacle ob) const;

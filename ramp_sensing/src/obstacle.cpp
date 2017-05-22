@@ -11,9 +11,12 @@ Obstacle::Obstacle(const nav_msgs::Odometry o)
   odom_t      = o;
 }
 
-Obstacle::Obstacle(int costmap_width, int costmap_height, float costmap_origin_x, float costmap_origin_y, float costmap_res, float global_grid_origin_x, float global_grid_origin_y) 
+Obstacle::Obstacle(float radius, int costmap_width, int costmap_height, float costmap_origin_x, float costmap_origin_y, float costmap_res, float global_grid_origin_x, float global_grid_origin_y) 
   : costmap_width_(costmap_width), costmap_height_(costmap_height), costmap_origin_x_(costmap_origin_x), costmap_origin_y_(costmap_origin_y), costmap_res_(costmap_res)
 {
+  radius_ = radius;
+  msg_.radius = radius;
+
   float x_max = costmap_width_ + costmap_origin_x_;
   float x_min = x_max - costmap_width_;
   float y_max = costmap_height_ + costmap_origin_y_;

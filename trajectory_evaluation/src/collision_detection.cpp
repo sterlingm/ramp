@@ -9,13 +9,14 @@ CollisionDetection::~CollisionDetection()
 void CollisionDetection::init() {}
 
 
-void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const double& coll_dist, QueryResult& result)
+void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const std::vector<double> obstacle_radii, QueryResult& result)
 {
   result.collision_ = false;
   for(uint8_t i=0;i<obstacle_trjs.size() && !result.collision_;i++)
   {
+    ROS_INFO("Ob radius: %f", obstacle_radii[i]);
     ROS_INFO("Ob traj: %s", utility_.toString(obstacle_trjs[i]).c_str());
-    query(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), coll_dist, result);
+    query(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), obstacle_radii[i], result);
   }
 }
 
@@ -1636,13 +1637,14 @@ void CollisionDetection::LineArcFull(const ramp_msgs::RampTrajectory& trajectory
 
 
 
-void CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, const double& traj_start, const double& coll_dist, QueryResult& result) const
+void CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, const double& traj_start, const double& ob_r, QueryResult& result) const
 {
   ros::Time time_start = ros::Time::now();
 
   ROS_INFO("In CollisionDetection::query"); 
   ROS_INFO("trajectory.points.size(): %i", (int)segment.size());
   ROS_INFO("ob_trajectory.points.size(): %i", (int)ob_trajectory.size());
+  //ROS_INFO("ob_radius: %f"
 
   /*if(ob_trajectory.trajectory.points.size() > 2)
   {
@@ -1650,8 +1652,8 @@ void CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajector
   }*/
   
   // For every point, check circle detection on a subset of the obstacle's trajectory
-  float dist_threshold = coll_dist > 0.4 ? coll_dist : 0.225;
-  dist_threshold = 0.225;
+  // obstacle radius + turtlebot radius (0.225)
+  float dist_threshold = ob_r + 0.225;
 
   // Trajectories start in the future, obstacle trajectories start at the present time, 
   // set an offset for obstacle indices to account for this 

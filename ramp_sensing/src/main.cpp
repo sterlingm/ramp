@@ -334,7 +334,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
 
     x_origin /= global_grid.info.resolution;
     y_origin /= global_grid.info.resolution;
-    
+
     ROS_INFO("After unit conversion: x_origin: %f y_origin: %f", x_origin, y_origin);
 
     for(int i=0;i<cir_obs.size();i++)
@@ -1147,7 +1147,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   ROS_INFO("Setting obstacles");
   for(int i=0;i<cirs.size();i++)
   {
-    Obstacle o(costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res, global_grid.info.origin.position.x, global_grid.info.origin.position.y); 
+    Obstacle o(cir_obs[i]->cir.radius*costmap_res, costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res, global_grid.info.origin.position.x, global_grid.info.origin.position.y); 
     o.update(cir_obs[i]->cir, velocities[i], cir_obs[i]->prevTheta[cir_obs[i]->prevCirs.size()-1]);
   
     obs.push_back(o);

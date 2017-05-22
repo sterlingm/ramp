@@ -14,7 +14,7 @@ class Obstacle
   public:
     Obstacle();
     Obstacle(const nav_msgs::Odometry p);
-    Obstacle(int costmap_width, int costmap_height, float costmap_origin_x, float costmap_origin_y, float costmap_res, float global_grid_origin_x, float global_grid_origin_y);
+    Obstacle(float radius, int costmap_width, int costmap_height, float costmap_origin_x, float costmap_origin_y, float costmap_res, float global_grid_origin_x, float global_grid_origin_y);
     ~Obstacle(); 
 
     /** Data Members */
@@ -51,6 +51,7 @@ class Obstacle
     float y_translate_costmap_;
     float global_grid_origin_x_;
     float global_grid_origin_y_;
+    float radius_;
 
     Utility utility_;
 };
