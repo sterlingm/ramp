@@ -380,7 +380,7 @@ void MobileRobot::moveOnTrajectory()
       {
         ROS_INFO("initial_theta_: %f motion_state_.positions.at(2): %f -tf_rot: %f", initial_theta_, motion_state_.positions.at(2), -tf_rot_);
         double theta_global = utility_.displaceAngle(motion_state_.positions[2], -tf_rot_); 
-        actual_theta = utility_.displaceAngle(initial_theta_, theta_global);
+        actual_theta = utility_.displaceAngle(initial_theta_, motion_state_.positions[2]);
         dist = utility_.findDistanceBetweenAngles(actual_theta, orientations_.at(num_traveled_));
         ROS_INFO("actual_theta: %f orientations[%i]: %f dist: %f", actual_theta, num_traveled_, orientations_.at(num_traveled_), dist);
         twist_.angular.z = dist;

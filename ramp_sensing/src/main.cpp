@@ -321,13 +321,6 @@ void updateOtherRobotCb(const nav_msgs::Odometry::ConstPtr& o, const std::string
 
 
 
-/** Publish the list of objects */
-void publishList(const ros::TimerEvent& e) 
-{
-  pub_obj.publish(list);
-} //End sendList
-
-
 std::vector<visualization_msgs::Marker> convertObsToMarkers()
 {
   std::vector<visualization_msgs::Marker> result;
@@ -342,7 +335,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
     x_origin /= global_grid.info.resolution;
     y_origin /= global_grid.info.resolution;
     
-    ROS_INFO("After translate: x_origin: %f y_origin: %f", x_origin, y_origin);
+    ROS_INFO("After unit conversion: x_origin: %f y_origin: %f", x_origin, y_origin);
 
     for(int i=0;i<cir_obs.size();i++)
     {
@@ -395,8 +388,18 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
   return result;
 }
 
+
+/** Publish the list of objects */
+void publishList(const ros::TimerEvent& e) 
+{
+  pub_obj.publish(list);
+} //End sendList
+
+
+
 void publishMarkers(const ros::TimerEvent& e)
 {
+  ROS_INFO("In publishMarkers");
   
   // Publish a single Marker
   visualization_msgs::MarkerArray result;
@@ -528,6 +531,7 @@ void publishMarkers(const ros::TimerEvent& e)
   //ROS_INFO("result.markers.size(): %i", (int)result.markers.size());
 
   pub_rviz.publish(result);
+  ROS_INFO("Exiting publishMarkers");
 }
 
 
@@ -1005,6 +1009,7 @@ std::vector<Circle> updateKalmanFilters(std::vector<Circle> cirs, std::vector<Ci
 
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
+  ROS_INFO("In costmapCb");
   //ROS_INFO("**************************************************");
   //ROS_INFO("Got a new costmap!");
   //ROS_INFO("**************************************************");
@@ -1138,19 +1143,22 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   obs.clear();
   list.obstacles.clear();
 
+
   ROS_INFO("Setting obstacles");
   for(int i=0;i<cirs.size();i++)
   {
-    Obstacle o(costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res); 
+    Obstacle o(costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res, global_grid.info.origin.position.x, global_grid.info.origin.position.y); 
     o.update(cir_obs[i]->cir, velocities[i], cir_obs[i]->prevTheta[cir_obs[i]->prevCirs.size()-1]);
+  
     obs.push_back(o);
+    ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
     list.obstacles.push_back(o.msg_);
   }
   ROS_INFO("Done setting obstacles");
 
   num_costmaps++;
   ////ROS_INFO("obs.size(): %i", (int)obs.size());
-  ////ROS_INFO("Leaving Cb");
+  ROS_INFO("Exiting costmapCb");
 }
 
 

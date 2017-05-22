@@ -14,7 +14,7 @@ void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory,
   result.collision_ = false;
   for(uint8_t i=0;i<obstacle_trjs.size() && !result.collision_;i++)
   {
-    //////ROS_INFO("Ob traj: %s", utility_.toString(obstacle_trjs[i]).c_str());
+    ROS_INFO("Ob traj: %s", utility_.toString(obstacle_trjs[i]).c_str());
     query(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), coll_dist, result);
   }
 }
@@ -1640,9 +1640,9 @@ void CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajector
 {
   ros::Time time_start = ros::Time::now();
 
-  ////ROS_INFO("In CollisionDetection::query"); 
-  //////ROS_INFO("trajectory.points.size(): %i", (int)segment.size());
-  //////ROS_INFO("ob_trajectory.points.size(): %i", (int)ob_trajectory.size());
+  ROS_INFO("In CollisionDetection::query"); 
+  ROS_INFO("trajectory.points.size(): %i", (int)segment.size());
+  ROS_INFO("ob_trajectory.points.size(): %i", (int)ob_trajectory.size());
 
   /*if(ob_trajectory.trajectory.points.size() > 2)
   {
@@ -1675,11 +1675,12 @@ void CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajector
     const trajectory_msgs::JointTrajectoryPoint* p_i    = &segment[i];
     const trajectory_msgs::JointTrajectoryPoint* p_ob   = &ob_trajectory[j];
     
-    ////////ROS_INFO("p_i: %s", utility_.toString(*p_i).c_str());
-    ////////ROS_INFO("p_j: %s", utility_.toString(*p_ob).c_str());
+    ROS_INFO("p_i: %s", utility_.toString(*p_i).c_str());
+    ROS_INFO("p_j: %s", utility_.toString(*p_ob).c_str());
 
     // Get the distance between the centers
     float dist = sqrt( pow(p_i->positions.at(0) - p_ob->positions.at(0),2) + pow(p_i->positions.at(1) - p_ob->positions.at(1),2) );
+    ROS_INFO("dist: %f", dist);
 
     // If the distance between the two centers is less than the sum of the two radii, 
     // there is collision
@@ -1700,7 +1701,7 @@ void CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajector
     } // end if
   } // end for
 
-  ////////ROS_INFO("Exiting CollisionDetection::query");
+  ROS_INFO("Exiting CollisionDetection::query");
 } // End query
 
 

@@ -1155,7 +1155,11 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
    * Set imminent collision
    */
   result.imminent_collision = imminent_collision_;
+  ROS_INFO("imminent_collision_: %s", imminent_collision_ ? "True" : "False");
 
+  //******************************************************
+  // Setting imminent collision to true HERE!
+  //******************************************************
   // If control cycles are happening, but the robot is stopped, toggle imminent collision for the evalution so that it does not consider the turning angle for the trajectory
   double v = sqrt( pow(latestUpdate_.msg_.velocities[0], 2) + pow(latestUpdate_.msg_.velocities[1],2) );
   if(moving_robot_ && v < 0.1)
@@ -1179,11 +1183,9 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
 
   double diff = fabs(utility_.findDistanceBetweenAngles(nec_theta, end));
   
-  //ROS_INFO("nec_theta: %f end: %f diff: %f", nec_theta, end, diff);
+  ROS_INFO("nec_theta: %f end: %f diff: %f", nec_theta, end, diff);
 
   result.trans_possible = trajec.transitionTraj_.trajectory.points.size() > 0 || diff < 0.31;
-
-  result.trans_possible = trajec.transitionTraj_.trajectory.points.size() > 0;
 
   // Set offset for eval req
   if(diff_.msg_.positions.size() > 0)

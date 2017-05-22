@@ -31,7 +31,7 @@
 <!-- <node name="trajectory_visualisation" pkg="trajectory_visualisation" type="trajectory_visualisation" /> -->
 
 <!-- Sensing -->
-<node name="ramp_sensing" pkg="ramp_sensing" type="ramp_sensing" output="log" />
+<node name="ramp_sensing" pkg="ramp_sensing" type="ramp_sensing" output="screen" />
 
 <!-- Reset odometry -->
 <node name="reset_odom" pkg="ramp_control" type="reset_odom.py" output="screen" />
