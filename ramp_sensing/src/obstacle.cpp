@@ -27,7 +27,7 @@ Obstacle::Obstacle(float radius, int costmap_width, int costmap_height, float co
 
   x_translate_costmap_ = x_min;
   y_translate_costmap_ = y_min;
-  ROS_INFO("width: %i height: %i o_x: %f o_y: %f x_max: %f x_min: %f y_max: %f y_min: %f", costmap_width_, costmap_height_, costmap_origin_x_, costmap_origin_y_, x_max, x_min, y_max, y_min);
+  //ROS_INFO("width: %i height: %i o_x: %f o_y: %f x_max: %f x_min: %f y_max: %f y_min: %f", costmap_width_, costmap_height_, costmap_origin_x_, costmap_origin_y_, x_max, x_min, y_max, y_min);
 }
 
 Obstacle::~Obstacle() {}
@@ -35,7 +35,7 @@ Obstacle::~Obstacle() {}
 
 void Obstacle::update(const nav_msgs::Odometry o) 
 {
-  /*ROS_INFO("Obstacle odometry passed in:\nPosition: (%f, %f, %f)", 
+  /*//ROS_INFO("Obstacle odometry passed in:\nPosition: (%f, %f, %f)", 
       o.pose.pose.position.x, 
       o.pose.pose.position.y, 
       tf::getYaw(o.pose.pose.orientation));*/
@@ -63,14 +63,14 @@ void Obstacle::update(const Circle c, const Velocity& v, const double theta)
   double x_origin = global_grid_origin_x_;
   double y_origin = global_grid_origin_y_;
   
-  ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
+  //ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
   
-  ////ROS_INFO("Before translate: x_origin: %f y_origin: %f", x_origin, y_origin);
+  //////ROS_INFO("Before translate: x_origin: %f y_origin: %f", x_origin, y_origin);
 
   x_origin /= costmap_res_;
   y_origin /= costmap_res_;
 
-  ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
+  //ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
   
   ms.positions.push_back((c.center.x + x_origin) * costmap_res_);
   ms.positions.push_back((c.center.y + y_origin) * costmap_res_);
@@ -118,7 +118,7 @@ void Obstacle::doTF(bool odom)
     double phi    = ms.positions.at(2);
     double v      = ms.velocities.at(0);
 
-    //////ROS_INFO("teta: %f phi: %f v: %f", teta, phi, v);
+    ////////ROS_INFO("teta: %f phi: %f v: %f", teta, phi, v);
 
 
     /*

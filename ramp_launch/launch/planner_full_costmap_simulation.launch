@@ -33,8 +33,8 @@
 <!-- Sensing -->
 <node name="ramp_sensing" pkg="ramp_sensing" type="ramp_sensing" output="screen" />
 
-<!-- Reset odometry -->
-<node name="reset_odom" pkg="ramp_control" type="reset_odom.py" output="screen" />
+<!-- Reset odometry
+<node name="reset_odom" pkg="ramp_control" type="reset_odom.py" output="screen" /> -->
 
 <!-- Control node -->
 <node name="ramp_control" pkg="ramp_control" type="ramp_control" output="screen" >

@@ -233,21 +233,6 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   Population pop_obs;
   Population copy = population_;
 
-  /*if(msg.obstacles.size() > 0)
-  {
-    if( fabs( tf::getYaw(ob_T_w_odom_[0].getRotation())) < 0.01)
-    {
-
-      ROS_INFO("Changing tf");
-      for(int i=0;i<msg.obstacles.size();i++)
-      {
-        double theta = tf::getYaw(msg.obstacles[i].odom_t.pose.pose.orientation);
-        ROS_INFO("theta: %f", theta);
-        ob_T_w_odom_[i].setRotation(tf::createQuaternionFromYaw(-theta));
-      }
-    }
-  }*/
-
   // For each obstacle, predict its trajectory
   for(uint8_t i=0;i<msg.obstacles.size();i++)
   {
@@ -316,15 +301,6 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     }
     modifier_->move_dir_  = dir;
     modifier_->move_dist_ = dist;
-
-    if(dist > COLL_DISTS[0])
-    {
-      i_COLL_DISTS_ = 0;
-    }
-    else
-    {
-      i_COLL_DISTS_ = 1;
-    }
   }
  
   else
@@ -340,12 +316,6 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   sc_durs_.push_back( ros::Time::now() - start );
   
   sendPopulation(copy, true);
-
-  // Send trajectories to rviz
-  if(ob_trajectory_.size() > 0)
-  {
-    sendPopulation(copy, true);
-  }
   
   /*//ROS_INFO("Pausing in Sensing Cycle");
   ros::Duration d(1);
@@ -3577,7 +3547,14 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
     result.color.g = 0;
     result.color.b = 0;
   }
+  /*if(trajec.equals(population_.getBest()))
+  {
+    result.color.r = 0;
+    result.color.g = 1;
+    result.color.b = 0;
+  }*/
   result.color.a = 1;
+
 
   // Push on all the trajectory points
   for(int i=0;i<trajec.msg_.trajectory.points.size();i++)
