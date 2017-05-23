@@ -396,7 +396,7 @@ void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector
   {
     //ROS_INFO("i: %i", i);
     Circle ci = cs[i];
-    //ROS_INFO("ci - Center: (%f, %f) Radius: %f", ci.center.x, ci.center.y, ci.radius);
+    ROS_INFO("ci - Center: (%f, %f) Radius: %f", ci.center.x, ci.center.y, ci.radius);
     
     j = i+1;
     double inflate = 20.0;
@@ -404,24 +404,24 @@ void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector
 
     while(j<cs.size())
     {
-      //ROS_INFO("j: %i", j);
+      ROS_INFO("j: %i", j);
 
       // Check if they overlap
       Circle cj = cs[j];
-      //ROS_INFO("cj - Center: (%f, %f) Radius: %f", cj.center.x, cj.center.y, cj.radius);
+      ROS_INFO("cj - Center: (%f, %f) Radius: %f", cj.center.x, cj.center.y, cj.radius);
      
       double max_r = ci.radius > cj.radius ? ci.radius : cj.radius;
       threshold = max_r + inflate;
 
       double d = utility_.positionDistance(ci.center.x, ci.center.y, cj.center.x, cj.center.y);
-      //ROS_INFO("d: %f threshold: %f", d, threshold);
+      ROS_INFO("d: %f threshold: %f", d, threshold);
 
       if(d < threshold)
       {
         // Combine them
         Circle temp;
         combineTwoCircles(ci, cj, temp);
-        //ROS_INFO("Result - Center: (%f, %f) Radius: %f", temp.center.x, temp.center.y, temp.radius);
+        ROS_INFO("Result - Center: (%f, %f) Radius: %f", temp.center.x, temp.center.y, temp.radius);
 
         // If combined, replace both circles with overlapping circle
         // Replace i by setting it to temp, erase the circle at j
@@ -429,7 +429,6 @@ void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector
         cs[i] = temp;
         ci = temp;
         cs.erase(cs.begin()+j, cs.begin()+j+1);
-        //result.erase(cs.begin()+j, cs.begin()+j+1);
 
         // Then, decrement j to get next circle for comparison
         j--;

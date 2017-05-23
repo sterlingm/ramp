@@ -278,10 +278,10 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     population_.setStartTime(t_start_new); 
   }
 
-  if(d.toSec() < (controlCycle_.toSec()-0.1))
-  {
+  //if(d.toSec() < (controlCycle_.toSec()-0.1))
+  //{
     evaluatePopulation();
-  } // end if below threshold since last CC
+  //} // end if below threshold since last CC
   
   
   if(cc_started_)

@@ -1009,10 +1009,9 @@ std::vector<Circle> updateKalmanFilters(std::vector<Circle> cirs, std::vector<Ci
 
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
+  ROS_INFO("**************************************************");
   ROS_INFO("In costmapCb");
-  //ROS_INFO("**************************************************");
-  //ROS_INFO("Got a new costmap!");
-  //ROS_INFO("**************************************************");
+  ROS_INFO("**************************************************");
   ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;
   t_last_costmap = ros::Time::now();
 
@@ -1158,7 +1157,9 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
   num_costmaps++;
   ////ROS_INFO("obs.size(): %i", (int)obs.size());
+  ROS_INFO("**************************************************");
   ROS_INFO("Exiting costmapCb");
+  ROS_INFO("**************************************************");
 }
 
 
