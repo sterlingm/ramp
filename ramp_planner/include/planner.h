@@ -126,7 +126,10 @@ class Planner {
     void sendBest();
     
     // Send the whole population to the trajectory viewer
-    void sendPopulation(const Population& pop, bool rviz=false);
+    ros::Duration sendPop_;
+    ros::Timer sendPopTimer_;
+    void sendPopulationCb(const ros::TimerEvent& t);
+    void sendPopulation();
     void displayTrajectory(const ramp_msgs::RampTrajectory traj) const;
     void buildLineList(const RampTrajectory& trajec, int id, visualization_msgs::Marker& result) const;
 

@@ -315,14 +315,12 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
 
   sc_durs_.push_back( ros::Time::now() - start );
   
-  sendPopulation(copy, true);
+  //sendPopulation();
   
   /*//ROS_INFO("Pausing in Sensing Cycle");
   ros::Duration d(1);
   d.sleep();
   std::cin.get();*/
-
-  //sendPopulation(pop_obs);
 
   ROS_INFO("Exiting sensingCycleCallback");
 }
@@ -1610,7 +1608,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
 
   // Initialize the timers, but don't start them yet
   controlCycle_       = ros::Duration(t_fixed_cc);
-  controlCycleTimer_  = h.createTimer(ros::Duration(controlCycle_), 
+  controlCycleTimer_  = h.createTimer(controlCycle_, 
                                      &Planner::controlCycleCallback, this);
   controlCycleTimer_.stop();
 
@@ -1622,6 +1620,8 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   ob_dists_timer_.stop();
 
 
+  sendPop_ = ros::Duration(0.05);
+  sendPopTimer_ = h.createTimer(sendPop_, &Planner::sendPopulationCb, this);
 
   // Set the ranges vector
   ranges_ = r;
@@ -1650,6 +1650,10 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
 
 
 
+void Planner::sendPopulationCb(const ros::TimerEvent& e)
+{
+  sendPopulation();
+}
 
 
 
@@ -2911,14 +2915,6 @@ void Planner::planningCycleCallback()
   generation_++;
   c_pc_++;
 
-  //if(cc_started_)
-  //{
-    //sendPopulation(population_);
-  //}
-  //else
-  //{
-  //}
-  //////ROS_INFO("population.bestID: %i", population_.calcBestIndex());
 
   //////ROS_INFO("Pop: %s", population_.toString().c_str());
   /*//////ROS_INFO("Exiting PC at time: %f", ros::Time::now().toSec());
@@ -2930,8 +2926,7 @@ void Planner::planningCycleCallback()
     copy.trajectories_.push_back(ob_trajectory_[i]);
   }
 
-  sendPopulation(population_, true);
-  //sendPopulation(copy, true);
+  //sendPopulation();
   
   ros::Duration d = ros::Time::now() - t_start; 
   ////ROS_INFO("d: %f EC: %s mod_worked: %s modded_two: %s", d.toSec(), EC ? "True" : "False", mod_worked ? "True" : "False", modded_two ? "True" : "False");
@@ -3261,7 +3256,7 @@ void Planner::doControlCycle()
     m_cc_ = latestUpdate_;
     startPlanning_ = m_cc_;
     controlCycle_ = ros::Duration(t_fixed_cc_);
-    sendPopulation(population_, true);
+    //sendPopulation();
     reset_ = false;
 
     // Set all of the trajectory t_start values to 0 b/c they would be starting now
@@ -3369,7 +3364,7 @@ void Planner::doControlCycle()
   }
  
   // Send the population to trajectory_visualization
-  sendPopulation(population_, true);
+  //sendPopulation();
   
   controlCycle_         = population_.getEarliestStartTime();
   controlCycleTimer_.setPeriod(controlCycle_, false);
@@ -3468,49 +3463,36 @@ void Planner::sendBest() {
 
 
 /** Send the whole population of trajectories to the trajectory viewer */
-void Planner::sendPopulation(const Population& pop, bool rviz)
+void Planner::sendPopulation()
 {
-  if(!rviz)
+
+  /*
+   * Send to trajectory_visualization node
+   */
+  ramp_msgs::Population msg = population_.populationMsg();
+  msg.robot_id = id_;
+
+  msg.population.push_back(movingOn_.msg_);
+  h_control_->sendPopulation(msg);
+    
+    
+  /*
+   * Send to rviz
+   */
+  visualization_msgs::MarkerArray ma;
+  for(int i=0;i<population_.trajectories_.size();i++)
   {
-    ramp_msgs::Population msg;
-
-    /*if(subPopulations_) 
-    {
-      Population temp(pop.getNumSubPops());
-      std::vector<RampTrajectory> trajecs = pop.getBestFromSubPops();
-      for(uint8_t i=0;i<trajecs.size();i++) 
-      {
-        temp.add(trajecs.at(i));
-      }
-
-      temp.calcBestIndex();
-      msg = temp.populationMsg();
-    }*/
-    //else 
-    //{
-      msg = pop.populationMsg();
-    //}
-    /*for(uint8_t i=0;i<ob_trajectory_.size();i++)
-    {
-      msg.population.push_back(ob_trajectory_.at(i).msg_);
-    }*/
-
-    msg.robot_id = id_;
-
-    msg.population.push_back(movingOn_.msg_);
-    h_control_->sendPopulation(msg);
+    visualization_msgs::Marker pop_trj;
+    buildLineList(population_.trajectories_[i], ++id_line_list_, pop_trj);
+    ma.markers.push_back(pop_trj);
   }
-  else
+  for(int i=0;i<ob_trajectory_.size();i++)
   {
-    visualization_msgs::MarkerArray ma;
-    for(int i=0;i<pop.trajectories_.size();i++)
-    {
-      visualization_msgs::Marker ob_trj;
-      buildLineList(pop.trajectories_[i], ++id_line_list_, ob_trj);
-      ma.markers.push_back(ob_trj);
-    }
-    h_rviz_->sendMarkerArray(ma);
+    visualization_msgs::Marker ob_trj;
+    buildLineList(ob_trajectory_[i], ++id_line_list_, ob_trj);
+    ma.markers.push_back(ob_trj);
   }
+  h_rviz_->sendMarkerArray(ma);
 }
 
 void Planner::displayTrajectory(const ramp_msgs::RampTrajectory traj) const 
@@ -3840,7 +3822,7 @@ trajectory_msgs::JointTrajectoryPoint Planner::prepareForTestCase()
   // Seed pop
   seedPopulation();
   evaluatePopulation();
-  sendPopulation(population_);
+  //sendPopulation();
 
   //ROS_INFO("Population Initialized: %s", population_.toString().c_str());
 
@@ -3943,7 +3925,7 @@ void Planner::go()
   ROS_INFO("Population initialized");
   evaluatePopulation();
   ROS_INFO("Initial population evaluated");
-  sendPopulation(population_, true);
+  //sendPopulation();
   std::cin.get();
  
 
@@ -3965,7 +3947,7 @@ void Planner::go()
     //////ROS_INFO("movingOn: %s", movingOn_.toString().c_str());
     
 
-    sendPopulation(population_);
+    //sendPopulation();
     std::cout<<"\ntransPopulation seeded! Press enter to continue\n";
     std::cin.get();
   }
