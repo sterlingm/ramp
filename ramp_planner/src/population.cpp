@@ -414,6 +414,7 @@ const int Population::add(const RampTrajectory& rt)
 /** Returns the fittest trajectory and sets calcBestIndex() */
 const int Population::calcBestIndex() const 
 {
+  //ROS_INFO("In Population::calcBestIndex");
   if(size() == 0)
   {
     ROS_ERROR("Calling Population::calcBestIndex(), but Population is empty");
@@ -432,6 +433,7 @@ const int Population::calcBestIndex() const
   } //end for
 
 
+  //ROS_INFO("Exiting Population::calcBestIndex");
   return i_max; 
 } //End calcBestIndex
 
@@ -441,7 +443,7 @@ const RampTrajectory Population::getBest() const
 {
   if(size() == 0)
   {
-    //ROS_ERROR("Calling Population::getBest(), but Population is empty");
+    ROS_ERROR("Calling Population::getBest(), but Population is empty");
   }
   return trajectories_.at(calcBestIndex());
 }

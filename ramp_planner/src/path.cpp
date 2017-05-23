@@ -70,6 +70,7 @@ Path::~Path() {}
 const bool Path::equals(const Path& p) const 
 {
   //ROS_INFO("In Path::equals");
+  //ROS_INFO("this.size(): %i p.size(): %i", size(), p.size());
   
   if(size() != p.size()) {
     //ROS_INFO("Exiting Path::equals");

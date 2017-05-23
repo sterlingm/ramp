@@ -3502,16 +3502,13 @@ void Planner::sendPopulation(const Population& pop, bool rviz)
   }
   else
   {
-    ROS_INFO("Sending population to rviz");
     visualization_msgs::MarkerArray ma;
     for(int i=0;i<pop.trajectories_.size();i++)
     {
       visualization_msgs::Marker ob_trj;
       buildLineList(pop.trajectories_[i], ++id_line_list_, ob_trj);
       ma.markers.push_back(ob_trj);
-      ROS_INFO("Line List %i size: %i", i, (int)ob_trj.points.size());
     }
-    ROS_INFO("ma.size(): %i", (int)ma.markers.size());
     h_rviz_->sendMarkerArray(ma);
   }
 }
@@ -3547,14 +3544,14 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
     result.color.g = 0;
     result.color.b = 0;
   }
-  /*if(trajec.equals(population_.getBest()))
+  // trajec may be an obstacle trajectory which has no points in the path member
+  if(trajec.msg_.holonomic_path.points.size() > 0 && trajec.equals(population_.getBest()))
   {
     result.color.r = 0;
     result.color.g = 1;
     result.color.b = 0;
-  }*/
+  }
   result.color.a = 1;
-
 
   // Push on all the trajectory points
   for(int i=0;i<trajec.msg_.trajectory.points.size();i++)

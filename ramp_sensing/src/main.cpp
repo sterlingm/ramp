@@ -1216,6 +1216,12 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   
   for(int i=0;i<velocities.size();i++)
   {
+    if(velocities[i].v < 0.1)
+    {
+      velocities[i].v   = 0;
+      velocities[i].vx  = 0;
+      velocities[i].vy  = 0;
+    }
     //ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
     cir_obs[i]->vel = velocities[i];
   }
@@ -1229,7 +1235,9 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     //ROS_INFO("Circle %i: (%f,%f)", i, circles_current[i].center.x, circles_current[i].center.y);
   }
   
-  // Set previous circles
+  /*
+   * Set previous circles
+   */
   for(int i=0;i<cir_obs.size();i++)
   {
     cir_obs[i]->prevCirs.push_back(cir_obs[i]->cir);
@@ -1238,12 +1246,13 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   // Set prev_cirs variable!
   prev_valid_cirs = circles_current;
  
-  // After finding velocities, populate Obstacle list
+  /*
+   *  After finding velocities, populate Obstacle list
+   */  
   obs.clear();
   list.obstacles.clear();
 
-
-  //ROS_INFO("Setting obstacles");
+  // Populate list
   for(int i=0;i<cirs.size();i++)
   {
     Obstacle o(cir_obs[i]->cir.radius*costmap_res, costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res, global_grid.info.origin.position.x, global_grid.info.origin.position.y); 
