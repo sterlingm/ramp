@@ -11,6 +11,7 @@ int                 id;
 MotionState         start, goal;
 std::vector<Range>  ranges;
 int                 population_size;
+double              radius;
 int                 gensBeforeCC;
 bool                sub_populations;
 bool                modifications;
@@ -80,6 +81,15 @@ void loadParameters(const ros::NodeHandle handle)
     ROS_ERROR("Did not find parameter robot_info/id");
   }
 
+  // Get the radius of the robot
+  if(handle.hasParam("robot_info/radius")) 
+  {
+    handle.getParam("robot_info/radius", radius);
+  }
+  else 
+  {
+    ROS_ERROR("Did not find parameter robot_info/radius");
+  }
 
   // Get the dofs
   if(handle.hasParam("robot_info/DOF_min") && 
@@ -486,7 +496,7 @@ int main(int argc, char** argv) {
      */
 
     /** Initialize the Planner */ 
-    my_planner.init(id, handle, start, goal, ranges, population_size, sub_populations, "global_frame", pt, gensBeforeCC, 
+    my_planner.init(id, handle, start, goal, ranges, population_size, radius, sub_populations, "global_frame", pt, gensBeforeCC, 
         t_pc_rate, t_cc_rate, errorReduction);
     my_planner.modifications_   = modifications;
     my_planner.evaluations_     = evaluations;

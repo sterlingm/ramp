@@ -9,6 +9,7 @@ Utility utility;
 int                 id;
 MotionState         start, goal;
 std::vector<Range>  ranges;
+double              radius;
 int                 population_size;
 int                 gensBeforeCC;
 bool                sub_populations;
@@ -31,11 +32,17 @@ ros::Publisher pub_rviz;
 
 
 // Initializes a vector of Ranges that the Planner is initialized with
+// Must be called AFTER radius is set
 void initDOF(const std::vector<double> dof_min, const std::vector<double> dof_max) 
 {
   for(unsigned int i=0;i<dof_min.size();i++) 
   {
     Range temp(dof_min.at(i), dof_max.at(i));
+    if(i == 0 || i == 1)
+    {
+      temp.msg_.min += radius;
+      temp.msg_.max -= radius;
+    }
     ranges.push_back(temp); 
   }
 
@@ -86,6 +93,15 @@ void loadParameters(const ros::NodeHandle handle)
     ROS_ERROR("Did not find parameter robot_info/id");
   }
 
+  // Get the radius of the robot
+  if(handle.hasParam("robot_info/radius")) 
+  {
+    handle.getParam("robot_info/radius", radius);
+  }
+  else 
+  {
+    ROS_ERROR("Did not find parameter robot_info/radius");
+  }
 
   // Get the dofs
   if(handle.hasParam("robot_info/DOF_min") && 
@@ -421,7 +437,7 @@ int main(int argc, char** argv) {
   //std::cin.get();
  
   // Initialize the planner
-  my_planner.init(id, handle, start, goal, ranges, population_size, sub_populations, global_frame, pt, gensBeforeCC, t_pc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
+  my_planner.init(id, handle, start, goal, ranges, population_size, radius, sub_populations, global_frame, pt, gensBeforeCC, t_pc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
   my_planner.modifications_   = modifications;
   my_planner.evaluations_     = evaluations;
   my_planner.seedPopulation_  = seedPopulation;

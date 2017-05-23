@@ -9,14 +9,14 @@ CollisionDetection::~CollisionDetection()
 void CollisionDetection::init() {}
 
 
-void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const std::vector<double> obstacle_radii, QueryResult& result)
+void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const double& robot_radius, const std::vector<double> obstacle_radii, QueryResult& result)
 {
   result.collision_ = false;
   for(uint8_t i=0;i<obstacle_trjs.size() && !result.collision_;i++)
   {
     ROS_INFO("Ob radius: %f", obstacle_radii[i]);
     ROS_INFO("Ob traj: %s", utility_.toString(obstacle_trjs[i]).c_str());
-    query(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), obstacle_radii[i], result);
+    query(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), robot_radius, obstacle_radii[i], result);
   }
 }
 
@@ -1637,7 +1637,7 @@ void CollisionDetection::LineArcFull(const ramp_msgs::RampTrajectory& trajectory
 
 
 
-void CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, const double& traj_start, const double& ob_r, QueryResult& result) const
+void CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, const double& traj_start, const double& robot_r, const double& ob_r, QueryResult& result) const
 {
   ros::Time time_start = ros::Time::now();
 
@@ -1653,7 +1653,8 @@ void CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajector
   
   // For every point, check circle detection on a subset of the obstacle's trajectory
   // obstacle radius + turtlebot radius (0.225)
-  float dist_threshold = ob_r + 0.225;
+  float dist_threshold = ob_r + robot_r;
+  ROS_INFO("ob_r: %f robot_r: %f dist_threshold: %f", ob_r, robot_r, dist_threshold);
 
   // Trajectories start in the future, obstacle trajectories start at the present time, 
   // set an offset for obstacle indices to account for this 

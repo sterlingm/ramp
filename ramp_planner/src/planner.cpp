@@ -278,16 +278,15 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     population_.setStartTime(t_start_new); 
   }
 
-  //if(d.toSec() < (controlCycle_.toSec()-0.1))
-  //{
+  if(d.toSec() < (controlCycle_.toSec()-0.1))
+  {
     evaluatePopulation();
-  //} // end if below threshold since last CC
+  } // end if below threshold since last CC
   
   
   if(cc_started_)
   {
     //////ROS_INFO("Evaluating movingOn_ in SC");
-    //movingOn_       = evaluateTrajectory(movingOn_);
     evaluateTrajectory(movingOn_, false);
     moving_on_coll_ = !movingOn_.msg_.feasible;
   }
@@ -1127,6 +1126,8 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
   ROS_INFO("latestUpdate_.msg_.positions.size(): %i", (int)latestUpdate_.msg_.positions.size());
   ROS_INFO("latestUpdate_.msg_.velocities.size(): %i", (int)latestUpdate_.msg_.velocities.size());
 
+  result.robot_radius = robot_radius_;
+
   result.trajectory   = trajec.msg_;
   result.currentTheta = latestUpdate_.msg_.positions[2]; 
 
@@ -1169,8 +1170,6 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
   {
     result.imminent_collision = true;
   }
-  ROS_INFO("i_COLL_DISTS_: %i COLL_DISTS.size(): %i", i_COLL_DISTS_, (int)COLL_DISTS.size());
-  result.coll_dist = COLL_DISTS[i_COLL_DISTS_];
 
   // full_eval is for predicting segments that are not generated
   result.full_eval = full;
@@ -1623,12 +1622,14 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const bool sub_populations, const std::string global_frame, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
 {
   ROS_INFO("In Planner::init");
 
   // Set ID
   id_ = i;
+
+  robot_radius_ = robot_radius;
 
   // Initialize the handlers
   h_traj_req_ = new TrajectoryRequestHandler(h);

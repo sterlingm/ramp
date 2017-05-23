@@ -111,6 +111,7 @@ class Planner {
               const MotionState         g, 
               const std::vector<Range>  r,                
               const int                 population_size, 
+              const double              robot_radius,
               const bool                sub_populations,  
               const std::string         global_frame,
               const TrajectoryType      pop_type=HYBRID,
@@ -491,6 +492,7 @@ class Planner {
     int num_mods_;
     int num_succ_mods_;
 
+    double robot_radius_;
 
     bool only_sensing_;
     bool moving_robot_;

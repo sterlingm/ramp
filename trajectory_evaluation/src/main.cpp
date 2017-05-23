@@ -37,7 +37,6 @@ bool handleRequest(ramp_msgs::EvaluationSrv::Request& reqs,
     ROS_INFO("Robot Evaluating trajectory %i: %s", (int)i, u.toString(reqs.reqs[i].trajectory).c_str());
     //////ROS_INFO("Obstacle size: %i", (int)reqs.reqs[i].obstacle_trjs.size());
     ROS_INFO("imminent_collision: %s", reqs.reqs[i].imminent_collision ? "True" : "False");
-    ROS_INFO("coll_dist: %f", reqs.reqs[i].coll_dist);
     ROS_INFO("full_eval: %s", reqs.reqs[i].full_eval ? "True" : "False");
     ROS_INFO("consider_trans: %s trans_possible: %s", reqs.reqs[i].consider_trans ? "True" : "False", reqs.reqs[i].trans_possible ? "True" : "False");
 
