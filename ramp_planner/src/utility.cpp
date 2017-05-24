@@ -362,6 +362,7 @@ const std::string Utility::toString(const ramp_msgs::Obstacle ob) const
 
   result<<"Pose: ("<<ob.ob_ms.positions[0]<<", "<<ob.ob_ms.positions[1]<<", "<<ob.ob_ms.positions[2]<<")";
   result<<"Twist: ("<<ob.ob_ms.velocities[0]<<", "<<ob.ob_ms.velocities[1]<<", "<<ob.ob_ms.velocities[2]<<")";
+  result<<"Radius: "<<ob.radius;
 
   return result.str();
 }

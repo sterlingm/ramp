@@ -14,6 +14,7 @@ class Move {
     ramp_msgs::Path path_;
     double dir_;
     double dist_;
+    double r_;
 
     Utility utility_;
   private:

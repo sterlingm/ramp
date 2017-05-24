@@ -68,6 +68,11 @@ void initDOF(const std::vector<double> dof_min, const std::vector<double> dof_ma
     ramp_msgs::Range temp;
     temp.min = dof_min.at(i);
     temp.max = dof_max.at(i);
+    if(i < 2)
+    {
+      temp.min += 0.25;
+      temp.max -= 0.25;
+    }
     ranges.push_back(temp); 
   }
 } // End initDOF
@@ -125,7 +130,12 @@ int main(int argc, char** argv) {
   loadParameters(handle);
 
   Utility u;
-  u.standardRanges_ = ranges; 
+  u.standardRanges_ = ranges;
+  ROS_INFO("Path modification ranges: ");
+  for(int i=0;i<u.standardRanges_.size();i++)
+  {
+    ROS_INFO("Min: %f Max: %f", u.standardRanges_[i].min, u.standardRanges_[i].max);
+  }
 
   ramp_msgs::Path p1;
   for(unsigned int i=0;i<10;i++) {

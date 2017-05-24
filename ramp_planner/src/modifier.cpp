@@ -68,11 +68,11 @@ const std::string Modifier::getOperator() const
 /** This method generates the random paths to use for the modification operator passed in as op argument */
 const std::vector<int> Modifier::getTargets(const std::string& op, const Population& pop) 
 {
-  //ROS_INFO("In Modifier::getTargets");
+  ROS_INFO("In Modifier::getTargets");
   //////ROS_INFO("pop.paths_.size(): %i", (int)pop.paths_.size());
   //////ROS_INFO("pop.trajec.size(): %i", (int)pop.trajectories_.size());
   //////ROS_INFO("Pop: %s", pop.toString().c_str());
-  //////ROS_INFO("op: %s", op.c_str());
+  ROS_INFO("op: %s", op.c_str());
   std::vector<int> result;
 
   // Get random path(s) to modify
@@ -94,7 +94,7 @@ const std::vector<int> Modifier::getTargets(const std::string& op, const Populat
   } // end if crossover 
 
 
-  //ROS_INFO("Exiting Modifier::getTargets");
+  ROS_INFO("Exiting Modifier::getTargets");
   return result;
 } // End getTargets
 
@@ -118,7 +118,7 @@ void Modifier::buildModificationRequest(const Population& pop, bool imminent_col
   }
   else
   {
-    ////ROS_INFO("Modifier: Calling Move because IC exists");
+    ROS_INFO("Modifier: Calling Move because IC exists");
     result.request.op = "move";
     targets.push_back(pop.calcBestIndex());  
   }
@@ -133,9 +133,11 @@ void Modifier::buildModificationRequest(const Population& pop, bool imminent_col
         pop.paths_.at(targets.at(i)).buildPathMsg());
   }
 
-  result.request.move_dir = move_dir_;
-  result.request.move_dist = move_dist_;
+  ROS_INFO("move_dir_: %f move_dist: %f move_ob_r_: %f", move_dir_, move_dist_, move_ob_r_);
 
+  result.request.move_dir   = move_dir_;
+  result.request.move_dist  = move_dist_;
+  result.request.move_ob_r  = move_ob_r_;
 } // End buildModificationRequest
 
 

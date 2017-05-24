@@ -229,6 +229,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   ros::Duration d(start - t_prevCC_);
   
   ob_trajectory_.clear();
+  ob_radii_.clear();
 
   Population pop_obs;
   Population copy = population_;
@@ -301,6 +302,8 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     }
     modifier_->move_dir_  = dir;
     modifier_->move_dist_ = dist;
+    ROS_INFO("Setting move_ob_r_ to %f", msg.obstacles[i_closest].radius);
+    modifier_->move_ob_r_ = msg.obstacles.at(i_closest).radius;
   }
  
   else
@@ -2663,6 +2666,7 @@ void Planner::modification()
 
     ROS_INFO("Final mod: %s", traj_final.toString().c_str());
 
+    ROS_WARN("Replacing a feasible trajectory with an infeasible one!");
 
     // Add the new trajectory to the population
     // Index is where the trajectory was added in the population (may replace another)
@@ -3547,7 +3551,7 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
     result.points.push_back(p);
   }
   // Planning cycles are usually 20Hz, but put a little padding on there so rviz looks smoother and doesn't start blinking if there are any delays
-  result.lifetime = ros::Duration(0.1);
+  result.lifetime = ros::Duration(0.15);
 
   // Width of the lines
   result.scale.x = 0.01;
