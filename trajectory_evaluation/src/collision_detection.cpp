@@ -1642,8 +1642,8 @@ void CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajector
   ros::Time time_start = ros::Time::now();
 
   ROS_INFO("In CollisionDetection::query"); 
-  ROS_INFO("trajectory.points.size(): %i", (int)segment.size());
-  ROS_INFO("ob_trajectory.points.size(): %i", (int)ob_trajectory.size());
+  //ROS_INFO("trajectory.points.size(): %i", (int)segment.size());
+  //ROS_INFO("ob_trajectory.points.size(): %i", (int)ob_trajectory.size());
   //ROS_INFO("ob_radius: %f"
 
   /*if(ob_trajectory.trajectory.points.size() > 2)
@@ -1654,7 +1654,7 @@ void CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajector
   // For every point, check circle detection on a subset of the obstacle's trajectory
   // obstacle radius + turtlebot radius (0.225)
   float dist_threshold = ob_r + robot_r;
-  ROS_INFO("ob_r: %f robot_r: %f dist_threshold: %f", ob_r, robot_r, dist_threshold);
+  //ROS_INFO("ob_r: %f robot_r: %f dist_threshold: %f", ob_r, robot_r, dist_threshold);
 
   // Trajectories start in the future, obstacle trajectories start at the present time, 
   // set an offset for obstacle indices to account for this 

@@ -128,6 +128,7 @@ class Planner {
     // Send the whole population to the trajectory viewer
     ros::Duration sendPop_;
     ros::Timer sendPopTimer_;
+    ros::Time t_prevSendPop_;
     void sendPopulationCb(const ros::TimerEvent& t);
     void sendPopulation();
     void displayTrajectory(const ramp_msgs::RampTrajectory traj) const;
