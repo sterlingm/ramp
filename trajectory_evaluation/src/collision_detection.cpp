@@ -12,11 +12,18 @@ void CollisionDetection::init() {}
 void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const double& robot_radius, const std::vector<double> obstacle_radii, QueryResult& result)
 {
   result.collision_ = false;
+  min_dist_ = 100;
   for(uint8_t i=0;i<obstacle_trjs.size() && !result.collision_;i++)
   {
     ROS_INFO("Ob radius: %f", obstacle_radii[i]);
     ROS_INFO("Ob traj: %s", utility_.toString(obstacle_trjs[i]).c_str());
-    query(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), robot_radius, obstacle_radii[i], result);
+    double d_min = query(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), robot_radius, obstacle_radii[i], result);
+    ROS_INFO("d_min: %f", d_min);
+
+    if(d_min < min_dist_)
+    {
+      min_dist_ = d_min;
+    }
   }
 }
 
@@ -1637,7 +1644,7 @@ void CollisionDetection::LineArcFull(const ramp_msgs::RampTrajectory& trajectory
 
 
 
-void CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, const double& traj_start, const double& robot_r, const double& ob_r, QueryResult& result) const
+double CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, const double& traj_start, const double& robot_r, const double& ob_r, QueryResult& result) const
 {
   ros::Time time_start = ros::Time::now();
 
@@ -1665,6 +1672,9 @@ void CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajector
 
   int i=0, j=0;
 
+  // Initialize to -1 because all dist values are >= 0
+  double d_min=100;
+
   for(i=0;i<segment.size();i++) 
   //for(i=0;i<49;i++) 
   {
@@ -1685,6 +1695,11 @@ void CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajector
     float dist = sqrt( pow(p_i->positions.at(0) - p_ob->positions.at(0),2) + pow(p_i->positions.at(1) - p_ob->positions.at(1),2) );
     ROS_INFO("dist: %f", dist);
 
+    if(dist < d_min)
+    {
+      d_min = dist;
+    }
+
     // If the distance between the two centers is less than the sum of the two radii, 
     // there is collision
     if( dist <= dist_threshold) 
@@ -1704,6 +1719,7 @@ void CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajector
     } // end if
   } // end for
 
+  return d_min;
   ROS_INFO("Exiting CollisionDetection::query");
 } // End query
 

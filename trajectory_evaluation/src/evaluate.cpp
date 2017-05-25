@@ -182,7 +182,8 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     double A = orientation_.perform(trj);
     
     //ROS_INFO("T: %f A: %f", T, A);
-    cost = T + A;
+    ROS_INFO("In Evalute::performFitness, cd_.min_dist_: %f", cd_.min_dist_);
+    cost = T + A - cd_.min_dist_;
   }
 
   else
