@@ -1,6 +1,6 @@
 #include "evaluate.h"
 
-Evaluate::Evaluate() : Q_coll_(10000.f), Q_kine_(100000.f), orientation_infeasible_(0) {}
+Evaluate::Evaluate() : Q_coll_(10000.f), Q_kine_(100000.f), orientation_infeasible_(0), T_norm_(1200.0), A_norm_(PI), D_norm_(15.0) {}
 
 void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res)
 {
@@ -180,10 +180,24 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
 
     // Orientation
     double A = orientation_.perform(trj);
+
+    // Minimum distance to any obstacle
+    double D = cd_.min_dist_;
     
-    //ROS_INFO("T: %f A: %f", T, A);
-    ROS_INFO("In Evalute::performFitness, cd_.min_dist_: %f", cd_.min_dist_);
-    cost = T + A - cd_.min_dist_;
+    ROS_INFO("T: %f A: %f D: %f", T, A, D);
+
+    // Normalize terms
+    T /= T_norm_;
+    A /= A_norm_;
+    D /= D_norm_;
+    
+    ROS_INFO("Normalized terms T: %f A: %f D: %f", T, A, D);
+
+    // Weight terms
+    D *= -1;
+    
+    // Compute overall cost
+    cost = T + A + D;
   }
 
   else

@@ -2666,8 +2666,6 @@ void Planner::modification()
 
     ROS_INFO("Final mod: %s", traj_final.toString().c_str());
 
-    ROS_WARN("Replacing a feasible trajectory with an infeasible one!");
-
     // Add the new trajectory to the population
     // Index is where the trajectory was added in the population (may replace another)
     // If it was successfully added, push its index onto the result

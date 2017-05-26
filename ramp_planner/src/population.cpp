@@ -144,12 +144,12 @@ const bool Population::feasibleExists() const
 
 
 
-/** This method returns true if there is at least one infeasible trajectory in the population */
+/** This method returns true if there is at least one infeasible trajectory in the population that is NOT the best trajectory */
 const bool Population::infeasibleExists() const 
 {
   for(uint8_t i=0;i<trajectories_.size();i++) 
   {
-    if(!trajectories_.at(i).msg_.feasible) 
+    if(!trajectories_.at(i).msg_.feasible && i != calcBestIndex()) 
     {
       return true;
     }

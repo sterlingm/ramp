@@ -35,6 +35,10 @@ class Evaluate {
 
     bool imminent_collision_;
 
+    double T_norm_;
+    double A_norm_;
+    double D_norm_;
+
     std::vector< ros::Duration > t_analy_;
     std::vector< ros::Duration > t_numeric_;
   private:
