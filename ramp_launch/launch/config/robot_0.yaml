@@ -1,6 +1,6 @@
 id: 0
 
-radius: 0.275
+radius: 0.2
 
 # Setting the Ranges in the planner code will consider the radius 
 # DOF must consider robot base dimensions

@@ -1,6 +1,6 @@
 #include "evaluate.h"
 
-Evaluate::Evaluate() : Q_coll_(10000.f), Q_kine_(100000.f), orientation_infeasible_(0), T_norm_(1200.0), A_norm_(PI), D_norm_(15.0) {}
+Evaluate::Evaluate() : Q_coll_(10000.f), Q_kine_(100000.f), orientation_infeasible_(0), T_norm_(1200.0), A_norm_(PI), D_norm_(1.0), T_weight_(0.25), A_weight_(0.15), D_weight_(1) {}
 
 void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res)
 {
@@ -167,8 +167,8 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     }
     //ROS_INFO("dist: %f delta_theta: %f", dist, delta_theta);
 
-    double max_v=0.25/2;
-    double max_w=PI/8.f;
+    double max_v=0.33/2;
+    double max_w=PI/4.f;
 
     // Estimate how long to execute positional and angular displacements based on max velocity
     double estimated_linear   = dist / max_v;
@@ -189,15 +189,19 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     // Normalize terms
     T /= T_norm_;
     A /= A_norm_;
-    D /= D_norm_;
+    //D /= D_norm_;
     
     ROS_INFO("Normalized terms T: %f A: %f D: %f", T, A, D);
 
     // Weight terms
-    D *= -1;
+    T *= T_weight_;
+    A *= A_weight_;
+    D *= D_weight_;
+    
+    ROS_INFO("Weighted terms T: %f A: %f D: %f", T, A, D);
     
     // Compute overall cost
-    cost = T + A + D;
+    cost = T + A + (1.f/D);
   }
 
   else
