@@ -38,7 +38,7 @@ void initDOF(const std::vector<double> dof_min, const std::vector<double> dof_ma
   for(unsigned int i=0;i<dof_min.size();i++) 
   {
     Range temp(dof_min.at(i), dof_max.at(i));
-    if(i == 0 || i == 1)
+    if(global_frame != "odom" && (i == 0 || i == 1))
     {
       temp.msg_.min += radius;
       temp.msg_.max -= radius;
@@ -102,6 +102,27 @@ void loadParameters(const ros::NodeHandle handle)
   {
     ROS_ERROR("Did not find parameter robot_info/radius");
   }
+
+  if(handle.hasParam("ramp/global_frame"))
+  {
+    handle.getParam("ramp/global_frame", global_frame);
+    ROS_INFO("global_frame: %s", global_frame.c_str());
+  }
+  else
+  {
+    ROS_ERROR("Could not find rosparam ramp/global_frame");
+  }
+
+  if(handle.hasParam("ramp/update_topic"))
+  {
+    handle.getParam("ramp/update_topic", update_topic);
+    ROS_INFO("update_topic: %s", update_topic.c_str());
+  }
+  else
+  {
+    ROS_ERROR("Could not find rosparam ramp/update_topic");
+  }
+
 
   // Get the dofs
   if(handle.hasParam("robot_info/DOF_min") && 
@@ -246,27 +267,6 @@ void loadParameters(const ros::NodeHandle handle)
   }
 
 
-  if(handle.hasParam("ramp/global_frame"))
-  {
-    handle.getParam("ramp/global_frame", global_frame);
-    ROS_INFO("global_frame: %s", global_frame.c_str());
-  }
-  else
-  {
-    ROS_ERROR("Could not find rosparam ramp/global_frame");
-  }
-
-  if(handle.hasParam("ramp/update_topic"))
-  {
-    handle.getParam("ramp/update_topic", update_topic);
-    ROS_INFO("update_topic: %s", update_topic.c_str());
-  }
-  else
-  {
-    ROS_ERROR("Could not find rosparam ramp/update_topic");
-  }
-
-
   std::cout<<"\n------- Done loading parameters -------\n";
     std::cout<<"\n  ID: "<<id;
     std::cout<<"\n  Start: "<<start.toString();
@@ -380,7 +380,10 @@ int main(int argc, char** argv) {
   Planner my_planner; 
   
   // Use updateCallbackPose if the msg type is PoseWithCovarianceStamped
-  ros::Subscriber sub_updatePose_ = handle.subscribe(update_topic, 1, &Planner::updateCbPose, &my_planner);
+  if(global_frame != "odom")
+  {
+    ros::Subscriber sub_updatePose_ = handle.subscribe(update_topic, 1, &Planner::updateCbPose, &my_planner);
+  }
   ros::Subscriber sub_updateVel_ = handle.subscribe("update", 1, &Planner::updateCbControlNode, &my_planner);
   ros::Subscriber sub_sc_ = handle.subscribe("obstacles", 1, &Planner::sensingCycleCallback, &my_planner);
 
@@ -400,9 +403,15 @@ int main(int argc, char** argv) {
   if(global_frame != "map")
   {
     tf::TransformListener listener_;
-    listener_.waitForTransform(global_frame, "map", ros::Time(0), d);
-    listener_.lookupTransform(global_frame, "map", ros::Time(0), my_planner.tf_global_costmap_);
-    ROS_INFO("Costmap tf: translate: (%f, %f) rotation: %f", my_planner.tf_global_costmap_.getOrigin().getX(), my_planner.tf_global_costmap_.getOrigin().getX(), my_planner.tf_global_costmap_.getRotation().getAngle());
+    if(listener_.waitForTransform(global_frame, "map", ros::Time(0), d))
+    {
+      listener_.lookupTransform(global_frame, "map", ros::Time(0), my_planner.tf_global_costmap_);
+      ROS_INFO("Costmap tf: translate: (%f, %f) rotation: %f", my_planner.tf_global_costmap_.getOrigin().getX(), my_planner.tf_global_costmap_.getOrigin().getX(), my_planner.tf_global_costmap_.getRotation().getAngle());
+    }
+    else
+    {
+      ROS_INFO("Frame \"map\" does not exist");
+    }
   }
 
   d.sleep();

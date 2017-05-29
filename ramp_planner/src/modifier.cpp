@@ -1,7 +1,7 @@
 #include "modifier.h"
 
 
-Modifier::Modifier(const ros::NodeHandle& h, const unsigned int n) : num_ops(n), move_dir_(101), move_dist_(101)
+Modifier::Modifier(const ros::NodeHandle& h, const unsigned int n) : num_ops(n), move_dir_(0), move_dist_(101), move_ob_r_(0.5)
 {
   h_mod_req_ = new ModificationRequestHandler(h);
 }

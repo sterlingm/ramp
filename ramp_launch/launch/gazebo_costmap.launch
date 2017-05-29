@@ -2,10 +2,17 @@
 
 <param name="use_sim_time" value="True"/>
 
-<include file="$(find ramp_sensing)/launch/costmap_amcl.launch" />
+<!-- Start the costmap -->
+<node name="costmap_node" pkg="costmap_2d" type="costmap_2d_node" output="screen" >
+  <rosparam file="$(find ramp_launch)/launch/costmap_param/my_rolling_costmap.yaml" command="load" />
+</node>
 
-<include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_static_obs.launch" />
 
+<!-- Start Gazebo simulation -->
+<include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_empty.launch" />
+<node name="pub_tf_missing_turtlebot_gazebo"  pkg="ramp_sensing" type="pub_tf_missing_turtlebot_gazebo" />
+
+<!-- Filter laser data to set a custom MAX_RANGE value for clearing obstacles from the costmap -->
 <include file="$(find laser_filters)/launch/range_filter.launch" />
 
 

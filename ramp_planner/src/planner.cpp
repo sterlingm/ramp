@@ -1449,6 +1449,13 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
   {
     ROS_INFO("odom msg: (%f, %f)", msg.velocities[0], msg.velocities[1]);
 
+    if(global_frame_ == "odom")
+    {
+      ROS_INFO("In if");
+      latestUpdate_ = msg;
+      latestUpdate_.transformBase(T_w_odom_);
+    }
+
     /*
      * Velocity values from ramp_control are [longitudal, 0, angular.z]
      */
@@ -1507,7 +1514,6 @@ void Planner::updateCbPose(const geometry_msgs::PoseWithCovarianceStamped msg)
 
     latestUpdate_.msg_.positions.push_back(msg_tf.getX());
     latestUpdate_.msg_.positions.push_back(msg_tf.getY());
-    //latestUpdate_.msg_.positions.push_back(0);
     
     double angle = tf::getYaw(msg.pose.pose.orientation);
     angle = utility_.displaceAngle(angle, -tf_global_costmap_.getRotation().getAngle());
@@ -1515,6 +1521,7 @@ void Planner::updateCbPose(const geometry_msgs::PoseWithCovarianceStamped msg)
   }
   else
   {
+    ROS_INFO("In else");
     latestUpdate_.msg_.positions.push_back(msg.pose.pose.position.x);
     latestUpdate_.msg_.positions.push_back(msg.pose.pose.position.y);
     latestUpdate_.msg_.positions.push_back(msg.pose.pose.position.z);

@@ -5,6 +5,11 @@
 std::string turtle_name;
 
 /*
+ * The values are obtained by running minimal.launch on a real Turtlebot,
+ * and using rosrun tf tf_echo for each frame
+ */
+
+/*
  * Create broadcasters
  * br_parent_child
  * bf   = base_footprint
@@ -35,7 +40,10 @@ void set_tf_bf_bl(tf::Transform& tf)
 void set_tf_bl_crf(tf::Transform& tf)
 {
   // Set position vector
-  tf.setOrigin( tf::Vector3(0.087, 0.013, -0.287) );
+  // On the real turtlebot, these values are (0.087, 0.013, -0.287)
+  // But in Gazebo, those values put the camera beneath the robot
+  // Negate the x and z values to get the correct tf for Gazebo
+  tf.setOrigin( tf::Vector3(-0.087, 0.013, 0.287) );
 
   // Set rotation
   tf::Quaternion q;

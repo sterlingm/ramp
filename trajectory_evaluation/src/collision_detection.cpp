@@ -1688,12 +1688,12 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
     const trajectory_msgs::JointTrajectoryPoint* p_i    = &segment[i];
     const trajectory_msgs::JointTrajectoryPoint* p_ob   = &ob_trajectory[j];
     
-    ROS_INFO("p_i: %s", utility_.toString(*p_i).c_str());
-    ROS_INFO("p_j: %s", utility_.toString(*p_ob).c_str());
-
     // Get the distance between the centers
     float dist = sqrt( pow(p_i->positions.at(0) - p_ob->positions.at(0),2) + pow(p_i->positions.at(1) - p_ob->positions.at(1),2) );
-    ROS_INFO("dist: %f", dist);
+    
+    /*ROS_INFO("p_i: %s", utility_.toString(*p_i).c_str());
+    ROS_INFO("p_j: %s", utility_.toString(*p_ob).c_str());
+    ROS_INFO("dist: %f", dist);*/
 
     if(dist < d_min)
     {

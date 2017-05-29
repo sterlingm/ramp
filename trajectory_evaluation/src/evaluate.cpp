@@ -167,8 +167,8 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     }
     //ROS_INFO("dist: %f delta_theta: %f", dist, delta_theta);
 
-    double max_v=0.33/2;
-    double max_w=PI/4.f;
+    double max_v=0.25/2;
+    double max_w=PI/8.f;
 
     // Estimate how long to execute positional and angular displacements based on max velocity
     double estimated_linear   = dist / max_v;
