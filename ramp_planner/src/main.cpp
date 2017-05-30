@@ -19,6 +19,7 @@ bool                seedPopulation;
 bool                errorReduction;
 bool                only_sensing;
 bool                moving_robot;
+bool                shrink_ranges;
 double              t_cc_rate;
 double              t_pc_rate;
 int                 pop_type;
@@ -38,7 +39,8 @@ void initDOF(const std::vector<double> dof_min, const std::vector<double> dof_ma
   for(unsigned int i=0;i<dof_min.size();i++) 
   {
     Range temp(dof_min.at(i), dof_max.at(i));
-    if(global_frame != "odom" && (i == 0 || i == 1))
+    //if(global_frame != "odom" && (i == 0 || i == 1))
+    if(shrink_ranges)
     {
       temp.msg_.min += radius;
       temp.msg_.max -= radius;
@@ -122,6 +124,13 @@ void loadParameters(const ros::NodeHandle handle)
   {
     ROS_ERROR("Could not find rosparam ramp/update_topic");
   }
+  
+  if(handle.hasParam("ramp/shrink_ranges"))
+  {
+    handle.getParam("ramp/shrink_ranges", shrink_ranges);
+    std::cout<<"\nshrink_ranges: "<<shrink_ranges;
+  }
+
 
 
   // Get the dofs
@@ -380,7 +389,7 @@ int main(int argc, char** argv) {
   Planner my_planner; 
   
   // Use updateCallbackPose if the msg type is PoseWithCovarianceStamped
-  if(global_frame != "odom")
+  if(update_topic != "odom")
   {
     ros::Subscriber sub_updatePose_ = handle.subscribe(update_topic, 1, &Planner::updateCbPose, &my_planner);
   }
@@ -446,7 +455,7 @@ int main(int argc, char** argv) {
   //std::cin.get();
  
   // Initialize the planner
-  my_planner.init(id, handle, start, goal, ranges, population_size, radius, sub_populations, global_frame, pt, gensBeforeCC, t_pc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
+  my_planner.init(id, handle, start, goal, ranges, population_size, radius, sub_populations, global_frame, update_topic, pt, gensBeforeCC, t_pc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
   my_planner.modifications_   = modifications;
   my_planner.evaluations_     = evaluations;
   my_planner.seedPopulation_  = seedPopulation;
@@ -460,10 +469,14 @@ int main(int argc, char** argv) {
   
   //testSwitch();
   //exit(1);
+  
+  //my_planner.pubMapOdom_ = ros::Duration(0.1);
+  //my_planner.pubMapOdomTimer_ = handle.createTimer(my_planner.pubMapOdom_, &Planner::pubMapOdomCb, &my_planner);
  
  
   /******* Start the planner *******/
   std::cout<<"\nPress Enter to start the planner\n";
+  
   std::cin.get(); 
   
   my_planner.go();

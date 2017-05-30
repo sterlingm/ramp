@@ -1449,9 +1449,8 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
   {
     ROS_INFO("odom msg: (%f, %f)", msg.velocities[0], msg.velocities[1]);
 
-    if(global_frame_ == "odom")
+    if(update_topic_ == "odom")
     {
-      ROS_INFO("In if");
       latestUpdate_ = msg;
       latestUpdate_.transformBase(T_w_odom_);
     }
@@ -1600,7 +1599,7 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
 {
   ROS_INFO("In Planner::init");
 
@@ -1622,16 +1621,17 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
                                      &Planner::controlCycleCallback, this);
   controlCycleTimer_.stop();
 
-  imminentCollisionTimer_ = h.createTimer(ros::Duration(imminentCollisionCycle_), 
+  imminentCollisionTimer_ = h.createTimer(imminentCollisionCycle_, 
                                           &Planner::imminentCollisionCallback, this);
   imminentCollisionTimer_.stop();
 
-  ob_dists_timer_ = h.createTimer(ros::Duration(ob_dists_timer_dur_), &Planner::obICCallback, this);
+  ob_dists_timer_ = h.createTimer(ob_dists_timer_dur_, &Planner::obICCallback, this);
   ob_dists_timer_.stop();
 
 
   sendPop_ = ros::Duration(0.05);
   sendPopTimer_ = h.createTimer(sendPop_, &Planner::sendPopulationCb, this);
+  sendPopTimer_.stop();
 
   // Set the ranges vector
   ranges_ = r;
@@ -1648,6 +1648,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   populationSize_       = population_size;
   subPopulations_       = sub_populations;
   global_frame_         = global_frame;
+  update_topic_         = update_topic;
   pop_type_             = pop_type;
   generationsBeforeCC_  = gens_before_cc;
   t_fixed_cc_           = t_fixed_cc;
@@ -3423,7 +3424,14 @@ void Planner::controlCycleCallback(const ros::TimerEvent& e)
 
 
 
+void Planner::pubMapOdomCb(const ros::TimerEvent& e)
+{
+  ROS_INFO("In pubMapOdomCb");
 
+  // Broadcast a tf for base_link to the global frame
+  static tf::TransformBroadcaster br;
+  br.sendTransform(tf::StampedTransform(T_w_odom_, ros::Time::now(), "map", "odom"));
+}
 
 
 
@@ -4012,6 +4020,7 @@ void Planner::go()
     controlCycleTimer_.start();
     imminentCollisionTimer_.start();
     ob_dists_timer_.start();
+    sendPopTimer_.start();
   }
 
   //////ROS_INFO("CCs started");

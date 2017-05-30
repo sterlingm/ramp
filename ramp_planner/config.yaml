@@ -24,9 +24,11 @@ fixed_control_cycle_rate: 2
 
 sensing_cycle_rate: 15
 
-global_frame: "odom"
+global_frame: "map"
 
 update_topic: "odom"
+
+shrink_ranges: false
 
 # Turtlebot obstacle topics
 #obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom', '/obstacle_3/odom']

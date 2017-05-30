@@ -40,6 +40,8 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 ## as an example, message headers may need to be generated before nodes
 add_dependencies(${PROJECT_NAME} ramp_msgs_generate_messages_cpp)
 
+add_executable(pub_map_odom src/main_pub_map_odom.cpp)
+target_link_libraries(pub_map_odom ${catkin_LIBRARIES})
 
 ## Declare a cpp executable
 add_executable(obstacle_trajectory src/control_handler.cpp src/knot_point.cpp src/main_obstacle_trajectory.cpp src/motion_state.cpp src/path.cpp src/ramp_trajectory.cpp src/range.cpp src/trajectory_request_handler.cpp src/utility.cpp)

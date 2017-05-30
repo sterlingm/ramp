@@ -39,6 +39,9 @@ target_link_libraries(pub_laser_tf ${catkin_LIBRARIES})
 add_executable(pub_tf_costmap src/main_map_rotate.cpp)
 target_link_libraries(pub_tf_costmap ${catkin_LIBRARIES})
 
+add_executable(pub_map_equal_odom src/main_map_equal_odom.cpp)
+target_link_libraries(pub_map_equal_odom ${catkin_LIBRARIES})
+
 add_executable(clear_obs src/main_clearing.cpp)
 target_link_libraries(clear_obs ${catkin_LIBRARIES})
 

@@ -496,7 +496,7 @@ int main(int argc, char** argv) {
      */
 
     /** Initialize the Planner */ 
-    my_planner.init(id, handle, start, goal, ranges, population_size, radius, sub_populations, "global_frame", pt, gensBeforeCC, 
+    my_planner.init(id, handle, start, goal, ranges, population_size, radius, sub_populations, "global_frame", "update_topic", pt, gensBeforeCC, 
         t_pc_rate, t_cc_rate, errorReduction);
     my_planner.modifications_   = modifications;
     my_planner.evaluations_     = evaluations;

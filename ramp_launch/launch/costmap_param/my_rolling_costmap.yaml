@@ -2,7 +2,7 @@ costmap:
     plugins:
         - {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"}
         - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
-    global_frame: /odom
+    global_frame: /map
     robot_base_frame: /base_footprint
     static_map: false
     rolling_window: true

@@ -14,6 +14,8 @@
 #include "parameter_handler.h"
 #include "bezier_curve.h"
 #include <type_traits>
+#include <tf/transform_broadcaster.h>
+
 
 struct ModificationResult 
 {
@@ -82,6 +84,10 @@ class Planner {
     ros::Timer imminentCollisionTimer_;
     ros::Duration imminentCollisionCycle_;
    
+    // Publishing p=map c=odom
+    ros::Timer pubMapOdomTimer_;
+    ros::Duration pubMapOdom_;
+    void pubMapOdomCb(const ros::TimerEvent& e);
     
     // Robot ID
     int id_;
@@ -114,6 +120,7 @@ class Planner {
               const double              robot_radius,
               const bool                sub_populations,  
               const std::string         global_frame,
+              const std::string         update_topic,
               const TrajectoryType      pop_type=HYBRID,
               const int                 gens_before_cc=0,
               const double              t_pc_rate=2.,
@@ -503,6 +510,7 @@ class Planner {
     int id_line_list_;
 
     std::string global_frame_;
+    std::string update_topic_;
     
     // Using a TransformListener is too inconsistent to rely on
     // because sometimes the tfs are there, sometimes it gives me the
