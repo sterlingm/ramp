@@ -86,10 +86,22 @@ int main(int argc, char** argv)
   ros::Subscriber sub_traj = handle.subscribe("bestTrajec", 1, trajCallback);
 
   setvbuf(stdout, NULL, _IOLBF, 4096);
- 
-  //handle.param("ramp_control/orientation", robot.initial_theta_, 0.785);
-  handle_local.param("orientation", robot.initial_theta_, -0.785);
-  std::cout<<"\n*********robot.orientation: "<<robot.initial_theta_;
+
+
+  // Get the start and goal vectors
+  std::vector<float> p_start;
+  if(handle.hasParam("robot_info/start"))
+  {
+    handle.getParam("robot_info/start", p_start);
+    robot.initial_theta_ = p_start[2];
+  }
+  else 
+  {
+    ROS_ERROR("ramp_control: Did not find parameters robot_info/start, robot_info/goal\nSetting initial_theta_ to 0");
+    robot.initial_theta_ = 0.f;
+  }
+  
+  ROS_INFO("robot.orientation: %f", robot.initial_theta_);
 
   bool sim=false;
   handle_local.param("simulation", sim, true);

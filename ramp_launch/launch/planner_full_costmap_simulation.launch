@@ -16,8 +16,7 @@
 </node> -->
 
 
-<!-- <node name="pub_map_equal_odom" pkg="ramp_sensing" type="pub_map_odom" /> -->
-<node name="pub_map_equal_odom" pkg="ramp_planner" type="pub_map_odom" />
+<!-- <node name="pub_map_equal_odom" pkg="ramp_planner" type="pub_map_odom" /> -->
 
 
 <!-- Trajectory Generator -->
@@ -43,7 +42,6 @@
   <remap from="odometry" to="odom" />
   <remap from="cmd_vel" to="mobile_base/commands/velocity" />
   <param name="simulation" value="true" />
-  <param name="orientation" type="double" value="0" />
 </node>
 
 <!-- Planner -->
