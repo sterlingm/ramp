@@ -102,9 +102,9 @@ void MobileBase::init(const ramp_msgs::TrajectoryRequest req)
   print_ = req.print;
  
   // Set trajectory type
-  //////////////ROS_INFO("req.type: %i", req.type);
+  ROS_INFO("req.type: %i", req.type);
   type_ = (TrajectoryType)req.type;
-  //////////////ROS_INFO("type_: %i", type_);
+  ROS_INFO("type_: %i", type_);
 
   // Set segments
   segments_ = req_.segments;
@@ -1381,7 +1381,7 @@ bool MobileBase::checkSpeed(const ramp_msgs::Path p, const std::vector<uint8_t> 
 bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs::TrajectoryResponse& res) 
 {
   ROS_INFO("In MobileBase::trajectoryRequest");
-  ////////////ROS_INFO("type_: %i HOLONOMIC: %i", req.type, HOLONOMIC); 
+  ROS_INFO("type_: %i HOLONOMIC: %i", req.type, HOLONOMIC); 
 
   // If there's less than 3 points, make it have straight segments
   // if req_.segments == 1
@@ -1414,8 +1414,10 @@ bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
   {
     double theta1 = utility_.findAngleFromAToB(req.path.points[0].motionState.positions, req.path.points[1].motionState.positions);
     double theta2 = utility_.findAngleFromAToB(req.path.points[1].motionState.positions, req.path.points[2].motionState.positions);
-    if(utility_.findDistanceBetweenAngles(theta1, theta2) < 0.1)
+    if(fabs(utility_.findDistanceBetweenAngles(theta1, theta2)) < 0.1)
     {
+      ROS_INFO("Changing type to HOLONOMIC");
+      ROS_INFO("theta1: %f theta2: %f diff: %f", theta1, theta2, utility_.findDistanceBetweenAngles(theta1, theta2));
       req.type = HOLONOMIC;
     }
   }
@@ -1493,6 +1495,10 @@ bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
       ////////////ROS_INFO("i_cs[%i]: %i", i, i_cs.at(i));
     }
   } // end if curves
+  else
+  {
+    ROS_INFO("Not planning Bezier because type: %i", type_);
+  }
 
   if(curves.size() == 0) 
   {
@@ -1531,7 +1537,7 @@ bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
 
 
  
-  ////////////////ROS_INFO("About to start generating points, segments_: %i", segments_);
+  ROS_INFO("About to start generating points, segments_: %i", segments_);
   uint8_t c=0;
   // Go through every knotpoint in the path
   // (or until timeCutoff has been reached)

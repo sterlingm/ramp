@@ -7,7 +7,7 @@
 
 Planner::Planner() : resolutionRate_(1.f / 10.f), ob_dists_timer_dur_(0.1), generation_(0), i_rt(1), goalThreshold_(0.4), num_ops_(6), D_(1.5f), 
   cc_started_(false), c_pc_(0), transThreshold_(1./50.), num_cc_(0), L_(0.33), h_traj_req_(0), h_eval_req_(0), h_control_(0), h_rviz_(0), modifier_(0), 
- delta_t_switch_(0.05), stop_(false), imminent_collision_(false), moving_on_coll_(false), log_enter_exit_(true), log_switching_(true), only_sensing_(0), id_line_list_(10000)
+ delta_t_switch_(0.1), stop_(false), imminent_collision_(false), moving_on_coll_(false), log_enter_exit_(true), log_switching_(true), only_sensing_(0), id_line_list_(10000)
 {
   imminentCollisionCycle_ = ros::Duration(1.f / 20.f);
   generationsPerCC_       = controlCycle_.toSec() / planningCycle_.toSec();
@@ -855,6 +855,7 @@ void Planner::adaptCurves(const MotionState& ms, const ros::Duration& d, std::ve
   if(log_enter_exit_)
   {
     ROS_INFO("In Planner::adaptCurves");
+    ROS_INFO("d: %f", d.toSec());
   }
 
   ramp_msgs::BezierCurve blank;
@@ -941,6 +942,7 @@ void Planner::adaptPopulation(const MotionState& ms, const ros::Duration& d)
   if(log_enter_exit_)
   {
     ROS_INFO("In adaptPopulation");
+    ROS_INFO("d: %f", d.toSec());
   }
 
   //std::vector<Path> paths = adaptPaths(population_, ms, d);
@@ -2410,7 +2412,7 @@ void Planner::getTransitionTrajectory(const RampTrajectory& trj_movingOn, const 
   {
     ROS_INFO("In Planner::getTransitionTrajectory");
   }
-  /*////ROS_INFO("t: %f", t);
+  ROS_INFO("t: %f", t);
   ////ROS_INFO("trj_movingOn: %s", trj_movingOn.toString().c_str());
   ////ROS_INFO("trj_target: %s", trj_target.toString().c_str());*/
 
@@ -2544,22 +2546,31 @@ void Planner::getTransitionTrajectory(const RampTrajectory& trj_movingOn, const 
     }
   } // end for
 
-  /*
-   * Get curve
-   */
 
+  /*
+   * Modify path if there is no curve to plan
+   * Remove the 2nd segment point
+   */
   if(no_curve)
   {
     p.msg_.points.erase(p.msg_.points.begin()+1);
   }
 
 
-  // Build request and get trajectory
-  ramp_msgs::TrajectoryRequest tr;
-  buildTrajectoryRequest(p, tr);
-  tr.type = TRANSITION;
+  /*
+   * Get curve
+   */
 
-  requestTrajectory(tr, result);
+  // If we can plan a curve, or the path can be connected with a straight line
+  if(!no_curve || fabs(utility_.findDistanceBetweenAngles(thetaS1, thetaS2)) < 0.13 )
+  {
+    // Build request and get trajectory
+    ramp_msgs::TrajectoryRequest tr;
+    buildTrajectoryRequest(p, tr);
+    tr.type = TRANSITION;
+
+    requestTrajectory(tr, result);
+  }
 
   
   
@@ -3276,7 +3287,7 @@ void Planner::doControlCycle()
     }
     ////ROS_INFO("population_: %s", population_.toString().c_str());
   }
-  // If trajectory does not reach t_fixed_cc, last point will be returned
+  // If no imminent collision, then adapt the population
   else
   {
     ROS_INFO("Setting ic.data = false and imminent_collision = false");
@@ -3288,90 +3299,99 @@ void Planner::doControlCycle()
     reset_ = false;
   
 
-  // At CC, startPlanning is assumed to be perfect (no motion error accounted for yet)
-  startPlanning_ = m_cc_;
+    // At CC, startPlanning is assumed to be perfect (no motion error accounted for yet)
+    startPlanning_ = m_cc_;
 
-  ROS_INFO("Before adaptation and evaluation, pop size: %i", population_.size());
-  for(uint8_t i=0;i<populationSize_;i++)
-  {
-    ROS_INFO("Trajectory %i: %s", i, population_.get(i).toString().c_str());
-  }
+    ROS_INFO("Before adaptation and evaluation, pop size: %i", population_.size());
+    for(uint8_t i=0;i<populationSize_;i++)
+    {
+      ROS_INFO("Trajectory %i: %s", i, population_.get(i).toString().c_str());
+    }
 
-  diff_.zero();
- 
-  ros::Time t_startAdapt = ros::Time::now();
-  
-  // Adapt population
-  // Check if bestT time reaches t_fixed_cc
-  if(bestT.getT() <= t_fixed_cc_)
-  {
-    adaptPopulation(startPlanning_, ros::Duration(t_fixed_cc_));
-  }
-  else
-  {
-    adaptPopulation(startPlanning_, ros::Duration(bestT.getT()));
-  }
+    diff_.zero();
+   
+    ros::Time t_startAdapt = ros::Time::now();
+    
+    /*
+     * Adapt the population
+     */
+    ROS_INFO("bestT.getT(): %f t_fixed_cc_: %f", bestT.getT(), t_fixed_cc_);
+    // Check if bestT time reaches t_fixed_cc
+    if(bestT.getT() <= t_fixed_cc_)
+    {
+      ROS_INFO("Adapting Pop with t_fixed_cc");
+      adaptPopulation(startPlanning_, ros::Duration(bestT.getT()));
+    }
+    else
+    {
+      ROS_INFO("Adapting Pop with bestT.getT()");
+      adaptPopulation(startPlanning_, ros::Duration(t_fixed_cc_));
+    }
 
-  // Why do this here? Non-hybrids are replaced by hybrids and 
-  // hybrids are evaluated after created
-  //evaluatePopulation();
+    // Why do this here? Non-hybrids are replaced by hybrids and 
+    // hybrids are evaluated after created
+    //evaluatePopulation();
 
-  ros::Duration d_adapt = ros::Time::now() - t_startAdapt;
-  adapt_durs_.push_back(d_adapt);
+    ros::Duration d_adapt = ros::Time::now() - t_startAdapt;
+    adapt_durs_.push_back(d_adapt);
 
-  
-  ROS_INFO("After adaptation:");
-  //ROS_INFO("Pop earliest time: %f", population_.getEarliestStartTime().toSec());
-  for(int i=0;i<population_.size();i++)
-  {
-    ROS_INFO("%s", population_.get(i).toString().c_str());
-  }
-  ////////ROS_INFO("Time spent adapting: %f", d_adapt.toSec());
- 
- 
-  // Find the transition (non-holonomic) population and set new control cycle time
-  ros::Time t_startTrans = ros::Time::now();
+    
+    ROS_INFO("After adaptation:");
+    //ROS_INFO("Pop earliest time: %f", population_.getEarliestStartTime().toSec());
+    for(int i=0;i<population_.size();i++)
+    {
+      ROS_INFO("%s", population_.get(i).toString().c_str());
+    }
+    ////////ROS_INFO("Time spent adapting: %f", d_adapt.toSec());
+   
+   
+    // Find the transition (non-holonomic) population and set new control cycle time
+    ros::Time t_startTrans = ros::Time::now();
 
-  /*
-   * Plan switching trajectories
-   */
-  double t_start = getEarliestStartTime(movingOn_);
-  ROS_INFO("t_start: %f", t_start);
-  getTransPop(population_, movingOn_, t_start, population_);
- 
-  ////ROS_INFO("Evaluating transPop");
-  evaluatePopulation();
-  
-  ros::Duration d_trans = ros::Time::now() - t_startTrans;
-  trans_durs_.push_back(d_trans);
-  
-  //////ROS_INFO("After finding transition population, controlCycle period: %f", controlCycle_.toSec());
-  ROS_INFO("New transPop:"); 
-  ROS_INFO("Pop earliest time: %f", population_.getEarliestStartTime().toSec());
-  for(int i=0;i<population_.size();i++)
-  {
-    ROS_INFO("%s", population_.get(i).toString().c_str());
-  }
-  //////ROS_INFO("Time spent getting trans pop: %f", d_trans.toSec());
+    /*
+     * Plan switching trajectories
+     */
+    double t_start = getEarliestStartTime(movingOn_);
+    ROS_INFO("t_start: %f", t_start);
 
-
-
-  // If error reduction
-  // Set pop_orig_ and totalDiff to 0's
-  if(errorReduction_) 
-  {
-    m_i_ = setMi(movingOn_);
-  }
- 
-  // Create sub-populations if enabled
-  if(subPopulations_) 
-  {
-    population_.createSubPopulations();
-  }
+    // Check that we were able to switch to any of them
+    if(t_start < t_fixed_cc_-0.0001)
+    {
+      getTransPop(population_, movingOn_, t_start, population_);
+      evaluatePopulation();
+      ros::Duration d_trans = ros::Time::now() - t_startTrans;
+      trans_durs_.push_back(d_trans);
+      
+      //////ROS_INFO("After finding transition population, controlCycle period: %f", controlCycle_.toSec());
+      ROS_INFO("New transPop:"); 
+      ROS_INFO("Pop earliest time: %f", population_.getEarliestStartTime().toSec());
+      for(int i=0;i<population_.size();i++)
+      {
+        ROS_INFO("%s", population_.get(i).toString().c_str());
+      }
+   
+      //////ROS_INFO("Time spent getting trans pop: %f", d_trans.toSec());
+    }
+    else
+    {
+      ROS_INFO("Could not switch to any trajectories, not computing transition trajectories!");
+    }
 
 
-  // End if no imminent collision
-  }
+
+    // If error reduction
+    // Set pop_orig_ and totalDiff to 0's
+    if(errorReduction_) 
+    {
+      m_i_ = setMi(movingOn_);
+    }
+   
+    // Create sub-populations if enabled
+    if(subPopulations_) 
+    {
+      population_.createSubPopulations();
+    }
+  } // end else no imminent collision
  
   // Send the population to trajectory_visualization
   //sendPopulation();
@@ -3657,10 +3677,6 @@ void Planner::evaluateTrajectory(RampTrajectory& t, bool full) const
 void Planner::evaluatePopulation()
 {
   requestEvaluation(population_.trajectories_);
-  /*for(uint16_t i=0;i<population_.size();i++)
-  {
-    evaluateTrajectory(population_.trajectories_[i]);
-  }*/
 }
 
 
