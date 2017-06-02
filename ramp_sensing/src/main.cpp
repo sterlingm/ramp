@@ -418,7 +418,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
 
       double radius = (cir_obs[i]->cir.radius) * global_grid.info.resolution;
       radius += coll_radius;
-      ////ROS_INFO("x: %f y: %f radius: %f", x, y, radius);
+      //ROS_INFO("x: %f y: %f radius: %f", x, y, radius);
       
       /*obs[i].cir_.center.x = x;
       obs[i].cir_.center.y = y;
@@ -1152,7 +1152,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   /*
    * Discard any circles too close to boundaries because those are likely walls
    */
-  removeWallObs(cirs);
+  //removeWallObs(cirs);
   
 
   /*
@@ -1238,18 +1238,12 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
       velocities[i].vx  = 0;
       velocities[i].vy  = 0;
     }
-    ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
+    //ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
     cir_obs[i]->vel = velocities[i];
   }
 
   // Push on velocities for data
   prev_velocities.push_back(velocities);
-  
-  //ROS_INFO("circles_current:");
-  for(int i=0;i<circles_current.size();i++)
-  {
-    ROS_INFO("Circle %i: (%f,%f)", i, circles_current[i].center.x, circles_current[i].center.y);
-  }
   
   /*
    * Set previous circles
@@ -1275,8 +1269,8 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     o.update(cir_obs[i]->cir, velocities[i], cir_obs[i]->prevTheta[cir_obs[i]->prevCirs.size()-1]);
   
     obs.push_back(o);
-    //ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
     list.obstacles.push_back(o.msg_);
+    //ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
   }
   //ROS_INFO("Done setting obstacles");
 

@@ -240,6 +240,7 @@ int main(int argc, char** argv) {
 
   // Set normalization for minimum distance to the area of the environment
   ev.D_norm_ = (dof_max[0] - dof_min[0]) * (dof_max[1] - dof_min[1]);
+  ROS_INFO("ev.D_norm_: %f", ev.D_norm_);
 
  
   // Advertise Service

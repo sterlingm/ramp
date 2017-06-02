@@ -58,24 +58,9 @@ void Obstacle::update(const Circle c, const Velocity& v, const double theta)
   doTF(false);
 
   ramp_msgs::MotionState ms;
-  // This transforms points to frame at center of costmap, units are meters, orientation is up and right
   
-  double x_origin = global_grid_origin_x_;
-  double y_origin = global_grid_origin_y_;
-  
-  //ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
-  
-  //////ROS_INFO("Before translate: x_origin: %f y_origin: %f", x_origin, y_origin);
-
-  x_origin /= costmap_res_;
-  y_origin /= costmap_res_;
-
-  //ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
-  
-  ms.positions.push_back((c.center.x + x_origin) * costmap_res_);
-  ms.positions.push_back((c.center.y + y_origin) * costmap_res_);
-  //ms.positions.push_back((c.center.x * costmap_res_) + x_translate_costmap_);
-  //ms.positions.push_back((c.center.y * costmap_res_) + y_translate_costmap_);
+  ms.positions.push_back(c.center.x);
+  ms.positions.push_back(c.center.y);
   ms.positions.push_back(theta);
 
   ms.velocities.push_back(v.vx);

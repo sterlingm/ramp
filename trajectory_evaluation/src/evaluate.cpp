@@ -195,7 +195,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     // Normalize terms
     T /= T_norm_;
     A /= A_norm_;
-    //D /= D_norm_;
+    D /= D_norm_;
     
     ROS_INFO("Normalized terms T: %f A: %f D: %f", T, A, D);
 
