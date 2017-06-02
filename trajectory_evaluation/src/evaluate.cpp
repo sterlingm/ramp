@@ -1,6 +1,6 @@
 #include "evaluate.h"
 
-Evaluate::Evaluate() : Q_coll_(10000.f), Q_kine_(100000.f), orientation_infeasible_(0), T_norm_(1200.0), A_norm_(PI), D_norm_(1.0), T_weight_(0.25), A_weight_(0.05), D_weight_(1) {}
+Evaluate::Evaluate() : Q_coll_(10000.f), Q_kine_(100000.f), orientation_infeasible_(0), T_norm_(50), A_norm_(PI), D_norm_(1.0), T_weight_(1), A_weight_(1), D_weight_(1) {}
 
 void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res)
 {
@@ -185,6 +185,12 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     double D = cd_.min_dist_;
     
     ROS_INFO("T: %f A: %f D: %f", T, A, D);
+
+    // Update normalization for Time if necessary
+    if(T > T_norm_)
+    {
+      T_norm_ = T;
+    }
 
     // Normalize terms
     T /= T_norm_;

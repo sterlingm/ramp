@@ -11,6 +11,9 @@ std::vector<ros::Duration> t_data;
 int count_multiple = 0;
 int count_single = 0;
 
+double T_weight, D_weight, A_weight;
+std::vector<double> dof_min, dof_max;
+
 /** Srv callback to evaluate a trajectory */
 bool handleRequest(ramp_msgs::EvaluationSrv::Request& reqs,
                    ramp_msgs::EvaluationSrv::Response& resps) 
@@ -215,24 +218,41 @@ int main(int argc, char** argv) {
   ros::init(argc, argv, "trajectory_evaluation");
   ros::NodeHandle handle;
 
+  // Increase buffer for stdout
   setvbuf(stdout, NULL, _IOLBF, 4096);
-
-  int id;
- 
-  ros::ServiceServer service    = handle.advertiseService("trajectory_evaluation", handleRequest);
-
+  
+  // Set reportData to run on shutdown
   signal(SIGINT, reportData);
-  //cd.pub_population = handle.advertise<ramp_msgs::Population>("/robot_1/population", 1000);
 
-  /** ***Testing*** */
+  /*
+   * Get rosparams for weights and environment size
+   */
+  handle.getParam("/ramp/eval_weight_T", T_weight);
+  handle.getParam("/ramp/eval_weight_D", D_weight);
+  handle.getParam("/ramp/eval_weight_A", A_weight);
+  handle.getParam("/robot_info/DOF_min", dof_min);
+  handle.getParam("/robot_info/DOF_max", dof_max);
+
+  // Set weights
+  ev.T_weight_ = T_weight;
+  ev.D_weight_ = D_weight;
+  ev.A_weight_ = A_weight;
+
+  // Set normalization for minimum distance to the area of the environment
+  ev.D_norm_ = (dof_max[0] - dof_min[0]) * (dof_max[1] - dof_min[1]);
+
+ 
+  // Advertise Service
+  ros::ServiceServer service = handle.advertiseService("trajectory_evaluation", handleRequest);
 
 
+  /*
+   * Start spinning
+   */
   ros::AsyncSpinner spinner(8);
   std::cout<<"\nWaiting for requests...\n";
   spinner.start();
   ros::waitForShutdown();
-
-  //ros::spin();
 
   printf("\nTrajectory Evaluation exiting normally\n");
   return 0;

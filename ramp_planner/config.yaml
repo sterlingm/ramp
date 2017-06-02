@@ -24,6 +24,12 @@ fixed_control_cycle_rate: 2
 
 sensing_cycle_rate: 15
 
+eval_weight_T: 0.25
+
+eval_weight_D: 0.5
+
+eval_weight_A: 0.05
+
 global_frame: "map"
 
 update_topic: "odom"
