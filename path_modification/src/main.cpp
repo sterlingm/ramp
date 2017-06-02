@@ -68,11 +68,11 @@ void initDOF(const std::vector<double> dof_min, const std::vector<double> dof_ma
     ramp_msgs::Range temp;
     temp.min = dof_min.at(i);
     temp.max = dof_max.at(i);
-    if(i < 2)
+    /*if(i < 2)
     {
       temp.min += 0.25;
       temp.max -= 0.25;
-    }
+    }*/
     ranges.push_back(temp); 
   }
 } // End initDOF
@@ -119,7 +119,8 @@ void loadParameters(const ros::NodeHandle& handle)
 
 
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) 
+{
   ros::init(argc, argv, "path_modification");
   srand(time(0)); 
 
@@ -141,7 +142,7 @@ int main(int argc, char** argv) {
   for(unsigned int i=0;i<10;i++) {
     ramp_msgs::KnotPoint kp;
     kp.motionState.positions.push_back(i);
-    kp.motionState.positions.push_back(i+1);
+    kp.motionState.positions.push_back(i);
     kp.motionState.positions.push_back(i+2);
 
     p1.points.push_back(kp);
@@ -155,11 +156,13 @@ int main(int argc, char** argv) {
   //Swap swap(p1);
   //swap.perform();
   Move m(p1);
-  m.dir_ = PI/4.;
-  m.dist_ = 1;
+  m.utility_ = u;
+  m.dir_ = PI/3.;
+  m.dist_ = 1.2;
+  m.r_ = 0.5;
   m.perform();
 
-  ROS_INFO("Path after modification: %s", u.toString(p1).c_str());
+  ROS_INFO("Path after modification: %s", u.toString(m.path_).c_str());
 
 /*  ramp_msgs::Path p2;
   for(unsigned int i=5;i>0;i--) {

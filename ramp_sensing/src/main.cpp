@@ -34,6 +34,7 @@ ramp_msgs::ObstacleList list;
 std::vector< std::string > ob_odoms;
 std::map< std::string, uint8_t > topic_index_map;
 nav_msgs::OccupancyGrid global_grid;
+std::string global_frame;
 
 double radius;
 std::vector<double> dof_min;
@@ -187,6 +188,15 @@ void loadParameters(const ros::NodeHandle& handle)
   else 
   {
     ROS_ERROR("Did not find parameters robot_info/DOF_min, robot_info/DOF_max");
+  }
+
+  if(handle.hasParam("/ramp/global_frame"))
+  {
+    handle.getParam("/ramp/global_frame", global_frame);
+  }
+  else
+  {
+    ROS_ERROR("Did not find rosparam /ramp/global_frame");
   }
 
 }
@@ -396,8 +406,8 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       //ROS_INFO("i: %i obs.size(): %i", i, (int)obs.size());
       visualization_msgs::Marker marker;
       marker.header.stamp = ros::Time::now();
-      //marker.header.frame_id = "/map";
-      marker.header.frame_id = "/costmap";
+      marker.header.frame_id = global_frame;
+      //marker.header.frame_id = "/costmap";
       marker.ns = "basic_shapes";
       marker.id = i;
       
@@ -495,8 +505,10 @@ void publishMarkers(const ros::TimerEvent& e)
 
     //text.header.frame_id  = "/map";
     //arrow.header.frame_id = "/map";
-    text.header.frame_id  = "/costmap";
-    arrow.header.frame_id = "/costmap";
+    //text.header.frame_id  = "/costmap";
+    //arrow.header.frame_id = "/costmap";
+    text.header.frame_id  = global_frame;
+    arrow.header.frame_id = global_frame;
 
     text.ns   = "basic_shapes";
     arrow.ns  = "basic_shapes";
@@ -560,7 +572,8 @@ void publishMarkers(const ros::TimerEvent& e)
   text.header.stamp   = ros::Time::now();
   text.id   = result.markers.size()+1;
   //text.header.frame_id  = "/map";
-  text.header.frame_id  = "/costmap";
+  //text.header.frame_id  = "/costmap";
+  text.header.frame_id  = global_frame;
   text.ns   = "basic_shapes";
   text.type   = visualization_msgs::Marker::TEXT_VIEW_FACING;
   text.action   = visualization_msgs::Marker::ADD;

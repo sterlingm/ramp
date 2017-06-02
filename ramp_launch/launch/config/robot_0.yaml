@@ -8,8 +8,8 @@ radius: 0.2
 # Turtlebot radius ~ 0.2
 # Cooky radius ~ 0.6
 DOF_min: [0,  0,  -3.14159]
-DOF_max: [9.75,  2.25,  3.14159]
+DOF_max: [2,  2,  3.14159]
 
 # relative to map
-start: [0, 0, 1.5708]
+start: [0, 1, 0]
 goal:  [7.5, 0, 0]
