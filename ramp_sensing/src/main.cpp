@@ -384,23 +384,13 @@ void updateOtherRobotCb(const nav_msgs::Odometry::ConstPtr& o, const std::string
 
 
 
-
 std::vector<visualization_msgs::Marker> convertObsToMarkers()
 {
   std::vector<visualization_msgs::Marker> result;
   
   if(global_grid.info.width != 0 && global_grid.info.height != 0)
   {
-    double x_origin = global_grid.info.origin.position.x;
-    double y_origin = global_grid.info.origin.position.y;
-    
-    //////ROS_INFO("Before translate: x_origin: %f y_origin: %f", x_origin, y_origin);
-
-    x_origin /= global_grid.info.resolution;
-    y_origin /= global_grid.info.resolution;
-
-    //ROS_INFO("After unit conversion: x_origin: %f y_origin: %f", x_origin, y_origin);
-
+    // For each CircleOb, make a Marker
     for(int i=0;i<cir_obs.size();i++)
     {
       //ROS_INFO("i: %i obs.size(): %i", i, (int)obs.size());
@@ -414,12 +404,9 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       marker.type = visualization_msgs::Marker::SPHERE;
       marker.action = visualization_msgs::Marker::ADD;
 
-      // This needs to be generalized to the costmap resolution
-      double x = (cir_obs[i]->cir.center.x + x_origin) * global_grid.info.resolution;
-      double y = (cir_obs[i]->cir.center.y + y_origin) * global_grid.info.resolution;
-      
-      ////ROS_INFO("Before translation: (%f, %f) After translation: (%f, %f)", obs[i].cir_.center.x, obs[i].cir_.center.y, x, y);
-      
+      // Set x and y
+      double x = cir_obs[i]->cir.center.x;
+      double y = cir_obs[i]->cir.center.y;
 
       marker.pose.position.x = x;
       marker.pose.position.y = y;
@@ -679,6 +666,7 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
     // If prevCir is set 
     if(cir_obs[i]->prevCirs.size() > 0)
     {
+      // Prev needs to be based on the global x,y
       int i_prev = cir_obs[i]->prevCirs.size()-1;
       //ROS_INFO("Prev: (%f, %f)", cir_obs[i]->prevCirs[i_prev].center.x, cir_obs[i]->prevCirs[i_prev].center.y);
       double x_dist = cir_obs[i]->cir.center.x - cir_obs[i]->prevCirs[i_prev].center.x;
@@ -1206,6 +1194,21 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    * Call the Kalman filter
    */
    std::vector<Circle> circles_current = updateKalmanFilters(cirs, cm);
+
+   /*
+    * Convert centers to the global frame
+    */
+   double x_origin = global_grid.info.origin.position.x;
+   double y_origin = global_grid.info.origin.position.y;
+   for(int i=0;i<cir_obs.size();i++)
+   {
+     //ROS_INFO("cir_obs[%i] center: (%f,%f): ", i, cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
+     double x = (cir_obs[i]->cir.center.x * global_grid.info.resolution) + x_origin;
+     double y = (cir_obs[i]->cir.center.y * global_grid.info.resolution) + y_origin;
+     cir_obs[i]->cir.center.x = x;
+     cir_obs[i]->cir.center.y = y;
+     //ROS_INFO("New Point: (%f,%f): ", x, y);
+   }
   
    
   /*
@@ -1235,7 +1238,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
       velocities[i].vx  = 0;
       velocities[i].vy  = 0;
     }
-    //ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
+    ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
     cir_obs[i]->vel = velocities[i];
   }
 
@@ -1245,7 +1248,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   //ROS_INFO("circles_current:");
   for(int i=0;i<circles_current.size();i++)
   {
-    //ROS_INFO("Circle %i: (%f,%f)", i, circles_current[i].center.x, circles_current[i].center.y);
+    ROS_INFO("Circle %i: (%f,%f)", i, circles_current[i].center.x, circles_current[i].center.y);
   }
   
   /*

@@ -7,8 +7,8 @@ radius: 0.2
 # Cooky demo hallway is [10, 2.5]
 # Turtlebot radius ~ 0.2
 # Cooky radius ~ 0.6
-DOF_min: [0,  0,  -3.14159]
-DOF_max: [2,  2,  3.14159]
+DOF_min: [0,    0,  -3.14159]
+DOF_max: [10,   2,  3.14159]
 
 # relative to map
 start: [0, 1, 0]
