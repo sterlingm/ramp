@@ -22,8 +22,6 @@ class Utility {
     
     const double findAngleFromAToB(const std::vector<double> a, const std::vector<double> b) const;
 
-    bool useCos(bool x, const double theta) const;
-
     const double findDistanceBetweenAngles(const double a1, const double a2) const;
     
     const double displaceAngle(const double a1, double a2) const;

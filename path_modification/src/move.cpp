@@ -9,15 +9,15 @@ Move::Move(const ramp_msgs::Path p) : path_(p) {}
  *  if x_dim, then [x, y]
  *  else, then [y, x]
  */
-const std::vector<double> Move::getNewPosition(const double value, const double bound, const double theta, const double r, bool x_dim, bool cosine) const
+const std::vector<double> Move::getNewPosition(const double value, const double bound, const double theta, const double r, bool x_dim) const
 {
   ROS_INFO("In Move::getNewPosition");
-  ROS_INFO("bound: %f theta: %f r: %f x_dim: %s cosine: %s", bound, theta, r, x_dim ? "True" : "False", cosine ? "True" : "False");
+  ROS_INFO("bound: %f theta: %f r: %f x_dim: %s", bound, theta, r, x_dim ? "True" : "False");
   
   double p_prime = bound;
   double delta_p = x_dim ? fabs(bound - path_.points[0].motionState.positions[0]) : fabs(bound - path_.points[0].motionState.positions[1]);
 
-  double denom = cosine ? cos(theta) : sin(theta);
+  double denom = x_dim ? cos(theta) : sin(theta);
   double r_prime = fabs(delta_p / denom);
   double other_prime = sqrt( pow(r_prime, 2) - pow(delta_p, 2) );
 
@@ -36,14 +36,6 @@ const std::vector<double> Move::getNewPosition(const double value, const double 
   return result;
 }
 
-double Move::getNewX(double y, double y_bound, double theta, double r, bool min, bool cosine)
-{
-
-  double y_prime = y_bound;
-  double r_prime = cosine ? y_prime / cos(theta) : y_prime / sin(theta);
-  double x_prime = sqrt( pow(r_prime,2) - pow(y_prime, 2) );
-  
-}
 
 const ramp_msgs::Path Move::perform() 
 {
@@ -68,7 +60,11 @@ const ramp_msgs::Path Move::perform()
   // Collision radius, ob radius + robot radius
   double coll_cir_rad = r_+0.275;
 
-  /*
+  /*urrent position
+  Range dist_range(r_, 3*r_);
+  dist = dist_range.random();
+  ROS_INFO("dist: %f", dist);
+
    * Get the new point!
    */
 
@@ -205,13 +201,13 @@ const ramp_msgs::Path Move::perform()
   // x dimension
   if(x < utility_.standardRanges_[0].min)
   {
-    std::vector<double> pos = getNewPosition(x, utility_.standardRanges_[0].min, theta, dist, true, utility_.useCos(true, theta));
+    std::vector<double> pos = getNewPosition(x, utility_.standardRanges_[0].min, theta, dist, true);
     x = pos[0];
     y = pos[1];
   }
   else if(x > utility_.standardRanges_[0].max)
   {
-    std::vector<double> pos = getNewPosition(x, utility_.standardRanges_[0].max, theta, dist, true, utility_.useCos(true, theta));
+    std::vector<double> pos = getNewPosition(x, utility_.standardRanges_[0].max, theta, dist, true);
     x = pos[0];
     y = pos[1];
   }
@@ -219,13 +215,13 @@ const ramp_msgs::Path Move::perform()
   // y dimension
   if(y < utility_.standardRanges_[1].min)
   {
-    std::vector<double> pos = getNewPosition(y, utility_.standardRanges_[1].min, theta, dist, false, utility_.useCos(false, theta));
+    std::vector<double> pos = getNewPosition(y, utility_.standardRanges_[1].min, theta, dist, false);
     x = pos[1];
     y = pos[0];
   }
   else if(y > utility_.standardRanges_[1].max)
   {
-    std::vector<double> pos = getNewPosition(y, utility_.standardRanges_[1].max, theta, dist, false, utility_.useCos(false, theta));
+    std::vector<double> pos = getNewPosition(y, utility_.standardRanges_[1].max, theta, dist, false);
     x = pos[1];
     y = pos[0];
   }

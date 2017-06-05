@@ -25,55 +25,6 @@ Utility::Utility()
 }
 
 
-/*
- * Returns true if cosine is used for the component of the vector in direction theta
- * x is true if we want the x component, false if we want the y component
- */
-bool Utility::useCos(bool x, const double theta) const
-{
-  /*if(x)
-  {
-    return true;
-  }
-  else
-  {
-    return false;
-  }*/
-
-  return x;
-
-  /*
-   * For each of these 4 cases, x is cosine and y is sine
-  
-  // f (0,45)
-  if( (theta > 0 && theta < PI/4.f)       ||
-  // g (45,90)
-      (theta > 3.f*PI/4.f)                ||
-  // h (-180,-135)
-      (theta > -PI && theta < -3.f*PI/4.f) ||
-  // e (0,-45)
-      (theta > -PI/4.f && theta < 0.f) )
-  {
-    return x;
-  }
-
-  /*
-   * For each of these 4 cases, x is sine and y is cosine
-  
-  // a (45,90)
-  else if( (theta > PI/4.f && theta < PI/2.f)      ||
-  // b (90,135)
-           (theta > PI/2.f && theta < 3.f*PI/4.f)  ||
-  // c (-135,-90)
-           (theta > -3.f*PI/4.f && theta < -PI/2.f)  ||
-  // d (-90,-45)
-           (theta > -PI/2.f && theta < -PI/4.f) )
-  {
-    return !x;
-  }*/
-}
-
-
 /** This method returns the Euclidean distance between two position vectors */
 const double Utility::positionDistance(const std::vector<double> a, const std::vector<double> b) const 
 {
