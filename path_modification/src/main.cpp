@@ -17,22 +17,28 @@ std::vector<double> dof_max;
 bool handleRequest(ramp_msgs::ModificationRequest::Request& req,
                    ramp_msgs::ModificationRequest::Response& res)
 {
-  /*std::cout<<"\npath_modification: In handleRequest\n";
+  std::cout<<"\npath_modification: In handleRequest\n";
 
   std::cout<<"\nNumber of paths received: "<<req.paths.size();
   std::cout<<"\nPaths received:";
   for(unsigned int i=0;i<req.paths.size();i++) {
     std::cout<<"\n"<<u.toString(req.paths.at(i));
   }
-  std::cout<<"\noperator: "<<req.op<<"\n";*/
+  ROS_INFO("Operator: %s", req.op.c_str());
 
   Modifier mod(req);
 
   // Set the ranges
   // do this in a better way eventually...
-  mod.in_.utility_.standardRanges_ = ranges; 
-  mod.chg_.utility_.standardRanges_ = ranges; 
-  mod.move_.utility_.standardRanges_ = ranges; 
+  mod.in_.utility_ = u; 
+  mod.chg_.utility_ = u;
+  mod.move_.utility_ = u;
+  
+  ROS_INFO("Path modification ranges: ");
+  for(int i=0;i<u.standardRanges_.size();i++)
+  {
+    ROS_INFO("Min: %f Max: %f", u.standardRanges_[i].min, u.standardRanges_[i].max);
+  }
 
   res.mod_paths = mod.perform();
   
@@ -130,7 +136,6 @@ int main(int argc, char** argv)
 
   loadParameters(handle);
 
-  Utility u;
   u.standardRanges_ = ranges;
   ROS_INFO("Path modification ranges: ");
   for(int i=0;i<u.standardRanges_.size();i++)

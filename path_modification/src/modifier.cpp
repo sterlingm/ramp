@@ -8,6 +8,17 @@ const std::vector<ramp_msgs::Path> Modifier::perform() {
   std::vector<ramp_msgs::Path> result;
 
   //std::cout<<"\nModifier received:"<<u.toString(mod_req.paths.at(0))<<"\n";
+  
+  for(int i=0;i<mod_req.paths.size();i++)
+  {
+    for(int j=0;j<mod_req.paths[i].points.size();j++)
+    {
+      if(mod_req.paths[i].points[j].motionState.positions[1] > 2.0)
+      {
+        ROS_INFO("Path has an out-of-bounds motion state");
+      }
+    }
+  }
 
   if(mod_req.op == "insert") 
   {

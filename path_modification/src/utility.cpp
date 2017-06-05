@@ -31,9 +31,20 @@ Utility::Utility()
  */
 bool Utility::useCos(bool x, const double theta) const
 {
+  /*if(x)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }*/
+
+  return x;
+
   /*
    * For each of these 4 cases, x is cosine and y is sine
-   */
+  
   // f (0,45)
   if( (theta > 0 && theta < PI/4.f)       ||
   // g (45,90)
@@ -48,7 +59,7 @@ bool Utility::useCos(bool x, const double theta) const
 
   /*
    * For each of these 4 cases, x is sine and y is cosine
-   */
+  
   // a (45,90)
   else if( (theta > PI/4.f && theta < PI/2.f)      ||
   // b (90,135)
@@ -59,7 +70,7 @@ bool Utility::useCos(bool x, const double theta) const
            (theta > -PI/2.f && theta < -PI/4.f) )
   {
     return !x;
-  }
+  }*/
 }
 
 

@@ -2861,7 +2861,7 @@ void Planner::planningCycleCallback()
     ros::Time t_start_error = ros::Time::now();
       
     ROS_INFO("Doing Adjustment");
-    //////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
+    ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
     
     // Do error correction
     ros::Duration t_since_cc = ros::Time::now() - t_prevCC_;
