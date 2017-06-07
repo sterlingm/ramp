@@ -20,10 +20,10 @@
 
 
 <!-- Trajectory Generator -->
-<node name="trajectory_generator" pkg="trajectory_generator" type="trajectory_generator" output="screen" />
+<node name="trajectory_generator" pkg="trajectory_generator" type="trajectory_generator" output="log" />
 
 <!-- Path Modification -->
-<node name="path_modification" pkg="path_modification" type="path_modification" output="screen" />
+<node name="path_modification" pkg="path_modification" type="path_modification" output="log" />
 
 <!-- Evaluation -->
 <node name="trajectory_evaluation" pkg="trajectory_evaluation" type="trajectory_evaluation" output="log" />
@@ -35,17 +35,17 @@
 <node name="ramp_sensing" pkg="ramp_sensing" type="ramp_sensing" output="screen" />
 
 <!-- Reset odometry -->
-<node name="reset_odom" pkg="ramp_control" type="reset_odom.py" output="screen" />
+<node name="reset_odom" pkg="ramp_control" type="reset_odom.py" output="log" />
 
 <!-- Control node -->
-<node name="ramp_control" pkg="ramp_control" type="ramp_control" output="screen" >
+<node name="ramp_control" pkg="ramp_control" type="ramp_control" output="log" >
   <remap from="odometry" to="odom" />
   <remap from="cmd_vel" to="mobile_base/commands/velocity" />
   <param name="simulation" value="true" />
 </node>
 
 <!-- Planner -->
-<node name="ramp_planner" pkg="ramp_planner" type="ramp_planner" output="screen" />
+<node name="ramp_planner" pkg="ramp_planner" type="ramp_planner" output="log" />
 
 
 

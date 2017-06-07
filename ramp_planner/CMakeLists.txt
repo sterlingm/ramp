@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ramp_planner)
 
-find_package(catkin REQUIRED COMPONENTS geometry_msgs message_generation ramp_msgs roscpp std_msgs tf)
+find_package(catkin REQUIRED COMPONENTS gazebo_msgs geometry_msgs message_generation ramp_msgs roscpp std_msgs tf)
 
 
 
@@ -81,6 +81,10 @@ add_executable(generate_test_case src/bezier_curve.cpp src/main_generate_test_ca
 set_target_properties(generate_test_case PROPERTIES COMPILE_FLAGS -std=c++0x)
 target_link_libraries(generate_test_case ${catkin_LIBRARIES} yaml-cpp)
 
+
+add_executable(move_gazebo_obs src/main_gazebo_ob.cpp src/range.cpp src/utility.cpp)
+set_target_properties(move_gazebo_obs PROPERTIES COMPILE_FLAGS -std=c++0x)
+target_link_libraries(move_gazebo_obs ${catkin_LIBRARIES} yaml-cpp)
 
 
 

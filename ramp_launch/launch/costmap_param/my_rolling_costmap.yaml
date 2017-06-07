@@ -7,8 +7,8 @@ costmap:
     static_map: false
     rolling_window: true
     resolution: 0.01
-    update_frequency: 30
-    publish_frequency: 30
+    update_frequency: 10
+    publish_frequency: 10
     width: 10
     height: 2.5
     obstacle_range: 10.0
