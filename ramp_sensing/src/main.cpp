@@ -68,7 +68,7 @@ double coll_radius = 0.25;
 
 std::vector<double> d_avg_values;
 
-double dist_threshold = 100;
+double dist_threshold = 50;
 double radius_threshold = 5;
 
 /*********************************
@@ -521,10 +521,10 @@ void publishMarkers(const ros::TimerEvent& e)
     // Set text value
     if(prev_velocities[prev_velocities.size()-1].size() > 0)
     {
-      //text.text = std::to_string(prev_velocities[prev_velocities.size()-1][i].v);
-      std::stringstream ss;
+      text.text = std::to_string(prev_velocities[prev_velocities.size()-1][i].v);
+      /*std::stringstream ss;
       ss<<"("<<cir_obs[i]->cir.center.x<<", "<<cir_obs[i]->cir.center.y<<")";
-      text.text = ss.str();
+      text.text = ss.str();*/
     }
 
     // Set arrow points
@@ -968,7 +968,9 @@ void addNewObs(std::vector<CircleMatch> cm, std::vector<Circle> cirs)
     {
       ROS_INFO("Creating new filter!");
       CircleOb* temp = createCircleOb(cirs[i]);
-      cir_obs.push_back(temp);
+      ROS_INFO("i: %i cir_obs.size(): %i", i, (int)cir_obs.size());
+      cir_obs.insert(cir_obs.begin()+i, temp);
+      //cir_obs.push_back(temp);
     }
   }
 }
