@@ -68,8 +68,8 @@ double coll_radius = 0.25;
 
 std::vector<double> d_avg_values;
 
-double dist_threshold = 50;
-double radius_threshold = 5;
+double dist_threshold = 100;
+double radius_threshold = 35;
 
 /*********************************
  * Variables for BFL
@@ -83,8 +83,8 @@ BFL::LinearAnalyticConditionalGaussian* sys_pdf=0;
 BFL::LinearAnalyticSystemModelGaussianUncertainty* sys_model=0;
 
 int STATE_SIZE=4;
-double MU_SYSTEM_NOISE_X = 0.0001;
-double MU_SYSTEM_NOISE_Y = 0.0001;
+double MU_SYSTEM_NOISE_X = 0.01;
+double MU_SYSTEM_NOISE_Y = 0.01;
 double SIGMA_SYSTEM_NOISE_X = 0.01;
 double SIGMA_SYSTEM_NOISE_Y = 0.01;
 
@@ -1033,11 +1033,15 @@ std::vector<Circle> updateKalmanFilters(std::vector<Circle> cirs, std::vector<Ci
     {
       u[0] = prev_velocities[prev_velocities.size()-1][i].vx;
       u[1] = prev_velocities[prev_velocities.size()-1][i].vy;
+      u[2] = 0;
+      u[3] = 0;
     }
     else
     {
       u[0] = 0;
       u[1] = 0;
+      u[2] = 0;
+      u[3] = 0;
     }
     
     // Measurement 
