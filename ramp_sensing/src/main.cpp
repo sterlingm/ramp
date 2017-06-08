@@ -969,8 +969,8 @@ void addNewObs(std::vector<CircleMatch> cm, std::vector<Circle> cirs)
       ROS_INFO("Creating new filter!");
       CircleOb* temp = createCircleOb(cirs[i]);
       ROS_INFO("i: %i cir_obs.size(): %i", i, (int)cir_obs.size());
-      cir_obs.insert(cir_obs.begin()+i, temp);
-      //cir_obs.push_back(temp);
+      //cir_obs.insert(cir_obs.begin()+i, temp);
+      cir_obs.push_back(temp);
     }
   }
 }
