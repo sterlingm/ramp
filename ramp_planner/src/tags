@@ -35,17 +35,11 @@ C2	bezier_curve.cpp	/^  MotionState C0, C1, C2, p0, p1, p2;$/;"	l
 CRITICAL	main_generate_test_case.cpp	/^  CRITICAL = 2,$/;"	e	enum:Group	file:
 CRITICAL	main_run_test_case.cpp	/^  CRITICAL = 2,$/;"	e	enum:Group	file:
 ControlHandler	control_handler.cpp	/^ControlHandler::ControlHandler(const ros::NodeHandle& h) : handle_(h) $/;"	f	class:ControlHandler	signature:(const ros::NodeHandle& h)
-ControlHandler	rviz_handler.cpp	/^ControlHandler::ControlHandler(const ros::NodeHandle& h) : handle_(h) $/;"	f	class:ControlHandler	signature:(const ros::NodeHandle& h)
 ControlHandler::ControlHandler	control_handler.cpp	/^ControlHandler::ControlHandler(const ros::NodeHandle& h) : handle_(h) $/;"	f	class:ControlHandler	signature:(const ros::NodeHandle& h)
-ControlHandler::ControlHandler	rviz_handler.cpp	/^ControlHandler::ControlHandler(const ros::NodeHandle& h) : handle_(h) $/;"	f	class:ControlHandler	signature:(const ros::NodeHandle& h)
 ControlHandler::send	control_handler.cpp	/^void ControlHandler::send(ramp_msgs::RampTrajectory bestTrajec) $/;"	f	class:ControlHandler	signature:(ramp_msgs::RampTrajectory bestTrajec)
-ControlHandler::send	rviz_handler.cpp	/^void ControlHandler::send(ramp_msgs::RampTrajectory bestTrajec) $/;"	f	class:ControlHandler	signature:(ramp_msgs::RampTrajectory bestTrajec)
 ControlHandler::sendIC	control_handler.cpp	/^void ControlHandler::sendIC(std_msgs::Bool value)$/;"	f	class:ControlHandler	signature:(std_msgs::Bool value)
-ControlHandler::sendIC	rviz_handler.cpp	/^void ControlHandler::sendIC(std_msgs::Bool value)$/;"	f	class:ControlHandler	signature:(std_msgs::Bool value)
 ControlHandler::sendObIC	control_handler.cpp	/^void ControlHandler::sendObIC(const int i, std_msgs::Bool value)$/;"	f	class:ControlHandler	signature:(const int i, std_msgs::Bool value)
-ControlHandler::sendObIC	rviz_handler.cpp	/^void ControlHandler::sendObIC(const int i, std_msgs::Bool value)$/;"	f	class:ControlHandler	signature:(const int i, std_msgs::Bool value)
 ControlHandler::sendPopulation	control_handler.cpp	/^void ControlHandler::sendPopulation(ramp_msgs::Population population) $/;"	f	class:ControlHandler	signature:(ramp_msgs::Population population)
-ControlHandler::sendPopulation	rviz_handler.cpp	/^void ControlHandler::sendPopulation(ramp_msgs::Population population) $/;"	f	class:ControlHandler	signature:(ramp_msgs::Population population)
 Duration	main_obstacle_twist_all.cpp	/^      dur_delays.push_back(ros::Duration(ob_delays.at(i)));$/;"	p	file:	signature:(ob_delays.at(i))
 EXTERIOR	main_generate_test_case.cpp	/^  EXTERIOR = 0,$/;"	e	enum:Group	file:
 EXTERIOR	main_run_test_case.cpp	/^  EXTERIOR = 0,$/;"	e	enum:Group	file:
@@ -72,8 +66,8 @@ MIX	main_run_test_case.cpp	/^  MIX      = 3$/;"	e	enum:Group	file:
 ModificationRequestHandler	modification_request_handler.cpp	/^ModificationRequestHandler::ModificationRequestHandler(const ros::NodeHandle& h) : handle_(h) $/;"	f	class:ModificationRequestHandler	signature:(const ros::NodeHandle& h)
 ModificationRequestHandler::ModificationRequestHandler	modification_request_handler.cpp	/^ModificationRequestHandler::ModificationRequestHandler(const ros::NodeHandle& h) : handle_(h) $/;"	f	class:ModificationRequestHandler	signature:(const ros::NodeHandle& h)
 ModificationRequestHandler::request	modification_request_handler.cpp	/^const bool ModificationRequestHandler::request(ramp_msgs::ModificationRequest& mr) $/;"	f	class:ModificationRequestHandler	signature:(ramp_msgs::ModificationRequest& mr)
-Modifier	modifier.cpp	/^Modifier::Modifier(const ros::NodeHandle& h, const unsigned int n) : num_ops(n), move_dir_(101), move_dist_(101)$/;"	f	class:Modifier	signature:(const ros::NodeHandle& h, const unsigned int n)
-Modifier::Modifier	modifier.cpp	/^Modifier::Modifier(const ros::NodeHandle& h, const unsigned int n) : num_ops(n), move_dir_(101), move_dist_(101)$/;"	f	class:Modifier	signature:(const ros::NodeHandle& h, const unsigned int n)
+Modifier	modifier.cpp	/^Modifier::Modifier(const ros::NodeHandle& h, const unsigned int n) : num_ops(n), move_dir_(0), move_dist_(101), move_ob_r_(0.5)$/;"	f	class:Modifier	signature:(const ros::NodeHandle& h, const unsigned int n)
+Modifier::Modifier	modifier.cpp	/^Modifier::Modifier(const ros::NodeHandle& h, const unsigned int n) : num_ops(n), move_dir_(0), move_dist_(101), move_ob_r_(0.5)$/;"	f	class:Modifier	signature:(const ros::NodeHandle& h, const unsigned int n)
 Modifier::buildModificationRequest	modifier.cpp	/^void Modifier::buildModificationRequest(const Population& pop, bool imminent_collision, ramp_msgs::ModificationRequest& result)$/;"	f	class:Modifier	signature:(const Population& pop, bool imminent_collision, ramp_msgs::ModificationRequest& result)
 Modifier::getOperator	modifier.cpp	/^const std::string Modifier::getOperator() const $/;"	f	class:Modifier	signature:() const
 Modifier::getTargets	modifier.cpp	/^const std::vector<int> Modifier::getTargets(const std::string& op, const Population& pop) $/;"	f	class:Modifier	signature:(const std::string& op, const Population& pop)
@@ -157,6 +151,7 @@ Planner::adaptPopulation	planner.cpp	/^void Planner::adaptPopulation(const Motio
 Planner::buildEvaluationRequest	planner.cpp	/^void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::EvaluationRequest& result, bool full) const$/;"	f	class:Planner	signature:(const RampTrajectory& trajec, ramp_msgs::EvaluationRequest& result, bool full) const
 Planner::buildEvaluationSrv	planner.cpp	/^void Planner::buildEvaluationSrv(const RampTrajectory& trajec, ramp_msgs::EvaluationSrv& result) const$/;"	f	class:Planner	signature:(const RampTrajectory& trajec, ramp_msgs::EvaluationSrv& result) const
 Planner::buildEvaluationSrv	planner.cpp	/^void Planner::buildEvaluationSrv(std::vector<RampTrajectory>& trajecs, ramp_msgs::EvaluationSrv& srv) const$/;"	f	class:Planner	signature:(std::vector<RampTrajectory>& trajecs, ramp_msgs::EvaluationSrv& srv) const
+Planner::buildLineList	planner.cpp	/^void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_msgs::Marker& result) const$/;"	f	class:Planner	signature:(const RampTrajectory& trajec, int id, visualization_msgs::Marker& result) const
 Planner::buildTrajectoryRequest	planner.cpp	/^void Planner::buildTrajectoryRequest(const Path path, const std::vector<ramp_msgs::BezierCurve> curves, ramp_msgs::TrajectoryRequest& result, const int id) const$/;"	f	class:Planner	signature:(const Path path, const std::vector<ramp_msgs::BezierCurve> curves, ramp_msgs::TrajectoryRequest& result, const int id) const
 Planner::buildTrajectoryRequest	planner.cpp	/^void Planner::buildTrajectoryRequest(const Path path, ramp_msgs::TrajectoryRequest& result, const int id) const$/;"	f	class:Planner	signature:(const Path path, ramp_msgs::TrajectoryRequest& result, const int id) const
 Planner::buildTrajectorySrv	planner.cpp	/^void Planner::buildTrajectorySrv(const Path path, const std::vector<ramp_msgs::BezierCurve> curves, ramp_msgs::TrajectorySrv& result, const int id) const$/;"	f	class:Planner	signature:(const Path path, const std::vector<ramp_msgs::BezierCurve> curves, ramp_msgs::TrajectorySrv& result, const int id) const
@@ -192,7 +187,7 @@ Planner::getTransitionTrajectory	planner.cpp	/^void Planner::getTransitionTrajec
 Planner::go	planner.cpp	/^void Planner::go() $/;"	f	class:Planner	signature:()
 Planner::goTest	planner.cpp	/^void Planner::goTest(float sec) $/;"	f	class:Planner	signature:(float sec)
 Planner::imminentCollisionCallback	planner.cpp	/^void Planner::imminentCollisionCallback(const ros::TimerEvent& t) $/;"	f	class:Planner	signature:(const ros::TimerEvent& t)
-Planner::init	planner.cpp	/^void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const bool sub_populations, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool errorReduction) $/;"	f	class:Planner	signature:(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const bool sub_populations, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool errorReduction)
+Planner::init	planner.cpp	/^void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) $/;"	f	class:Planner	signature:(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction)
 Planner::initPopulation	planner.cpp	/^void Planner::initPopulation() $/;"	f	class:Planner	signature:()
 Planner::initStartGoal	planner.cpp	/^void Planner::initStartGoal(const MotionState s, const MotionState g) {$/;"	f	class:Planner	signature:(const MotionState s, const MotionState g)
 Planner::modification	planner.cpp	/^void Planner::modification()$/;"	f	class:Planner	signature:()
@@ -207,6 +202,7 @@ Planner::planningCycleCallback	planner.cpp	/^void Planner::planningCycleCallback
 Planner::planningCycles	planner.cpp	/^void Planner::planningCycles(int num)$/;"	f	class:Planner	signature:(int num)
 Planner::predictTransition	planner.cpp	/^bool Planner::predictTransition(const RampTrajectory& from, const RampTrajectory& to, const double& t)$/;"	f	class:Planner	signature:(const RampTrajectory& from, const RampTrajectory& to, const double& t)
 Planner::prepareForTestCase	planner.cpp	/^trajectory_msgs::JointTrajectoryPoint Planner::prepareForTestCase()$/;"	f	class:Planner	signature:()
+Planner::pubMapOdomCb	planner.cpp	/^void Planner::pubMapOdomCb(const ros::TimerEvent& e)$/;"	f	class:Planner	signature:(const ros::TimerEvent& e)
 Planner::randomMS	planner.cpp	/^void Planner::randomMS(MotionState& result) const$/;"	f	class:Planner	signature:(MotionState& result) const
 Planner::randomizeMSPositions	planner.cpp	/^const MotionState Planner::randomizeMSPositions(const MotionState ms) const $/;"	f	class:Planner	signature:(const MotionState ms) const
 Planner::replanCurve	planner.cpp	/^const ramp_msgs::BezierCurve Planner::replanCurve(const RampTrajectory trajec, const MotionState ms_start) const $/;"	f	class:Planner	signature:(const RampTrajectory trajec, const MotionState ms_start) const
@@ -220,17 +216,19 @@ Planner::requestTrajectory	planner.cpp	/^void Planner::requestTrajectory(ramp_ms
 Planner::requestTrajectory	planner.cpp	/^void Planner::requestTrajectory(std::vector<ramp_msgs::TrajectoryRequest>& trs, std::vector<RampTrajectory>& result)$/;"	f	class:Planner	signature:(std::vector<ramp_msgs::TrajectoryRequest>& trs, std::vector<RampTrajectory>& result)
 Planner::resetStart	planner.cpp	/^void Planner::resetStart() $/;"	f	class:Planner	signature:()
 Planner::restartAfterDebugging	planner.cpp	/^void Planner::restartAfterDebugging() $/;"	f	class:Planner	signature:()
-Planner::seedPopulation	planner.cpp	/^void Planner::seedPopulation() $/;"	f	class:Planner	signature:()
+Planner::seedPopulation	planner.cpp	/^void Planner::seedPopulation()$/;"	f	class:Planner	signature:()
 Planner::seedPopulationTwo	planner.cpp	/^void Planner::seedPopulationTwo() {$/;"	f	class:Planner	signature:()
 Planner::sendBest	planner.cpp	/^void Planner::sendBest() {$/;"	f	class:Planner	signature:()
-Planner::sendPopulation	planner.cpp	/^void Planner::sendPopulation(const Population& pop) const $/;"	f	class:Planner	signature:(const Population& pop) const
+Planner::sendPopulation	planner.cpp	/^void Planner::sendPopulation()$/;"	f	class:Planner	signature:()
+Planner::sendPopulationCb	planner.cpp	/^void Planner::sendPopulationCb(const ros::TimerEvent& e)$/;"	f	class:Planner	signature:(const ros::TimerEvent& e)
 Planner::sensingCycleCallback	planner.cpp	/^void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)$/;"	f	class:Planner	signature:(const ramp_msgs::ObstacleList& msg)
 Planner::setMi	planner.cpp	/^const std::vector<MotionState> Planner::setMi(const RampTrajectory& trj_current) const $/;"	f	class:Planner	signature:(const RampTrajectory& trj_current) const
 Planner::setT_base_w	planner.cpp	/^void Planner::setT_base_w(std::vector<double> base_pos) $/;"	f	class:Planner	signature:(std::vector<double> base_pos)
 Planner::stopForDebugging	planner.cpp	/^void Planner::stopForDebugging() $/;"	f	class:Planner	signature:()
 Planner::switchTrajectory	planner.cpp	/^void Planner::switchTrajectory(const RampTrajectory& from, const RampTrajectory& to, const double& t_start, RampTrajectory& result)$/;"	f	class:Planner	signature:(const RampTrajectory& from, const RampTrajectory& to, const double& t_start, RampTrajectory& result)
 Planner::switchTrajectory	planner.cpp	/^void Planner::switchTrajectory(const RampTrajectory& from, const RampTrajectory& to, std::vector<RampTrajectory>& result)$/;"	f	class:Planner	signature:(const RampTrajectory& from, const RampTrajectory& to, std::vector<RampTrajectory>& result)
-Planner::updateCallback	planner.cpp	/^void Planner::updateCallback(const ramp_msgs::MotionState& msg) $/;"	f	class:Planner	signature:(const ramp_msgs::MotionState& msg)
+Planner::updateCbControlNode	planner.cpp	/^void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg) $/;"	f	class:Planner	signature:(const ramp_msgs::MotionState& msg)
+Planner::updateCbPose	planner.cpp	/^void Planner::updateCbPose(const geometry_msgs::PoseWithCovarianceStamped msg)$/;"	f	class:Planner	signature:(const geometry_msgs::PoseWithCovarianceStamped msg)
 Planner::updateCurvePos	planner.cpp	/^const double Planner::updateCurvePos(const RampTrajectory& traj, const ros::Duration& d) const $/;"	f	class:Planner	signature:(const RampTrajectory& traj, const ros::Duration& d) const
 Planner::updatePathsStart	planner.cpp	/^void Planner::updatePathsStart(const MotionState s) $/;"	f	class:Planner	signature:(const MotionState s)
 Planner::validKPForPath	planner.cpp	/^const bool Planner::validKPForPath(const MotionState ms, const Path p) const$/;"	f	class:Planner	signature:(const MotionState ms, const Path p) const
@@ -283,7 +281,13 @@ Range::Range	range.cpp	/^Range::Range(const ramp_msgs::Range r) {$/;"	f	class:Ra
 Range::random	range.cpp	/^const float Range::random() const {$/;"	f	class:Range	signature:() const
 Range::toString	range.cpp	/^const std::string Range::toString() const {$/;"	f	class:Range	signature:() const
 Range::~Range	range.cpp	/^Range::~Range() {}$/;"	f	class:Range	signature:()
+RvizHandler	rviz_handler.cpp	/^RvizHandler::RvizHandler(const ros::NodeHandle& h) : handle_(h) $/;"	f	class:RvizHandler	signature:(const ros::NodeHandle& h)
+RvizHandler::RvizHandler	rviz_handler.cpp	/^RvizHandler::RvizHandler(const ros::NodeHandle& h) : handle_(h) $/;"	f	class:RvizHandler	signature:(const ros::NodeHandle& h)
+RvizHandler::sendMarkerArray	rviz_handler.cpp	/^void RvizHandler::sendMarkerArray(const visualization_msgs::MarkerArray& ma)$/;"	f	class:RvizHandler	signature:(const visualization_msgs::MarkerArray& ma)
 SLike	main_obstacle_twist_all.cpp	/^void SLike(const int index, const double v, const double w, const double t)$/;"	f	signature:(const int index, const double v, const double w, const double t)
+StampedTransform	main_pub_map_odom.cpp	/^  br.sendTransform(tf::StampedTransform(T_map_odom, ros::Time::now(), "map", "odom"));$/;"	p	file:	signature:(T_map_odom, ros::Time::now(), Ó, Ó)
+StampedTransform	planner.cpp	/^  br.sendTransform(tf::StampedTransform(T_w_odom_, ros::Time::now(), "map", "odom"));$/;"	p	file:	signature:(T_w_odom_, ros::Time::now(), Ó, Ó)
+T_map_odom	main_pub_map_odom.cpp	/^tf::Transform T_map_odom;$/;"	v
 T_w_odom	main_generate_test_case.cpp	/^  tf::Transform T_w_odom;$/;"	l
 TestCase	main_generate_test_case.cpp	/^struct TestCase {$/;"	s	file:
 TestCase	main_run_test_case.cpp	/^struct TestCase $/;"	s	file:
@@ -312,11 +316,11 @@ TrajectoryRequestHandler::TrajectoryRequestHandler	trajectory_request_handler.cp
 TrajectoryRequestHandler::request	trajectory_request_handler.cpp	/^const bool TrajectoryRequestHandler::request(ramp_msgs::TrajectorySrv& tr) $/;"	f	class:TrajectoryRequestHandler	signature:(ramp_msgs::TrajectorySrv& tr)
 Utility	utility.cpp	/^Utility::Utility() {$/;"	f	class:Utility	signature:()
 Utility::Utility	utility.cpp	/^Utility::Utility() {$/;"	f	class:Utility	signature:()
-Utility::displaceAngle	utility.cpp	/^const double Utility::displaceAngle(const double a1, double a2) const {$/;"	f	class:Utility	signature:(const double a1, double a2) const
+Utility::displaceAngle	utility.cpp	/^const double Utility::displaceAngle(const double a1, double a2) const $/;"	f	class:Utility	signature:(const double a1, double a2) const
 Utility::findAngleFromAToB	utility.cpp	/^const double Utility::findAngleFromAToB(const std::vector<double> a, const std::vector<double> b) const $/;"	f	class:Utility	signature:(const std::vector<double> a, const std::vector<double> b) const
 Utility::findAngleFromAToB	utility.cpp	/^const double Utility::findAngleFromAToB(const std::vector<float> a, const std::vector<float> b) const $/;"	f	class:Utility	signature:(const std::vector<float> a, const std::vector<float> b) const
 Utility::findAngleFromAToB	utility.cpp	/^const double Utility::findAngleFromAToB(const trajectory_msgs::JointTrajectoryPoint a, const trajectory_msgs::JointTrajectoryPoint b) const $/;"	f	class:Utility	signature:(const trajectory_msgs::JointTrajectoryPoint a, const trajectory_msgs::JointTrajectoryPoint b) const
-Utility::findDistanceBetweenAngles	utility.cpp	/^const double Utility::findDistanceBetweenAngles(const double a1, const double a2) const $/;"	f	class:Utility	signature:(const double a1, const double a2) const
+Utility::findDistanceBetweenAngles	utility.cpp	/^const double Utility::findDistanceBetweenAngles(const double a1, const double a2) const$/;"	f	class:Utility	signature:(const double a1, const double a2) const
 Utility::getEuclideanDist	utility.cpp	/^const double Utility::getEuclideanDist(const std::vector<double> a, const std::vector<double> b) const {$/;"	f	class:Utility	signature:(const std::vector<double> a, const std::vector<double> b) const
 Utility::getPath	utility.cpp	/^const ramp_msgs::Path Utility::getPath(const std::vector<ramp_msgs::KnotPoint> kps) const {$/;"	f	class:Utility	signature:(const std::vector<ramp_msgs::KnotPoint> kps) const
 Utility::getPath	utility.cpp	/^const ramp_msgs::Path Utility::getPath(const std::vector<ramp_msgs::MotionState> mps) const {$/;"	f	class:Utility	signature:(const std::vector<ramp_msgs::MotionState> mps) const
@@ -330,12 +334,15 @@ Utility::toString	utility.cpp	/^const std::string Utility::toString(const ramp_m
 Utility::toString	utility.cpp	/^const std::string Utility::toString(const ramp_msgs::RampTrajectory traj) const {$/;"	f	class:Utility	signature:(const ramp_msgs::RampTrajectory traj) const
 Utility::toString	utility.cpp	/^const std::string Utility::toString(const trajectory_msgs::JointTrajectoryPoint p) const {$/;"	f	class:Utility	signature:(const trajectory_msgs::JointTrajectoryPoint p) const
 Vector3	main_generate_test_case.cpp	/^      temp.setOrigin( tf::Vector3(conf.at(0), conf.at(1), 0));$/;"	p	file:	signature:(conf.at(0), conf.at(1), 0)
+Vector3	main_pub_map_odom.cpp	/^  T_map_odom.setOrigin( tf::Vector3(p_start[0], p_start[1], 0) );$/;"	p	file:	signature:(p_start[0], p_start[1], 0)
 Vector3	main_testing.cpp	/^      temp.setOrigin( tf::Vector3(conf.at(0), conf.at(1), 0));$/;"	p	file:	signature:(conf.at(0), conf.at(1), 0)
 Vector3	planner.cpp	/^  T_w_odom_.setOrigin(  tf::Vector3(base_pos.at(0), base_pos.at(1), 0));$/;"	p	file:	signature:(base_pos.at(0), base_pos.at(1), 0)
 a	bezier_curve.cpp	/^  double a = (2.*ms_max_.msg_.accelerations.at(i)\/3.);$/;"	l
+a	planner.cpp	/^      tf::Vector3 a(msg.accelerations[0], msg.accelerations[1], 0);$/;"	p	file:	signature:(msg.accelerations[0], msg.accelerations[1], 0)
 a	planner.cpp	/^    MotionState a = segmentPoints.at(i);$/;"	l
 a	planner.cpp	/^    ramp_msgs::MotionState a = p.msg_.points.at(i).motionState;$/;"	l
 a	ramp_trajectory.cpp	/^  std::vector<double> a = msg_.holonomic_path.points[0].motionState.positions;$/;"	l
+a_tf	planner.cpp	/^      tf::Vector3 a_tf = tf_global_odom_rot_ * a;$/;"	l
 abs	motion_state.cpp	/^const MotionState MotionState::abs() const {$/;"	f	class:MotionState	signature:() const
 abtc	main_generate_test_case.cpp	/^    ABTC abtc;$/;"	l
 abtc	main_generate_test_case.cpp	/^  ABTC abtc;$/;"	m	struct:TestCaseTwo	file:	access:public
@@ -353,6 +360,7 @@ addBeforeGoal	planner.cpp	/^      result.addBeforeGoal(ms_temp);$/;"	p	file:	sig
 addBeforeGoal	planner.cpp	/^    result.addBeforeGoal(ms_temp);$/;"	p	file:	signature:(ms_temp)
 all	planner.cpp	/^  std::vector<KnotPoint> all;$/;"	l
 all2	planner.cpp	/^  std::vector<KnotPoint> all2;$/;"	l
+angle	planner.cpp	/^    double angle = tf::getYaw(msg.pose.pose.orientation);$/;"	l
 at	motion_state.cpp	/^      result.msg_.accelerations.at(i) \/= num;$/;"	p	file:	signature:(i)
 at	motion_state.cpp	/^      result.msg_.jerks.at(i) \/= num;$/;"	p	file:	signature:(i)
 at	motion_state.cpp	/^      result.msg_.positions.at(i) += m.msg_.positions.at(i);$/;"	p	file:	signature:(i)
@@ -388,10 +396,13 @@ bestTrajec	main_generate_test_case.cpp	/^ramp_msgs::RampTrajectory bestTrajec;$/
 bestTrajec_at_end	main_generate_test_case.cpp	/^std::vector<RampTrajectory> bestTrajec_at_end;$/;"	v
 bestTrajec_fe	main_generate_test_case.cpp	/^  std::vector<bool>   bestTrajec_fe;$/;"	l
 blank	planner.cpp	/^  ramp_msgs::BezierCurve blank;$/;"	l
+br	main_pub_map_odom.cpp	/^  static tf::TransformBroadcaster br;$/;"	l	file:
+br	planner.cpp	/^  static tf::TransformBroadcaster br;$/;"	l	file:
 buildEvaluationRequest	planner.cpp	/^void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::EvaluationRequest& result, bool full) const$/;"	f	class:Planner	signature:(const RampTrajectory& trajec, ramp_msgs::EvaluationRequest& result, bool full) const
 buildEvaluationSrv	planner.cpp	/^void Planner::buildEvaluationSrv(const RampTrajectory& trajec, ramp_msgs::EvaluationSrv& result) const$/;"	f	class:Planner	signature:(const RampTrajectory& trajec, ramp_msgs::EvaluationSrv& result) const
 buildEvaluationSrv	planner.cpp	/^void Planner::buildEvaluationSrv(std::vector<RampTrajectory>& trajecs, ramp_msgs::EvaluationSrv& srv) const$/;"	f	class:Planner	signature:(std::vector<RampTrajectory>& trajecs, ramp_msgs::EvaluationSrv& srv) const
 buildKnotPointMsg	knot_point.cpp	/^const ramp_msgs::KnotPoint KnotPoint::buildKnotPointMsg() const {$/;"	f	class:KnotPoint	signature:() const
+buildLineList	planner.cpp	/^void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_msgs::Marker& result) const$/;"	f	class:Planner	signature:(const RampTrajectory& trajec, int id, visualization_msgs::Marker& result) const
 buildModificationRequest	modifier.cpp	/^void Modifier::buildModificationRequest(const Population& pop, bool imminent_collision, ramp_msgs::ModificationRequest& result)$/;"	f	class:Modifier	signature:(const Population& pop, bool imminent_collision, ramp_msgs::ModificationRequest& result)
 buildObstacleMsg	main_generate_test_case.cpp	/^const ramp_msgs::Obstacle buildObstacleMsg(const double& p_x, const double& p_y, const double& v_mag, const double& v_direction, const double& w)$/;"	f	signature:(const double& p_x, const double& p_y, const double& v_mag, const double& v_direction, const double& w)
 buildObstacleMsg	main_run_test_case.cpp	/^const ramp_msgs::Obstacle buildObstacleMsg(const double& p_x, const double& p_y, const double& v_mag, const double& v_direction, const double& w)$/;"	f	signature:(const double& p_x, const double& p_y, const double& v_mag, const double& v_direction, const double& w)
@@ -411,6 +422,7 @@ calculateR_min	bezier_curve.cpp	/^void BezierCurve::calculateR_min() $/;"	f	clas
 calculateT_R_min	bezier_curve.cpp	/^void BezierCurve::calculateT_R_min() $/;"	f	class:BezierCurve	signature:()
 call	main_run_test_case.cpp	/^    client_reset.call(reset_srv);$/;"	p	file:	signature:(reset_srv)
 canReplace	population.cpp	/^const bool Population::canReplace(const RampTrajectory& rt, const int& i) const $/;"	f	class:Population	signature:(const RampTrajectory& rt, const int& i) const
+cb	main_gazebo_ob.cpp	/^  gazebo_msgs::GetModelState cb;$/;"	l
 cc_started	main_obstacle_trajectory.cpp	/^  bool cc_started = false;$/;"	l
 cc_started	main_obstacle_twist_all.cpp	/^  bool cc_started = false;$/;"	l
 changeStart	path.cpp	/^void Path::changeStart(const MotionState ms) $/;"	f	class:Path	signature:(const MotionState ms)
@@ -420,6 +432,9 @@ clear	bezier_curve.cpp	/^  ms_max_.msg_.accelerations.clear();$/;"	p	file:	signa
 clear	bezier_curve.cpp	/^  ms_max_.msg_.velocities.clear();$/;"	p	file:	signature:()
 clear	bezier_curve.cpp	/^  segmentPoints_.clear();$/;"	p	file:	signature:()
 clear	control_handler.cpp	/^    str.clear();$/;"	p	file:	signature:()
+clear	planner.cpp	/^  latestUpdate_.msg_.positions.clear();$/;"	p	file:	signature:()
+clear	planner.cpp	/^  ob_radii_.clear();$/;"	p	file:	signature:()
+clear	planner.cpp	/^  ob_trajectory_.clear();$/;"	p	file:	signature:()
 clear	planner.cpp	/^  population_.paths_.clear();$/;"	p	file:	signature:()
 clear	planner.cpp	/^  population_.trajectories_.clear();$/;"	p	file:	signature:()
 clear	planner.cpp	/^  result.clear();$/;"	p	file:	signature:()
@@ -434,7 +449,7 @@ clear	population.cpp	/^  paths_.clear();$/;"	p	file:	signature:()
 clear	population.cpp	/^  subPopulations_.clear();$/;"	p	file:	signature:()
 clear	population.cpp	/^  trajectories_.clear(); $/;"	p	file:	signature:()
 clear	population.cpp	/^void Population::clear() $/;"	f	class:Population	signature:()
-clear	rviz_handler.cpp	/^    str.clear();$/;"	p	file:	signature:()
+client	main_gazebo_ob.cpp	/^  ros::ServiceClient client       = handle.serviceClient<ramp_msgs::TrajectorySrv>("\/trajectory_generator");$/;"	l
 client	main_obstacle_trajectory.cpp	/^  ros::ServiceClient client = handle.serviceClient<ramp_msgs::TrajectorySrv>("\/trajectory_generator");$/;"	l
 client_reset	main_run_test_case.cpp	/^  ros::ServiceClient client_reset = handle.serviceClient<std_srvs::Empty>("reset_positions");$/;"	l
 close	main_generate_test_case.cpp	/^  f_feasible.close();$/;"	p	file:	signature:()
@@ -455,10 +470,10 @@ copy	planner.cpp	/^  Population copy = population_; $/;"	l
 copy	planner.cpp	/^  Population copy = population_;$/;"	l
 cos	main_generate_test_case.cpp	/^  result.ob_ms.velocities.push_back(v_mag*cos(v_direction));$/;"	p	file:	signature:(v_direction)
 cos	main_run_test_case.cpp	/^  result.ob_ms.velocities.push_back(v_mag*cos(v_direction));$/;"	p	file:	signature:(v_direction)
-costmap_height	main.cpp	/^int costmap_width, costmap_height, costmap_origin_x, costmap_origin_y;$/;"	v
-costmap_origin_x	main.cpp	/^int costmap_width, costmap_height, costmap_origin_x, costmap_origin_y;$/;"	v
-costmap_origin_y	main.cpp	/^int costmap_width, costmap_height, costmap_origin_x, costmap_origin_y;$/;"	v
-costmap_width	main.cpp	/^int costmap_width, costmap_height, costmap_origin_x, costmap_origin_y;$/;"	v
+costmap_height	main.cpp	/^float costmap_width, costmap_height, costmap_origin_x, costmap_origin_y;$/;"	v
+costmap_origin_x	main.cpp	/^float costmap_width, costmap_height, costmap_origin_x, costmap_origin_y;$/;"	v
+costmap_origin_y	main.cpp	/^float costmap_width, costmap_height, costmap_origin_x, costmap_origin_y;$/;"	v
+costmap_width	main.cpp	/^float costmap_width, costmap_height, costmap_origin_x, costmap_origin_y;$/;"	v
 cout	main.cpp	/^    std::cout<<"\\n  Ranges: ";$/;"	m	class:std	file:
 cout	main.cpp	/^  std::cout<<"\\n------- Done loading parameters -------\\n";$/;"	m	class:std	file:
 cout	main.cpp	/^  std::cout<<"\\n---------------------------------------";$/;"	m	class:std	file:
@@ -487,8 +502,8 @@ cout	planner.cpp	/^    std::cout<<"\\nSub-transPopulations created\\n";$/;"	m	cl
 cout	planner.cpp	/^    std::cout<<"\\ntransPopulation seeded! Press enter to continue\\n";$/;"	m	class:std	file:
 cout	planner.cpp	/^    std::cout<<"\\ntransPopulation seeded!\\n";$/;"	m	class:std	file:
 cout	planner.cpp	/^  std::cout<<"\\nPress Enter to continue\\n";$/;"	m	class:std	file:
-cout	planner.cpp	/^  std::cout<<"\\ntransPopulation initialized! Press enter to continue\\n";$/;"	m	class:std	file:
 createQuaternionFromYaw	main_generate_test_case.cpp	/^      temp.setRotation(tf::createQuaternionFromYaw(conf.at(2)));$/;"	p	file:	signature:(conf.at(2))
+createQuaternionFromYaw	main_pub_map_odom.cpp	/^  T_map_odom.setRotation(tf::createQuaternionFromYaw(p_start[2]));$/;"	p	file:	signature:(p_start[2])
 createQuaternionFromYaw	main_testing.cpp	/^      temp.setRotation(tf::createQuaternionFromYaw(conf.at(2)));$/;"	p	file:	signature:(conf.at(2))
 createQuaternionFromYaw	planner.cpp	/^  T_w_odom_.setRotation(tf::createQuaternionFromYaw(base_pos.at(2)));$/;"	p	file:	signature:(base_pos.at(2))
 createSubPopulations	planner.cpp	/^      population_.createSubPopulations();$/;"	p	file:	signature:()
@@ -507,14 +522,15 @@ d	planner.cpp	/^  ros::Duration d = ros::Time::now() - t_prevIC_;$/;"	l
 d	planner.cpp	/^  ros::Duration d = ros::Time::now() - t_start; $/;"	l
 d	utility.cpp	/^  std::vector<double> d;$/;"	l
 d_a	utility.cpp	/^  std::vector<double> d_a;$/;"	l
-d_adapt	planner.cpp	/^  ros::Duration d_adapt = ros::Time::now() - t_startAdapt;$/;"	l
+d_adapt	planner.cpp	/^    ros::Duration d_adapt = ros::Time::now() - t_startAdapt;$/;"	l
 d_b	utility.cpp	/^  std::vector<double> d_b;$/;"	l
 d_cc	planner.cpp	/^  ros::Duration d_cc = ros::Time::now() - t;$/;"	l
 d_elap_ob	main_generate_test_case.cpp	/^    double d_elap_ob = d_elapsed.toSec() - ob_delay[i];$/;"	l
+d_elapsed	main_gazebo_ob.cpp	/^  ros::Duration d_elapsed = ros::Time::now() - t_start;$/;"	l
 d_elapsed	main_generate_test_case.cpp	/^  ros::Duration d_elapsed = ros::Time::now() - tc.t_begin;$/;"	l
 d_elapsed	main_run_test_case.cpp	/^  ros::Duration d_elapsed = ros::Time::now() - tc.t_begin;$/;"	l
 d_since_cc	planner.cpp	/^    ros::Duration d_since_cc = ros::Time::now() - t_prevCC_;$/;"	l
-d_trans	planner.cpp	/^  ros::Duration d_trans = ros::Time::now() - t_startTrans;$/;"	l
+d_trans	planner.cpp	/^      ros::Duration d_trans = ros::Time::now() - t_startTrans;$/;"	l
 d_x	utility.cpp	/^  double d_x = b.at(0) - a.at(0);$/;"	l
 d_y	utility.cpp	/^  double d_y = b.at(1) - a.at(1);$/;"	l
 delimiter	main_generate_test_case.cpp	/^    std::string delimiter = ",";$/;"	l
@@ -538,7 +554,7 @@ diff	planner.cpp	/^  MotionState diff;$/;"	l
 diff	planner.cpp	/^  double diff = fabs(utility_.findDistanceBetweenAngles(nec_theta, end));$/;"	l
 difference	utility.cpp	/^  double difference = a2 - a1;$/;"	l
 dir	planner.cpp	/^    double dir = utility_.findAngleFromAToB(latestUpdate_.msg_.positions, $/;"	l
-displaceAngle	utility.cpp	/^const double Utility::displaceAngle(const double a1, double a2) const {$/;"	f	class:Utility	signature:(const double a1, double a2) const
+displaceAngle	utility.cpp	/^const double Utility::displaceAngle(const double a1, double a2) const $/;"	f	class:Utility	signature:(const double a1, double a2) const
 displayTrajectory	planner.cpp	/^void Planner::displayTrajectory(const ramp_msgs::RampTrajectory traj) const $/;"	f	class:Planner	signature:(const ramp_msgs::RampTrajectory traj) const
 dist	main_generate_test_case.cpp	/^      double dist = utility.positionDistance(one, two);$/;"	l
 dist	main_generate_test_case.cpp	/^    double dist = utility.positionDistance( goal.msg_.positions, latestUpdate.msg_.positions );$/;"	l
@@ -550,12 +566,10 @@ dist_ob	planner.cpp	/^        double dist_ob = utility_.positionDistance(ob_traj
 dist_theshold	planner.cpp	/^  double dist_theshold = 0.4f;$/;"	l
 divide	motion_state.cpp	/^const MotionState MotionState::divide(const int num) const {$/;"	f	class:MotionState	signature:(const int num) const
 doControlCycle	planner.cpp	/^void Planner::doControlCycle() $/;"	f	class:Planner	signature:()
-dof_max	main.cpp	/^    std::vector<double> dof_min, dof_max;$/;"	l
 dof_max	main.cpp	/^  std::vector<double> dof_max;$/;"	l
 dof_max	main_generate_test_case.cpp	/^  std::vector<double> dof_max;$/;"	l
 dof_max	main_run_test_case.cpp	/^  std::vector<double> dof_max;$/;"	l
 dof_max	main_testing.cpp	/^  std::vector<double> dof_max;$/;"	l
-dof_min	main.cpp	/^    std::vector<double> dof_min, dof_max;$/;"	l
 dof_min	main.cpp	/^  std::vector<double> dof_min;$/;"	l
 dof_min	main_generate_test_case.cpp	/^  std::vector<double> dof_min;$/;"	l
 dof_min	main_run_test_case.cpp	/^  std::vector<double> dof_min;$/;"	l
@@ -611,9 +625,10 @@ findAngleFromAToB	utility.cpp	/^const double Utility::findAngleFromAToB(const st
 findAngleFromAToB	utility.cpp	/^const double Utility::findAngleFromAToB(const std::vector<float> a, const std::vector<float> b) const $/;"	f	class:Utility	signature:(const std::vector<float> a, const std::vector<float> b) const
 findAngleFromAToB	utility.cpp	/^const double Utility::findAngleFromAToB(const trajectory_msgs::JointTrajectoryPoint a, const trajectory_msgs::JointTrajectoryPoint b) const $/;"	f	class:Utility	signature:(const trajectory_msgs::JointTrajectoryPoint a, const trajectory_msgs::JointTrajectoryPoint b) const
 findAverageDiff	planner.cpp	/^const MotionState Planner::findAverageDiff() {$/;"	f	class:Planner	signature:()
-findDistanceBetweenAngles	utility.cpp	/^const double Utility::findDistanceBetweenAngles(const double a1, const double a2) const $/;"	f	class:Utility	signature:(const double a1, const double a2) const
+findDistanceBetweenAngles	utility.cpp	/^const double Utility::findDistanceBetweenAngles(const double a1, const double a2) const$/;"	f	class:Utility	signature:(const double a1, const double a2) const
 findMotionType	planner.cpp	/^const MotionType Planner::findMotionType(const ramp_msgs::Obstacle ob) const $/;"	f	class:Planner	signature:(const ramp_msgs::Obstacle ob) const
 findVelocity	bezier_curve.cpp	/^const double BezierCurve::findVelocity(const uint8_t i, const double l, const double theta) const $/;"	f	class:BezierCurve	signature:(const uint8_t i, const double l, const double theta) const
+first	main_gazebo_ob.cpp	/^bool first=true;$/;"	v
 fitnessFeasibleToString	planner.cpp	/^    std::cout<<"\\n"<<population_.fitnessFeasibleToString()<<"\\n";$/;"	p	file:	signature:()
 fitnessFeasibleToString	population.cpp	/^const std::string Population::fitnessFeasibleToString() const $/;"	f	class:Population	signature:() const
 full	planner.cpp	/^    RampTrajectory switching, full;$/;"	l
@@ -699,6 +714,7 @@ getTransitionTrajectory	planner.cpp	/^void Planner::getTransitionTrajectory(cons
 getUDotDotMax	bezier_curve.cpp	/^const double BezierCurve::getUDotDotMax(const double u_dot_max) const $/;"	f	class:BezierCurve	signature:(const double u_dot_max) const
 getUDotInitial	bezier_curve.cpp	/^const double BezierCurve::getUDotInitial() const {$/;"	f	class:BezierCurve	signature:() const
 getUDotMax	bezier_curve.cpp	/^const double BezierCurve::getUDotMax(const double u_dot_0) const {$/;"	f	class:BezierCurve	signature:(const double u_dot_0) const
+global_frame	main.cpp	/^std::string         global_frame;$/;"	v
 go	main.cpp	/^  my_planner.go();$/;"	p	file:	signature:()
 go	main_testing.cpp	/^  my_planner.go();$/;"	p	file:	signature:()
 go	planner.cpp	/^void Planner::go() $/;"	f	class:Planner	signature:()
@@ -715,10 +731,14 @@ goal_marker	main.cpp	/^  visualization_msgs::Marker start_marker, goal_marker;$/
 greater	bezier_curve.cpp	/^  double greater, lesser;$/;"	l
 group	main_generate_test_case.cpp	/^  Group group;$/;"	m	struct:TestCase	file:	access:public
 group	main_run_test_case.cpp	/^  Group group;$/;"	m	struct:TestCase	file:	access:public
+gz_get_model	main_gazebo_ob.cpp	/^  ros::ServiceClient gz_get_model = handle.serviceClient<gazebo_msgs::GetModelState>("\/gazebo\/get_model_state");$/;"	l
+gz_set_model	main_gazebo_ob.cpp	/^ros::ServiceClient gz_set_model;$/;"	v
 handle	main.cpp	/^  ros::NodeHandle handle;$/;"	l
+handle	main_gazebo_ob.cpp	/^  ros::NodeHandle handle;$/;"	l
 handle	main_generate_test_case.cpp	/^  ros::NodeHandle handle;$/;"	l
 handle	main_obstacle_trajectory.cpp	/^  ros::NodeHandle handle;$/;"	l
 handle	main_obstacle_twist_all.cpp	/^  ros::NodeHandle handle;$/;"	l
+handle	main_pub_map_odom.cpp	/^  ros::NodeHandle handle;$/;"	l
 handle	main_run_test_case.cpp	/^  ros::NodeHandle handle;$/;"	l
 handle	main_testing.cpp	/^  ros::NodeHandle handle;$/;"	l
 has_curve	planner.cpp	/^  bool    has_curve = t.msg_.curves.size() > 0;$/;"	l
@@ -752,6 +772,7 @@ id	main_testing.cpp	/^    std::cout<<"\\n  ID: "<<id;$/;"	l
 id	main_testing.cpp	/^int                 id;$/;"	v
 imminentCollisionCallback	planner.cpp	/^void Planner::imminentCollisionCallback(const ros::TimerEvent& t) $/;"	f	class:Planner	signature:(const ros::TimerEvent& t)
 imminentCollisionCb	main_generate_test_case.cpp	/^void imminentCollisionCb(const std_msgs::Bool msg)$/;"	f	signature:(const std_msgs::Bool msg)
+index	main_gazebo_ob.cpp	/^  int index = d_elapsed.toSec()*10;$/;"	l
 index	main_generate_test_case.cpp	/^    int index = d_elap_ob*10;$/;"	l
 index	main_run_test_case.cpp	/^  int index = d_elapsed.toSec() * 10;$/;"	l
 index	planner.cpp	/^    int index = floor(t*10)+1 >= curve.u_values.size() ? floor(t*10) : floor(t*10)+1;$/;"	l
@@ -759,17 +780,19 @@ index	planner.cpp	/^    int index = population_.add(traj_final);$/;"	l
 index	utility.cpp	/^    unsigned int index = traj.i_knotPoints.at(i);$/;"	l
 infeasibleExists	population.cpp	/^const bool Population::infeasibleExists() const $/;"	f	class:Population	signature:() const
 init	bezier_curve.cpp	/^void BezierCurve::init(const std::vector<MotionState> segment_points, const double lambda, const MotionState ms_current) $/;"	f	class:BezierCurve	signature:(const std::vector<MotionState> segment_points, const double lambda, const MotionState ms_current)
-init	main.cpp	/^  my_planner.init(id, handle, start, goal, ranges, population_size, sub_populations, pt, gensBeforeCC, t_pc_rate, t_cc_rate, errorReduction); $/;"	p	file:	signature:(id, handle, start, goal, ranges, population_size, sub_populations, pt, gensBeforeCC, t_pc_rate, t_cc_rate, errorReduction)
+init	main.cpp	/^  my_planner.init(id, handle, start, goal, ranges, population_size, radius, sub_populations, global_frame, update_topic, pt, gensBeforeCC, t_pc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); $/;"	p	file:	signature:(id, handle, start, goal, ranges, population_size, radius, sub_populations, global_frame, update_topic, pt, gensBeforeCC, t_pc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction)
 init	main.cpp	/^  ros::init(argc, argv, "ramp_planner");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
+init	main_gazebo_ob.cpp	/^  ros::init(argc, argv, "move_gazebo_obs");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 init	main_generate_test_case.cpp	/^  ros::init(argc, argv, "ramp_planner");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 init	main_obstacle_trajectory.cpp	/^  ros::init(argc, argv, "obstacle");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 init	main_obstacle_twist_all.cpp	/^  ros::init(argc, argv, "obstacle");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
-init	main_run_test_case.cpp	/^    my_planner.init(id, handle, start, goal, ranges, population_size, sub_populations, pt, gensBeforeCC, $/;"	p	file:	signature:(id, handle, start, goal, ranges, population_size, sub_populations, pt, gensBeforeCC, t_pc_rate, t_cc_rate, errorReduction)
+init	main_pub_map_odom.cpp	/^  ros::init(argc, argv, "pub_map_odom");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
+init	main_run_test_case.cpp	/^    my_planner.init(id, handle, start, goal, ranges, population_size, radius, sub_populations, "global_frame", "update_topic", pt, gensBeforeCC, $/;"	p	file:	signature:(id, handle, start, goal, ranges, population_size, radius, sub_populations, Ó, Ó, pt, gensBeforeCC, t_pc_rate, t_cc_rate, errorReduction)
 init	main_run_test_case.cpp	/^  ros::init(argc, argv, "ramp_planner");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 init	main_testing.cpp	/^  my_planner.init(id, handle, start, goal, ranges, population_size, sub_populations, ob_tfs, gensBeforeCC, t_pc_rate, t_cc_rate, errorReduction); $/;"	p	file:	signature:(id, handle, start, goal, ranges, population_size, sub_populations, ob_tfs, gensBeforeCC, t_pc_rate, t_cc_rate, errorReduction)
 init	main_testing.cpp	/^  ros::init(argc, argv, "ramp_planner");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 init	planner.cpp	/^    curve.init(segmentPoints, lambda, ms_startTrans);$/;"	p	file:	signature:(segmentPoints, lambda, ms_startTrans)
-init	planner.cpp	/^void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const bool sub_populations, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool errorReduction) $/;"	f	class:Planner	signature:(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const bool sub_populations, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool errorReduction)
+init	planner.cpp	/^void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) $/;"	f	class:Planner	signature:(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction)
 initControlPoints	bezier_curve.cpp	/^void BezierCurve::initControlPoints() $/;"	f	class:BezierCurve	signature:()
 initControlPoints	bezier_curve.cpp	/^void BezierCurve::initControlPoints(const MotionState cp_0) {$/;"	f	class:BezierCurve	signature:(const MotionState cp_0)
 initDOF	main.cpp	/^void initDOF(const std::vector<double> dof_min, const std::vector<double> dof_max) $/;"	f	signature:(const std::vector<double> dof_min, const std::vector<double> dof_max)
@@ -799,8 +822,11 @@ kp	planner.cpp	/^      KnotPoint kp(ms);$/;"	p	file:	signature:(ms)
 kp	planner.cpp	/^  int kp = 1; $/;"	l
 kp	planner.cpp	/^  ramp_msgs::KnotPoint kp;$/;"	l
 kp	utility.cpp	/^    ramp_msgs::KnotPoint kp;$/;"	l
+kp1	main_gazebo_ob.cpp	/^  ramp_msgs::KnotPoint kp1;$/;"	l
 kp1	planner.cpp	/^  ramp_msgs::KnotPoint kp1;$/;"	l
+kp2	main_gazebo_ob.cpp	/^  ramp_msgs::KnotPoint kp2;$/;"	l
 kp2	planner.cpp	/^  ramp_msgs::KnotPoint kp2;$/;"	l
+kp3	main_gazebo_ob.cpp	/^  ramp_msgs::KnotPoint kp3;$/;"	l
 kp_g	main_obstacle_trajectory.cpp	/^  KnotPoint kp_g(g);$/;"	p	file:	signature:(g)
 kp_g	path.cpp	/^  KnotPoint kp_g(goal);$/;"	p	file:	signature:(goal)
 kp_ms	ramp_trajectory.cpp	/^    KnotPoint kp_ms(ms);$/;"	p	file:	signature:(ms)
@@ -817,23 +843,31 @@ latestUpdate	main_generate_test_case.cpp	/^MotionState latestUpdate;$/;"	v
 lesser	bezier_curve.cpp	/^  double greater, lesser;$/;"	l
 line	main_generate_test_case.cpp	/^    std::string line;$/;"	l
 line	main_testing.cpp	/^    std::string line;$/;"	l
+listen	main.cpp	/^  tf::TransformListener listen;$/;"	l
+listener_	main.cpp	/^    tf::TransformListener listener_;$/;"	l
 loadObstacleTF	main_generate_test_case.cpp	/^void loadObstacleTF()$/;"	f	signature:()
 loadObstacleTF	main_testing.cpp	/^void loadObstacleTF()$/;"	f	signature:()
-loadParameters	main.cpp	/^void loadParameters(const ros::NodeHandle handle) $/;"	f	signature:(const ros::NodeHandle handle)
+loadParameters	main.cpp	/^void loadParameters(const ros::NodeHandle handle)$/;"	f	signature:(const ros::NodeHandle handle)
 loadParameters	main_generate_test_case.cpp	/^void loadParameters(const ros::NodeHandle handle) $/;"	f	signature:(const ros::NodeHandle handle)
 loadParameters	main_run_test_case.cpp	/^void loadParameters(const ros::NodeHandle handle) $/;"	f	signature:(const ros::NodeHandle handle)
 loadParameters	main_testing.cpp	/^void loadParameters(const ros::NodeHandle handle) $/;"	f	signature:(const ros::NodeHandle handle)
+lookupTransform	main.cpp	/^      listener_.lookupTransform(global_frame, "map", ros::Time(0), my_planner.tf_global_costmap_);$/;"	p	file:	signature:(global_frame, Ó, ros::Time(0), my_planner.tf_global_costmap_)
+lookupTransform	main.cpp	/^  listen.lookupTransform(global_frame, "odom", ros::Time(0), my_planner.tf_global_odom_);$/;"	p	file:	signature:(global_frame, Ó, ros::Time(0), my_planner.tf_global_odom_)
+ma	planner.cpp	/^  visualization_msgs::MarkerArray ma;$/;"	l
 mag_angular_t	planner.cpp	/^  double mag_angular_t = ob.ob_ms.velocities[2];$/;"	l
 mag_linear_t	planner.cpp	/^  double mag_linear_t = sqrt( pow(ob.ob_ms.velocities[0], 2) + pow(ob.ob_ms.velocities[1], 2) );$/;"	l
 main	main.cpp	/^int main(int argc, char** argv) {$/;"	f	signature:(int argc, char** argv)
+main	main_gazebo_ob.cpp	/^int main(int argc, char** argv)$/;"	f	signature:(int argc, char** argv)
 main	main_generate_test_case.cpp	/^int main(int argc, char** argv) {$/;"	f	signature:(int argc, char** argv)
 main	main_obstacle_trajectory.cpp	/^int main(int argc, char** argv)$/;"	f	signature:(int argc, char** argv)
 main	main_obstacle_twist_all.cpp	/^int main(int argc, char** argv)$/;"	f	signature:(int argc, char** argv)
+main	main_pub_map_odom.cpp	/^int main(int argc, char** argv)$/;"	f	signature:(int argc, char** argv)
 main	main_run_test_case.cpp	/^int main(int argc, char** argv) {$/;"	f	signature:(int argc, char** argv)
 main	main_testing.cpp	/^int main(int argc, char** argv) {$/;"	f	signature:(int argc, char** argv)
 min_dist	planner.cpp	/^  double min_dist;$/;"	l
 mod_trajec	planner.cpp	/^  std::vector<RampTrajectory> mod_trajec;$/;"	l
 modded_paths	planner.cpp	/^  std::vector<Path> modded_paths = modifyPath();$/;"	l
+model_name	main_gazebo_ob.cpp	/^  std::string model_name = "cardboard_box";$/;"	l
 modification	planner.cpp	/^void Planner::modification()$/;"	f	class:Planner	signature:()
 modifications	main.cpp	/^    std::cout<<"\\nmodifications: "<<modifications;$/;"	l
 modifications	main.cpp	/^bool                modifications;$/;"	v
@@ -847,8 +881,11 @@ modifyPath	planner.cpp	/^const std::vector<Path> Planner::modifyPath() $/;"	f	cl
 modifyTrajec	planner.cpp	/^void Planner::modifyTrajec(std::vector<RampTrajectory>& result)$/;"	f	class:Planner	signature:(std::vector<RampTrajectory>& result)
 motion_type	planner.cpp	/^  MotionType motion_type = findMotionType(ob);$/;"	l
 moving	main_generate_test_case.cpp	/^  bool moving[9];$/;"	m	struct:ABTC	file:	access:public
+moving_robot	main.cpp	/^    std::cout<<"\\nmoving_robot: "<<moving_robot;$/;"	l
+moving_robot	main.cpp	/^bool                moving_robot;$/;"	v
 mp	path.cpp	/^    ramp_msgs::KnotPoint mp = msg_.points[i];$/;"	l
 mr	modifier.cpp	/^  ramp_msgs::ModificationRequest mr;$/;"	l
+ms	main_gazebo_ob.cpp	/^  gazebo_msgs::SetModelState ms; $/;"	l
 ms	planner.cpp	/^      MotionState ms = traj.getPointAtTime(t);$/;"	l
 ms	planner.cpp	/^    MotionState ms = from.getPointAtTime(t_pc);$/;"	l
 ms	ramp_trajectory.cpp	/^    MotionState ms(msg_.trajectory.points.at( msg_.i_knotPoints.at(i)));$/;"	p	file:	signature:(msg_.trajectory.points.at( msg_.i_knotPoints.at(i)))
@@ -859,16 +896,18 @@ ms_startTrans	planner.cpp	/^  MotionState ms_startTrans = trj_movingOn.getPointA
 ms_temp	planner.cpp	/^    MotionState ms_temp;$/;"	l
 msg	main_generate_test_case.cpp	/^  ramp_msgs::Obstacle msg;$/;"	m	struct:ObInfo	file:	access:public
 msg	main_run_test_case.cpp	/^  ramp_msgs::Obstacle msg;$/;"	m	struct:ObInfo	file:	access:public
-msg	planner.cpp	/^  ramp_msgs::Population msg;$/;"	l
+msg	planner.cpp	/^  ramp_msgs::Population msg = population_.populationMsg();$/;"	l
 msg	population.cpp	/^  ramp_msgs::Population msg;$/;"	l
+msg_tf	planner.cpp	/^    tf::Vector3 msg_tf = tf_global_costmap_ * v;$/;"	l
 mt	main_generate_test_case.cpp	/^      MotionType mt = my_planner.findMotionType(tc.obs[i].msg);$/;"	l
 multiply	motion_state.cpp	/^const MotionState MotionState::multiply(const int num) const {$/;"	f	class:MotionState	signature:(const int num) const
-my_planner	main.cpp	/^Planner             my_planner; $/;"	v
+my_planner	main.cpp	/^  Planner my_planner; $/;"	l
 my_planner	main_generate_test_case.cpp	/^Planner             my_planner; $/;"	v
 my_planner	main_run_test_case.cpp	/^Planner             my_planner; $/;"	v
 my_planner	main_testing.cpp	/^Planner             my_planner; $/;"	v
 n	planner.cpp	/^  uint8_t n = (rand() % 4)+1;$/;"	l
 nec_theta	planner.cpp	/^  double nec_theta = utility_.findAngleFromAToB(ms_startTrans.msg_.positions, ms_endOfMovingOn.msg_.positions);$/;"	l
+nec_theta	planner.cpp	/^  double nec_theta = utility_.findAngleFromAToB(trajec.msg_.trajectory.points[0].positions, trajec.msg_.trajectory.points[ trajec.msg_.i_knotPoints[1] ].positions);$/;"	l
 new_pop	planner.cpp	/^  std::vector<RampTrajectory> new_pop;$/;"	l
 no_curve	planner.cpp	/^  bool no_curve=false;$/;"	l
 node_start	main_obstacle_twist_all.cpp	/^ros::Time node_start;$/;"	v
@@ -916,6 +955,8 @@ ob_topics	main.cpp	/^std::vector<std::string> ob_topics;$/;"	v
 ob_topics	main_generate_test_case.cpp	/^std::vector<std::string> ob_topics;$/;"	v
 ob_topics	main_run_test_case.cpp	/^std::vector<std::string> ob_topics;$/;"	v
 ob_topics	main_testing.cpp	/^std::vector<std::string> ob_topics;$/;"	v
+ob_trj	main_gazebo_ob.cpp	/^ramp_msgs::RampTrajectory ob_trj;$/;"	v
+ob_trj	planner.cpp	/^    visualization_msgs::Marker ob_trj;$/;"	l
 ob_trj_timer	main_generate_test_case.cpp	/^  ros::Timer ob_trj_timer;$/;"	l
 ob_trj_timer	main_run_test_case.cpp	/^  ros::Timer ob_trj_timer;$/;"	l
 ob_trjs	main_generate_test_case.cpp	/^  std::vector<RampTrajectory> ob_trjs;$/;"	m	struct:TestCase	file:	access:public
@@ -936,15 +977,19 @@ odom_msg	main_generate_test_case.cpp	/^  nav_msgs::Odometry odom_msg;$/;"	l
 odom_msg	main_run_test_case.cpp	/^  nav_msgs::Odometry odom_msg;$/;"	l
 offsetPopulation	planner.cpp	/^void Planner::offsetPopulation(const MotionState& diff) $/;"	f	class:Planner	signature:(const MotionState& diff)
 offsetPositions	path.cpp	/^void Path::offsetPositions(const MotionState diff)$/;"	f	class:Path	signature:(const MotionState diff)
-offsetPositions	planner.cpp	/^      movingOn_.offsetPositions(temp);$/;"	p	file:	signature:(temp)
+offsetPositions	planner.cpp	/^    movingOn_.offsetPositions(temp);$/;"	p	file:	signature:(temp)
 offsetPositions	planner.cpp	/^    population_.paths_[i].offsetPositions(diff);$/;"	p	file:	signature:(diff)
 offsetPositions	planner.cpp	/^    population_.trajectories_[i].offsetPositions(diff);$/;"	p	file:	signature:(diff)
 offsetPositions	planner.cpp	/^  t.offsetPositions(diff);$/;"	p	file:	signature:(diff)
 offsetTrajectory	planner.cpp	/^void Planner::offsetTrajectory(RampTrajectory& t, const MotionState& diff) $/;"	f	class:Planner	signature:(RampTrajectory& t, const MotionState& diff)
 one	main_generate_test_case.cpp	/^      std::vector<double> one, two, three;$/;"	l
 one	main_generate_test_case.cpp	/^      std::vector<double> one, two;$/;"	l
+only_sensing	main.cpp	/^    std::cout<<"\\nonly_sensing: "<<only_sensing;$/;"	l
+only_sensing	main.cpp	/^bool                only_sensing;$/;"	v
 op	modifier.cpp	/^  unsigned int op = rand() % num_ops;$/;"	l
 p	control_handler.cpp	/^    ros::Publisher p = handle_.advertise<std_msgs::Bool>(str.str(), 1);$/;"	l
+p	main_gazebo_ob.cpp	/^  ramp_msgs::Path p;$/;"	l
+p	main_gazebo_ob.cpp	/^  trajectory_msgs::JointTrajectoryPoint p = index >= ob_trj.trajectory.points.size() ? ob_trj.trajectory.points[ob_trj.trajectory.points.size()-1] : ob_trj.trajectory.points[index]; $/;"	l
 p	main_generate_test_case.cpp	/^      ramp_msgs::Path p = my_planner.getObstaclePath(tc.obs[i].msg, mt);$/;"	l
 p	main_generate_test_case.cpp	/^      trajectory_msgs::JointTrajectoryPoint p = tc.ob_trjs[i].trajectory.points[temp_index]; $/;"	l
 p	main_obstacle_trajectory.cpp	/^  Path p(s,g);$/;"	p	file:	signature:(s,g)
@@ -952,9 +997,9 @@ p	main_run_test_case.cpp	/^  trajectory_msgs::JointTrajectoryPoint p = tc.ob_trj
 p	motion_state.cpp	/^  tf::Vector3 p = transformBasePosition(t);$/;"	l
 p	motion_state.cpp	/^  tf::Vector3 p(msg_.positions.at(0), msg_.positions.at(1), 0);$/;"	p	file:	signature:(msg_.positions.at(0), msg_.positions.at(1), 0)
 p	planner.cpp	/^    Path p = result.msg_.holonomic_path;$/;"	l
+p	planner.cpp	/^    geometry_msgs::Point p;$/;"	l
 p	planner.cpp	/^  Path p(segmentPoints);$/;"	p	file:	signature:(segmentPoints)
 p	population.cpp	/^    Population p = subPopulations_.at(temp.msg_.i_subPopulation);$/;"	l
-p	rviz_handler.cpp	/^    ros::Publisher p = handle_.advertise<std_msgs::Bool>(str.str(), 1);$/;"	l
 p	utility.cpp	/^    trajectory_msgs::JointTrajectoryPoint p = traj.trajectory.points.at(i);$/;"	l
 p	utility.cpp	/^    trajectory_msgs::JointTrajectoryPoint p = traj.trajectory.points.at(index);$/;"	l
 p0	bezier_curve.cpp	/^    MotionState C0, C1, C2, p0, p1, p2;$/;"	l
@@ -978,6 +1023,7 @@ p_next_cc	main_run_test_case.cpp	/^    auto p_next_cc = my_planner.prepareForTes
 p_next_cc	planner.cpp	/^  trajectory_msgs::JointTrajectoryPoint p_next_cc = movingOn_.msg_.trajectory.points.at(t_next_cc*10);$/;"	l
 p_start	main.cpp	/^    std::vector<float> p_start;$/;"	l
 p_start	main_generate_test_case.cpp	/^    std::vector<float> p_start;$/;"	l
+p_start	main_pub_map_odom.cpp	/^  std::vector<float> p_start;$/;"	l
 p_start	main_run_test_case.cpp	/^    std::vector<float> p_start;$/;"	l
 p_start	main_testing.cpp	/^    std::vector<float> p_start;$/;"	l
 path	planner.cpp	/^  std::vector<ramp_msgs::KnotPoint> path;$/;"	l
@@ -993,6 +1039,7 @@ point	planner.cpp	/^      trajectory_msgs::JointTrajectoryPoint point = traj.msg
 pop	main_obstacle_trajectory.cpp	/^  ramp_msgs::Population pop;$/;"	l
 pop	planner.cpp	/^  ramp_msgs::Population pop;$/;"	l
 pop_obs	planner.cpp	/^  Population pop_obs;$/;"	l
+pop_trj	planner.cpp	/^    visualization_msgs::Marker pop_trj;$/;"	l
 pop_type	main.cpp	/^int                 pop_type;$/;"	v
 pop_type	main_generate_test_case.cpp	/^int                 pop_type;$/;"	v
 pop_type	main_run_test_case.cpp	/^int                 pop_type;$/;"	v
@@ -1018,9 +1065,13 @@ prepareForTestCase	planner.cpp	/^trajectory_msgs::JointTrajectoryPoint Planner::
 pt	main.cpp	/^TrajectoryType      pt;$/;"	v
 pt	main_generate_test_case.cpp	/^TrajectoryType      pt;$/;"	v
 pt	main_run_test_case.cpp	/^TrajectoryType      pt;$/;"	v
+pubMapOdomCb	planner.cpp	/^void Planner::pubMapOdomCb(const ros::TimerEvent& e)$/;"	f	class:Planner	signature:(const ros::TimerEvent& e)
+pubMapOdomTimer_	main_pub_map_odom.cpp	/^  ros::Timer pubMapOdomTimer_ = handle.createTimer(pubMapOdom_, &sendTransform);$/;"	l
+pubObTrj	main_gazebo_ob.cpp	/^void pubObTrj(const ros::TimerEvent e)$/;"	f	signature:(const ros::TimerEvent e)
 pubObTrj	main_generate_test_case.cpp	/^void pubObTrj(const ros::TimerEvent e, TestCaseTwo& tc)$/;"	f	signature:(const ros::TimerEvent e, TestCaseTwo& tc)
 pubObTrj	main_run_test_case.cpp	/^void pubObTrj(const ros::TimerEvent e, const TestCase tc)$/;"	f	signature:(const ros::TimerEvent e, const TestCase tc)
 pubStartGoalMarkers	main.cpp	/^void pubStartGoalMarkers()$/;"	f	signature:()
+pub_ob_trj	main_gazebo_ob.cpp	/^  ros::Timer pub_ob_trj = handle.createTimer(ros::Duration(1.0f\/20.0f), pubObTrj);$/;"	l
 pub_obs	main_generate_test_case.cpp	/^ros::Publisher pub_obs;$/;"	v
 pub_pop	main_obstacle_trajectory.cpp	/^  ros::Publisher pub_pop = handle.advertise<ramp_msgs::Population>("\/population", 1000);  $/;"	l
 pub_rviz	main.cpp	/^ros::Publisher pub_rviz;$/;"	v
@@ -1034,9 +1085,7 @@ publish	main_generate_test_case.cpp	/^    pub_obs.publish(obs_stat);$/;"	p	file:
 publish	main_generate_test_case.cpp	/^  pub_obs.publish(tc.ob_list);$/;"	p	file:	signature:(tc.ob_list)
 publish	main_obstacle_trajectory.cpp	/^  pub_pop.publish(pop);$/;"	p	file:	signature:(pop)
 publish	main_obstacle_trajectory.cpp	/^  pub_traj.publish(tr_srv.response.resps.at(0).trajectory);$/;"	p	file:	signature:(tr_srv.response.resps.at(0).trajectory)
-publish	rviz_handler.cpp	/^  pub_bestTrajec_.publish(bestTrajec);$/;"	p	file:	signature:(bestTrajec)
-publish	rviz_handler.cpp	/^  pub_imminent_collision_.publish(value);$/;"	p	file:	signature:(value)
-publish	rviz_handler.cpp	/^  pub_population_.publish(population);$/;"	p	file:	signature:(population)
+publish	rviz_handler.cpp	/^  pub_markerArray_.publish(ma);$/;"	p	file:	signature:(ma)
 publishToAllObs	main_obstacle_twist_all.cpp	/^void publishToAllObs(const geometry_msgs::Twist twist)$/;"	f	signature:(const geometry_msgs::Twist twist)
 publishToOb	main_obstacle_twist_all.cpp	/^void publishToOb(const ros::TimerEvent e, const int index)$/;"	f	signature:(const ros::TimerEvent e, const int index)
 push_back	bezier_curve.cpp	/^      C0.msg_.velocities.push_back(ms_init_.msg_.velocities.at(0));$/;"	p	file:	signature:(ms_init_.msg_.velocities.at(0))
@@ -1061,16 +1110,24 @@ push_back	bezier_curve.cpp	/^  controlPoints_.push_back(C0);$/;"	p	file:	signatu
 push_back	bezier_curve.cpp	/^  controlPoints_.push_back(C1);$/;"	p	file:	signature:(C1)
 push_back	bezier_curve.cpp	/^  controlPoints_.push_back(C2);$/;"	p	file:	signature:(C2)
 push_back	control_handler.cpp	/^    pub_ob_imminent_collision_.push_back(p);$/;"	p	file:	signature:(p)
-push_back	main.cpp	/^    dof_max.push_back(PI);$/;"	p	file:	signature:(PI)
-push_back	main.cpp	/^    dof_max.push_back(x_max);$/;"	p	file:	signature:(x_max)
-push_back	main.cpp	/^    dof_max.push_back(y_max);$/;"	p	file:	signature:(y_max)
-push_back	main.cpp	/^    dof_min.push_back(x_min);$/;"	p	file:	signature:(x_min)
-push_back	main.cpp	/^    dof_min.push_back(y_min);$/;"	p	file:	signature:(y_min)
 push_back	main.cpp	/^    goal.msg_.positions.push_back(g.at(i));$/;"	p	file:	signature:(g.at(i))
 push_back	main.cpp	/^    ranges.push_back(temp); $/;"	p	file:	signature:(temp)
 push_back	main.cpp	/^    start.msg_.positions.push_back(s.at(i));$/;"	p	file:	signature:(s.at(i))
 push_back	main.cpp	/^  result.markers.push_back(goal_marker);$/;"	p	file:	signature:(goal_marker)
 push_back	main.cpp	/^  result.markers.push_back(start_marker);$/;"	p	file:	signature:(start_marker)
+push_back	main_gazebo_ob.cpp	/^  kp1.motionState.positions.push_back(PI);$/;"	p	file:	signature:(PI)
+push_back	main_gazebo_ob.cpp	/^  kp1.motionState.positions.push_back(cb.response.pose.position.x);$/;"	p	file:	signature:(cb.response.pose.position.x)
+push_back	main_gazebo_ob.cpp	/^  kp1.motionState.positions.push_back(cb.response.pose.position.y);$/;"	p	file:	signature:(cb.response.pose.position.y)
+push_back	main_gazebo_ob.cpp	/^  kp2.motionState.positions.push_back(PI);$/;"	p	file:	signature:(PI)
+push_back	main_gazebo_ob.cpp	/^  kp2.motionState.positions.push_back(cb.response.pose.position.x-1.0);$/;"	p	file:	signature:(cb.response.pose.position.x-1.0)
+push_back	main_gazebo_ob.cpp	/^  kp2.motionState.positions.push_back(cb.response.pose.position.y-1.0);$/;"	p	file:	signature:(cb.response.pose.position.y-1.0)
+push_back	main_gazebo_ob.cpp	/^  kp3.motionState.positions.push_back(PI);$/;"	p	file:	signature:(PI)
+push_back	main_gazebo_ob.cpp	/^  kp3.motionState.positions.push_back(cb.response.pose.position.x-2.0);$/;"	p	file:	signature:(cb.response.pose.position.x-2.0)
+push_back	main_gazebo_ob.cpp	/^  kp3.motionState.positions.push_back(cb.response.pose.position.y);$/;"	p	file:	signature:(cb.response.pose.position.y)
+push_back	main_gazebo_ob.cpp	/^  p.points.push_back(kp1);$/;"	p	file:	signature:(kp1)
+push_back	main_gazebo_ob.cpp	/^  p.points.push_back(kp2);$/;"	p	file:	signature:(kp2)
+push_back	main_gazebo_ob.cpp	/^  p.points.push_back(kp3);$/;"	p	file:	signature:(kp3)
+push_back	main_gazebo_ob.cpp	/^  ts.request.reqs.push_back(tr);$/;"	p	file:	signature:(tr)
 push_back	main_generate_test_case.cpp	/^        tc.ob_trjs.push_back(tr_srv.response.resps[i].trajectory);$/;"	p	file:	signature:(tr_srv.response.resps[i].trajectory)
 push_back	main_generate_test_case.cpp	/^      bestTrajec_fe.push_back(false);$/;"	p	file:	signature:(false)
 push_back	main_generate_test_case.cpp	/^      bestTrajec_fe.push_back(true);$/;"	p	file:	signature:(true)
@@ -1159,6 +1216,7 @@ push_back	planner.cpp	/^        temp.segmentPoints.push_back( path.msg_.points.a
 push_back	planner.cpp	/^        times.push_back(t); $/;"	p	file:	signature:(t)
 push_back	planner.cpp	/^      c.push_back(curves.at(i));$/;"	p	file:	signature:(curves.at(i))
 push_back	planner.cpp	/^      ob_dists_.push_back(dist);$/;"	p	file:	signature:(dist)
+push_back	planner.cpp	/^      ob_radii_.push_back(msg.obstacles[i].radius);$/;"	p	file:	signature:(msg.obstacles[i].radius)
 push_back	planner.cpp	/^      ob_trajectory_.push_back(ob_temp_trj);$/;"	p	file:	signature:(ob_temp_trj)
 push_back	planner.cpp	/^      result.msg_.positions.push_back(ranges_[i].random());$/;"	p	file:	signature:(ranges_[i].random())
 push_back	planner.cpp	/^      result.msg_.positions.push_back(theta_test.random());$/;"	p	file:	signature:(theta_test.random())
@@ -1167,6 +1225,8 @@ push_back	planner.cpp	/^      result.push_back(curve);$/;"	p	file:	signature:(cu
 push_back	planner.cpp	/^      result.push_back(full);$/;"	p	file:	signature:(full)
 push_back	planner.cpp	/^      result.push_back(switching);$/;"	p	file:	signature:(switching)
 push_back	planner.cpp	/^      result.push_back(temp);$/;"	p	file:	signature:(temp)
+push_back	planner.cpp	/^      trans_durs_.push_back(d_trans);$/;"	p	file:	signature:(d_trans)
+push_back	planner.cpp	/^    adapt_durs_.push_back(d_adapt);$/;"	p	file:	signature:(d_adapt)
 push_back	planner.cpp	/^    copy.trajectories_.push_back(ob_temp_trj);$/;"	p	file:	signature:(ob_temp_trj)
 push_back	planner.cpp	/^    copy.trajectories_.push_back(ob_trajectory_[i]);$/;"	p	file:	signature:(ob_trajectory_[i])
 push_back	planner.cpp	/^    goal.motionState.positions.push_back(ob_goal_b.getX());$/;"	p	file:	signature:(ob_goal_b.getX())
@@ -1175,11 +1235,21 @@ push_back	planner.cpp	/^    goal.motionState.positions.push_back(start.motionSta
 push_back	planner.cpp	/^    goal.motionState.velocities.push_back(start.motionState.velocities.at(0));$/;"	p	file:	signature:(start.motionState.velocities.at(0))
 push_back	planner.cpp	/^    goal.motionState.velocities.push_back(start.motionState.velocities.at(1));$/;"	p	file:	signature:(start.motionState.velocities.at(1))
 push_back	planner.cpp	/^    goal.motionState.velocities.push_back(start.motionState.velocities.at(2));$/;"	p	file:	signature:(start.motionState.velocities.at(2))
+push_back	planner.cpp	/^    latestUpdate_.msg_.positions.push_back(angle);$/;"	p	file:	signature:(angle)
+push_back	planner.cpp	/^    latestUpdate_.msg_.positions.push_back(msg.pose.pose.position.x);$/;"	p	file:	signature:(msg.pose.pose.position.x)
+push_back	planner.cpp	/^    latestUpdate_.msg_.positions.push_back(msg.pose.pose.position.y);$/;"	p	file:	signature:(msg.pose.pose.position.y)
+push_back	planner.cpp	/^    latestUpdate_.msg_.positions.push_back(msg.pose.pose.position.z);$/;"	p	file:	signature:(msg.pose.pose.position.z)
+push_back	planner.cpp	/^    latestUpdate_.msg_.positions.push_back(msg_tf.getX());$/;"	p	file:	signature:(msg_tf.getX())
+push_back	planner.cpp	/^    latestUpdate_.msg_.positions.push_back(msg_tf.getY());$/;"	p	file:	signature:(msg_tf.getY())
+push_back	planner.cpp	/^    ma.markers.push_back(ob_trj);$/;"	p	file:	signature:(ob_trj)
+push_back	planner.cpp	/^    ma.markers.push_back(pop_trj);$/;"	p	file:	signature:(pop_trj)
 push_back	planner.cpp	/^    new_pop.push_back(trajec);$/;"	p	file:	signature:(trajec)
 push_back	planner.cpp	/^    path.push_back(goal);$/;"	p	file:	signature:(goal)
 push_back	planner.cpp	/^    path.push_back(start);$/;"	p	file:	signature:(start)
 push_back	planner.cpp	/^    result.msg_.positions.push_back(ranges_.at(i).random());$/;"	p	file:	signature:(ranges_.at(i).random())
+push_back	planner.cpp	/^    result.obstacle_radii.push_back(ob_radii_[i]);$/;"	p	file:	signature:(ob_radii_[i])
 push_back	planner.cpp	/^    result.obstacle_trjs.push_back(ob_trajectory_[i].msg_);$/;"	p	file:	signature:(ob_trajectory_[i].msg_)
+push_back	planner.cpp	/^    result.points.push_back(p);$/;"	p	file:	signature:(p)
 push_back	planner.cpp	/^    result.push_back(temp);$/;"	p	file:	signature:(temp)
 push_back	planner.cpp	/^    result.push_back(temp_path);$/;"	p	file:	signature:(temp_path)
 push_back	planner.cpp	/^    result.push_back(traj);$/;"	p	file:	signature:(traj)
@@ -1187,7 +1257,6 @@ push_back	planner.cpp	/^    srv.request.reqs.push_back(req);$/;"	p	file:	signatu
 push_back	planner.cpp	/^    srv.request.reqs.push_back(trs.at(i));$/;"	p	file:	signature:(trs.at(i))
 push_back	planner.cpp	/^    tr_reqs.push_back(tr);$/;"	p	file:	signature:(tr)
 push_back	planner.cpp	/^    tr_srv.request.reqs.push_back(tr);$/;"	p	file:	signature:(tr)
-push_back	planner.cpp	/^  adapt_durs_.push_back(d_adapt);$/;"	p	file:	signature:(d_adapt)
 push_back	planner.cpp	/^  all.push_back(goal_);$/;"	p	file:	signature:(goal_)
 push_back	planner.cpp	/^  all.push_back(kp);$/;"	p	file:	signature:(kp)
 push_back	planner.cpp	/^  all.push_back(startPlanning_);$/;"	p	file:	signature:(startPlanning_)
@@ -1218,7 +1287,6 @@ push_back	planner.cpp	/^  srv.request.reqs.push_back(request);$/;"	p	file:	signa
 push_back	planner.cpp	/^  srv.request.reqs.push_back(tr);$/;"	p	file:	signature:(tr)
 push_back	planner.cpp	/^  t.push_back(trajec);$/;"	p	file:	signature:(trajec)
 push_back	planner.cpp	/^  tr_srv.request.reqs.push_back(tr);$/;"	p	file:	signature:(tr)
-push_back	planner.cpp	/^  trans_durs_.push_back(d_trans);$/;"	p	file:	signature:(d_trans)
 push_back	population.cpp	/^        i_validSubpops.push_back(i);$/;"	p	file:	signature:(i)
 push_back	population.cpp	/^        result.push_back(subPopulations_.at(i).get(i_best));$/;"	p	file:	signature:(subPopulations_.at(i).get(i_best))
 push_back	population.cpp	/^    msg.population.push_back(trajectories_.at(i).msg_);$/;"	p	file:	signature:(trajectories_.at(i).msg_)
@@ -1230,7 +1298,6 @@ push_back	population.cpp	/^    trajectories_.push_back (rt);  $/;"	p	file:	signa
 push_back	population.cpp	/^    trajectories_.push_back(trajec);$/;"	p	file:	signature:(trajec)
 push_back	ramp_trajectory.cpp	/^    result.msg_.points.push_back(kp_ms.buildKnotPointMsg());$/;"	p	file:	signature:(kp_ms.buildKnotPointMsg())
 push_back	ramp_trajectory.cpp	/^    rt.trajectory.points.push_back(msg_.trajectory.points.at(0));$/;"	p	file:	signature:(msg_.trajectory.points.at(0))
-push_back	rviz_handler.cpp	/^    pub_ob_imminent_collision_.push_back(p);$/;"	p	file:	signature:(p)
 push_back	utility.cpp	/^    c.push_back(a.positions.at(i));$/;"	p	file:	signature:(a.positions.at(i))
 push_back	utility.cpp	/^    d.push_back(b.positions.at(i));$/;"	p	file:	signature:(b.positions.at(i))
 push_back	utility.cpp	/^    d_a.push_back(a.at(i));$/;"	p	file:	signature:(a.at(i))
@@ -1243,6 +1310,8 @@ push_back	utility.cpp	/^  standardRanges.push_back(range2);$/;"	p	file:	signatur
 r	main_generate_test_case.cpp	/^  double r = sqrt( pow(dim,2) * 2 );$/;"	l
 r	main_run_test_case.cpp	/^  double r = sqrt( pow(dim,2) * 2 );$/;"	l
 radicand	bezier_curve.cpp	/^  double radicand = (2*a*l) + pow(v_0, 2);$/;"	l
+radius	main.cpp	/^double              radius;$/;"	v
+radius	main_run_test_case.cpp	/^double              radius;$/;"	v
 random	range.cpp	/^const float Range::random() const {$/;"	f	class:Range	signature:() const
 randomMS	main_run_test_case.cpp	/^    my_planner.randomMS(initial_state);$/;"	p	file:	signature:(initial_state)
 randomMS	planner.cpp	/^void Planner::randomMS(MotionState& result) const$/;"	f	class:Planner	signature:(MotionState& result) const
@@ -1342,22 +1411,26 @@ result	utility.cpp	/^  double result=0;$/;"	l
 result	utility.cpp	/^  ramp_msgs::Path result;$/;"	l
 result	utility.cpp	/^  std::ostringstream result;$/;"	l
 ros::init	main.cpp	/^  ros::init(argc, argv, "ramp_planner");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
+ros::init	main_gazebo_ob.cpp	/^  ros::init(argc, argv, "move_gazebo_obs");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 ros::init	main_generate_test_case.cpp	/^  ros::init(argc, argv, "ramp_planner");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 ros::init	main_obstacle_trajectory.cpp	/^  ros::init(argc, argv, "obstacle");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 ros::init	main_obstacle_twist_all.cpp	/^  ros::init(argc, argv, "obstacle");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
+ros::init	main_pub_map_odom.cpp	/^  ros::init(argc, argv, "pub_map_odom");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 ros::init	main_run_test_case.cpp	/^  ros::init(argc, argv, "ramp_planner");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 ros::init	main_testing.cpp	/^  ros::init(argc, argv, "ramp_planner");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 ros::shutdown	main.cpp	/^  ros::shutdown();$/;"	p	class:ros	file:	signature:()
 ros::shutdown	main_generate_test_case.cpp	/^  ros::shutdown();$/;"	p	class:ros	file:	signature:()
 ros::shutdown	main_run_test_case.cpp	/^  ros::shutdown();$/;"	p	class:ros	file:	signature:()
 ros::shutdown	main_testing.cpp	/^  ros::shutdown();$/;"	p	class:ros	file:	signature:()
+ros::spin	main_gazebo_ob.cpp	/^  ros::spin();$/;"	p	class:ros	file:	signature:()
+ros::spin	main_pub_map_odom.cpp	/^  ros::spin();$/;"	p	class:ros	file:	signature:()
 ros::spinOnce	main_generate_test_case.cpp	/^      ros::spinOnce();$/;"	p	class:ros	file:	signature:()
 ros::spinOnce	main_obstacle_trajectory.cpp	/^    ros::spinOnce();$/;"	p	class:ros	file:	signature:()
 ros::spinOnce	main_obstacle_twist_all.cpp	/^    ros::spinOnce();$/;"	p	class:ros	file:	signature:()
 ros::spinOnce	main_run_test_case.cpp	/^      ros::spinOnce();$/;"	p	class:ros	file:	signature:()
+ros::spinOnce	planner.cpp	/^    planningCycleCallback(); ROS_INFO("Done with PC Callback"); r.sleep(); ROS_INFO("Slept, now spinning"); ros::spinOnce(); ROS_INFO("Done spinning once");$/;"	p	class:ros	file:	signature:()
 ros::spinOnce	planner.cpp	/^    ros::spinOnce(); $/;"	p	class:ros	file:	signature:()
 ros::spinOnce	planner.cpp	/^  while(generation_ < num) {planningCycleCallback(); r.sleep(); ros::spinOnce();}$/;"	p	class:ros	file:	signature:()
-ros::spinOnce	planner.cpp	/^  while(generation_ < num_pc) {planningCycleCallback(); r.sleep(); ros::spinOnce();}$/;"	p	class:ros	file:	signature:()
 ros::waitForShutdown	main_obstacle_twist_all.cpp	/^  ros::waitForShutdown();$/;"	p	class:ros	file:	signature:()
 rt	ramp_trajectory.cpp	/^  ramp_msgs::RampTrajectory rt;$/;"	l
 run	bezier_curve.cpp	/^  double run  = segmentPoints_.at(1).msg_.positions.at(0) - $/;"	l
@@ -1375,26 +1448,26 @@ seedPopulation	main_run_test_case.cpp	/^    std::cout<<"\\nseed_population: "<<s
 seedPopulation	main_run_test_case.cpp	/^bool                seedPopulation;$/;"	v
 seedPopulation	main_testing.cpp	/^    std::cout<<"\\nseed_population: "<<seedPopulation;$/;"	l
 seedPopulation	main_testing.cpp	/^bool                seedPopulation;$/;"	v
-seedPopulation	planner.cpp	/^void Planner::seedPopulation() $/;"	f	class:Planner	signature:()
+seedPopulation	planner.cpp	/^void Planner::seedPopulation()$/;"	f	class:Planner	signature:()
 seedPopulationTwo	planner.cpp	/^void Planner::seedPopulationTwo() {$/;"	f	class:Planner	signature:()
 segmentPoints	planner.cpp	/^  std::vector<MotionState> segmentPoints;$/;"	l
 send	control_handler.cpp	/^void ControlHandler::send(ramp_msgs::RampTrajectory bestTrajec) $/;"	f	class:ControlHandler	signature:(ramp_msgs::RampTrajectory bestTrajec)
 send	planner.cpp	/^    h_control_->send(best.msg_);$/;"	p	file:	signature:(best.msg_)
 send	planner.cpp	/^  h_control_->send(empty);$/;"	p	file:	signature:(empty)
-send	rviz_handler.cpp	/^void ControlHandler::send(ramp_msgs::RampTrajectory bestTrajec) $/;"	f	class:ControlHandler	signature:(ramp_msgs::RampTrajectory bestTrajec)
 sendBest	planner.cpp	/^void Planner::sendBest() {$/;"	f	class:Planner	signature:()
 sendIC	control_handler.cpp	/^void ControlHandler::sendIC(std_msgs::Bool value)$/;"	f	class:ControlHandler	signature:(std_msgs::Bool value)
 sendIC	planner.cpp	/^    h_control_->sendIC(ic);$/;"	p	file:	signature:(ic)
 sendIC	planner.cpp	/^  h_control_->sendIC(ic);$/;"	p	file:	signature:(ic)
-sendIC	rviz_handler.cpp	/^void ControlHandler::sendIC(std_msgs::Bool value)$/;"	f	class:ControlHandler	signature:(std_msgs::Bool value)
+sendMarkerArray	planner.cpp	/^  h_rviz_->sendMarkerArray(ma);$/;"	p	file:	signature:(ma)
+sendMarkerArray	rviz_handler.cpp	/^void RvizHandler::sendMarkerArray(const visualization_msgs::MarkerArray& ma)$/;"	f	class:RvizHandler	signature:(const visualization_msgs::MarkerArray& ma)
 sendObIC	control_handler.cpp	/^void ControlHandler::sendObIC(const int i, std_msgs::Bool value)$/;"	f	class:ControlHandler	signature:(const int i, std_msgs::Bool value)
 sendObIC	planner.cpp	/^    h_control_->sendObIC(i, ob_ic);$/;"	p	file:	signature:(i, ob_ic)
-sendObIC	rviz_handler.cpp	/^void ControlHandler::sendObIC(const int i, std_msgs::Bool value)$/;"	f	class:ControlHandler	signature:(const int i, std_msgs::Bool value)
 sendPopulation	control_handler.cpp	/^void ControlHandler::sendPopulation(ramp_msgs::Population population) $/;"	f	class:ControlHandler	signature:(ramp_msgs::Population population)
 sendPopulation	planner.cpp	/^  h_control_->sendPopulation(msg);$/;"	p	file:	signature:(msg)
 sendPopulation	planner.cpp	/^  h_control_->sendPopulation(pop);$/;"	p	file:	signature:(pop)
-sendPopulation	planner.cpp	/^void Planner::sendPopulation(const Population& pop) const $/;"	f	class:Planner	signature:(const Population& pop) const
-sendPopulation	rviz_handler.cpp	/^void ControlHandler::sendPopulation(ramp_msgs::Population population) $/;"	f	class:ControlHandler	signature:(ramp_msgs::Population population)
+sendPopulation	planner.cpp	/^void Planner::sendPopulation()$/;"	f	class:Planner	signature:()
+sendPopulationCb	planner.cpp	/^void Planner::sendPopulationCb(const ros::TimerEvent& e)$/;"	f	class:Planner	signature:(const ros::TimerEvent& e)
+sendTransform	main_pub_map_odom.cpp	/^void sendTransform(const ros::TimerEvent& e)$/;"	f	signature:(const ros::TimerEvent& e)
 sensingCycleCallback	planner.cpp	/^void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)$/;"	f	class:Planner	signature:(const ramp_msgs::ObstacleList& msg)
 setCCStarted	parameter_handler.cpp	/^void ParameterHandler::setCCStarted(bool cc) $/;"	f	class:ParameterHandler	signature:(bool cc)
 setCCStarted	planner.cpp	/^    h_parameters_.setCCStarted(true); $/;"	p	file:	signature:(true)
@@ -1412,6 +1485,8 @@ setT_base_w	planner.cpp	/^void Planner::setT_base_w(std::vector<double> base_pos
 setTestCase	main_run_test_case.cpp	/^    my_planner.h_parameters_.setTestCase(false);$/;"	p	file:	signature:(false)
 setTestCase	main_run_test_case.cpp	/^    my_planner.h_parameters_.setTestCase(true); $/;"	p	file:	signature:(true)
 setTestCase	parameter_handler.cpp	/^void ParameterHandler::setTestCase(bool ready_tc)$/;"	f	class:ParameterHandler	signature:(bool ready_tc)
+shrink_ranges	main.cpp	/^    std::cout<<"\\nshrink_ranges: "<<shrink_ranges;$/;"	l
+shrink_ranges	main.cpp	/^bool                shrink_ranges;$/;"	v
 shutdown	main.cpp	/^  ros::shutdown();$/;"	p	class:ros	file:	signature:()
 shutdown	main_generate_test_case.cpp	/^  ros::shutdown();$/;"	p	class:ros	file:	signature:()
 shutdown	main_run_test_case.cpp	/^  ros::shutdown();$/;"	p	class:ros	file:	signature:()
@@ -1420,6 +1495,8 @@ sin	main_generate_test_case.cpp	/^  result.ob_ms.velocities.push_back(v_mag*sin(
 sin	main_run_test_case.cpp	/^  result.ob_ms.velocities.push_back(v_mag*sin(v_direction));$/;"	p	file:	signature:(v_direction)
 size	path.cpp	/^const unsigned int Path::size() const { return msg_.points.size(); }$/;"	f	class:Path	signature:() const
 size	population.cpp	/^const unsigned int Population::size() const { return trajectories_.size(); }$/;"	f	class:Population	signature:() const
+sleep	main.cpp	/^  d.sleep();$/;"	p	file:	signature:()
+sleep	main_gazebo_ob.cpp	/^  d.sleep();$/;"	p	file:	signature:()
 sleep	main_generate_test_case.cpp	/^      r.sleep();$/;"	p	file:	signature:()
 sleep	main_generate_test_case.cpp	/^    d_history.sleep();$/;"	p	file:	signature:()
 sleep	main_obstacle_trajectory.cpp	/^    r.sleep();$/;"	p	file:	signature:()
@@ -1427,17 +1504,19 @@ sleep	main_obstacle_trajectory.cpp	/^  rs.sleep();$/;"	p	file:	signature:()
 sleep	main_obstacle_twist_all.cpp	/^      r.sleep();$/;"	p	file:	signature:()
 sleep	main_obstacle_twist_all.cpp	/^    r.sleep();$/;"	p	file:	signature:()
 sleep	main_run_test_case.cpp	/^      r.sleep();$/;"	p	file:	signature:()
+sleep	planner.cpp	/^    planningCycleCallback(); ROS_INFO("Done with PC Callback"); r.sleep(); ROS_INFO("Slept, now spinning"); ros::spinOnce(); ROS_INFO("Done spinning once");$/;"	p	file:	signature:()
 sleep	planner.cpp	/^    r.sleep();$/;"	p	file:	signature:()
 sleep	planner.cpp	/^  while(generation_ < num) {planningCycleCallback(); r.sleep(); ros::spinOnce();}$/;"	p	file:	signature:()
-sleep	planner.cpp	/^  while(generation_ < num_pc) {planningCycleCallback(); r.sleep(); ros::spinOnce();}$/;"	p	file:	signature:()
 slope	bezier_curve.cpp	/^  double slope  = (run != 0) ? ryse \/ run : ryse;$/;"	l
+spin	main_gazebo_ob.cpp	/^  ros::spin();$/;"	p	class:ros	file:	signature:()
+spin	main_pub_map_odom.cpp	/^  ros::spin();$/;"	p	class:ros	file:	signature:()
 spinOnce	main_generate_test_case.cpp	/^      ros::spinOnce();$/;"	p	class:ros	file:	signature:()
 spinOnce	main_obstacle_trajectory.cpp	/^    ros::spinOnce();$/;"	p	class:ros	file:	signature:()
 spinOnce	main_obstacle_twist_all.cpp	/^    ros::spinOnce();$/;"	p	class:ros	file:	signature:()
 spinOnce	main_run_test_case.cpp	/^      ros::spinOnce();$/;"	p	class:ros	file:	signature:()
+spinOnce	planner.cpp	/^    planningCycleCallback(); ROS_INFO("Done with PC Callback"); r.sleep(); ROS_INFO("Slept, now spinning"); ros::spinOnce(); ROS_INFO("Done spinning once");$/;"	p	class:ros	file:	signature:()
 spinOnce	planner.cpp	/^    ros::spinOnce(); $/;"	p	class:ros	file:	signature:()
 spinOnce	planner.cpp	/^  while(generation_ < num) {planningCycleCallback(); r.sleep(); ros::spinOnce();}$/;"	p	class:ros	file:	signature:()
-spinOnce	planner.cpp	/^  while(generation_ < num_pc) {planningCycleCallback(); r.sleep(); ros::spinOnce();}$/;"	p	class:ros	file:	signature:()
 srv	planner.cpp	/^  ramp_msgs::EvaluationSrv srv;$/;"	l
 srv	planner.cpp	/^  ramp_msgs::TrajectorySrv srv;$/;"	l
 start	main.cpp	/^MotionState         start, goal;$/;"	v
@@ -1447,9 +1526,12 @@ start	main_obstacle_twist_all.cpp	/^  spinner.start();$/;"	p	file:	signature:()
 start	main_run_test_case.cpp	/^  MotionState start;$/;"	l
 start	main_run_test_case.cpp	/^MotionState         start, goal;$/;"	v
 start	main_testing.cpp	/^MotionState         start, goal;$/;"	v
+start	planner.cpp	/^    controlCycleTimer_.start();$/;"	p	file:	signature:()
+start	planner.cpp	/^    imminentCollisionTimer_.start();$/;"	p	file:	signature:()
+start	planner.cpp	/^    ob_dists_timer_.start();$/;"	p	file:	signature:()
+start	planner.cpp	/^    sendPopTimer_.start();$/;"	p	file:	signature:()
 start	planner.cpp	/^  controlCycleTimer_.start();$/;"	p	file:	signature:()
 start	planner.cpp	/^  imminentCollisionTimer_.start();$/;"	p	file:	signature:()
-start	planner.cpp	/^  ob_dists_timer_.start();$/;"	p	file:	signature:()
 start	planner.cpp	/^  planningCycleTimer_.start();$/;"	p	file:	signature:()
 start	planner.cpp	/^  ramp_msgs::KnotPoint start; $/;"	l
 start	planner.cpp	/^  ros::Time start = ros::Time::now();$/;"	l
@@ -1483,7 +1565,6 @@ std::cout	planner.cpp	/^    std::cout<<"\\nSub-transPopulations created\\n";$/;"
 std::cout	planner.cpp	/^    std::cout<<"\\ntransPopulation seeded! Press enter to continue\\n";$/;"	m	class:std	file:
 std::cout	planner.cpp	/^    std::cout<<"\\ntransPopulation seeded!\\n";$/;"	m	class:std	file:
 std::cout	planner.cpp	/^  std::cout<<"\\nPress Enter to continue\\n";$/;"	m	class:std	file:
-std::cout	planner.cpp	/^  std::cout<<"\\ntransPopulation initialized! Press enter to continue\\n";$/;"	m	class:std	file:
 std::endl	main_generate_test_case.cpp	/^      ].time_from_start.toSec()<<std::endl;$/;"	m	class:std	file:
 std::endl	main_generate_test_case.cpp	/^      f_feasible<<false<<std::endl;$/;"	m	class:std	file:
 std::endl	main_generate_test_case.cpp	/^      f_feasible<<true<<std::endl;$/;"	m	class:std	file:
@@ -1503,12 +1584,11 @@ stop	planner.cpp	/^  controlCycleTimer_.stop();$/;"	p	file:	signature:()
 stop	planner.cpp	/^  imminentCollisionTimer_.stop();$/;"	p	file:	signature:()
 stop	planner.cpp	/^  ob_dists_timer_.stop();$/;"	p	file:	signature:()
 stop	planner.cpp	/^  planningCycleTimer_.stop();$/;"	p	file:	signature:()
+stop	planner.cpp	/^  sendPopTimer_.stop();$/;"	p	file:	signature:()
 stopForDebugging	planner.cpp	/^void Planner::stopForDebugging() $/;"	f	class:Planner	signature:()
 stopTime_	knot_point.cpp	/^  result<<" Stop time: "<<stopTime_<<"\\n";$/;"	l
 str	control_handler.cpp	/^  std::stringstream str;$/;"	l
-str	rviz_handler.cpp	/^  std::stringstream str;$/;"	l
 string	control_handler.cpp	/^    str.str(std::string());$/;"	p	file:	signature:()
-string	rviz_handler.cpp	/^    str.str(std::string());$/;"	p	file:	signature:()
 stuck_in_ic	main_generate_test_case.cpp	/^  std::vector<bool>   stuck_in_ic;$/;"	l
 sub	main_obstacle_twist_all.cpp	/^   ros::Subscriber sub = handle.subscribe<std_msgs::Bool>(topic_str.str(), 10, boost::bind(obIcCb, _1, i));$/;"	l
 sub	population.cpp	/^    Population sub(maxSize_, type_, true);$/;"	p	file:	signature:(maxSize_, type_, true)
@@ -1527,8 +1607,9 @@ sub_sc_	main.cpp	/^  ros::Subscriber sub_sc_ = handle.subscribe("obstacles", 1, 
 sub_sc_	main_run_test_case.cpp	/^  ros::Subscriber sub_sc_     = handle.subscribe("obstacles", 1, &Planner::sensingCycleCallback,  &my_planner);$/;"	l
 sub_sc_	main_testing.cpp	/^  ros::Subscriber sub_sc_ = handle.subscribe("obstacles", 1, &Planner::sensingCycleCallback, &my_planner);$/;"	l
 sub_update	main_generate_test_case.cpp	/^  ros::Subscriber sub_update = handle.subscribe("update", 1, updateCb);$/;"	l
-sub_update_	main.cpp	/^  ros::Subscriber sub_update_ = handle.subscribe("update", 1, &Planner::updateCallback, &my_planner);$/;"	l
-sub_update_	main_run_test_case.cpp	/^  ros::Subscriber sub_update_ = handle.subscribe("update",    1, &Planner::updateCallback,        &my_planner);$/;"	l
+sub_updatePose_	main.cpp	/^    ros::Subscriber sub_updatePose_ = handle.subscribe(update_topic, 1, &Planner::updateCbPose, &my_planner);$/;"	l
+sub_updateVel_	main.cpp	/^  ros::Subscriber sub_updateVel_ = handle.subscribe("update", 1, &Planner::updateCbControlNode, &my_planner);$/;"	l
+sub_update_	main_run_test_case.cpp	/^  ros::Subscriber sub_update_ = handle.subscribe("update",    1, &Planner::updateCbControlNode,        &my_planner);$/;"	l
 sub_update_	main_testing.cpp	/^  ros::Subscriber sub_update_ = handle.subscribe("update", 1, &Planner::updateCallback, &my_planner);$/;"	l
 subtractPosition	motion_state.cpp	/^const MotionState MotionState::subtractPosition(const MotionState m, bool orientation) const {$/;"	f	class:MotionState	signature:(const MotionState m, bool orientation) const
 subtractPosition	path.cpp	/^    temp.subtractPosition(diff);$/;"	p	file:	signature:(diff)
@@ -1569,13 +1650,14 @@ t_pc_rate	main_generate_test_case.cpp	/^double              t_pc_rate;$/;"	v
 t_pc_rate	main_run_test_case.cpp	/^double              t_pc_rate;$/;"	v
 t_pc_rate	main_testing.cpp	/^double              t_pc_rate;$/;"	v
 t_s0	planner.cpp	/^    double t_s0 = traj.msg_.trajectory.points.at($/;"	l
-t_since_cc	planner.cpp	/^      ros::Duration t_since_cc = ros::Time::now() - t_prevCC_;$/;"	l
+t_since_cc	planner.cpp	/^    ros::Duration t_since_cc = ros::Time::now() - t_prevCC_;$/;"	l
 t_since_cc	planner.cpp	/^  ros::Duration t_since_cc = ros::Time::now() - t_prevCC_;$/;"	l
+t_start	main_gazebo_ob.cpp	/^ros::Time t_start;$/;"	v
+t_start	planner.cpp	/^    double t_start = getEarliestStartTime(movingOn_);$/;"	l
 t_start	planner.cpp	/^    ros::Time t_start = ros::Time::now();$/;"	l
-t_start	planner.cpp	/^  double t_start = getEarliestStartTime(movingOn_);$/;"	l
 t_start	planner.cpp	/^  ros::Time t_start = ros::Time::now();$/;"	l
-t_startAdapt	planner.cpp	/^  ros::Time t_startAdapt = ros::Time::now();$/;"	l
-t_startTrans	planner.cpp	/^  ros::Time t_startTrans = ros::Time::now();$/;"	l
+t_startAdapt	planner.cpp	/^    ros::Time t_startAdapt = ros::Time::now();$/;"	l
+t_startTrans	planner.cpp	/^    ros::Time t_startTrans = ros::Time::now();$/;"	l
 t_start_error	planner.cpp	/^    ros::Time t_start_error = ros::Time::now();$/;"	l
 t_start_new	planner.cpp	/^    double t_start_new = (controlCycle_ - d_since_cc).toSec();$/;"	l
 t_stop	ramp_trajectory.cpp	/^  double t_stop = t;$/;"	l
@@ -1597,9 +1679,9 @@ temp	path.cpp	/^    KnotPoint temp(all[i]);$/;"	p	file:	signature:(all[i])
 temp	path.cpp	/^    KnotPoint temp(msg_.points[i]);$/;"	p	file:	signature:(msg_.points[i])
 temp	path.cpp	/^    MotionState temp(msg_.points[i].motionState);$/;"	p	file:	signature:(msg_.points[i].motionState)
 temp	planner.cpp	/^        ramp_msgs::BezierCurve temp;$/;"	l
-temp	planner.cpp	/^      MotionState temp = diff_.subtractPosition(diff);$/;"	l
 temp	planner.cpp	/^      Path temp = population_.paths_.at(i);$/;"	l
 temp	planner.cpp	/^      RampTrajectory temp;$/;"	l
+temp	planner.cpp	/^    MotionState temp = diff_.subtractPosition(diff);$/;"	l
 temp	planner.cpp	/^    MotionState temp = movingOn_.getPointAtTime(planningCycle_.toSec()*(i+1));$/;"	l
 temp	planner.cpp	/^    RampTrajectory temp;$/;"	l
 temp	planner.cpp	/^  MotionState temp = diff_.subtractPosition(diff);$/;"	l
@@ -1672,6 +1754,7 @@ toString	utility.cpp	/^const std::string Utility::toString(const trajectory_msgs
 token	main_generate_test_case.cpp	/^      std::string token;$/;"	l
 token	main_testing.cpp	/^      std::string token;$/;"	l
 topic_str	main_obstacle_twist_all.cpp	/^   std::stringstream topic_str;$/;"	l
+tr	main_gazebo_ob.cpp	/^  ramp_msgs::TrajectoryRequest tr;$/;"	l
 tr	main_generate_test_case.cpp	/^      ramp_msgs::TrajectoryRequest tr;$/;"	l
 tr	main_obstacle_trajectory.cpp	/^  ramp_msgs::TrajectoryRequest tr;$/;"	l
 tr	planner.cpp	/^    ramp_msgs::TrajectoryRequest tr;$/;"	l
@@ -1690,14 +1773,16 @@ trajecs	planner.cpp	/^  std::vector<RampTrajectory> trajecs = getTrajectories(pa
 trajecs	planner.cpp	/^  std::vector<RampTrajectory> trajecs;$/;"	l
 transformBase	main_generate_test_case.cpp	/^  latestUpdate.transformBase(T_w_odom);$/;"	p	file:	signature:(T_w_odom)
 transformBase	motion_state.cpp	/^void MotionState::transformBase(const tf::Transform t) $/;"	f	class:MotionState	signature:(const tf::Transform t)
-transformBase	planner.cpp	/^    latestUpdate_.transformBase(T_w_odom_);$/;"	p	file:	signature:(T_w_odom_)
+transformBase	planner.cpp	/^      latestUpdate_.transformBase(T_w_odom_);$/;"	p	file:	signature:(T_w_odom_)
 transformBasePosition	motion_state.cpp	/^tf::Vector3 MotionState::transformBasePosition(const tf::Transform t) $/;"	f	class:MotionState	signature:(const tf::Transform t)
 trj_gen	main_generate_test_case.cpp	/^  ros::ServiceClient trj_gen = handle.serviceClient<ramp_msgs::TrajectorySrv>("trajectory_generator");$/;"	l
+ts	main_gazebo_ob.cpp	/^  ramp_msgs::TrajectorySrv ts;$/;"	l
 tt	planner.cpp	/^  ros::Time tt = ros::Time::now();$/;"	l
 turn	main_obstacle_twist_all.cpp	/^void turn(const int index, const double v, const double w, const double t)$/;"	f	signature:(const int index, const double v, const double w, const double t)
 twist	main_obstacle_twist_all.cpp	/^  geometry_msgs::Twist twist;$/;"	l
 two	main_generate_test_case.cpp	/^      std::vector<double> one, two, three;$/;"	l
 two	main_generate_test_case.cpp	/^      std::vector<double> one, two;$/;"	l
+u	main_gazebo_ob.cpp	/^Utility u;$/;"	v
 u	main_obstacle_trajectory.cpp	/^  Utility u;$/;"	l
 u_dot_0_x	bezier_curve.cpp	/^  double u_dot_0_x = fabs(x_dot_0 \/ (A_*u_0_+C_));$/;"	l
 u_dot_0_y	bezier_curve.cpp	/^  double u_dot_0_y = fabs(y_dot_0 \/ (B_*u_0_+D_));$/;"	l
@@ -1709,10 +1794,12 @@ u_x	bezier_curve.cpp	/^  double u_x = ( fabs(A_+C_) > fabs(C_) ) ? 0 : 1;$/;"	l
 u_x	bezier_curve.cpp	/^  double u_x = ( fabs(A_+C_) > fabs(C_) ) ? 1 : 0;$/;"	l
 u_y	bezier_curve.cpp	/^  double u_y = ( fabs(B_+D_) > fabs(D_) ) ? 0 : 1;$/;"	l
 u_y	bezier_curve.cpp	/^  double u_y = ( fabs(B_+D_) > fabs(D_) ) ? 1 : 0;$/;"	l
-updateCallback	planner.cpp	/^void Planner::updateCallback(const ramp_msgs::MotionState& msg) $/;"	f	class:Planner	signature:(const ramp_msgs::MotionState& msg)
 updateCb	main_generate_test_case.cpp	/^void updateCb(const ramp_msgs::MotionState& msg)$/;"	f	signature:(const ramp_msgs::MotionState& msg)
+updateCbControlNode	planner.cpp	/^void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg) $/;"	f	class:Planner	signature:(const ramp_msgs::MotionState& msg)
+updateCbPose	planner.cpp	/^void Planner::updateCbPose(const geometry_msgs::PoseWithCovarianceStamped msg)$/;"	f	class:Planner	signature:(const geometry_msgs::PoseWithCovarianceStamped msg)
 updateCurvePos	planner.cpp	/^const double Planner::updateCurvePos(const RampTrajectory& traj, const ros::Duration& d) const $/;"	f	class:Planner	signature:(const RampTrajectory& traj, const ros::Duration& d) const
 updatePathsStart	planner.cpp	/^void Planner::updatePathsStart(const MotionState s) $/;"	f	class:Planner	signature:(const MotionState s)
+update_topic	main.cpp	/^std::string         update_topic;$/;"	v
 updatedTrajecs	planner.cpp	/^  std::vector<RampTrajectory> updatedTrajecs;$/;"	l
 utility	main.cpp	/^Utility utility;$/;"	v
 utility	main_generate_test_case.cpp	/^Utility utility;$/;"	v
@@ -1723,15 +1810,18 @@ v	bezier_curve.cpp	/^  double v = sqrt( pow(x_dot,2) + pow(y_dot,2) );$/;"	l
 v	bezier_curve.cpp	/^  double v = sqrt(radicand);$/;"	l
 v	main_generate_test_case.cpp	/^  double v;$/;"	m	struct:ObInfo	file:	access:public
 v	main_run_test_case.cpp	/^  double v;$/;"	m	struct:ObInfo	file:	access:public
+v	planner.cpp	/^      tf::Vector3 v(latestUpdate_.msg_.velocities[0], latestUpdate_.msg_.velocities[1], 0);$/;"	p	file:	signature:(latestUpdate_.msg_.velocities[0], latestUpdate_.msg_.velocities[1], 0)
 v	planner.cpp	/^    double v = sqrt( pow(start.motionState.velocities[0], 2) + pow(start.motionState.velocities[1], 2) );$/;"	l
+v	planner.cpp	/^    tf::Vector3 v(msg.pose.pose.position.x, msg.pose.pose.position.y, 0.0);$/;"	p	file:	signature:(msg.pose.pose.position.x, msg.pose.pose.position.y, 0.0)
 v	planner.cpp	/^  double v = speed.random();$/;"	l
-v	planner.cpp	/^  double v = sqrt( pow(latestUpdate_.msg_.velocities[2], 2) + pow(latestUpdate_.msg_.velocities[2],2) );$/;"	l
+v	planner.cpp	/^  double v = sqrt( pow(latestUpdate_.msg_.velocities[0], 2) + pow(latestUpdate_.msg_.velocities[1],2) );$/;"	l
 v_0	bezier_curve.cpp	/^  double v_0 = ms_current_.msg_.velocities.size() > 0 ?$/;"	l
 v_max	bezier_curve.cpp	/^  double v_max = 0.33;$/;"	l
 v_max	bezier_curve.cpp	/^  double v_max = MAX_SPEED_;  $/;"	l
 v_max	bezier_curve.cpp	/^  double v_max = MAX_SPEED_;$/;"	l
 v_rmin	bezier_curve.cpp	/^  double v_rmin = sqrt(pow(x_dot,2) + pow(y_dot,2));$/;"	l
 v_target	bezier_curve.cpp	/^  double v_target = i == 0 ? cos(theta) * v_max : sin(theta) * v_max;$/;"	l
+v_tf	planner.cpp	/^      tf::Vector3 v_tf = tf_global_odom_rot_ * v;$/;"	l
 v_x	main_generate_test_case.cpp	/^  double v_x = v_mag*cos(v_direction);$/;"	l
 v_x	main_run_test_case.cpp	/^  double v_x = v_mag*cos(v_direction);$/;"	l
 v_y	main_generate_test_case.cpp	/^  double v_y = v_mag*sin(v_direction);$/;"	l
@@ -1746,6 +1836,7 @@ w	main_run_test_case.cpp	/^  double w;$/;"	m	struct:ObInfo	file:	access:public
 w_max	bezier_curve.cpp	/^  double w_max = (2.f*PI)\/3.f;$/;"	l
 w_rmin	bezier_curve.cpp	/^  double w_rmin = v_rmin \/ R_min_;$/;"	l
 waitForShutdown	main_obstacle_twist_all.cpp	/^  ros::waitForShutdown();$/;"	p	class:ros	file:	signature:()
+waitForTransform	main.cpp	/^  listen.waitForTransform(global_frame, "odom", ros::Time(0), ros::Duration(2.0));$/;"	p	file:	signature:(global_frame, Ó, ros::Time(0), ros::Duration(2.0))
 x	bezier_curve.cpp	/^    double x = p1.msg_.positions.at(0) - l_c*cos(theta_s1);$/;"	l
 x	bezier_curve.cpp	/^  double x = C1.msg_.positions.at(0) + s1*cos(theta_s2);$/;"	l
 x	main_generate_test_case.cpp	/^  double x = init.msg_.positions[0] + r*cos(PI\/4.f);$/;"	l
@@ -1766,8 +1857,6 @@ x_dot	bezier_curve.cpp	/^  double x_dot = ((A_*t_R_min_)+C_)*u_dot;$/;"	l
 x_dot	bezier_curve.cpp	/^  double x_dot = (A_*t_R_min_ + C_)*u_dot_max;$/;"	l
 x_dot	planner.cpp	/^  double x_dot = v*cos(result.msg_.positions[2]);$/;"	l
 x_dot_0	bezier_curve.cpp	/^  double x_dot_0 = (ms_begin_.msg_.velocities.size() > 0) ?  ms_begin_.msg_.velocities.at(0) : $/;"	l
-x_max	main.cpp	/^    int x_max = costmap_width + costmap_origin_x;$/;"	l
-x_min	main.cpp	/^    int x_min = costmap_origin_x;$/;"	l
 y	bezier_curve.cpp	/^    double y = p1.msg_.positions.at(1) - l_c*sin(theta_s1);$/;"	l
 y	bezier_curve.cpp	/^  double y = C1.msg_.positions.at(1) + s1*sin(theta_s2);$/;"	l
 y	main_generate_test_case.cpp	/^  double y = init.msg_.positions[1] + r*sin(PI\/4.f);$/;"	l
@@ -1787,11 +1876,9 @@ y_dot	bezier_curve.cpp	/^  double y_dot = ((B_*t_R_min_)+D_)*u_dot;$/;"	l
 y_dot	bezier_curve.cpp	/^  double y_dot = (B_*t_R_min_ + D_)*u_dot_max;$/;"	l
 y_dot	planner.cpp	/^  double y_dot = v*sin(result.msg_.positions[2]);$/;"	l
 y_dot_0	bezier_curve.cpp	/^  double y_dot_0 = (ms_begin_.msg_.velocities.size() > 0) ?  ms_begin_.msg_.velocities.at(1) : $/;"	l
-y_max	main.cpp	/^    int y_max = costmap_height + costmap_origin_y;$/;"	l
-y_min	main.cpp	/^    int y_min = costmap_origin_y;$/;"	l
 zero	motion_state.cpp	/^const MotionState MotionState::zero(const uint8_t size) const {$/;"	f	class:MotionState	signature:(const uint8_t size) const
 zero	motion_state.cpp	/^void MotionState::zero()$/;"	f	class:MotionState	signature:()
-zero	planner.cpp	/^  diff_.zero();$/;"	p	file:	signature:()
+zero	planner.cpp	/^    diff_.zero();$/;"	p	file:	signature:()
 ~BezierCurve	bezier_curve.cpp	/^BezierCurve::~BezierCurve() {}$/;"	f	class:BezierCurve	signature:()
 ~Modifier	modifier.cpp	/^Modifier::~Modifier() $/;"	f	class:Modifier	signature:()
 ~Path	path.cpp	/^Path::~Path() {}$/;"	f	class:Path	signature:()

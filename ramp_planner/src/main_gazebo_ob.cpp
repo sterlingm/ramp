@@ -80,21 +80,31 @@ int main(int argc, char** argv)
   ramp_msgs::KnotPoint kp1;
   kp1.motionState.positions.push_back(cb.response.pose.position.x);
   kp1.motionState.positions.push_back(cb.response.pose.position.y);
-  kp1.motionState.positions.push_back(PI);
 
+  // Make sure deltaX > deltaY
   ramp_msgs::KnotPoint kp2;
-  kp2.motionState.positions.push_back(cb.response.pose.position.x-5.0);
-  kp2.motionState.positions.push_back(cb.response.pose.position.y);
+  kp2.motionState.positions.push_back(cb.response.pose.position.x-1);
+  kp2.motionState.positions.push_back(cb.response.pose.position.y-1);
   kp2.motionState.positions.push_back(PI);
 
+  double theta1 = u.findAngleFromAToB(kp1.motionState.positions, kp2.motionState.positions);
+  kp1.motionState.positions.push_back(PI);
+
+
+  ramp_msgs::KnotPoint kp3;
+  kp3.motionState.positions.push_back(cb.response.pose.position.x-2.0);
+  kp3.motionState.positions.push_back(cb.response.pose.position.y);
+  kp3.motionState.positions.push_back(PI);
 
   // Push knotpoints onto the path
   p.points.push_back(kp1);
   p.points.push_back(kp2);
+  p.points.push_back(kp3);
   
 
   // Build the request
   tr.path = p;
+  tr.type = HOLONOMIC;
 
   // Build the srv
   ramp_msgs::TrajectorySrv ts;
