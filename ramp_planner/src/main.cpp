@@ -303,8 +303,8 @@ void pubStartGoalMarkers()
   start_marker.id = 10000;
   goal_marker.id = 10001;
 
-  start_marker.header.frame_id = "/map_rot";
-  goal_marker.header.frame_id = "/map_rot";
+  start_marker.header.frame_id = global_frame;
+  goal_marker.header.frame_id = global_frame;
 
   start_marker.ns = "basic_shapes";
   goal_marker.ns = "basic_shapes";
@@ -463,7 +463,7 @@ int main(int argc, char** argv) {
   std::cout<<"\nStart: "<<my_planner.start_.toString();
   std::cout<<"\nGoal: "<<my_planner.goal_.toString();
 
-  //pubStartGoalMarkers();
+  pubStartGoalMarkers();
   //ROS_INFO("Done with pubStartGoalMarkers");
 
   

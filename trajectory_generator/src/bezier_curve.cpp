@@ -127,12 +127,12 @@ const bool BezierCurve::verify() const
   double v_rmin = sqrt(pow(x_dot,2) + pow(y_dot,2));
   double w_rmin = v_rmin / R_min_;
   
-  /*ROS_INFO("u_dot_max: %f", u_dot_max);
-  ROS_INFO("x_dot: %f y_dot: %f", x_dot, y_dot);
-  ROS_INFO("w_rmin: %f v_rmin: %f R_min: %f t_R_min: %f x_dot: %f y_dot: %f", w_rmin, v_rmin, R_min_, t_R_min_, x_dot, y_dot);
-  ROS_INFO("w_rmin <= w_max: %s", w_rmin <= w_max ? "True" : "False");
-  ROS_INFO("t_R_min: %f", t_R_min_);
-  ROS_INFO("l_: %f", l_);*/
+  /*//ROS_INFO("u_dot_max: %f", u_dot_max);
+  //ROS_INFO("x_dot: %f y_dot: %f", x_dot, y_dot);
+  //ROS_INFO("w_rmin: %f v_rmin: %f R_min: %f t_R_min: %f x_dot: %f y_dot: %f", w_rmin, v_rmin, R_min_, t_R_min_, x_dot, y_dot);
+  //ROS_INFO("w_rmin <= w_max: %s", w_rmin <= w_max ? "True" : "False");
+  //ROS_INFO("t_R_min: %f", t_R_min_);
+  //ROS_INFO("l_: %f", l_);*/
   
   bool result = l_ < 1. && (t_R_min_ >= 0 && t_R_min_ <= 1) && (w_rmin <= w_max);
   //ROS_INFO("result: %s", result ? "True" : "False");
@@ -312,6 +312,7 @@ const ramp_msgs::MotionState BezierCurve::getInitialState()
   {
     //ROS_INFO("In else");
     result.velocities.at(0) = findVelocity(0, l, theta);
+    //ROS_INFO("result.velocities[0]: %f", result.velocities[0]);
     if(ryse == 0.)
     {
       result.velocities.at(1) = 0;
@@ -931,7 +932,7 @@ void BezierCurve::calculateConstants() {
 /** Generate all the motion states on the curve */
 const std::vector<ramp_msgs::MotionState> BezierCurve::generateCurve() 
 {
-  ROS_INFO("Entered BezierCurve::generateCurve()");
+  //ROS_INFO("Entered BezierCurve::generateCurve()");
   ////////ROS_INFO("Points so far: ");
   for(uint8_t i=0;i<points_.size();i++)
   {
@@ -986,7 +987,7 @@ void BezierCurve::generateCurveOOP()
   ////////ROS_INFO("Points so far: ");
   /*for(uint8_t i=0;i<points_.size();i++)
   {
-    ROS_INFO("Point %i, %s", i, utility_.toString(points_.at(i)).c_str());
+    //ROS_INFO("Point %i, %s", i, utility_.toString(points_.at(i)).c_str());
   }*/
   //printReflexxesInfo();
   
@@ -1024,7 +1025,7 @@ void BezierCurve::generateCurveOOP()
     ////////////ROS_INFO("u_values_[%i]: %f", i, u_values_.at(i));
   }*/
 
-  //////////ROS_INFO("Exiting BezierCurve::generateCurve()");
+  //ROS_INFO("Exiting BezierCurve::generateCurve()");
 }
 
 

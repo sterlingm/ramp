@@ -10,7 +10,7 @@
 
 <!-- START NODES -->
 
-<!-- Costmap
+<!-- Costmap is started in separate launch file, e.g. gazebo_costmap.launch
 <node name="costmap_node" pkg="costmap_2d" type="costmap_2d_node" output="log" >
   <rosparam file="/opt/ros/kinetic/share/turtlebot_navigation/param/cleverm_static_costmap.yaml" command="load" />
 </node> -->
@@ -20,16 +20,13 @@
 
 
 <!-- Trajectory Generator -->
-<node name="trajectory_generator" pkg="trajectory_generator" type="trajectory_generator" output="log" />
+<node name="trajectory_generator" pkg="trajectory_generator" type="trajectory_generator" output="screen" />
 
 <!-- Path Modification -->
 <node name="path_modification" pkg="path_modification" type="path_modification" output="log" />
 
 <!-- Evaluation -->
 <node name="trajectory_evaluation" pkg="trajectory_evaluation" type="trajectory_evaluation" output="log" />
-
-<!-- Trajectory Visualization -->
-<!-- <node name="trajectory_visualisation" pkg="trajectory_visualisation" type="trajectory_visualisation" /> -->
 
 <!-- Sensing -->
 <node name="ramp_sensing" pkg="ramp_sensing" type="ramp_sensing" output="screen" />
@@ -45,7 +42,11 @@
 </node>
 
 <!-- Planner -->
-<node name="ramp_planner" pkg="ramp_planner" type="ramp_planner" output="log" />
+<node name="ramp_planner" pkg="ramp_planner" type="ramp_planner" output="screen" />
+
+
+<!-- Move obstacles -->
+<node name="move_obstacles" pkg="ramp_planner" type="move_gazebo_obs" output="log" />
 
 
 

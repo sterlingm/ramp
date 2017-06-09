@@ -412,10 +412,10 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       marker.action = visualization_msgs::Marker::ADD;
 
       // Set x and y
-      //double x = cir_obs[i]->cir.center.x;
-      //double y = cir_obs[i]->cir.center.y;
-      double x = (cir_obs[i]->cir.center.x + x_origin) * global_grid.info.resolution;
-      double y = (cir_obs[i]->cir.center.y + y_origin) * global_grid.info.resolution;
+      double x = cir_obs[i]->cir.center.x;
+      double y = cir_obs[i]->cir.center.y;
+      //double x = (cir_obs[i]->cir.center.x + x_origin) * global_grid.info.resolution;
+      //double y = (cir_obs[i]->cir.center.y + y_origin) * global_grid.info.resolution;
 
       ROS_INFO("cir_obs[%i]->cir.center.x: %f cir_obs[%i]->cir.center.y: %f", i, cir_obs[i]->cir.center.x, i, cir_obs[i]->cir.center.y);
       ROS_INFO("(x,y): (%f,%f) x_origin: %f y_origin: %f", x, y, x_origin, y_origin);
@@ -1215,9 +1215,10 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
    /*
     * Convert centers to the global frame
-    
+    */ 
    double x_origin = global_grid.info.origin.position.x;
    double y_origin = global_grid.info.origin.position.y;
+   ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
    for(int i=0;i<cir_obs.size();i++)
    {
      ROS_INFO("cir_obs[%i] center: (%f,%f): ", i, cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
@@ -1226,7 +1227,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
      cir_obs[i]->cir.center.x = x;
      cir_obs[i]->cir.center.y = y;
      ROS_INFO("New Point: (%f,%f): ", x, y);
-   }*/
+   }
   
    
   /*

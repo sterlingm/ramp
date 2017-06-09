@@ -83,8 +83,8 @@ int main(int argc, char** argv)
 
   // Make sure deltaX > deltaY
   ramp_msgs::KnotPoint kp2;
-  kp2.motionState.positions.push_back(cb.response.pose.position.x-1);
-  kp2.motionState.positions.push_back(cb.response.pose.position.y-1);
+  kp2.motionState.positions.push_back(cb.response.pose.position.x-8);
+  kp2.motionState.positions.push_back(cb.response.pose.position.y);
   kp2.motionState.positions.push_back(PI);
 
   double theta1 = u.findAngleFromAToB(kp1.motionState.positions, kp2.motionState.positions);
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
   // Push knotpoints onto the path
   p.points.push_back(kp1);
   p.points.push_back(kp2);
-  p.points.push_back(kp3);
+  //p.points.push_back(kp3);
   
 
   // Build the request
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
   }
   
   // Make Timer to start moving
-  ros::Duration d(1.0);
+  ros::Duration d(2.0);
   d.sleep();
   t_start = ros::Time::now();
   ROS_INFO("Initial t_start: %f", t_start.toSec());
