@@ -94,8 +94,8 @@ double SIGMA_SYSTEM_NOISE_Y = 0.1;
 //MatrixWrapper::Matrix* H=0;
 BFL::LinearAnalyticConditionalGaussian* meas_pdf = 0;
 BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model = 0;
-double MU_MEAS_NOISE = 0.01;
-double SIGMA_MEAS_NOISE = 0.01;
+double MU_MEAS_NOISE = 0.0025;
+double SIGMA_MEAS_NOISE = 0.0025;
 
 // Input vector
 MatrixWrapper::ColumnVector u(STATE_SIZE);
@@ -840,6 +840,10 @@ std::vector<CircleMatch> matchCircles(std::vector<Circle> cirs, std::vector<Circ
 {
   ROS_INFO("In matchCircles");
   ROS_INFO("cirs.size(): %i targets.size(): %i", (int)cirs.size(), (int)targets.size());
+  for(int i=0;i<cirs.size();i++)
+  {
+    ROS_INFO("Circle %i: (%f,%f)", i, cirs[i].center.x, cirs[i].center.y);
+  }
   for(int i=0;i<targets.size();i++)
   {
     ROS_INFO("Target %i: (%f,%f)", i, targets[i].center.x, targets[i].center.y);
@@ -1208,6 +1212,24 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    */
 
   /*
+   * Convert centers to the global frame
+   */ 
+   double x_origin = global_grid.info.origin.position.x;
+   double y_origin = global_grid.info.origin.position.y;
+   ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
+   for(int i=0;i<cir_obs.size();i++)
+   {
+     ROS_INFO("cir_obs[%i] center: (%f,%f): ", i, cirs[i].center.x, cirs[i].center.y);
+     double x = (cirs[i].center.x * global_grid.info.resolution) + x_origin;
+     double y = (cirs[i].center.y * global_grid.info.resolution) + y_origin;
+     cirs[i].center.x = x;
+     cirs[i].center.y = y;
+     cirs[i].radius *= global_grid.info.resolution;
+     ROS_INFO("New Point: (%f,%f) New Radius: %f ", x, y, cirs[i].radius);
+   }
+   
+
+  /*
    * Data association
    * Do the data associate before kf updates so that 
    * 1) cir_obs.cir is set before doing update
@@ -1221,28 +1243,6 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    * Call the Kalman filter
    */
    std::vector<Circle> circles_current = updateKalmanFilters(cirs, cm);
-
-   /*
-    * Convert centers to the global frame
-    */ 
-   double x_origin = global_grid.info.origin.position.x;
-   double y_origin = global_grid.info.origin.position.y;
-   ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
-   for(int i=0;i<cir_obs.size();i++)
-   {
-     ROS_INFO("cir_obs[%i] center: (%f,%f): ", i, cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
-     double x = (cir_obs[i]->cir.center.x * global_grid.info.resolution) + x_origin;
-     double y = (cir_obs[i]->cir.center.y * global_grid.info.resolution) + y_origin;
-     cir_obs[i]->cir.center.x = x;
-     cir_obs[i]->cir.center.y = y;
-     cir_obs[i]->cir.radius *= global_grid.info.resolution;
-     ROS_INFO("New Point: (%f,%f) New Radius: %f ", x, y, cir_obs[i]->cir.radius);
-   }
-
-   for(int i=0;i<cm.size();i++)
-   {
-     cm[i].delta_r *= global_grid.info.resolution;
-   }
   
    
   /*
