@@ -59,8 +59,17 @@ void Obstacle::update(const Circle c, const Velocity& v, const double theta)
 
   ramp_msgs::MotionState ms;
   
+  /*
+   * Convert
+   
+  double x = (c.center.x + global_grid_origin_x_) * costmap_res_;
+  double y = (c.center.y + global_grid_origin_y_) * costmap_res_;
+  ms.positions.push_back(x);
+  ms.positions.push_back(y);*/
+
   ms.positions.push_back(c.center.x);
   ms.positions.push_back(c.center.y);
+  
   ms.positions.push_back(theta);
 
   ms.velocities.push_back(v.vx);

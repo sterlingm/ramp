@@ -6,7 +6,7 @@ MobileBase::MobileBase() : planning_full_(false), i_XDOF_(0), i_THETADOF_(1)
   reflexxesData_.rml = 0;
   reflexxesData_.inputParameters = 0;
   reflexxesData_.outputParameters = 0;
-  MAX_SPEED = 0.33;
+  MAX_SPEED = 0.75;
 } 
 
 

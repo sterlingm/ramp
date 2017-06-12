@@ -1,5 +1,4 @@
 #include "circle_packer.h"
-//#include "Utilties.cpp"
 
 
 
@@ -871,7 +870,7 @@ std::vector<Circle> CirclePacker::goMinEncCir()
 
 std::vector<Circle> CirclePacker::goMyBlobs()
 {
-  //ROS_INFO("In CirclePacker::goMyBlobs()");
+  ROS_INFO("In CirclePacker::goMyBlobs()");
   std::vector<Circle> result;
 
   // Create a matrix of the same size and type as src
@@ -894,9 +893,21 @@ std::vector<Circle> CirclePacker::goMyBlobs()
   // Go through each set of contour points
   for(int i=0;i<contours.size();i++)
   {
-    //ROS_INFO("contours[%i].size(): %i", i, (int)contours[i].size());
+    ROS_INFO("contours[%i].size(): %i", i, (int)contours[i].size());
     Circle c;
     std::vector<cv::Point2f> obs_points;
+
+    // Draw contours
+    cv::Mat drawing = cv::Mat::zeros( src.size(), CV_8UC3 );
+    for( int j = 0; j< contours.size(); j++ )
+    {
+      cv::Scalar color = cv::Scalar( 0, 0, 255 );
+      drawContours( drawing, contours, j, color, 2, 8, hierarchy, 0, cv::Point() );
+    }
+
+    /// Show in a window
+    //imshow( "Contours", drawing );
+    //cv::waitKey(0);
 
     // Check that there are at least a min number of contour points
     // This is because we usually get massive circles (radius>1000) when there
@@ -932,18 +943,20 @@ std::vector<Circle> CirclePacker::goMyBlobs()
       {
         y_max = p.y;
       }
+
+      obs_points.push_back(p);
     } // end for each contour point
 
     /*
      * Go through the region and collect all obstacle pixels
      */
     int num_ob=0, num_free=0;
-    for(int x=x_min;x<x_max;x++)
+    for(int x=x_min;x<=x_max;x++)
     {
-      for(int y=y_min;y<y_max;y++)
+      for(int y=y_min;y<=y_max;y++)
       {
         int pixel = src.at<uchar>(y, x);
-        ////ROS_INFO("Point (%i,%i) pixel value: %i", y, x, pixel);
+        ROS_INFO("Point (%i,%i) pixel value: %i", y, x, pixel);
 
         // If the value is less than some threshold for obstacle pixels
         if(pixel < 100)
@@ -951,14 +964,16 @@ std::vector<Circle> CirclePacker::goMyBlobs()
           cv::Point2f p;
           p.x = x;
           p.y = y;
-          obs_points.push_back(p);
+          //obs_points.push_back(p);
           num_ob++;
         }
         else num_free++;
       } // end inner for
     } // end for each pixel in region
 
-    int x=0, y=0;
+    ROS_INFO("obs_points.size(): %i", (int)obs_points.size());
+
+    float x=0, y=0;
     for(int j=0;j<obs_points.size();j++)
     {
       x+=obs_points[j].x;
@@ -966,7 +981,7 @@ std::vector<Circle> CirclePacker::goMyBlobs()
     }
     x /= obs_points.size();
     y /= obs_points.size();
-    //ROS_INFO("Average center: (%i,%i)", x, y);
+    ROS_INFO("Average center: (%f,%f)", x, y);
 
     // Set the center value
     c.center.x = y;
@@ -981,6 +996,7 @@ std::vector<Circle> CirclePacker::goMyBlobs()
     {
       cv::Point2f pt = obs_points[pointIdx];
       double d = utility_.positionDistance(c.center.x, c.center.y, pt.y, pt.x);
+      ROS_INFO("Point %i, d: %f", pointIdx, d);
       dists.push_back(d);
 
       if(d > max_dist)
@@ -988,6 +1004,15 @@ std::vector<Circle> CirclePacker::goMyBlobs()
         max_dist = d;
       }
     } // end for
+    ROS_INFO("max_dist: %f", max_dist);
+    ROS_INFO("obs_points.size(): %i", (int)obs_points.size());
+    ROS_INFO("dist from center:");
+    for(int j=0;j<obs_points.size();j++)
+    {
+      cv::Point2f pt = obs_points[j];
+      double d = utility_.positionDistance(c.center.x, c.center.y, pt.y, pt.x);
+      ROS_INFO("Point %i: (%f,%f) d: %f", j, pt.y, pt.x, d);
+    }
 
     // Compute the radius based on the dist
     //std::sort(dists.begin(), dists.end());

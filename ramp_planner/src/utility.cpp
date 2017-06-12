@@ -335,8 +335,8 @@ const std::string Utility::toString(const ramp_msgs::RampTrajectory traj) const 
   result<<"\n Points:";
   //for(unsigned int i=15;i<27;i++) {
   //for(unsigned int i=0;i<7;i++) {
-  //for(unsigned int i=0;i<50 && i<traj.trajectory.points.size();i++) {
-  for(unsigned int i=0;i<traj.trajectory.points.size();i++) {
+  for(unsigned int i=0;i<50 && i<traj.trajectory.points.size();i++) {
+  //for(unsigned int i=0;i<traj.trajectory.points.size();i++) {
     result<<"\n\n   Point "<<i<<":";
     
     trajectory_msgs::JointTrajectoryPoint p = traj.trajectory.points.at(i);

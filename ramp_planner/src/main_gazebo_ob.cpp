@@ -122,13 +122,24 @@ int main(int argc, char** argv)
   }
   
   // Make Timer to start moving
-  ros::Duration d(2.0);
-  d.sleep();
+  //ros::Duration d(2.0);
+  //d.sleep();
+
+  // Wait for ramp to start moving the robot
+  ros::Rate r(25);
+  bool cc_started = false;
+  while(!cc_started)
+  {
+    handle.getParam("/ramp/cc_started", cc_started);
+    //ROS_INFO("/ramp/cc_started: %s", cc_started ? "True" : "False");
+    r.sleep();
+    ros::spinOnce();
+  }
+
   t_start = ros::Time::now();
   ROS_INFO("Initial t_start: %f", t_start.toSec());
   ROS_INFO("ros::Time::now(): %f", ros::Time::now().toSec());
   ros::Timer pub_ob_trj = handle.createTimer(ros::Duration(1.0f/20.0f), pubObTrj);
-
   ros::spin();
 
   printf("\nExiting normally\n");

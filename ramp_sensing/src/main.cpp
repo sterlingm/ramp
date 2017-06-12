@@ -429,15 +429,15 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       marker.pose.orientation.w = 1.0;
 
       double radius = (cir_obs[i]->cir.radius) * global_grid.info.resolution;
-      radius += coll_radius;
       ROS_INFO("x: %f y: %f radius: %f", x, y, radius);
       
       /*obs[i].cir_.center.x = x;
       obs[i].cir_.center.y = y;
       obs[i].cir_.radius = radius;*/
       
-      marker.scale.x = radius;
-      marker.scale.y = radius;
+      // scale values are the diameter so use the radius*2
+      marker.scale.x = radius*2.00f;
+      marker.scale.y = radius*2.00f;
       marker.scale.z = 0.1;
       marker.color.r = 0;
       marker.color.g = 1;
@@ -687,6 +687,13 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
       double x_dist = cir_obs[i]->cir.center.x - cir_obs[i]->prevCirs[i_prev].center.x;
       double y_dist = cir_obs[i]->cir.center.y - cir_obs[i]->prevCirs[i_prev].center.y;
       double dist = sqrt( pow(x_dist,2) + pow(y_dist,2) );
+
+      // Add on change in radius
+      if(cm.size()>0)
+      {
+        dist += cm[0].delta_r;
+        ROS_INFO("Adding delta r: %f to dist, new dist: %f", cm[0].delta_r, dist);
+      }
 
       double theta = atan2(y_dist, x_dist);
       double w = util.displaceAngle(theta, cir_obs[i]->prevTheta[i_prev]) / d_elapsed.toSec();
@@ -1188,7 +1195,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   ROS_INFO("cirs array finalized:");
   for(int i=0;i<cirs.size();i++)
   {
-    ROS_INFO("Circle %i: (%f,%f)", i, cirs[i].center.x, cirs[i].center.y);
+    ROS_INFO("Circle %i: (%f,%f) radius: %f", i, cirs[i].center.x, cirs[i].center.y, cirs[i].radius);
   }
 
 
@@ -1287,6 +1294,13 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     Obstacle o(cir_obs[i]->cir.radius*costmap_res, costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res, global_grid.info.origin.position.x, global_grid.info.origin.position.y); 
     o.update(cir_obs[i]->cir, velocities[i], cir_obs[i]->prevTheta[cir_obs[i]->prevCirs.size()-1]);
   
+    /*vdouble x = (cir_obs[i]->cir.center.x + x_origin) * global_grid.info.resolution;
+  double x_origin = global_grid.info.origin.position.x;
+  double y_origin = global_grid.info.origin.position.y;
+    double y = (cir_obs[i]->cir.center.y + y_origin) * global_grid.info.resolution;
+    o.msg_.ob_ms.positions[0] = x;
+    o.msg_.ob_ms.positions[1] = y;*/
+
     obs.push_back(o);
     list.obstacles.push_back(o.msg_);
     ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
