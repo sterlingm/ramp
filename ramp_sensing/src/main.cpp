@@ -83,10 +83,10 @@ BFL::LinearAnalyticConditionalGaussian* sys_pdf=0;
 BFL::LinearAnalyticSystemModelGaussianUncertainty* sys_model=0;
 
 int STATE_SIZE=4;
-double MU_SYSTEM_NOISE_X = 0.01;
-double MU_SYSTEM_NOISE_Y = 0.01;
-double SIGMA_SYSTEM_NOISE_X = 0.01;
-double SIGMA_SYSTEM_NOISE_Y = 0.01;
+double MU_SYSTEM_NOISE_X = 0.1;
+double MU_SYSTEM_NOISE_Y = 0.1;
+double SIGMA_SYSTEM_NOISE_X = 0.1;
+double SIGMA_SYSTEM_NOISE_Y = 0.1;
 
 /*
  * Measurement model
@@ -94,8 +94,8 @@ double SIGMA_SYSTEM_NOISE_Y = 0.01;
 //MatrixWrapper::Matrix* H=0;
 BFL::LinearAnalyticConditionalGaussian* meas_pdf = 0;
 BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model = 0;
-double MU_MEAS_NOISE = 0.;
-double SIGMA_MEAS_NOISE = 0.1;
+double MU_MEAS_NOISE = 0.01;
+double SIGMA_MEAS_NOISE = 0.01;
 
 // Input vector
 MatrixWrapper::ColumnVector u(STATE_SIZE);
@@ -106,12 +106,12 @@ MatrixWrapper::ColumnVector u(STATE_SIZE);
 BFL::Gaussian* prior = 0;
 double PRIOR_MU_X = 328;
 double PRIOR_MU_Y = 211;
-double PRIOR_MU_VX = 0.1;
-double PRIOR_MU_VY = 0.1;
-double PRIOR_MU_AX = 0.1;
-double PRIOR_MU_AY = 0.1;
-double PRIOR_COV_X = 0.1;
-double PRIOR_COV_Y = 0.1;
+double PRIOR_MU_VX = 0.01;
+double PRIOR_MU_VY = 0.01;
+double PRIOR_MU_AX = 0.01;
+double PRIOR_MU_AY = 0.01;
+double PRIOR_COV_X = 0.01;
+double PRIOR_COV_Y = 0.01;
 double PRIOR_COV_VX = 0.01;
 double PRIOR_COV_VY = 0.01;
 double PRIOR_COV_AX = 0.01;
@@ -428,7 +428,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       marker.pose.orientation.z = 0.0;
       marker.pose.orientation.w = 1.0;
 
-      double radius = (cir_obs[i]->cir.radius) * global_grid.info.resolution;
+      double radius = cir_obs[i]->cir.radius;
       ROS_INFO("x: %f y: %f radius: %f", x, y, radius);
       
       /*obs[i].cir_.center.x = x;
@@ -686,7 +686,9 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
       ROS_INFO("Prev: (%f, %f)", cir_obs[i]->prevCirs[i_prev].center.x, cir_obs[i]->prevCirs[i_prev].center.y);
       double x_dist = cir_obs[i]->cir.center.x - cir_obs[i]->prevCirs[i_prev].center.x;
       double y_dist = cir_obs[i]->cir.center.y - cir_obs[i]->prevCirs[i_prev].center.y;
-      double dist = sqrt( pow(x_dist,2) + pow(y_dist,2) );
+      //double dist = sqrt( pow(x_dist,2) + pow(y_dist,2) );
+
+      double dist = util.positionDistance(cir_obs[i]->prevCirs[i_prev].center.x, cir_obs[i]->prevCirs[i_prev].center.y, cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
 
       // Add on change in radius
       if(cm.size()>0)
@@ -698,14 +700,14 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
       double theta = atan2(y_dist, x_dist);
       double w = util.displaceAngle(theta, cir_obs[i]->prevTheta[i_prev]) / d_elapsed.toSec();
 
-      double linear_v = (dist / d_elapsed.toSec()) * grid_resolution;
+      double linear_v = (dist / d_elapsed.toSec());
 
       // Xdot and Ydot should be based on overall linear speed
       temp.vx = linear_v*cos(theta);
       temp.vy = linear_v*sin(theta);
       temp.v  = linear_v;
       temp.w  = w;
-      ROS_INFO("vx: %f vy: %f speed: %f theta: %f w: %f", temp.vx, temp.vy, linear_v, theta, w);
+      ROS_INFO("dist: %f t: %f vx: %f vy: %f speed: %f theta: %f w: %f", dist, d_elapsed.toSec(), temp.vx, temp.vy, linear_v, theta, w);
       
       predicted_velocities.push_back(temp);
     }
@@ -1233,7 +1235,13 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
      double y = (cir_obs[i]->cir.center.y * global_grid.info.resolution) + y_origin;
      cir_obs[i]->cir.center.x = x;
      cir_obs[i]->cir.center.y = y;
-     ROS_INFO("New Point: (%f,%f): ", x, y);
+     cir_obs[i]->cir.radius *= global_grid.info.resolution;
+     ROS_INFO("New Point: (%f,%f) New Radius: %f ", x, y, cir_obs[i]->cir.radius);
+   }
+
+   for(int i=0;i<cm.size();i++)
+   {
+     cm[i].delta_r *= global_grid.info.resolution;
    }
   
    
