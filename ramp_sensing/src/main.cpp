@@ -996,7 +996,7 @@ void addNewObs(std::vector<CircleMatch> cm, std::vector<Circle> cirs)
 std::vector<CircleMatch> dataAssociation(std::vector<Circle> cirs)
 {
   ROS_INFO("Starting data association");
-  //ROS_INFO("cirs.size(): %i prev_valid_cirs: %i cir_obs: %i", (int)cirs.size(), (int)prev_valid_cirs.size(), (int)cir_obs.size());
+  ROS_INFO("cirs.size(): %i prev_valid_cirs: %i cir_obs: %i", (int)cirs.size(), (int)prev_valid_cirs.size(), (int)cir_obs.size());
   
   std::vector<CircleMatch> cm = matchCircles(cirs, prev_valid_cirs);
   ROS_INFO("cm.size(): %i", (int)cm.size());
@@ -1006,9 +1006,18 @@ std::vector<CircleMatch> dataAssociation(std::vector<Circle> cirs)
   for(int i=0;i<cm.size();i++)
   {
     //ROS_INFO("Match %i: i_cirs: %i i_prevCir: %i dist: %f delta_r: %f", i, cm[i].i_cirs, cm[i].i_prevCir, cm[i].dist, cm[i].delta_r);
+    
+    /*
+     * This may need to be looked at later on
+     * what if cir_obs.size() == 0? or less than cm.size()? or cm[i].i_prevCir?
+     * cir_obs doesn't get new objects pushed on until addNewObs is called
+     */
     // Set cir value for this circle obstacle!
-    cir_obs[cm[i].i_prevCir]->cir = copy[cm[i].i_cirs];
-    ROS_INFO("Setting cir_obs[%i]->cir to (%f,%f)", cm[i].i_prevCir, copy[cm[i].i_cirs].center.x, copy[cm[i].i_cirs].center.y);
+    if(cir_obs.size() > cm[i].i_prevCir)
+    {
+      cir_obs[cm[i].i_prevCir]->cir = copy[cm[i].i_cirs];
+      ROS_INFO("Setting cir_obs[%i]->cir to (%f,%f)", cm[i].i_prevCir, copy[cm[i].i_cirs].center.x, copy[cm[i].i_cirs].center.y);
+    }
   } // end for each potential match
  
   // Delete and add filters based on matching results
@@ -1201,6 +1210,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   ROS_INFO("cirs array finalized:");
   for(int i=0;i<cirs.size();i++)
   {
+    ROS_INFO("i: %i", i);
     ROS_INFO("Circle %i: (%f,%f) radius: %f", i, cirs[i].center.x, cirs[i].center.y, cirs[i].radius);
   }
 
@@ -1216,16 +1226,17 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    */ 
    double x_origin = global_grid.info.origin.position.x;
    double y_origin = global_grid.info.origin.position.y;
-   ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
-   for(int i=0;i<cir_obs.size();i++)
+   ROS_INFO("About to convert to global coordinates, cirs.size(): %i cir_obs.size(): %i", (int)cirs.size(), (int)cir_obs.size());
+   //ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
+   for(int i=0;i<cirs.size();i++)
    {
-     ROS_INFO("cir_obs[%i] center: (%f,%f): ", i, cirs[i].center.x, cirs[i].center.y);
+     //ROS_INFO("cir_obs[%i] center: (%f,%f): ", i, cirs[i].center.x, cirs[i].center.y);
      double x = (cirs[i].center.x * global_grid.info.resolution) + x_origin;
      double y = (cirs[i].center.y * global_grid.info.resolution) + y_origin;
      cirs[i].center.x = x;
      cirs[i].center.y = y;
      cirs[i].radius *= global_grid.info.resolution;
-     ROS_INFO("New Point: (%f,%f) New Radius: %f ", x, y, cirs[i].radius);
+     //ROS_INFO("New Point: (%f,%f) New Radius: %f ", x, y, cirs[i].radius);
    }
    
 
@@ -1302,21 +1313,12 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     Obstacle o(cir_obs[i]->cir.radius*costmap_res, costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res, global_grid.info.origin.position.x, global_grid.info.origin.position.y); 
     o.update(cir_obs[i]->cir, velocities[i], cir_obs[i]->prevTheta[cir_obs[i]->prevCirs.size()-1]);
   
-    /*vdouble x = (cir_obs[i]->cir.center.x + x_origin) * global_grid.info.resolution;
-  double x_origin = global_grid.info.origin.position.x;
-  double y_origin = global_grid.info.origin.position.y;
-    double y = (cir_obs[i]->cir.center.y + y_origin) * global_grid.info.resolution;
-    o.msg_.ob_ms.positions[0] = x;
-    o.msg_.ob_ms.positions[1] = y;*/
-
     obs.push_back(o);
     list.obstacles.push_back(o.msg_);
-    ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
+    //ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
   }
-  ROS_INFO("Done setting obstacles");
 
   num_costmaps++;
-  ////ROS_INFO("obs.size(): %i", (int)obs.size());
   ROS_INFO("**************************************************");
   ROS_INFO("Exiting costmapCb");
   ROS_INFO("**************************************************");
