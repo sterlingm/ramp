@@ -235,6 +235,23 @@ const RampTrajectory RampTrajectory::getSubTrajectoryPost(const double t) const
 }
 
 
+bool RampTrajectory::stopRotateInFirstSec() const
+{
+  for(int i=0;i < 10 && i < msg_.trajectory.points.size();i++)
+  {
+    trajectory_msgs::JointTrajectoryPoint p = msg_.trajectory.points[i];
+
+    double v = sqrt( pow(p.positions[0], 2) + pow(p.positions[1], 2) );
+    if(v < 0.01)
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
 
 
 /*

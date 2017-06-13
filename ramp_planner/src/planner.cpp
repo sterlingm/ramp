@@ -1160,7 +1160,8 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
   
   ROS_INFO("nec_theta: %f end: %f diff: %f", nec_theta, end, diff);
 
-  result.trans_possible = trajec.transitionTraj_.trajectory.points.size() > 0 || diff < 0.31;
+  //result.trans_possible = trajec.transitionTraj_.trajectory.points.size() > 0 || diff < 0.31;
+  result.trans_possible = trajec.transitionTraj_.trajectory.points.size() > 0 || !trajec.stopRotateInFirstSec();
 
   // Set offset for eval req
   if(diff_.msg_.positions.size() > 0)

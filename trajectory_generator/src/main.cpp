@@ -62,15 +62,6 @@ bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
     ramp_msgs::TrajectoryResponse tres;
     ROS_INFO("Trajectory Request Received: %s", utility.toString(treq).c_str());
 
-    // Check for out-of-bounds index
-    for(int j=0;j<treq.path.points.size();j++)
-    {
-      if(treq.path.points[j].motionState.positions[1] > 2.0)
-      {
-        ROS_WARN("Path has an out-of-bounds index");
-        ROS_WARN("Path point %i: %s", j, utility.toString(treq.path.points[j].motionState).c_str());
-      }
-    }
     /*
      * Check for start == goal
      */
@@ -116,17 +107,6 @@ bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
     ROS_INFO("Response: %s", utility.toString(tres).c_str());
     
     
-    for(int j=0;j<tres.trajectory.trajectory.points.size();j++)
-    {
-      if( tres.trajectory.trajectory.points[j].positions[1] > 2.0 ||
-          tres.trajectory.trajectory.points[j].positions[1] < -0.001f ||
-          tres.trajectory.trajectory.points[j].positions[0] > 10 ||
-          tres.trajectory.trajectory.points[j].positions[0] < -0.001f)
-      {
-        ROS_INFO("Path has an out-of-bounds index");
-      }
-    }
-  
     res.resps.push_back(tres);
   }
 
