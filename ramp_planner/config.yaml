@@ -53,3 +53,7 @@ obstacle_delays: []
 #obstacle_odoms: ['/robot_1/odom', '/robot_2/odom']
 #obstacle_vels: ['/robot_1/cmd_vel', '/robot_2/cmd_vel']
 #obstacle_delays: [2, 0]
+
+
+gazebo_model_names: ['cardboard_box', 'cardboard_box_0']
+
