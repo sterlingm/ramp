@@ -237,17 +237,22 @@ const RampTrajectory RampTrajectory::getSubTrajectoryPost(const double t) const
 
 bool RampTrajectory::stopRotateInFirstSec() const
 {
+  ROS_INFO("In RampTrajectory::stopRotateInFirstSec");
   for(int i=0;i < 10 && i < msg_.trajectory.points.size();i++)
   {
     trajectory_msgs::JointTrajectoryPoint p = msg_.trajectory.points[i];
 
-    double v = sqrt( pow(p.positions[0], 2) + pow(p.positions[1], 2) );
+    double v = sqrt( pow(p.velocities[0], 2) + pow(p.velocities[1], 2) );
+    ROS_INFO("p: %s", utility_.toString(p).c_str());
+    ROS_INFO("v: %f", v);
     if(v < 0.01)
     {
+      ROS_INFO("Returning true");
       return true;
     }
   }
 
+  ROS_INFO("Returning false");
   return false;
 }
 

@@ -4,21 +4,23 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
-ALL_BEZIER	utility.h	/^  ALL_BEZIER            = 1,$/;"	e	enum:TrajectoryType
 ALL_STRAIGHT_SEGMENTS	utility.h	/^  ALL_STRAIGHT_SEGMENTS = 0,$/;"	e	enum:TrajectoryType
 DirectoryOfThisScript	.ycm_extra_conf.py	/^def DirectoryOfThisScript():$/;"	f	access:public
 EVALUATION_REQUEST_HANDLER_H	evaluation_request_handler.h	2;"	d
-EvaluationRequestHandler	evaluation_request_handler.cpp	/^EvaluationRequestHandler::EvaluationRequestHandler(const ros::NodeHandle& h) : handle_(h) {$/;"	f	class:EvaluationRequestHandler	signature:(const ros::NodeHandle& h)
+EvaluationRequestHandler	evaluation_request_handler.cpp	/^EvaluationRequestHandler::EvaluationRequestHandler(const ros::NodeHandle& h) : handle_(h) $/;"	f	class:EvaluationRequestHandler	signature:(const ros::NodeHandle& h)
 EvaluationRequestHandler	evaluation_request_handler.h	/^    EvaluationRequestHandler(const ros::NodeHandle& h);$/;"	p	class:EvaluationRequestHandler	access:public	signature:(const ros::NodeHandle& h)
 EvaluationRequestHandler	evaluation_request_handler.h	/^class EvaluationRequestHandler {$/;"	c
-EvaluationRequestHandler::EvaluationRequestHandler	evaluation_request_handler.cpp	/^EvaluationRequestHandler::EvaluationRequestHandler(const ros::NodeHandle& h) : handle_(h) {$/;"	f	class:EvaluationRequestHandler	signature:(const ros::NodeHandle& h)
+EvaluationRequestHandler::EvaluationRequestHandler	evaluation_request_handler.cpp	/^EvaluationRequestHandler::EvaluationRequestHandler(const ros::NodeHandle& h) : handle_(h) $/;"	f	class:EvaluationRequestHandler	signature:(const ros::NodeHandle& h)
 EvaluationRequestHandler::EvaluationRequestHandler	evaluation_request_handler.h	/^    EvaluationRequestHandler(const ros::NodeHandle& h);$/;"	p	class:EvaluationRequestHandler	access:public	signature:(const ros::NodeHandle& h)
 EvaluationRequestHandler::client_	evaluation_request_handler.h	/^    ros::ServiceClient client_;$/;"	m	class:EvaluationRequestHandler	access:private
 EvaluationRequestHandler::handle_	evaluation_request_handler.h	/^    ros::NodeHandle handle_;$/;"	m	class:EvaluationRequestHandler	access:private
-EvaluationRequestHandler::request	evaluation_request_handler.cpp	/^const bool EvaluationRequestHandler::request(ramp_msgs::EvaluationRequest& er) {$/;"	f	class:EvaluationRequestHandler	signature:(ramp_msgs::EvaluationRequest& er)
-EvaluationRequestHandler::request	evaluation_request_handler.h	/^    const bool request(ramp_msgs::EvaluationRequest& er);$/;"	p	class:EvaluationRequestHandler	access:public	signature:(ramp_msgs::EvaluationRequest& er)
+EvaluationRequestHandler::request	evaluation_request_handler.cpp	/^const bool EvaluationRequestHandler::request(ramp_msgs::EvaluationSrv& er) $/;"	f	class:EvaluationRequestHandler	signature:(ramp_msgs::EvaluationSrv& er)
+EvaluationRequestHandler::request	evaluation_request_handler.h	/^    const bool request(ramp_msgs::EvaluationSrv& er);$/;"	p	class:EvaluationRequestHandler	access:public	signature:(ramp_msgs::EvaluationSrv& er)
 FlagsForFile	.ycm_extra_conf.py	/^def FlagsForFile( filename, **kwargs ):$/;"	f	access:public
 GetCompilationInfoForFile	.ycm_extra_conf.py	/^def GetCompilationInfoForFile( filename ):$/;"	f	access:public
+GetRosIncludeFlags	.ycm_extra_conf.py	/^def GetRosIncludeFlags():$/;"	f	access:public
+GetRosIncludePaths	.ycm_extra_conf.py	/^def GetRosIncludePaths():$/;"	f	access:public
+HYBRID	utility.h	/^  HYBRID                = 1,$/;"	e	enum:TrajectoryType
 IsHeaderFile	.ycm_extra_conf.py	/^def IsHeaderFile( filename ):$/;"	f	access:public
 MakeRelativePathsInFlagsAbsolute	.ycm_extra_conf.py	/^def MakeRelativePathsInFlagsAbsolute( flags, working_directory ):$/;"	f	access:public
 MotionType	motion_type.h	/^enum class MotionType {$/;"	c
@@ -27,26 +29,25 @@ MotionType::Rotation	motion_type.h	/^  Rotation                    = 2,$/;"	m	cl
 MotionType::Translation	motion_type.h	/^  Translation                 = 1,$/;"	m	class:MotionType	access:private
 MotionType::TranslationAndRotation	motion_type.h	/^  TranslationAndRotation      = 3,$/;"	m	class:MotionType	access:private
 None	motion_type.h	/^  None                        = 0,$/;"	m	class:MotionType	access:private
-PARTIAL_BEZIER	utility.h	/^  PARTIAL_BEZIER        = 2,$/;"	e	enum:TrajectoryType
 PI	publish_twist_command.cpp	7;"	d	file:
-PI	utility.h	16;"	d
+PI	utility.h	17;"	d
 POSE_COUNT_THRESHOLD	display_base_location.cpp	/^static const int POSE_COUNT_THRESHOLD = 1;$/;"	v	file:
-PREDICTION	utility.h	/^  PREDICTION            = 4$/;"	e	enum:TrajectoryType
+PREDICTION	utility.h	/^  PREDICTION            = 3$/;"	e	enum:TrajectoryType
 Rotation	motion_type.h	/^  Rotation                    = 2,$/;"	m	class:MotionType	access:private
 SOURCE_EXTENSIONS	.ycm_extra_conf.py	/^SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.m', '.mm' ]$/;"	v
 TRAJECTORY_REQUEST_HANDLER_H	trajectory_request_handler.h	2;"	d
-TRANSITION	utility.h	/^  TRANSITION            = 3,$/;"	e	enum:TrajectoryType
+TRANSITION	utility.h	/^  TRANSITION            = 2,$/;"	e	enum:TrajectoryType
 T_od_w	display_base_location.cpp	/^tf::StampedTransform T_od_w;$/;"	v
 T_w_b	viewPredicted.cpp	/^tf::Transform T_w_b;$/;"	v
-TrajectoryRequestHandler	trajectory_request_handler.cpp	/^TrajectoryRequestHandler::TrajectoryRequestHandler(const ros::NodeHandle& h) : handle_(h) {$/;"	f	class:TrajectoryRequestHandler	signature:(const ros::NodeHandle& h)
+TrajectoryRequestHandler	trajectory_request_handler.cpp	/^TrajectoryRequestHandler::TrajectoryRequestHandler(const ros::NodeHandle& h) : handle_(h) $/;"	f	class:TrajectoryRequestHandler	signature:(const ros::NodeHandle& h)
 TrajectoryRequestHandler	trajectory_request_handler.h	/^    TrajectoryRequestHandler(const ros::NodeHandle& h);$/;"	p	class:TrajectoryRequestHandler	access:public	signature:(const ros::NodeHandle& h)
 TrajectoryRequestHandler	trajectory_request_handler.h	/^class TrajectoryRequestHandler {$/;"	c
-TrajectoryRequestHandler::TrajectoryRequestHandler	trajectory_request_handler.cpp	/^TrajectoryRequestHandler::TrajectoryRequestHandler(const ros::NodeHandle& h) : handle_(h) {$/;"	f	class:TrajectoryRequestHandler	signature:(const ros::NodeHandle& h)
+TrajectoryRequestHandler::TrajectoryRequestHandler	trajectory_request_handler.cpp	/^TrajectoryRequestHandler::TrajectoryRequestHandler(const ros::NodeHandle& h) : handle_(h) $/;"	f	class:TrajectoryRequestHandler	signature:(const ros::NodeHandle& h)
 TrajectoryRequestHandler::TrajectoryRequestHandler	trajectory_request_handler.h	/^    TrajectoryRequestHandler(const ros::NodeHandle& h);$/;"	p	class:TrajectoryRequestHandler	access:public	signature:(const ros::NodeHandle& h)
 TrajectoryRequestHandler::client_	trajectory_request_handler.h	/^    ros::ServiceClient client_;$/;"	m	class:TrajectoryRequestHandler	access:private
 TrajectoryRequestHandler::handle_	trajectory_request_handler.h	/^    ros::NodeHandle  handle_; $/;"	m	class:TrajectoryRequestHandler	access:private
-TrajectoryRequestHandler::request	trajectory_request_handler.cpp	/^const bool TrajectoryRequestHandler::request(ramp_msgs::TrajectoryRequest& tr) {$/;"	f	class:TrajectoryRequestHandler	signature:(ramp_msgs::TrajectoryRequest& tr)
-TrajectoryRequestHandler::request	trajectory_request_handler.h	/^    const bool request(ramp_msgs::TrajectoryRequest& tr);$/;"	p	class:TrajectoryRequestHandler	access:public	signature:(ramp_msgs::TrajectoryRequest& tr)
+TrajectoryRequestHandler::request	trajectory_request_handler.cpp	/^const bool TrajectoryRequestHandler::request(ramp_msgs::TrajectorySrv& tr) $/;"	f	class:TrajectoryRequestHandler	signature:(ramp_msgs::TrajectorySrv& tr)
+TrajectoryRequestHandler::request	trajectory_request_handler.h	/^    const bool request(ramp_msgs::TrajectorySrv& tr);$/;"	p	class:TrajectoryRequestHandler	access:public	signature:(ramp_msgs::TrajectorySrv& tr)
 TrajectoryType	utility.h	/^enum TrajectoryType {$/;"	g
 Translation	motion_type.h	/^  Translation                 = 1,$/;"	m	class:MotionType	access:private
 TranslationAndRotation	motion_type.h	/^  TranslationAndRotation      = 3,$/;"	m	class:MotionType	access:private
@@ -94,8 +95,8 @@ a_vec	utility.cpp	/^  std::vector<float> a_vec;$/;"	l
 angle_at_start	display_base_location.cpp	/^float angle_at_start = 0.0f;$/;"	v
 at	interrupt_trajectory.cpp	/^    stop.positions.at(i) += (start_.velocities.at(i) \/ 10);$/;"	p	file:	signature:(i)
 at	utility.cpp	/^      result<<", "<<p.accelerations.at(k);$/;"	p	file:	signature:(k)
+at	utility.cpp	/^      result<<", "<<p.positions.at(k);$/;"	p	file:	signature:(k)
 at	utility.cpp	/^      result<<", "<<p.velocities.at(k);$/;"	p	file:	signature:(k)
-at	utility.cpp	/^    result<<", "<<p.positions.at(k);$/;"	p	file:	signature:(k)
 at	utility.cpp	/^    result<<mp.accelerations.at(i)<<" ";$/;"	p	file:	signature:(i)
 at	utility.cpp	/^    result<<mp.jerks.at(i)<<" ";$/;"	p	file:	signature:(i)
 at	utility.cpp	/^    result<<mp.positions.at(i)<<" ";$/;"	p	file:	signature:(i)
@@ -107,6 +108,7 @@ avg_w	viewPredicted.cpp	/^  float avg_w = w_sum \/ gr_angulars.size();$/;"	l
 avg_w	viewPredicted.cpp	/^  std::cout<<"\\naverage angular velocity when driving straight: "<<avg_w;$/;"	l
 b_vec	utility.cpp	/^  std::vector<float> b_vec;$/;"	l
 bi	publish_trajectory_command.cpp	/^  ramp_msgs::BezierCurve bi;$/;"	l
+bi	test_move_op.cpp	/^  ramp_msgs::BezierCurve bi;$/;"	l
 bi2	publish_trajectory_command.cpp	/^  ramp_msgs::BezierCurve bi2;$/;"	l
 blank	interrupt_trajectory.cpp	/^  ramp_msgs::RampTrajectory blank;$/;"	l
 c	display_base_location.cpp	/^    Configuration c(configuration_);$/;"	p	file:	signature:(configuration_)
@@ -124,23 +126,26 @@ c6	publish_trajectory_command.cpp	/^  ramp_msgs::KnotPoint c6;$/;"	l
 c7	publish_trajectory_command.cpp	/^  ramp_msgs::KnotPoint c7;$/;"	l
 c8	publish_trajectory_command.cpp	/^  ramp_msgs::KnotPoint c8;$/;"	l
 c9	publish_trajectory_command.cpp	/^  ramp_msgs::KnotPoint c9;$/;"	l
-call	evaluation_test.cpp	/^  client_eval.call(er1);$/;"	p	file:	signature:(er1)
-call	evaluation_test.cpp	/^  client_eval.call(er2);$/;"	p	file:	signature:(er2)
-call	interrupt_trajectory.cpp	/^  client_.call(tr);$/;"	p	file:	signature:(tr)
-call	interrupt_trajectory.cpp	/^  client_.call(tr2);$/;"	p	file:	signature:(tr2)
-call	interrupt_trajectory.cpp	/^  client_.call(tr3);$/;"	p	file:	signature:(tr3)
+call	evaluation_test.cpp	/^  client_eval.call(er_srv1);$/;"	p	file:	signature:(er_srv1)
+call	interrupt_trajectory.cpp	/^  client_.call(tr_srv);$/;"	p	file:	signature:(tr_srv)
+call	interrupt_trajectory.cpp	/^  client_.call(tr_srv2);$/;"	p	file:	signature:(tr_srv2)
+call	interrupt_trajectory.cpp	/^  client_.call(tr_srv3);$/;"	p	file:	signature:(tr_srv3)
 clear	display_base_location.cpp	/^    thetas_.clear();$/;"	p	file:	signature:()
 clear	display_base_location.cpp	/^  configuration_.K.clear();$/;"	p	file:	signature:()
 clear	interrupt_trajectory.cpp	/^  pop.population.clear();$/;"	p	file:	signature:()
-clientTrajEval	test_collision.cpp	/^  ros::ServiceClient clientTrajEval = handle.serviceClient<ramp_msgs::EvaluationRequest>("trajectory_evaluation");$/;"	l
-clientTrajGen	test_collision.cpp	/^  ros::ServiceClient clientTrajGen  = handle.serviceClient<ramp_msgs::TrajectoryRequest>("trajectory_generator");$/;"	l
+clear	test_move_op.cpp	/^  pop.population.clear();$/;"	p	file:	signature:()
+clientTrajEval	test_collision.cpp	/^  ros::ServiceClient clientTrajEval = handle.serviceClient<ramp_msgs::EvaluationSrv>("trajectory_evaluation");$/;"	l
+clientTrajGen	test_collision.cpp	/^  ros::ServiceClient clientTrajGen  = handle.serviceClient<ramp_msgs::TrajectorySrv>("trajectory_generator");$/;"	l
 client_	evaluation_request_handler.h	/^    ros::ServiceClient client_;$/;"	m	class:EvaluationRequestHandler	access:private
-client_	interrupt_trajectory.cpp	/^  ros::ServiceClient client_ = handle.serviceClient<ramp_msgs::TrajectoryRequest>("trajectory_generator");$/;"	l
-client_	publish_trajectory_command.cpp	/^  ros::ServiceClient client_ = handle.serviceClient<ramp_msgs::TrajectoryRequest>("trajectory_generator");$/;"	l
+client_	interrupt_trajectory.cpp	/^  ros::ServiceClient client_ = handle.serviceClient<ramp_msgs::TrajectorySrv>("trajectory_generator");$/;"	l
+client_	publish_trajectory_command.cpp	/^  ros::ServiceClient client_ = handle.serviceClient<ramp_msgs::TrajectorySrv>("trajectory_generator");$/;"	l
+client_	test_move_op.cpp	/^  ros::ServiceClient client_ = handle.serviceClient<ramp_msgs::TrajectorySrv>("trajectory_generator");$/;"	l
 client_	trajectory_request_handler.h	/^    ros::ServiceClient client_;$/;"	m	class:TrajectoryRequestHandler	access:private
-client_eval	evaluation_test.cpp	/^  ros::ServiceClient client_eval = handle.serviceClient<ramp_msgs::EvaluationRequest>("trajectory_evaluation");$/;"	l
-client_eval	publish_trajectory_command.cpp	/^  ros::ServiceClient client_eval = handle.serviceClient<ramp_msgs::EvaluationRequest>("trajectory_evaluation");$/;"	l
-client_traj	evaluation_test.cpp	/^  ros::ServiceClient client_traj = handle.serviceClient<ramp_msgs::TrajectoryRequest>("trajectory_generator");$/;"	l
+client_eval	evaluation_test.cpp	/^  ros::ServiceClient client_eval = handle.serviceClient<ramp_msgs::EvaluationSrv>("trajectory_evaluation");$/;"	l
+client_eval	publish_trajectory_command.cpp	/^  ros::ServiceClient client_eval = handle.serviceClient<ramp_msgs::EvaluationSrv>("trajectory_evaluation");$/;"	l
+client_eval	test_move_op.cpp	/^  ros::ServiceClient client_eval = handle.serviceClient<ramp_msgs::EvaluationSrv>("trajectory_evaluation");$/;"	l
+client_path	test_move_op.cpp	/^  ros::ServiceClient client_path = handle.serviceClient<ramp_msgs::ModificationRequest>("path_modification");$/;"	l
+client_traj	evaluation_test.cpp	/^  ros::ServiceClient client_traj = handle.serviceClient<ramp_msgs::TrajectorySrv>("trajectory_generator");$/;"	l
 compilation_database_folder	.ycm_extra_conf.py	/^compilation_database_folder = ''$/;"	v
 cout	evaluation_test.cpp	/^  std::cout<<"\\n************** Trajectory 1: ****************";$/;"	m	class:std	file:
 cout	evaluation_test.cpp	/^  std::cout<<"\\n************** Trajectory 2: ****************";$/;"	m	class:std	file:
@@ -153,6 +158,7 @@ cout	interrupt_trajectory.cpp	/^  std::cout<<"\\nPress Enter to publish first tr
 cout	publish_trajectory_command.cpp	/^    std::cout<<"\\nSome error getting trajectory\\n";$/;"	m	class:std	file:
 cout	publish_trajectory_command.cpp	/^  std::cout<<"\\nExiting Normally\\n";$/;"	m	class:std	file:
 cout	publish_trajectory_command.cpp	/^  std::cout<<"\\nPress Enter to request and send the trajectory\\n";$/;"	m	class:std	file:
+cout	publish_trajectory_command.cpp	/^  std::cout<<"\\n\\nPress Enter to Publish population\\n";$/;"	m	class:std	file:
 cout	publish_twist_command.cpp	/^  std::cout<<"\\nExiting Normally\\n";$/;"	m	class:std	file:
 cout	publish_twist_command.cpp	/^  std::cout<<"\\nPress Enter to publish the twist message\\n";$/;"	m	class:std	file:
 cout	test_collision.cpp	/^      std::cout<<"\\nSome error getting trajectory\\n";$/;"	m	class:std	file:
@@ -170,6 +176,7 @@ cp2_1	publish_trajectory_command.cpp	/^  ramp_msgs::MotionState cp2_1 = sp2_1;$/
 cp2_2	publish_trajectory_command.cpp	/^  ramp_msgs::MotionState cp2_2;$/;"	l
 createQuaternionFromYaw	display_base_location.cpp	/^  T_od_w.setRotation(tf::createQuaternionFromYaw(orientation));$/;"	p	file:	signature:(orientation)
 curves	publish_trajectory_command.cpp	/^  std::vector<ramp_msgs::BezierCurve> curves;$/;"	l
+curves	test_move_op.cpp	/^  std::vector<ramp_msgs::BezierCurve> curves;$/;"	l
 d	utility.cpp	/^  std::vector<double> d;$/;"	l
 d_a	utility.cpp	/^  std::vector<double> d_a;$/;"	l
 d_b	utility.cpp	/^  std::vector<double> d_b;$/;"	l
@@ -177,19 +184,25 @@ d_x	utility.cpp	/^  double d_x = b.at(0) - a.at(0);$/;"	l
 d_y	utility.cpp	/^  double d_y = b.at(1) - a.at(1);$/;"	l
 database	.ycm_extra_conf.py	/^  database = None$/;"	v
 database	.ycm_extra_conf.py	/^  database = ycm_core.CompilationDatabase( compilation_database_folder )$/;"	v
-delta_x	viewPredicted.cpp	/^    double delta_x = cos(phi)*ob.odom_t.twist.twist.linear.x;$/;"	l
-delta_y	viewPredicted.cpp	/^    double delta_y = sin(phi)*ob.odom_t.twist.twist.linear.x;$/;"	l
+default_flags	.ycm_extra_conf.py	/^default_flags = [$/;"	v
+delta_x	viewPredicted.cpp	/^    double delta_x = cos(phi)*v;$/;"	l
+delta_y	viewPredicted.cpp	/^    double delta_y = sin(phi)*v;$/;"	l
 delta_y	viewPredicted.cpp	/^    std::cout<<"\\ntheta: "<<theta<<" delta_x: "<<delta_x<<" delta_y: "<<delta_y;$/;"	l
 difference	utility.cpp	/^  double difference = a2 - a1;$/;"	l
 displaceAngle	utility.cpp	/^const double Utility::displaceAngle(const double a1, double a2) const {$/;"	f	class:Utility	signature:(const double a1, double a2) const
 displaceAngle	utility.h	/^    const double displaceAngle(const double a1, double a2) const;$/;"	p	class:Utility	access:public	signature:(const double a1, double a2) const
 displayConfiguration	display_base_location.cpp	/^void displayConfiguration() {$/;"	f	signature:()
 end	publish_twist_command.cpp	/^  ros::Time end = ros::Time::now() + ros::Duration(1);$/;"	l
+er	publish_trajectory_command.cpp	/^  ramp_msgs::EvaluationRequest er;$/;"	l
 er	test_collision.cpp	/^    ramp_msgs::EvaluationRequest er;$/;"	l
 er1	evaluation_test.cpp	/^  ramp_msgs::EvaluationRequest er1;$/;"	l
 er2	evaluation_test.cpp	/^  ramp_msgs::EvaluationRequest er2;$/;"	l
+er_req	test_move_op.cpp	/^  ramp_msgs::EvaluationRequest er_req;$/;"	l
+er_srv	publish_trajectory_command.cpp	/^  ramp_msgs::EvaluationSrv er_srv;$/;"	l
+er_srv	test_collision.cpp	/^    ramp_msgs::EvaluationSrv er_srv;$/;"	l
+er_srv	test_move_op.cpp	/^  ramp_msgs::EvaluationSrv er_srv;$/;"	l
+er_srv1	evaluation_test.cpp	/^  ramp_msgs::EvaluationSrv er_srv1;$/;"	l
 euc_dist	utility.cpp	/^  double euc_dist = sqrt( pow(d_x,2) + pow(d_y,2) );$/;"	l
-fakeOdom	viewPredicted.cpp	/^void fakeOdom() {$/;"	f	signature:()
 findAngleFromAToB	evaluation_test.cpp	/^    std::cout<<"\\nA to B: "<<u.findAngleFromAToB(p2_kp1.motionState.positions, p2_kp2.motionState.positions);$/;"	p	file:	signature:(p2_kp1.motionState.positions, p2_kp2.motionState.positions)
 findAngleFromAToB	utility.cpp	/^const double Utility::findAngleFromAToB(const std::vector<double> a, const std::vector<double> b) const {$/;"	f	class:Utility	signature:(const std::vector<double> a, const std::vector<double> b) const
 findAngleFromAToB	utility.cpp	/^const double Utility::findAngleFromAToB(const std::vector<float> a, const std::vector<float> b) const {$/;"	f	class:Utility	signature:(const std::vector<float> a, const std::vector<float> b) const
@@ -204,12 +217,13 @@ findAngleToVector	utility.h	/^    const double findAngleToVector(const std::vect
 findDistanceBetweenAngles	utility.cpp	/^const double Utility::findDistanceBetweenAngles(const double a1, const double a2) const {$/;"	f	class:Utility	signature:(const double a1, const double a2) const
 findDistanceBetweenAngles	utility.h	/^    const double findDistanceBetweenAngles(const double a1, const double a2) const;$/;"	p	class:Utility	access:public	signature:(const double a1, const double a2) const
 findMotionType	viewPredicted.cpp	/^const MotionType findMotionType(const ramp_msgs::Obstacle ob) { $/;"	f	signature:(const ramp_msgs::Obstacle ob)
-flags	.ycm_extra_conf.py	/^flags = [$/;"	v
+flags	.ycm_extra_conf.py	/^flags = default_flags + GetRosIncludeFlags()$/;"	v
 get	imminent_collision.cpp	/^      std::cin.get();$/;"	p	file:	signature:()
 get	interrupt_trajectory.cpp	/^  std::cin.get();$/;"	p	file:	signature:()
 get	publish_trajectory_command.cpp	/^  std::cin.get();$/;"	p	file:	signature:()
 get	publish_twist_command.cpp	/^  std::cin.get();$/;"	p	file:	signature:()
 get	test_collision.cpp	/^  std::cin.get();$/;"	p	file:	signature:()
+get	test_move_op.cpp	/^  std::cin.get();$/;"	p	file:	signature:()
 getAndSendTrajectory	viewPredicted.cpp	/^void getAndSendTrajectory() {$/;"	f	signature:()
 getEuclideanDist	utility.cpp	/^const double Utility::getEuclideanDist(const std::vector<double> a, const std::vector<double> b) const {$/;"	f	class:Utility	signature:(const std::vector<double> a, const std::vector<double> b) const
 getEuclideanDist	utility.h	/^    const double getEuclideanDist(const std::vector<double> a, std::vector<double> b) const;$/;"	p	class:Utility	access:public	signature:(const std::vector<double> a, std::vector<double> b) const
@@ -219,8 +233,6 @@ getPath	utility.cpp	/^const ramp_msgs::Path Utility::getPath(const std::vector<r
 getPath	utility.h	/^    const ramp_msgs::Path getPath(const std::vector<ramp_msgs::KnotPoint>   kps) const;$/;"	p	class:Utility	access:public	signature:(const std::vector<ramp_msgs::KnotPoint> kps) const
 getPath	utility.h	/^    const ramp_msgs::Path getPath(const std::vector<ramp_msgs::MotionState> mps) const;$/;"	p	class:Utility	access:public	signature:(const std::vector<ramp_msgs::MotionState> mps) const
 getPredictedTrajectory	viewPredicted.cpp	/^const ramp_msgs::RampTrajectory getPredictedTrajectory(const ramp_msgs::Obstacle ob, const ros::Duration d) {$/;"	f	signature:(const ramp_msgs::Obstacle ob, const ros::Duration d)
-getY	viewPredicted.cpp	/^  std::cout<<"\\np_st.x: "<<p_st.getX()<<" p_st.y: "<<p_st.getY()<<" p_st_tf.x: "<<p_st_tf.getX()<<" p_st_tf.y: "<<p_st_tf.getY();$/;"	p	file:	signature:()
-getYaw	viewPredicted.cpp	/^  start.motionState.positions.push_back(tf::getYaw(ob.odom_t.pose.pose.orientation));$/;"	p	file:	signature:(ob.odom_t.pose.pose.orientation)
 goal	viewPredicted.cpp	/^    ramp_msgs::KnotPoint goal;$/;"	l
 gr_angulars	viewPredicted.cpp	/^std::vector<float> gr_angulars;$/;"	v
 h_traj_req_	viewPredicted.cpp	/^TrajectoryRequestHandler* h_traj_req_;$/;"	v
@@ -232,6 +244,7 @@ handle	interrupt_trajectory.cpp	/^  ros::NodeHandle handle;$/;"	l
 handle	publish_trajectory_command.cpp	/^  ros::NodeHandle handle;$/;"	l
 handle	publish_twist_command.cpp	/^  ros::NodeHandle handle;$/;"	l
 handle	test_collision.cpp	/^  ros::NodeHandle handle;$/;"	l
+handle	test_move_op.cpp	/^  ros::NodeHandle handle;$/;"	l
 handle	viewPredicted.cpp	/^  ros::NodeHandle handle;$/;"	l
 handle_	evaluation_request_handler.h	/^    ros::NodeHandle handle_;$/;"	m	class:EvaluationRequestHandler	access:private
 handle_	trajectory_request_handler.h	/^    ros::NodeHandle  handle_; $/;"	m	class:TrajectoryRequestHandler	access:private
@@ -247,10 +260,13 @@ init	interrupt_trajectory.cpp	/^  ros::init(argc, argv, "interrupt_trajectory");
 init	publish_trajectory_command.cpp	/^  ros::init(argc, argv, "publish_trajectory_command");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 init	publish_twist_command.cpp	/^  ros::init(argc, argv, "publish_twist_command");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 init	test_collision.cpp	/^  ros::init(argc, argv, "publish_trajectory_command");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
+init	test_move_op.cpp	/^  ros::init(argc, argv, "test_move_op");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 init	viewPredicted.cpp	/^  ros::init(argc, argv, "viewPredicted");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
+jp	test_move_op.cpp	/^  trajectory_msgs::JointTrajectoryPoint jp;$/;"	l
+kp	test_move_op.cpp	/^    ramp_msgs::KnotPoint kp;$/;"	l
 kp	utility.cpp	/^    ramp_msgs::KnotPoint kp;$/;"	l
-mag_angular_t	viewPredicted.cpp	/^  float mag_angular_t = sqrt( tf::tfDot(v_angular, v_angular) );$/;"	l
-mag_linear_t	viewPredicted.cpp	/^  float mag_linear_t  = sqrt( tf::tfDot(v_linear, v_linear)   );$/;"	l
+mag_angular_t	viewPredicted.cpp	/^  double mag_angular_t = ob.ob_ms.velocities[2];$/;"	l
+mag_linear_t	viewPredicted.cpp	/^  double mag_linear_t = sqrt( pow(ob.ob_ms.velocities[0], 2) + pow(ob.ob_ms.velocities[1], 2) );$/;"	l
 main	display_base_location.cpp	/^int main(int argc, char** argv) {$/;"	f	signature:(int argc, char** argv)
 main	evaluation_test.cpp	/^int main(int argc, char** argv) {$/;"	f	signature:(int argc, char** argv)
 main	getYaw.cpp	/^int main(int argc, char** argv) {$/;"	f	signature:(int argc, char** argv)
@@ -259,11 +275,13 @@ main	interrupt_trajectory.cpp	/^int main(int argc, char** argv) {$/;"	f	signatur
 main	publish_trajectory_command.cpp	/^int main(int argc, char** argv) {$/;"	f	signature:(int argc, char** argv)
 main	publish_twist_command.cpp	/^int main(int argc, char** argv) {$/;"	f	signature:(int argc, char** argv)
 main	test_collision.cpp	/^int main(int argc, char** argv) {$/;"	f	signature:(int argc, char** argv)
+main	test_move_op.cpp	/^int main(int argc, char** argv)$/;"	f	signature:(int argc, char** argv)
 main	viewPredicted.cpp	/^int main(int argc, char** argv) {$/;"	f	signature:(int argc, char** argv)
 max_v	viewPredicted.cpp	/^  float max_v = tgr_linears.at(0);$/;"	l
 max_v	viewPredicted.cpp	/^  std::cout<<"\\nmax linear velocity when self-rotating: "<<max_v;$/;"	l
 max_w	viewPredicted.cpp	/^  float max_w = gr_angulars.at(0);$/;"	l
 max_w	viewPredicted.cpp	/^  std::cout<<"\\nmax angular velocity when driving straight: "<<max_w;$/;"	l
+mod	test_move_op.cpp	/^  ramp_msgs::ModificationRequest mod;$/;"	l
 motion_type	viewPredicted.cpp	/^  MotionType motion_type = findMotionType(ob);$/;"	l
 ms1	interrupt_trajectory.cpp	/^  ramp_msgs::KnotPoint ms1;$/;"	l
 ms2	interrupt_trajectory.cpp	/^  ramp_msgs::KnotPoint ms2;$/;"	l
@@ -273,8 +291,19 @@ ms_initVA2	publish_trajectory_command.cpp	/^  ramp_msgs::MotionState ms_initVA2;
 ms_maxVA	publish_trajectory_command.cpp	/^  ramp_msgs::MotionState ms_maxVA;$/;"	l
 ms_maxVA2	publish_trajectory_command.cpp	/^  ramp_msgs::MotionState ms_maxVA2;$/;"	l
 now	publish_twist_command.cpp	/^  std::cout<<ros::Time::now();$/;"	p	class:ros::Time	file:	signature:()
+ob1	publish_trajectory_command.cpp	/^  ramp_msgs::KnotPoint ob1;$/;"	l
+ob1	test_move_op.cpp	/^  ramp_msgs::KnotPoint ob1;$/;"	l
+ob2	publish_trajectory_command.cpp	/^  ramp_msgs::KnotPoint ob2;$/;"	l
 ob_goal_b	viewPredicted.cpp	/^    tf::Vector3 ob_goal_b(start.motionState.positions.at(0) + (delta_x * predictionTime_.toSec()), $/;"	p	file:	signature:(start.motionState.positions.at(0) + (delta_x * predictionTime_.toSec()), start.motionState.positions.at(1) + (delta_y * predictionTime_.toSec()), 0)
+ob_jp	test_move_op.cpp	/^  trajectory_msgs::JointTrajectoryPoint ob_jp;$/;"	l
+ob_traj	test_move_op.cpp	/^  ramp_msgs::RampTrajectory ob_traj;$/;"	l
+obp	publish_trajectory_command.cpp	/^  ramp_msgs::Path obp, obp2;$/;"	l
+obp2	publish_trajectory_command.cpp	/^  ramp_msgs::Path obp, obp2;$/;"	l
 obstacle	viewPredicted.cpp	/^ramp_msgs::Obstacle obstacle;$/;"	v
+obt	publish_trajectory_command.cpp	/^  ramp_msgs::RampTrajectory obt = obtr_srv.response.resps.at(0).trajectory;$/;"	l
+obtr	publish_trajectory_command.cpp	/^  ramp_msgs::TrajectoryRequest obtr, obtr2;$/;"	l
+obtr2	publish_trajectory_command.cpp	/^  ramp_msgs::TrajectoryRequest obtr, obtr2;$/;"	l
+obtr_srv	publish_trajectory_command.cpp	/^  ramp_msgs::TrajectorySrv obtr_srv;$/;"	l
 odom_recv	viewPredicted.cpp	/^bool odom_recv = false;$/;"	v
 odometryCallback	display_base_location.cpp	/^void odometryCallback(const nav_msgs::Odometry::ConstPtr& msg) {$/;"	f	signature:(const nav_msgs::Odometry::ConstPtr& msg)
 odometryCallback	getYaw.cpp	/^void odometryCallback(const nav_msgs::Odometry& msg) {$/;"	f	signature:(const nav_msgs::Odometry& msg)
@@ -288,6 +317,7 @@ p	test_collision.cpp	/^  ramp_msgs::Path p;$/;"	l
 p	utility.cpp	/^    trajectory_msgs::JointTrajectoryPoint p = traj.trajectory.points.at(i);$/;"	l
 p	utility.cpp	/^    trajectory_msgs::JointTrajectoryPoint p = traj.trajectory.points.at(index);$/;"	l
 p1	evaluation_test.cpp	/^    ramp_msgs::Path p1;$/;"	l
+p1	test_move_op.cpp	/^  ramp_msgs::Path p1;$/;"	l
 p1_kp1	evaluation_test.cpp	/^    ramp_msgs::KnotPoint p1_kp1;$/;"	l
 p1_kp2	evaluation_test.cpp	/^    ramp_msgs::KnotPoint p1_kp2;$/;"	l
 p2	evaluation_test.cpp	/^    ramp_msgs::Path p2;$/;"	l
@@ -296,13 +326,12 @@ p2_kp1	evaluation_test.cpp	/^    ramp_msgs::KnotPoint p2_kp1;$/;"	l
 p2_kp2	evaluation_test.cpp	/^    ramp_msgs::KnotPoint p2_kp2;$/;"	l
 p2_kp3	evaluation_test.cpp	/^    ramp_msgs::KnotPoint p2_kp3;$/;"	l
 p3	interrupt_trajectory.cpp	/^  ramp_msgs::Path p3;$/;"	l
-p_st	viewPredicted.cpp	/^  tf::Vector3 p_st(start.motionState.positions.at(0), start.motionState.positions.at(1), 0); $/;"	p	file:	signature:(start.motionState.positions.at(0), start.motionState.positions.at(1), 0)
-p_st_tf	viewPredicted.cpp	/^  tf::Vector3 p_st_tf = T_w_b * p_st;$/;"	l
 path	viewPredicted.cpp	/^  std::vector<ramp_msgs::KnotPoint> path;$/;"	l
 phi	viewPredicted.cpp	/^  double phi = start.motionState.positions.at(2);$/;"	l
 pop	interrupt_trajectory.cpp	/^ramp_msgs::Population pop;$/;"	v
 pop	publish_trajectory_command.cpp	/^  ramp_msgs::Population pop;$/;"	l
 pop	test_collision.cpp	/^    ramp_msgs::Population pop;$/;"	l
+pop	test_move_op.cpp	/^  ramp_msgs::Population pop;$/;"	l
 pop	viewPredicted.cpp	/^    ramp_msgs::Population pop;$/;"	l
 pos	display_base_location.cpp	/^  tf::Vector3 pos(x, y, 0);$/;"	p	file:	signature:(x, y, 0)
 positionDistance	utility.cpp	/^const double Utility::positionDistance(const std::vector<double> a, const std::vector<double> b) const {$/;"	f	class:Utility	signature:(const std::vector<double> a, const std::vector<double> b) const
@@ -310,20 +339,23 @@ positionDistance	utility.h	/^    const double positionDistance(const std::vector
 pub_pop	interrupt_trajectory.cpp	/^  ros::Publisher pub_pop = handle.advertise<ramp_msgs::Population>("population", 1000);$/;"	l
 pub_pop	publish_trajectory_command.cpp	/^  ros::Publisher pub_pop = handle.advertise<ramp_msgs::Population>("population", 1000);$/;"	l
 pub_pop	test_collision.cpp	/^  ros::Publisher pub_pop = handle.advertise<ramp_msgs::Population>("\/robot_0\/population", 1000);$/;"	l
+pub_pop	test_move_op.cpp	/^  ros::Publisher pub_pop = handle.advertise<ramp_msgs::Population>("population", 1000);$/;"	l
 pub_traj	evaluation_test.cpp	/^  ros::Publisher pub_traj = handle.advertise<ramp_msgs::RampTrajectory>("bestTrajec", 1000);$/;"	l
 pub_traj	interrupt_trajectory.cpp	/^  ros::Publisher pub_traj = handle.advertise<ramp_msgs::RampTrajectory>("bestTrajec", 1000);$/;"	l
 pub_traj	publish_trajectory_command.cpp	/^  ros::Publisher pub_traj = handle.advertise<ramp_msgs::RampTrajectory>("bestTrajec", 1000);$/;"	l
 pub_traj	test_collision.cpp	/^  ros::Publisher pub_traj = handle.advertise<ramp_msgs::RampTrajectory>("bestTrajec", 1000);$/;"	l
+pub_traj	test_move_op.cpp	/^  ros::Publisher pub_traj = handle.advertise<ramp_msgs::RampTrajectory>("bestTrajec", 1000);$/;"	l
 pub_twist	publish_twist_command.cpp	/^  ros::Publisher pub_twist = handle.advertise<geometry_msgs::Twist>("cmd_vel", 1000);$/;"	l
 publish	interrupt_trajectory.cpp	/^  pub_pop.publish(pop); $/;"	p	file:	signature:(pop)
 publish	interrupt_trajectory.cpp	/^  pub_traj.publish(blank);$/;"	p	file:	signature:(blank)
-publish	interrupt_trajectory.cpp	/^  pub_traj.publish(tr.response.trajectory);$/;"	p	file:	signature:(tr.response.trajectory)
+publish	interrupt_trajectory.cpp	/^  pub_traj.publish(tr_srv.response.resps.at(0).trajectory);$/;"	p	file:	signature:(tr_srv.response.resps.at(0).trajectory)
 publish	interrupt_trajectory.cpp	/^  pub_traj.publish(trj2);$/;"	p	file:	signature:(trj2)
 publish	interrupt_trajectory.cpp	/^  pub_traj.publish(trj3);$/;"	p	file:	signature:(trj3)
-publish	publish_trajectory_command.cpp	/^    pub_traj.publish(tr.response.trajectory);$/;"	p	file:	signature:(tr.response.trajectory)
+publish	publish_trajectory_command.cpp	/^    pub_traj.publish(tr_srv.response.resps.at(0).trajectory);$/;"	p	file:	signature:(tr_srv.response.resps.at(0).trajectory)
 publish	publish_trajectory_command.cpp	/^  pub_pop.publish(pop);$/;"	p	file:	signature:(pop)
 publish	publish_twist_command.cpp	/^    pub_twist.publish(t);$/;"	p	file:	signature:(t)
 publish	test_collision.cpp	/^    pub_pop.publish(pop);$/;"	p	file:	signature:(pop)
+publish	test_move_op.cpp	/^  pub_pop.publish(pop);$/;"	p	file:	signature:(pop)
 publish	viewPredicted.cpp	/^    pub_population.publish(pop);$/;"	p	file:	signature:(pop)
 push_back	display_base_location.cpp	/^    configuration_.ranges.push_back(u.standardRanges.at(i).buildRangeMsg());$/;"	p	file:	signature:(u.standardRanges.at(i).buildRangeMsg())
 push_back	display_base_location.cpp	/^  configuration_.K.push_back(x);$/;"	p	file:	signature:(x)
@@ -337,6 +369,10 @@ push_back	evaluation_test.cpp	/^    p2.points.push_back(p2_kp2);$/;"	p	file:	sig
 push_back	evaluation_test.cpp	/^    p2.points.push_back(p2_kp3);$/;"	p	file:	signature:(p2_kp3)
 push_back	evaluation_test.cpp	/^    p2_kp1.motionState.positions.push_back(PI);$/;"	p	file:	signature:(PI)
 push_back	evaluation_test.cpp	/^    p2_kp3.motionState.positions.push_back(PI);$/;"	p	file:	signature:(PI)
+push_back	evaluation_test.cpp	/^  er_srv1.request.reqs.push_back(er1);$/;"	p	file:	signature:(er1)
+push_back	evaluation_test.cpp	/^  er_srv1.request.reqs.push_back(er2);$/;"	p	file:	signature:(er2)
+push_back	evaluation_test.cpp	/^  tr_srv.request.reqs.push_back(tr1);$/;"	p	file:	signature:(tr1)
+push_back	evaluation_test.cpp	/^  tr_srv.request.reqs.push_back(tr2);$/;"	p	file:	signature:(tr2)
 push_back	interrupt_trajectory.cpp	/^  p.points.push_back(c1);$/;"	p	file:	signature:(c1)
 push_back	interrupt_trajectory.cpp	/^  p.points.push_back(c2);$/;"	p	file:	signature:(c2)
 push_back	interrupt_trajectory.cpp	/^  p.points.push_back(c3);$/;"	p	file:	signature:(c3)
@@ -347,9 +383,9 @@ push_back	interrupt_trajectory.cpp	/^  p3.points.push_back(ms2);$/;"	p	file:	sig
 push_back	interrupt_trajectory.cpp	/^  pop.population.push_back(trj);$/;"	p	file:	signature:(trj)
 push_back	interrupt_trajectory.cpp	/^  pop.population.push_back(trj2);$/;"	p	file:	signature:(trj2)
 push_back	interrupt_trajectory.cpp	/^  pop.population.push_back(trj3);$/;"	p	file:	signature:(trj3)
-push_back	publish_trajectory_command.cpp	/^  bi.controlPoints.push_back(cp0);$/;"	p	file:	signature:(cp0)
-push_back	publish_trajectory_command.cpp	/^  bi.controlPoints.push_back(cp1);$/;"	p	file:	signature:(cp1)
-push_back	publish_trajectory_command.cpp	/^  bi.controlPoints.push_back(cp2);$/;"	p	file:	signature:(cp2)
+push_back	interrupt_trajectory.cpp	/^  tr_srv.request.reqs.push_back(tr);$/;"	p	file:	signature:(tr)
+push_back	interrupt_trajectory.cpp	/^  tr_srv2.request.reqs.push_back(tr2);$/;"	p	file:	signature:(tr2)
+push_back	interrupt_trajectory.cpp	/^  tr_srv3.request.reqs.push_back(tr3);$/;"	p	file:	signature:(tr3)
 push_back	publish_trajectory_command.cpp	/^  bi.segmentPoints.push_back(sp0);$/;"	p	file:	signature:(sp0)
 push_back	publish_trajectory_command.cpp	/^  bi.segmentPoints.push_back(sp1);$/;"	p	file:	signature:(sp1)
 push_back	publish_trajectory_command.cpp	/^  bi.segmentPoints.push_back(sp2);$/;"	p	file:	signature:(sp2)
@@ -360,13 +396,38 @@ push_back	publish_trajectory_command.cpp	/^  bi2.segmentPoints.push_back(sp2_0);
 push_back	publish_trajectory_command.cpp	/^  bi2.segmentPoints.push_back(sp2_1);$/;"	p	file:	signature:(sp2_1)
 push_back	publish_trajectory_command.cpp	/^  bi2.segmentPoints.push_back(sp2_2);$/;"	p	file:	signature:(sp2_2)
 push_back	publish_trajectory_command.cpp	/^  curves.push_back(bi);$/;"	p	file:	signature:(bi)
+push_back	publish_trajectory_command.cpp	/^  er.obstacle_trjs.push_back(obt);$/;"	p	file:	signature:(obt)
+push_back	publish_trajectory_command.cpp	/^  er_srv.request.reqs.push_back(er);$/;"	p	file:	signature:(er)
+push_back	publish_trajectory_command.cpp	/^  obp.points.push_back(ob1);$/;"	p	file:	signature:(ob1)
+push_back	publish_trajectory_command.cpp	/^  obp.points.push_back(ob2);$/;"	p	file:	signature:(ob2)
+push_back	publish_trajectory_command.cpp	/^  obtr_srv.request.reqs.push_back(obtr);$/;"	p	file:	signature:(obtr)
 push_back	publish_trajectory_command.cpp	/^  p.points.push_back(c1);$/;"	p	file:	signature:(c1)
 push_back	publish_trajectory_command.cpp	/^  p.points.push_back(c2);$/;"	p	file:	signature:(c2)
+push_back	publish_trajectory_command.cpp	/^  p.points.push_back(c3);$/;"	p	file:	signature:(c3)
+push_back	publish_trajectory_command.cpp	/^  p.points.push_back(c4);$/;"	p	file:	signature:(c4)
 push_back	publish_trajectory_command.cpp	/^  p.points.push_back(c5);$/;"	p	file:	signature:(c5)
-push_back	publish_trajectory_command.cpp	/^  pop.population.push_back(tr.response.trajectory);$/;"	p	file:	signature:(tr.response.trajectory)
+push_back	publish_trajectory_command.cpp	/^  pop.population.push_back(obt);$/;"	p	file:	signature:(obt)
+push_back	publish_trajectory_command.cpp	/^  pop.population.push_back(tr_srv.response.resps.at(0).trajectory);$/;"	p	file:	signature:(tr_srv.response.resps.at(0).trajectory)
+push_back	publish_trajectory_command.cpp	/^  tr_srv.request.reqs.push_back(tr);$/;"	p	file:	signature:(tr)
+push_back	test_collision.cpp	/^    er_srv.request.reqs.push_back(er);$/;"	p	file:	signature:(er)
 push_back	test_collision.cpp	/^    pop.population.push_back(trajectory);$/;"	p	file:	signature:(trajectory)
 push_back	test_collision.cpp	/^  p.points.push_back(c1);$/;"	p	file:	signature:(c1)
 push_back	test_collision.cpp	/^  p.points.push_back(zero);$/;"	p	file:	signature:(zero)
+push_back	test_collision.cpp	/^  tr_srv.request.reqs.push_back(tr);$/;"	p	file:	signature:(tr)
+push_back	test_move_op.cpp	/^    p1.points.push_back(kp);$/;"	p	file:	signature:(kp)
+push_back	test_move_op.cpp	/^  bi.segmentPoints.push_back(sp0);$/;"	p	file:	signature:(sp0)
+push_back	test_move_op.cpp	/^  bi.segmentPoints.push_back(sp1);$/;"	p	file:	signature:(sp1)
+push_back	test_move_op.cpp	/^  bi.segmentPoints.push_back(sp2);$/;"	p	file:	signature:(sp2)
+push_back	test_move_op.cpp	/^  curves.push_back(bi);$/;"	p	file:	signature:(bi)
+push_back	test_move_op.cpp	/^  er_req.obstacle_trjs.push_back(ob_traj);$/;"	p	file:	signature:(ob_traj)
+push_back	test_move_op.cpp	/^  er_srv.request.reqs.push_back(er_req);$/;"	p	file:	signature:(er_req)
+push_back	test_move_op.cpp	/^  mod.request.paths.push_back(p1);$/;"	p	file:	signature:(p1)
+push_back	test_move_op.cpp	/^  ob_traj.trajectory.points.push_back(ob_jp);$/;"	p	file:	signature:(ob_jp)
+push_back	test_move_op.cpp	/^  pop.population.push_back(ob_traj);$/;"	p	file:	signature:(ob_traj)
+push_back	test_move_op.cpp	/^  pop.population.push_back(tr_srv.response.resps[0].trajectory);$/;"	p	file:	signature:(tr_srv.response.resps[0].trajectory)
+push_back	test_move_op.cpp	/^  pop.population.push_back(traj);$/;"	p	file:	signature:(traj)
+push_back	test_move_op.cpp	/^  tr_srv.request.reqs.push_back(tr);$/;"	p	file:	signature:(tr)
+push_back	test_move_op.cpp	/^  traj.trajectory.points.push_back(jp);$/;"	p	file:	signature:(jp)
 push_back	utility.cpp	/^    c.push_back(a.positions.at(i));$/;"	p	file:	signature:(a.positions.at(i))
 push_back	utility.cpp	/^    d.push_back(b.positions.at(i));$/;"	p	file:	signature:(b.positions.at(i))
 push_back	utility.cpp	/^    d_a.push_back(a.at(i));$/;"	p	file:	signature:(a.at(i))
@@ -386,15 +447,11 @@ push_back	viewPredicted.cpp	/^    goal.motionState.velocities.push_back(start.mo
 push_back	viewPredicted.cpp	/^    path.push_back(goal);$/;"	p	file:	signature:(goal)
 push_back	viewPredicted.cpp	/^    pop.population.push_back(t);$/;"	p	file:	signature:(t)
 push_back	viewPredicted.cpp	/^  path.push_back(start);$/;"	p	file:	signature:(start)
-push_back	viewPredicted.cpp	/^  start.motionState.positions.push_back(ob.odom_t.pose.pose.position.x);$/;"	p	file:	signature:(ob.odom_t.pose.pose.position.x)
-push_back	viewPredicted.cpp	/^  start.motionState.positions.push_back(ob.odom_t.pose.pose.position.y);$/;"	p	file:	signature:(ob.odom_t.pose.pose.position.y)
-push_back	viewPredicted.cpp	/^  start.motionState.velocities.push_back(ob.odom_t.twist.twist.angular.z);$/;"	p	file:	signature:(ob.odom_t.twist.twist.angular.z)
-push_back	viewPredicted.cpp	/^  start.motionState.velocities.push_back(ob.odom_t.twist.twist.linear.x);$/;"	p	file:	signature:(ob.odom_t.twist.twist.linear.x)
-push_back	viewPredicted.cpp	/^  start.motionState.velocities.push_back(ob.odom_t.twist.twist.linear.y);$/;"	p	file:	signature:(ob.odom_t.twist.twist.linear.y)
-request	evaluation_request_handler.cpp	/^const bool EvaluationRequestHandler::request(ramp_msgs::EvaluationRequest& er) {$/;"	f	class:EvaluationRequestHandler	signature:(ramp_msgs::EvaluationRequest& er)
-request	evaluation_request_handler.h	/^    const bool request(ramp_msgs::EvaluationRequest& er);$/;"	p	class:EvaluationRequestHandler	access:public	signature:(ramp_msgs::EvaluationRequest& er)
-request	trajectory_request_handler.cpp	/^const bool TrajectoryRequestHandler::request(ramp_msgs::TrajectoryRequest& tr) {$/;"	f	class:TrajectoryRequestHandler	signature:(ramp_msgs::TrajectoryRequest& tr)
-request	trajectory_request_handler.h	/^    const bool request(ramp_msgs::TrajectoryRequest& tr);$/;"	p	class:TrajectoryRequestHandler	access:public	signature:(ramp_msgs::TrajectoryRequest& tr)
+push_back	viewPredicted.cpp	/^  tr_srv.request.reqs.push_back(tr);$/;"	p	file:	signature:(tr)
+request	evaluation_request_handler.cpp	/^const bool EvaluationRequestHandler::request(ramp_msgs::EvaluationSrv& er) $/;"	f	class:EvaluationRequestHandler	signature:(ramp_msgs::EvaluationSrv& er)
+request	evaluation_request_handler.h	/^    const bool request(ramp_msgs::EvaluationSrv& er);$/;"	p	class:EvaluationRequestHandler	access:public	signature:(ramp_msgs::EvaluationSrv& er)
+request	trajectory_request_handler.cpp	/^const bool TrajectoryRequestHandler::request(ramp_msgs::TrajectorySrv& tr) $/;"	f	class:TrajectoryRequestHandler	signature:(ramp_msgs::TrajectorySrv& tr)
+request	trajectory_request_handler.h	/^    const bool request(ramp_msgs::TrajectorySrv& tr);$/;"	p	class:TrajectoryRequestHandler	access:public	signature:(ramp_msgs::TrajectorySrv& tr)
 result	utility.cpp	/^  double result;$/;"	l
 result	utility.cpp	/^  double result=0;$/;"	l
 result	utility.cpp	/^  ramp_msgs::Path result;$/;"	l
@@ -411,6 +468,7 @@ ros::init	interrupt_trajectory.cpp	/^  ros::init(argc, argv, "interrupt_trajecto
 ros::init	publish_trajectory_command.cpp	/^  ros::init(argc, argv, "publish_trajectory_command");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 ros::init	publish_twist_command.cpp	/^  ros::init(argc, argv, "publish_twist_command");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 ros::init	test_collision.cpp	/^  ros::init(argc, argv, "publish_trajectory_command");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
+ros::init	test_move_op.cpp	/^  ros::init(argc, argv, "test_move_op");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 ros::init	viewPredicted.cpp	/^  ros::init(argc, argv, "viewPredicted");$/;"	p	class:ros	file:	signature:(argc, argv, Ó)
 ros::spin	getYaw.cpp	/^  ros::spin();$/;"	p	class:ros	file:	signature:()
 ros::spinOnce	display_base_location.cpp	/^    ros::spinOnce();$/;"	p	class:ros	file:	signature:()
@@ -431,8 +489,11 @@ sleep	test_collision.cpp	/^    d_while.sleep();$/;"	p	file:	signature:()
 sleep	test_collision.cpp	/^  d.sleep();$/;"	p	file:	signature:()
 sleep	viewPredicted.cpp	/^    r.sleep();$/;"	p	file:	signature:()
 sp0	publish_trajectory_command.cpp	/^  ramp_msgs::MotionState sp0;$/;"	l
+sp0	test_move_op.cpp	/^  ramp_msgs::MotionState sp0;$/;"	l
 sp1	publish_trajectory_command.cpp	/^  ramp_msgs::MotionState sp1;$/;"	l
+sp1	test_move_op.cpp	/^  ramp_msgs::MotionState sp1;$/;"	l
 sp2	publish_trajectory_command.cpp	/^  ramp_msgs::MotionState sp2;$/;"	l
+sp2	test_move_op.cpp	/^  ramp_msgs::MotionState sp2;$/;"	l
 sp2_0	publish_trajectory_command.cpp	/^  ramp_msgs::MotionState sp2_0;$/;"	l
 sp2_1	publish_trajectory_command.cpp	/^  ramp_msgs::MotionState sp2_1 = c3.motionState;$/;"	l
 sp2_2	publish_trajectory_command.cpp	/^  ramp_msgs::MotionState sp2_2 = c4.motionState;$/;"	l
@@ -455,6 +516,7 @@ std::cout	interrupt_trajectory.cpp	/^  std::cout<<"\\nPress Enter to publish fir
 std::cout	publish_trajectory_command.cpp	/^    std::cout<<"\\nSome error getting trajectory\\n";$/;"	m	class:std	file:
 std::cout	publish_trajectory_command.cpp	/^  std::cout<<"\\nExiting Normally\\n";$/;"	m	class:std	file:
 std::cout	publish_trajectory_command.cpp	/^  std::cout<<"\\nPress Enter to request and send the trajectory\\n";$/;"	m	class:std	file:
+std::cout	publish_trajectory_command.cpp	/^  std::cout<<"\\n\\nPress Enter to Publish population\\n";$/;"	m	class:std	file:
 std::cout	publish_twist_command.cpp	/^  std::cout<<"\\nExiting Normally\\n";$/;"	m	class:std	file:
 std::cout	publish_twist_command.cpp	/^  std::cout<<"\\nPress Enter to publish the twist message\\n";$/;"	m	class:std	file:
 std::cout	test_collision.cpp	/^      std::cout<<"\\nSome error getting trajectory\\n";$/;"	m	class:std	file:
@@ -472,9 +534,9 @@ sub_odometry	viewPredicted.cpp	/^ros::Subscriber sub_odometry;$/;"	v
 sub_start	interrupt_trajectory.cpp	/^  ros::Subscriber sub_start = handle.subscribe("update", 1000, &updateCallback);$/;"	l
 t	publish_twist_command.cpp	/^  geometry_msgs::Twist t;$/;"	l
 t	viewPredicted.cpp	/^    ramp_msgs::RampTrajectory t = getPredictedTrajectory(obstacle, d);$/;"	l
+t_end	publish_trajectory_command.cpp	/^  ros::Time t_end, t_start = ros::Time::now();$/;"	l
+t_start	publish_trajectory_command.cpp	/^  ros::Time t_end, t_start = ros::Time::now();$/;"	l
 teta	viewPredicted.cpp	/^  double teta = utility.findAngleToVector(start.motionState.positions);$/;"	l
-tf::vector3MsgToTF	viewPredicted.cpp	/^  tf::vector3MsgToTF(ob.odom_t.twist.twist.angular, v_angular);$/;"	p	class:tf	file:	signature:(ob.odom_t.twist.twist.angular, v_angular)
-tf::vector3MsgToTF	viewPredicted.cpp	/^  tf::vector3MsgToTF(ob.odom_t.twist.twist.linear, v_linear);$/;"	p	class:tf	file:	signature:(ob.odom_t.twist.twist.linear, v_linear)
 tgr_linears	viewPredicted.cpp	/^std::vector<float> tgr_linears;$/;"	v
 theta	display_base_location.cpp	/^float theta;$/;"	v
 theta	publish_twist_command.cpp	/^float x, y, theta;$/;"	v
@@ -484,8 +546,7 @@ toString	display_base_location.cpp	/^    cout<<"\\n\\nConfiguration: "<<c.toStri
 toString	interrupt_trajectory.cpp	/^  std::cout<<"\\nFinal trajectory: "<<u.toString(trj3);$/;"	p	file:	signature:(trj3)
 toString	interrupt_trajectory.cpp	/^  std::cout<<"\\nTrajectory 2: "<<u.toString(trj2);$/;"	p	file:	signature:(trj2)
 toString	interrupt_trajectory.cpp	/^  std::cout<<"\\nnew path: "<<u.toString(p2);$/;"	p	file:	signature:(p2)
-toString	publish_trajectory_command.cpp	/^    std::cout<<"\\nSending Trajectory "<<u.toString(tr.response.trajectory)<<"\\n";$/;"	p	file:	signature:(tr.response.trajectory)
-toString	test_collision.cpp	/^    std::cout<<"\\nSending Trajectory "<<u.toString(tr.response.trajectory);$/;"	p	file:	signature:(tr.response.trajectory)
+toString	test_collision.cpp	/^    std::cout<<"\\nSending Trajectory "<<u.toString(tr_srv.response.resps.at(0).trajectory);$/;"	p	file:	signature:(tr_srv.response.resps.at(0).trajectory)
 toString	utility.cpp	/^    result<<"\\n       "<<toString(p);$/;"	p	file:	signature:(p)
 toString	utility.cpp	/^    result<<"\\n "<<i<<": "<<toString(path.points.at(i));$/;"	p	file:	signature:(path.points.at(i))
 toString	utility.cpp	/^    result<<"\\n"<<i<<": "<<toString(bi.controlPoints.at(i));$/;"	p	file:	signature:(bi.controlPoints.at(i))
@@ -508,23 +569,32 @@ toString	utility.h	/^    const std::string toString(const ramp_msgs::Path path) 
 toString	utility.h	/^    const std::string toString(const ramp_msgs::RampTrajectory traj) const;$/;"	p	class:Utility	access:public	signature:(const ramp_msgs::RampTrajectory traj) const
 toString	utility.h	/^    const std::string toString(const trajectory_msgs::JointTrajectoryPoint p) const;$/;"	p	class:Utility	access:public	signature:(const trajectory_msgs::JointTrajectoryPoint p) const
 toString	viewPredicted.cpp	/^    std::cout<<"\\nGoal: "<<utility.toString(goal);$/;"	p	file:	signature:(goal)
-toString	viewPredicted.cpp	/^  std::cout<<"\\nAfter changing, start: "<<utility.toString(start);$/;"	p	file:	signature:(start)
 toString	viewPredicted.cpp	/^  std::cout<<"\\nBefore changing velocities, start: "<<utility.toString(start);$/;"	p	file:	signature:(start)
 tr	interrupt_trajectory.cpp	/^  ramp_msgs::TrajectoryRequest tr;$/;"	l
 tr	publish_trajectory_command.cpp	/^  ramp_msgs::TrajectoryRequest tr;$/;"	l
 tr	test_collision.cpp	/^  ramp_msgs::TrajectoryRequest tr;$/;"	l
+tr	test_move_op.cpp	/^  ramp_msgs::TrajectoryRequest tr;$/;"	l
 tr	viewPredicted.cpp	/^  ramp_msgs::TrajectoryRequest tr;$/;"	l
 tr1	evaluation_test.cpp	/^  ramp_msgs::TrajectoryRequest tr1;$/;"	l
 tr2	evaluation_test.cpp	/^  ramp_msgs::TrajectoryRequest tr2;$/;"	l
 tr2	interrupt_trajectory.cpp	/^  ramp_msgs::TrajectoryRequest tr2;$/;"	l
 tr3	interrupt_trajectory.cpp	/^  ramp_msgs::TrajectoryRequest tr3;$/;"	l
+tr_srv	evaluation_test.cpp	/^  ramp_msgs::TrajectorySrv tr_srv;$/;"	l
+tr_srv	interrupt_trajectory.cpp	/^  ramp_msgs::TrajectorySrv tr_srv;$/;"	l
+tr_srv	publish_trajectory_command.cpp	/^  ramp_msgs::TrajectorySrv tr_srv;$/;"	l
+tr_srv	test_collision.cpp	/^  ramp_msgs::TrajectorySrv tr_srv;$/;"	l
+tr_srv	test_move_op.cpp	/^  ramp_msgs::TrajectorySrv tr_srv;$/;"	l
+tr_srv	viewPredicted.cpp	/^  ramp_msgs::TrajectorySrv tr_srv;$/;"	l
+tr_srv2	interrupt_trajectory.cpp	/^  ramp_msgs::TrajectorySrv tr_srv2;$/;"	l
+tr_srv3	interrupt_trajectory.cpp	/^  ramp_msgs::TrajectorySrv tr_srv3;$/;"	l
+traj	test_move_op.cpp	/^  ramp_msgs::RampTrajectory traj;$/;"	l
 traj1	evaluation_test.cpp	/^  ramp_msgs::RampTrajectory traj1;$/;"	l
 traj2	evaluation_test.cpp	/^  ramp_msgs::RampTrajectory traj2;$/;"	l
 trajectory	test_collision.cpp	/^  ramp_msgs::RampTrajectory trajectory;$/;"	l
 transformBase	display_base_location.cpp	/^    c.transformBase(T_od_w);$/;"	p	file:	signature:(T_od_w)
-trj	interrupt_trajectory.cpp	/^  ramp_msgs::RampTrajectory trj = tr.response.trajectory;$/;"	l
-trj2	interrupt_trajectory.cpp	/^  ramp_msgs::RampTrajectory trj2 = tr2.response.trajectory;$/;"	l
-trj3	interrupt_trajectory.cpp	/^  ramp_msgs::RampTrajectory trj3 = tr3.response.trajectory;$/;"	l
+trj	interrupt_trajectory.cpp	/^  ramp_msgs::RampTrajectory trj = tr_srv.response.resps.at(0).trajectory;$/;"	l
+trj2	interrupt_trajectory.cpp	/^  ramp_msgs::RampTrajectory trj2 = tr_srv2.response.resps.at(0).trajectory;$/;"	l
+trj3	interrupt_trajectory.cpp	/^  ramp_msgs::RampTrajectory trj3 = tr_srv3.response.resps.at(0).trajectory;$/;"	l
 u	display_base_location.cpp	/^Utility u;$/;"	v
 u	evaluation_test.cpp	/^Utility u;$/;"	v
 u	interrupt_trajectory.cpp	/^Utility u;$/;"	v
@@ -532,14 +602,10 @@ u	publish_trajectory_command.cpp	/^Utility u;$/;"	v
 u	test_collision.cpp	/^Utility u;$/;"	v
 updateCallback	interrupt_trajectory.cpp	/^void updateCallback(const ramp_msgs::MotionState& msg) {$/;"	f	signature:(const ramp_msgs::MotionState& msg)
 utility	viewPredicted.cpp	/^Utility utility;$/;"	v
-v	viewPredicted.cpp	/^  double v = start.motionState.velocities.at(0);$/;"	l
+v	viewPredicted.cpp	/^  double v = sqrt( pow(start.motionState.velocities[0], 2) + pow(start.motionState.velocities[1], 2) );$/;"	l
 v	viewPredicted.cpp	/^  std::cout<<"\\nteta: "<<teta<<" phi: "<<phi<<" v: "<<v;$/;"	l
-v_angular	viewPredicted.cpp	/^  tf::Vector3 v_angular;$/;"	l
-v_linear	viewPredicted.cpp	/^  tf::Vector3 v_linear;$/;"	l
 v_sum	viewPredicted.cpp	/^  float v_sum = max_v;$/;"	l
 value	getYaw.cpp	/^float value;$/;"	v
-vector3MsgToTF	viewPredicted.cpp	/^  tf::vector3MsgToTF(ob.odom_t.twist.twist.angular, v_angular);$/;"	p	class:tf	file:	signature:(ob.odom_t.twist.twist.angular, v_angular)
-vector3MsgToTF	viewPredicted.cpp	/^  tf::vector3MsgToTF(ob.odom_t.twist.twist.linear, v_linear);$/;"	p	class:tf	file:	signature:(ob.odom_t.twist.twist.linear, v_linear)
 w_sum	viewPredicted.cpp	/^  float w_sum = max_w;$/;"	l
 x	publish_twist_command.cpp	/^float x, y, theta;$/;"	v
 y	publish_twist_command.cpp	/^float x, y, theta;$/;"	v

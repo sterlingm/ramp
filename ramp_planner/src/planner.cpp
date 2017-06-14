@@ -724,7 +724,7 @@ const int Planner::estimateIfOnCurve(const MotionState ms, const ramp_msgs::Bezi
   } // end if past segment 1
 
   // Else, robot has not reached curve, return 1
-  ROS_INFO("Returning 1");
+  ROS_INFO("Returning 1 (robot has not reached the curve)");
   return 1;
 }
 
@@ -873,6 +873,7 @@ void Planner::adaptCurves(const MotionState& ms, const ros::Duration& d, std::ve
       ROS_INFO("In if trajectory has curve");
 
       // Set curve
+      // If a trajectory has two curves, go straight to the second curve because the first is just a transition
       ramp_msgs::BezierCurve curve = population_.get(i).msg_.curves.size() > 1 ? population_.get(i).msg_.curves.at(1) :
                                                                         population_.get(i).msg_.curves.at(0) ;
       ROS_INFO("Set curve to: %s", utility_.toString(curve).c_str());
@@ -1159,6 +1160,7 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
   double diff = fabs(utility_.findDistanceBetweenAngles(nec_theta, end));
   
   ROS_INFO("nec_theta: %f end: %f diff: %f", nec_theta, end, diff);
+  ROS_INFO("trajec.transitionTraj_.trajectory.points.size(): %i trajec.stopRotateInFirstSec(): %s", (int)trajec.transitionTraj_.trajectory.points.size(), trajec.stopRotateInFirstSec() ? "True" : "False");
 
   //result.trans_possible = trajec.transitionTraj_.trajectory.points.size() > 0 || diff < 0.31;
   result.trans_possible = trajec.transitionTraj_.trajectory.points.size() > 0 || !trajec.stopRotateInFirstSec();

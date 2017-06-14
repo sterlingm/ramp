@@ -20,13 +20,15 @@ gens_before_control_cycle: 20
 
 pop_traj_type: 1 #0=holonomic, 1=hybrid
 
-fixed_control_cycle_rate: 2
+fixed_control_cycle_rate: 1.5
 
 sensing_cycle_rate: 15
 
-eval_weight_T: 1
+eval_weight_T: 1.25
 
-eval_weight_D: 2
+# As D weight increases, overall contribution of D to the cost decreases
+# This is because high values of D are good so we add 1/D to the fitness cost
+eval_weight_D: 10
 
 eval_weight_A: 0.25
 

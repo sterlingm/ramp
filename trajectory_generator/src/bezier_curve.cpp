@@ -71,7 +71,14 @@ void BezierCurve::init(const ramp_msgs::BezierCurve bi, const ramp_msgs::MotionS
   u_dot_0_  = bi.u_dot_0; 
   u_dot_max_ = bi.u_dot_max;
 
-  if(bi.controlPoints.size() > 0) 
+  /*
+   * Why are we re-computing if we already have a set of control points?
+   */
+  if(bi.controlPoints.size() == 3)
+  {
+    controlPoints_ = bi.controlPoints;
+  }
+  else if(bi.controlPoints.size() > 0) 
   {
     initControlPoints(bi.controlPoints.at(0));
   }
@@ -119,6 +126,7 @@ const bool BezierCurve::verify() const
 
   double v_max = MAX_SPEED;
   double w_max = (2.f*PI)/3.f;
+  //ROS_INFO("v_max: %f w_max: %f", v_max, w_max);
 
   double u_dot_max = getUDotMax(u_dot_0_);
 
@@ -127,12 +135,12 @@ const bool BezierCurve::verify() const
   double v_rmin = sqrt(pow(x_dot,2) + pow(y_dot,2));
   double w_rmin = v_rmin / R_min_;
   
-  /*//ROS_INFO("u_dot_max: %f", u_dot_max);
+  //ROS_INFO("u_dot_max: %f", u_dot_max);
   //ROS_INFO("x_dot: %f y_dot: %f", x_dot, y_dot);
   //ROS_INFO("w_rmin: %f v_rmin: %f R_min: %f t_R_min: %f x_dot: %f y_dot: %f", w_rmin, v_rmin, R_min_, t_R_min_, x_dot, y_dot);
   //ROS_INFO("w_rmin <= w_max: %s", w_rmin <= w_max ? "True" : "False");
   //ROS_INFO("t_R_min: %f", t_R_min_);
-  //ROS_INFO("l_: %f", l_);*/
+  //ROS_INFO("l_: %f", l_);
   
   bool result = l_ < 1. && (t_R_min_ >= 0 && t_R_min_ <= 1) && (w_rmin <= w_max);
   //ROS_INFO("result: %s", result ? "True" : "False");
@@ -773,7 +781,7 @@ void BezierCurve::initControlPoints()
 /** Initialize the control points of the Bezier curve given the first one */
 void BezierCurve::initControlPoints(const ramp_msgs::MotionState cp_0) 
 {
-  ////////ROS_INFO("In BezierCurve::initControlPoints(ramp_msgs::MotionState)");
+  //ROS_INFO("In BezierCurve::initControlPoints(ramp_msgs::MotionState)");
   ramp_msgs::MotionState C0, C1, C2, p0, p1, p2;
 
 
