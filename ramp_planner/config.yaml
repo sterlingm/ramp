@@ -24,7 +24,7 @@ fixed_control_cycle_rate: 1.5
 
 sensing_cycle_rate: 15
 
-eval_weight_T: 1.25
+eval_weight_T: 1.75
 
 # As D weight increases, overall contribution of D to the cost decreases
 # This is because high values of D are good so we add 1/D to the fitness cost

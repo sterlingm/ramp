@@ -34,6 +34,11 @@ void pubObTrj(const ros::TimerEvent e)
     ms.request.model_state.pose.position.x = p.positions[0];
     ms.request.model_state.pose.position.y = p.positions[1];
 
+    if(i == 1)
+    {
+      ROS_INFO("p: %s", u.toString(p).c_str());
+    }
+
     // Call srv
     if(!gz_set_model.call(ms))
     {
@@ -100,7 +105,6 @@ int main(int argc, char** argv)
     double theta1 = u.findAngleFromAToB(kp1.motionState.positions, kp2.motionState.positions);
     kp1.motionState.positions.push_back(PI);
 
-
     ramp_msgs::KnotPoint kp3;
     kp3.motionState.positions.push_back(cb.response.pose.position.x-2.0);
     kp3.motionState.positions.push_back(cb.response.pose.position.y);
@@ -110,6 +114,24 @@ int main(int argc, char** argv)
     p.points.push_back(kp1);
     p.points.push_back(kp2);
     //p.points.push_back(kp3);
+    
+    if(model_name == "cardboard_box_0")
+    {
+      kp2.motionState.positions[0] = kp1.motionState.positions[0] - 2.0f;
+      kp2.motionState.positions[1] = kp1.motionState.positions[1] - 1.0f;
+      
+      double theta = u.findAngleFromAToB(kp1.motionState.positions, kp2.motionState.positions);
+      kp1.motionState.positions[2] = theta;
+      
+
+      kp3.motionState.positions[0] = kp2.motionState.positions[0] - 8.0f;
+      kp3.motionState.positions[1] = kp2.motionState.positions[1];
+
+      p.points[0] = kp1;
+      p.points[1] = kp2;
+      p.points.push_back(kp3);
+    }
+
     
 
     // Build the request
