@@ -35,7 +35,7 @@
 <node name="reset_odom" pkg="ramp_control" type="reset_odom.py" output="log" />
 
 <!-- Control node -->
-<node name="ramp_control" pkg="ramp_control" type="ramp_control" output="log" >
+<node name="ramp_control" pkg="ramp_control" type="ramp_control" output="screen" >
   <remap from="odometry" to="odom" />
   <remap from="cmd_vel" to="mobile_base/commands/velocity" />
   <param name="simulation" value="true" />

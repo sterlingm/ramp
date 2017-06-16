@@ -11,5 +11,5 @@ DOF_min: [0,    0,  -3.14159]
 DOF_max: [10,   2,  3.14159]
 
 # relative to map
-start: [0, 1, 0]
+start: [0, 0.5, 0]
 goal:  [7.5, 0, 0]

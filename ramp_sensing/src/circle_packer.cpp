@@ -398,7 +398,9 @@ void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector
     //////ROS_INFO("ci - Center: (%f, %f) Radius: %f", ci.center.x, ci.center.y, ci.radius);
     
     j = i+1;
-    double inflate = 20.0;
+
+    // This gets called before converting to global coordinates 1 = 5cm = 0.05m
+    double inflate = 2.5;
     double threshold = 0.;
 
     while(j<cs.size())

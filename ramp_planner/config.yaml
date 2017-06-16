@@ -20,7 +20,7 @@ gens_before_control_cycle: 20
 
 pop_traj_type: 1 #0=holonomic, 1=hybrid
 
-fixed_control_cycle_rate: 1.5
+fixed_control_cycle_rate: 1.8
 
 sensing_cycle_rate: 15
 

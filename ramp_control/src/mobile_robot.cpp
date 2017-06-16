@@ -125,7 +125,7 @@ void MobileRobot::updateCallback(const ros::TimerEvent& e) {
  *   It calls calculateSpeedsAndTimes to update the robot's vectors needed to move */
 void MobileRobot::updateTrajectory(const ramp_msgs::RampTrajectory& msg) 
 {
-  //ROS_INFO("Time since last trajectory: %f", (ros::Time::now() - t_prev_traj_).toSec());
+  ROS_INFO("Time since last trajectory: %f", (ros::Time::now() - t_prev_traj_).toSec());
   t_prev_traj_ = ros::Time::now();
   //ROS_INFO("Received RampTrajectory");
   //ROS_INFO("Trajectory: %s", utility_.toString(msg).c_str());
@@ -325,12 +325,18 @@ void MobileRobot::moveOnTrajectory()
   ros::Rate r_ic(100);
 
   ros::Time s;
+  ros::Time t_restart;
 
   double actual_theta, dist;
 
   // Execute the trajectory
   while(ros::ok() && (num_traveled_+1) < num_) 
   {
+    if (num_traveled_ == 1)
+    {
+      ROS_INFO("Time since last restart: %f", (ros::Time::now() - t_restart).toSec());
+      t_restart = ros::Time::now();
+    }
     //ROS_INFO("num_traveled_: %i/%i", num_traveled_, num_);
     //ROS_INFO("At state: %s", utility_.toString(motion_state_).c_str());
     s = ros::Time::now();
@@ -378,15 +384,15 @@ void MobileRobot::moveOnTrajectory()
       // TODO: Works with Bezier curve?
       if(fabs(twist_.linear.x) > 0.0f && fabs(twist_.angular.z) < 0.0001f) 
       {
-        ROS_INFO("initial_theta_: %f motion_state_.positions.at(2): %f -tf_rot: %f", initial_theta_, motion_state_.positions.at(2), -tf_rot_);
+        //ROS_INFO("initial_theta_: %f motion_state_.positions.at(2): %f -tf_rot: %f", initial_theta_, motion_state_.positions.at(2), -tf_rot_);
         double theta_global = utility_.displaceAngle(motion_state_.positions[2], -tf_rot_); 
         actual_theta = utility_.displaceAngle(initial_theta_, motion_state_.positions[2]);
         dist = utility_.findDistanceBetweenAngles(actual_theta, orientations_.at(num_traveled_));
-        ROS_INFO("actual_theta: %f orientations[%i]: %f dist: %f", actual_theta, num_traveled_, orientations_.at(num_traveled_), dist);
+        //ROS_INFO("actual_theta: %f orientations[%i]: %f dist: %f", actual_theta, num_traveled_, orientations_.at(num_traveled_), dist);
         twist_.angular.z = dist;
       }
 
-      ROS_INFO("twist.linear.x: %f twist.angular.z: %f", twist_.linear.x, twist_.angular.z);
+      //ROS_INFO("twist.linear.x: %f twist.angular.z: %f", twist_.linear.x, twist_.angular.z);
 
       // Send the twist_message to move the robot
       sendTwist();

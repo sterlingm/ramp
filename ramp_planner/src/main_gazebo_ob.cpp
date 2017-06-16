@@ -115,7 +115,7 @@ int main(int argc, char** argv)
     p.points.push_back(kp2);
     //p.points.push_back(kp3);
     
-    if(model_name == "cardboard_box_0")
+    /*if(model_name == "cardboard_box_0")
     {
       kp2.motionState.positions[0] = kp1.motionState.positions[0] - 2.0f;
       kp2.motionState.positions[1] = kp1.motionState.positions[1] - 1.0f;
@@ -130,7 +130,7 @@ int main(int argc, char** argv)
       p.points[0] = kp1;
       p.points[1] = kp2;
       p.points.push_back(kp3);
-    }
+    }*/
 
     
 

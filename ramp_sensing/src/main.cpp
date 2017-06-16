@@ -68,8 +68,8 @@ double coll_radius = 0.25;
 
 std::vector<double> d_avg_values;
 
-double dist_threshold = 100;
-double radius_threshold = 35;
+double dist_threshold = 0.5;
+double radius_threshold = 0.5;
 
 /*********************************
  * Variables for BFL
@@ -172,7 +172,7 @@ void loadParameters(const ros::NodeHandle& handle)
   }
   else 
   {
-    ROS_ERROR("Did not find parameter robot_info/radius");
+    //ROS_ERROR("Did not find parameter robot_info/radius");
   }
 
   // Get the dofs
@@ -187,7 +187,7 @@ void loadParameters(const ros::NodeHandle& handle)
   }
   else 
   {
-    ROS_ERROR("Did not find parameters robot_info/DOF_min, robot_info/DOF_max");
+    //ROS_ERROR("Did not find parameters robot_info/DOF_min, robot_info/DOF_max");
   }
 
   if(handle.hasParam("/ramp/global_frame"))
@@ -196,7 +196,7 @@ void loadParameters(const ros::NodeHandle& handle)
   }
   else
   {
-    ROS_ERROR("Did not find rosparam /ramp/global_frame");
+    //ROS_ERROR("Did not find rosparam /ramp/global_frame");
   }
 
 }
@@ -209,7 +209,7 @@ void loadObstacleTF()
 
   if(!ifile.is_open())
   {
-    ROS_ERROR("Cannot open obstacle_tf.txt file!");
+    //ROS_ERROR("Cannot open obstacle_tf.txt file!");
   }
   else
   {
@@ -417,7 +417,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       //double x = (cir_obs[i]->cir.center.x + x_origin) * global_grid.info.resolution;
       //double y = (cir_obs[i]->cir.center.y + y_origin) * global_grid.info.resolution;
 
-      //ROS_INFO("cir_obs[%i]->cir.center.x: %f cir_obs[%i]->cir.center.y: %f", i, cir_obs[i]->cir.center.x, i, cir_obs[i]->cir.center.y);
+      //ROS_INFO("cir_obs[%i]->cir.center.x: %f cir_obs[%i]->cir.center.y: %f cir_obs[%i]->cir.radius: %f", i, cir_obs[i]->cir.center.x, i, cir_obs[i]->cir.center.y, i, cir_obs[i]->cir.radius);
       //ROS_INFO("(x,y): (%f,%f) x_origin: %f y_origin: %f", x, y, x_origin, y_origin);
 
       marker.pose.position.x = x;
@@ -429,7 +429,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       marker.pose.orientation.w = 1.0;
 
       double radius = cir_obs[i]->cir.radius;
-      //ROS_INFO("x: %f y: %f radius: %f", x, y, radius);
+      //ROS_INFO("Marker info x: %f y: %f radius: %f", x, y, radius);
       
       /*obs[i].cir_.center.x = x;
       obs[i].cir_.center.y = y;
@@ -979,7 +979,7 @@ void addNewObs(std::vector<CircleMatch> cm, std::vector<Circle> cirs)
     //ROS_INFO("matched_cirs[%i]: %i", i, matched_cirs[i]);
     if(!matched_cirs[i])
     {
-      //ROS_INFO("Creating new filter!");
+      //ROS_INFO("Creating new filter! Center: (%f,%f) Radius: %f", cirs[i].center.x, cirs[i].center.y, cirs[i].radius);
       CircleOb* temp = createCircleOb(cirs[i]);
       //ROS_INFO("i: %i cir_obs.size(): %i", i, (int)cir_obs.size());
       //cir_obs.insert(cir_obs.begin()+i, temp);
@@ -1090,9 +1090,6 @@ std::vector<Circle> updateKalmanFilters(std::vector<Circle> cirs, std::vector<Ci
 
     // Push on resulting circle
     result.push_back(cir_obs[i]->cir);
-
-    // Set the updated radius
-    cir_obs[i]->cir.radius = cirs[i].radius;
 
     // Push back center data for logging
     cirs_pos.push_back(cir_obs[i]->cir);
@@ -1222,7 +1219,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    */
 
   /*
-   * Convert centers to the global frame
+   * Convert centers radii to the global frame
    */ 
    double x_origin = global_grid.info.origin.position.x;
    double y_origin = global_grid.info.origin.position.y;
@@ -1236,7 +1233,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
      cirs[i].center.x = x;
      cirs[i].center.y = y;
      cirs[i].radius *= global_grid.info.resolution;
-     ////ROS_INFO("New Point: (%f,%f) New Radius: %f ", x, y, cirs[i].radius);
+     //ROS_INFO("New Point: (%f,%f) New Radius: %f ", x, y, cirs[i].radius);
    }
    
 
@@ -1248,12 +1245,25 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    */
   std::vector<CircleMatch> cm = dataAssociation(cirs);
 
+  //ROS_INFO("After data association:");
+  /*for(int i=0;i<cir_obs.size();i++)
+  {
+    //ROS_INFO("cir_obs[%i]->cir.center.x: %f cir_obs[%i]->cir.center.y: %f cir_obs[%i]->cir.radius: %f", i, cir_obs[i]->cir.center.x, i, cir_obs[i]->cir.center.y, i, cir_obs[i]->cir.radius);
+  }*/
+
 
   
   /*
    * Call the Kalman filter
    */
    std::vector<Circle> circles_current = updateKalmanFilters(cirs, cm);
+
+  //ROS_INFO("After kalman filter:");
+  /*for(int i=0;i<cir_obs.size();i++)
+  {
+    //ROS_INFO("cir_obs[%i]->cir.center.x: %f cir_obs[%i]->cir.center.y: %f cir_obs[%i]->cir.radius: %f", i, cir_obs[i]->cir.center.x, i, cir_obs[i]->cir.center.y, i, cir_obs[i]->cir.radius);
+  }*/
+
   
    
   /*
@@ -1308,9 +1318,9 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   list.obstacles.clear();
 
   // Populate list
-  for(int i=0;i<cirs.size();i++)
+  for(int i=0;i<cir_obs.size();i++)
   {
-    Obstacle o(cir_obs[i]->cir.radius*costmap_res, costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res, global_grid.info.origin.position.x, global_grid.info.origin.position.y); 
+    Obstacle o(cir_obs[i]->cir.radius, costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res, global_grid.info.origin.position.x, global_grid.info.origin.position.y); 
     o.update(cir_obs[i]->cir, velocities[i], cir_obs[i]->prevTheta[cir_obs[i]->prevCirs.size()-1]);
   
     obs.push_back(o);
@@ -1452,7 +1462,7 @@ int main(int argc, char** argv)
   }
   else
   {
-    ROS_ERROR("ramp_sensing: Could not find obstacle_topics rosparam!");
+    //ROS_ERROR("ramp_sensing: Could not find obstacle_topics rosparam!");
   }
 
   if(handle.hasParam("/ramp/sensing_cycle_rate"))
@@ -1462,7 +1472,7 @@ int main(int argc, char** argv)
   }
   else
   {
-    ROS_ERROR("ramp_sensing: Could not find sensing_cycle_rate rosparam!");
+    //ROS_ERROR("ramp_sensing: Could not find sensing_cycle_rate rosparam!");
   }
 
   loadObstacleTF();
