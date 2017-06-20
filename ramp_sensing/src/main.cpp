@@ -94,8 +94,8 @@ double SIGMA_SYSTEM_NOISE_Y = 0.1;
 //MatrixWrapper::Matrix* H=0;
 BFL::LinearAnalyticConditionalGaussian* meas_pdf = 0;
 BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model = 0;
-double MU_MEAS_NOISE = 0.0025;
-double SIGMA_MEAS_NOISE = 0.0025;
+double MU_MEAS_NOISE = 0.00025;
+double SIGMA_MEAS_NOISE = 0.00025;
 
 // Input vector
 MatrixWrapper::ColumnVector u(STATE_SIZE);
@@ -797,12 +797,14 @@ void consolidateCostmaps(const nav_msgs::OccupancyGrid g1, const nav_msgs::Occup
   ////ROS_INFO("In consolidateCostmaps(OccupancyGrid, OccupancyGrid, OccupancyGrid)");
   ////ROS_INFO("g1.data.size(): %i", (int)g1.data.size());
   result = g1;
-  ////ROS_INFO("Before for loops, result.size(): %i", (int)result.data.size());
+  //ROS_INFO("g1.info.width: %i g1.info.height: %i", g1.info.width, g1.info.height);
+  //ROS_INFO("Before for loops, result.size(): %i", (int)result.data.size());
   for(int r=0;r<g1.info.width;r++)
   {
-    int r_offset = g1.info.width*r;
+    int r_offset = g1.info.height*r;
     for(int c=0;c<g1.info.height;c++)
     {
+      //ROS_INFO("r_offset: %i c: %i r_offset+c: %i", r_offset, c, r_offset+c);
       result.data[r_offset + c] = g1.data[r_offset + c] | g2.data[r_offset + c];
     }
   }
@@ -1154,7 +1156,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
   //ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
   // Consolidate this occupancy grid with prev ones
-  /*nav_msgs::OccupancyGrid consolidated_grid;
+  nav_msgs::OccupancyGrid consolidated_grid;
   consolidateCostmaps(*grid, prev_grids, consolidated_grid);
   
   // Push this grid onto prev_grids
@@ -1167,11 +1169,13 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   // Publish the consolidated costmap
   pub_cons_costmap.publish(consolidated_grid);
 
-
+  // Make a pointer for the consolidated costmap
   boost::shared_ptr<nav_msgs::OccupancyGrid> cg_ptr = boost::make_shared<nav_msgs::OccupancyGrid>(consolidated_grid);
+  //*grid = *cg_ptr;
+  //global_grid = *cg_ptr;
 
   ////ROS_INFO("consolidated_grid.data.size(): %i", (int)consolidated_grid.data.size());
-  ////ROS_INFO("cg_ptr->data.size(): %i", (int)cg_ptr->data.size());*/
+  ////ROS_INFO("cg_ptr->data.size(): %i", (int)cg_ptr->data.size());
 
   /*
    ********************************************
@@ -1179,8 +1183,8 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    ********************************************
    */
 
-  //CirclePacker c(cg_ptr); // (If using consolidated costmaps)
-  CirclePacker c(grid);
+  CirclePacker c(cg_ptr); // (If using consolidated costmaps)
+  //CirclePacker c(grid);
   //std::vector<Circle> cirs_myblobs = c.go();
   //std::vector<Circle> cirs = c.goHough();
   //std::vector<Circle> cirs = c.goMinEncCir();
@@ -1329,9 +1333,9 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   }
 
   num_costmaps++;
-  //ROS_INFO("**************************************************");
-  //ROS_INFO("Exiting costmapCb");
-  //ROS_INFO("**************************************************");
+  ROS_INFO("**************************************************");
+  ROS_INFO("Exiting costmapCb");
+  ROS_INFO("**************************************************");
 }
 
 

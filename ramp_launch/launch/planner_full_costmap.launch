@@ -10,25 +10,23 @@
 
 <!-- START NODES -->
 
-<!-- Costmap
+<!-- Costmap -->
 <node name="costmap_node" pkg="costmap_2d" type="costmap_2d_node" output="log" >
-  <rosparam file="/opt/ros/kinetic/share/turtlebot_navigation/param/cleverm_static_costmap.yaml" command="load" />
-</node> -->
+  <rosparam file="$(find ramp_launch)/launch/costmap_param/my_rolling_costmap.yaml" command="load" />
+</node>
+<include file="$(find laser_filters)/launch/range_filter.launch" />
 
 
 
 
 <!-- Trajectory Generator -->
-<node name="trajectory_generator" pkg="trajectory_generator" type="trajectory_generator" output="log" />
+<node name="trajectory_generator" pkg="trajectory_generator" type="trajectory_generator" output="screen" />
 
 <!-- Path Modification -->
 <node name="path_modification" pkg="path_modification" type="path_modification" />
 
 <!-- Evaluation -->
 <node name="trajectory_evaluation" pkg="trajectory_evaluation" type="trajectory_evaluation" output="screen" />
-
-<!-- Trajectory Visualization -->
-<!-- <node name="trajectory_visualisation" pkg="trajectory_visualisation" type="trajectory_visualisation" /> -->
 
 <!-- Sensing -->
 <node name="ramp_sensing" pkg="ramp_sensing" type="ramp_sensing" output="log" />

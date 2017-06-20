@@ -4,7 +4,6 @@
 
 CirclePacker::CirclePacker(nav_msgs::OccupancyGridConstPtr g)
 {
-  //////ROS_INFO("In CirclePacker::CirclePacker()");
   grid_ = *g;
   convertOGtoMat(g);
 }
@@ -27,14 +26,18 @@ CirclePacker::~CirclePacker()
 
 void CirclePacker::convertOGtoMat(nav_msgs::OccupancyGridConstPtr g)
 {
-  //////ROS_INFO("In CirclePacker::convertOGtoMat");
+  ROS_INFO("In CirclePacker::convertOGtoMat");
 
   
   // Use the GridMap2D library to convert from nav_msgs::OccupancyGrid to cv::Mat
   gridmap_2d::GridMap2D gmap(g, false);
+  ROS_INFO("Done with making GridMap2D");
 
   // Set src
   src = gmap.binaryMap();
+  ROS_INFO("Done calling gmap.binaryMap()");
+  
+  ROS_INFO("Exiting CirclePacker::convertOGtoMat");
 }
 
 void CirclePacker::CannyThreshold(int, void*)
@@ -872,7 +875,7 @@ std::vector<Circle> CirclePacker::goMinEncCir()
 
 std::vector<Circle> CirclePacker::goMyBlobs()
 {
-  //ROS_INFO("In CirclePacker::goMyBlobs()");
+  ROS_INFO("In CirclePacker::goMyBlobs()");
   std::vector<Circle> result;
 
   // Create a matrix of the same size and type as src
@@ -1033,6 +1036,6 @@ std::vector<Circle> CirclePacker::goMyBlobs()
     }
   } // end for each set of contour points
 
-  //ROS_INFO("Exiting CirclePacker::goMyBlobs()");
+  ROS_INFO("Exiting CirclePacker::goMyBlobs()");
   return result;
 }
