@@ -31,6 +31,9 @@ std::string         update_topic;
 float costmap_width, costmap_height, costmap_origin_x, costmap_origin_y;
 ros::Publisher pub_rviz;
 
+bool use_start_param;
+bool start_planner;
+
 
 // Initializes a vector of Ranges that the Planner is initialized with
 // Must be called AFTER radius is set
@@ -131,6 +134,11 @@ void loadParameters(const ros::NodeHandle handle)
     std::cout<<"\nshrink_ranges: "<<shrink_ranges;
   }
 
+  if(handle.hasParam("ramp/use_start_param"))
+  {
+    handle.getParam("ramp/use_start_param", use_start_param);
+    std::cout<<"\nuse_start_param: "<<use_start_param;
+  }
 
 
   // Get the dofs
@@ -478,6 +486,15 @@ int main(int argc, char** argv) {
   std::cout<<"\nPress Enter to start the planner\n";
   
   std::cin.get(); 
+
+  if(use_start_param)
+  {
+    ROS_INFO("Waiting for param ramp/start_planner to be true");
+    while(!start_planner)
+    {
+      handle.param("ramp/start_planner", start_planner, false);
+    }
+  }
   
   my_planner.go();
 

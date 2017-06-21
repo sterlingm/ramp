@@ -71,6 +71,8 @@ std::vector<double> d_avg_values;
 double dist_threshold = 0.5;
 double radius_threshold = 0.5;
 
+int num_costmaps_accumulate = 5;
+
 /*********************************
  * Variables for BFL
  *********************************/
@@ -1161,7 +1163,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   
   // Push this grid onto prev_grids
   prev_grids.push_back(*grid);
-  if(prev_grids.size() > 5)
+  if(prev_grids.size() > num_costmaps_accumulate)
   {
     prev_grids.pop_back();
   }
@@ -1193,7 +1195,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   /*
    * Discard any circles too close to boundaries because those are likely walls
    */
-  //removeWallObs(cirs);
+  removeWallObs(cirs);
   
 
   /*

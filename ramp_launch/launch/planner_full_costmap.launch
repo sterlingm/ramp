@@ -17,6 +17,8 @@
 <include file="$(find laser_filters)/launch/range_filter.launch" />
 
 
+<!-- Reset odometry -->
+<node name="reset_odom" pkg="ramp_control" type="reset_odom.py" output="log" />
 
 
 <!-- Trajectory Generator -->

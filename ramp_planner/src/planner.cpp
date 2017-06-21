@@ -3964,7 +3964,7 @@ void Planner::go()
   evaluatePopulation();
   ROS_INFO("Initial population evaluated");
   //sendPopulation();
-  std::cin.get();
+  //std::cin.get();
  
 
 

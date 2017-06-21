@@ -2,12 +2,13 @@
 #include<tf/transform_broadcaster.h>
 
 tf::Transform T_map_odom;
+double t_future = 2.0;
 
 void sendTransform(const ros::TimerEvent& e)
 {
   // Broadcast a tf for base_link to the global frame
   static tf::TransformBroadcaster br;
-  br.sendTransform(tf::StampedTransform(T_map_odom, ros::Time::now(), "map", "odom"));
+  br.sendTransform(tf::StampedTransform(T_map_odom, ros::Time::now()+ros::Duration(t_future), "map", "odom"));
 }
 
 int main(int argc, char** argv)
