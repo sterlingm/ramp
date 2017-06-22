@@ -2,7 +2,7 @@
 #include<tf/transform_broadcaster.h>
 
 tf::Transform T_map_odom;
-double t_future = 2.0;
+double t_future = 3.5;
 
 void sendTransform(const ros::TimerEvent& e)
 {
@@ -29,7 +29,7 @@ int main(int argc, char** argv)
   T_map_odom.setOrigin( tf::Vector3(p_start[0], p_start[1], 0) );
   T_map_odom.setRotation(tf::createQuaternionFromYaw(p_start[2]));
   
-  ros::Duration pubMapOdom_(0.1);
+  ros::Duration pubMapOdom_(0.05);
   ros::Timer pubMapOdomTimer_ = handle.createTimer(pubMapOdom_, &sendTransform);
 
   

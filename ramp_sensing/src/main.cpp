@@ -28,7 +28,7 @@ std::vector<Circle> cirs_pos;
 
 Utility util;
 double rate=10;
-ros::Publisher pub_obj, pub_rviz, pub_cons_costmap;
+ros::Publisher pub_obj, pub_rviz, pub_cons_costmap, pub_half_costmap;
 std::vector< Obstacle> obs;
 ramp_msgs::ObstacleList list;
 std::vector< std::string > ob_odoms;
@@ -96,8 +96,8 @@ double SIGMA_SYSTEM_NOISE_Y = 0.1;
 //MatrixWrapper::Matrix* H=0;
 BFL::LinearAnalyticConditionalGaussian* meas_pdf = 0;
 BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model = 0;
-double MU_MEAS_NOISE = 0.00025;
-double SIGMA_MEAS_NOISE = 0.00025;
+double MU_MEAS_NOISE = 0.0005;
+double SIGMA_MEAS_NOISE = 0.0005;
 
 // Input vector
 MatrixWrapper::ColumnVector u(STATE_SIZE);
@@ -1143,6 +1143,31 @@ void removeWallObs(std::vector<Circle>& cirs)
 }
 
 
+void halfCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::OccupancyGrid& result)
+{
+  //ROS_INFO("In halfCostmap");
+  //ROS_INFO("Costmap info: width: %i height: %i origin: (%f,%f)", grid->info.width, grid->info.height, grid->info.origin.position.x, grid->info.origin.position.y);
+  
+  for(int c=0;c<grid->info.height;c++)
+  {
+    int c_offset = (c*grid->info.width);// + grid->info.width/2;
+    for(int r=grid->info.width/2;r<grid->info.width;r++)
+    {
+      //ROS_INFO("c: %i c_offset: %i r: %i total: %i", c, c_offset, r, c_offset+r);
+      result.data.push_back(grid->data[c_offset + r]);
+    }
+  }
+
+  result.info = grid->info;
+  result.info.width /= 2;
+  result.info.origin.position.x += (result.info.width * result.info.resolution);
+  
+  //ROS_INFO("Half Costmap info: width: %i height: %i origin: (%f,%f)", result.info.width, result.info.height, result.info.origin.position.x, result.info.origin.position.y);
+
+  //ROS_INFO("Exiting halfCostmap");
+}
+
+
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
   //ROS_INFO("**************************************************");
@@ -1151,18 +1176,26 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;
   t_last_costmap = ros::Time::now();
 
+  nav_msgs::OccupancyGrid half;
+  halfCostmap(grid, half);
+  //pub_half_costmap.publish(half);
+
   ////ROS_INFO("New costmap size: %i", (int)grid->data.size());
 
-  double grid_resolution = grid->info.resolution; 
-  global_grid = *grid;
+  //double grid_resolution = grid->info.resolution; 
+  //global_grid = *grid;
+  
+  double grid_resolution = half.info.resolution; 
+  global_grid = half;
 
   //ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
   // Consolidate this occupancy grid with prev ones
   nav_msgs::OccupancyGrid consolidated_grid;
-  consolidateCostmaps(*grid, prev_grids, consolidated_grid);
+  //consolidateCostmaps(*grid, prev_grids, consolidated_grid);
+  consolidateCostmaps(half, prev_grids, consolidated_grid);
   
   // Push this grid onto prev_grids
-  prev_grids.push_back(*grid);
+  prev_grids.push_back(half);
   if(prev_grids.size() > num_costmaps_accumulate)
   {
     prev_grids.pop_back();
@@ -1293,12 +1326,12 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   
   for(int i=0;i<velocities.size();i++)
   {
-    /*if(velocities[i].v < 0.1)
+    if(velocities[i].v < 0.1)
     {
       velocities[i].v   = 0;
       velocities[i].vx  = 0;
       velocities[i].vy  = 0;
-    }*/
+    }
     //ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
     cir_obs[i]->vel = velocities[i];
   }
@@ -1335,9 +1368,9 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   }
 
   num_costmaps++;
-  ROS_INFO("**************************************************");
+  /*ROS_INFO("**************************************************");
   ROS_INFO("Exiting costmapCb");
-  ROS_INFO("**************************************************");
+  ROS_INFO("**************************************************");*/
 }
 
 
@@ -1511,6 +1544,7 @@ int main(int argc, char** argv)
   pub_obj = handle.advertise<ramp_msgs::ObstacleList>("obstacles", 1);
   pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1);
   pub_cons_costmap = handle.advertise<nav_msgs::OccupancyGrid>("consolidated_costmap", 1);
+  pub_half_costmap = handle.advertise<nav_msgs::OccupancyGrid>("half_costmap", 1);
 
   //Timers
   ros::Timer timer = handle.createTimer(ros::Duration(1.f / rate), publishList);

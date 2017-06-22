@@ -382,7 +382,8 @@ void pubStartGoalMarkers()
 
 
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) 
+{
   srand( time(0));
 
   ros::init(argc, argv, "ramp_planner");
@@ -489,6 +490,8 @@ int main(int argc, char** argv) {
 
   if(use_start_param)
   {
+    start_planner = false;
+    handle.setParam("ramp/start_planner", false);
     ROS_INFO("Waiting for param ramp/start_planner to be true");
     while(!start_planner)
     {

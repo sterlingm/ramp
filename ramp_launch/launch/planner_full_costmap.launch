@@ -22,16 +22,16 @@
 
 
 <!-- Trajectory Generator -->
-<node name="trajectory_generator" pkg="trajectory_generator" type="trajectory_generator" output="screen" />
+<node name="trajectory_generator" pkg="trajectory_generator" type="trajectory_generator" output="log" />
 
 <!-- Path Modification -->
 <node name="path_modification" pkg="path_modification" type="path_modification" />
 
 <!-- Evaluation -->
-<node name="trajectory_evaluation" pkg="trajectory_evaluation" type="trajectory_evaluation" output="screen" />
+<node name="trajectory_evaluation" pkg="trajectory_evaluation" type="trajectory_evaluation" output="log" />
 
 <!-- Sensing -->
-<node name="ramp_sensing" pkg="ramp_sensing" type="ramp_sensing" output="log" />
+<node name="ramp_sensing" pkg="ramp_sensing" type="ramp_sensing" output="screen" />
 
 <!-- Planner -->
 <node name="ramp_planner" pkg="ramp_planner" type="ramp_planner" output="screen" />
