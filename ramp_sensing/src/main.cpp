@@ -72,6 +72,7 @@ double dist_threshold = 0.5;
 double radius_threshold = 0.5;
 
 int num_costmaps_accumulate = 5;
+int num_velocity_count = 5;
 
 /*********************************
  * Variables for BFL
@@ -1122,23 +1123,26 @@ Point getGlobalCoords(const Circle& cir)
 void removeWallObs(std::vector<Circle>& cirs)
 {
   int i=0;
-  while(i<cirs.size())
+  if(ranges.size() > 2)
   {
-    Point c = getGlobalCoords(cirs[i]);
-    //ROS_INFO("Circle %i global coordinates: (%f, %f)", i, c.x, c.y);
-    
-    if( c.x < ranges[0].min || c.x > ranges[0].max ||
-        c.y < ranges[1].min || c.y > ranges[1].max )
+    while(i<cirs.size())
     {
-      //ROS_INFO("Obstacle is too close to boundary, discarding it");
-      cirs.erase(cirs.begin()+i);
-      i--;
+      Point c = getGlobalCoords(cirs[i]);
+      //ROS_INFO("Circle %i global coordinates: (%f, %f)", i, c.x, c.y);
+      
+      if( c.x < ranges[0].min || c.x > ranges[0].max ||
+          c.y < ranges[1].min || c.y > ranges[1].max )
+      {
+        //ROS_INFO("Obstacle is too close to boundary, discarding it");
+        cirs.erase(cirs.begin()+i);
+        i--;
+      }
+      else
+      {
+        //ROS_INFO("Keeping obstacle");
+      }
+      i++;
     }
-    else
-    {
-      //ROS_INFO("Keeping obstacle");
-    }
-    i++;
   }
 }
 
@@ -1170,15 +1174,14 @@ void halfCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
 
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
-  //ROS_INFO("**************************************************");
-  //ROS_INFO("In costmapCb");
-  //ROS_INFO("**************************************************");
+  /*ROS_INFO("**************************************************");
+  ROS_INFO("In costmapCb");
+  ROS_INFO("**************************************************");*/
   ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;
   t_last_costmap = ros::Time::now();
 
   nav_msgs::OccupancyGrid half;
   halfCostmap(grid, half);
-  //pub_half_costmap.publish(half);
 
   ////ROS_INFO("New costmap size: %i", (int)grid->data.size());
 
@@ -1192,20 +1195,23 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   // Consolidate this occupancy grid with prev ones
   nav_msgs::OccupancyGrid consolidated_grid;
   //consolidateCostmaps(*grid, prev_grids, consolidated_grid);
-  consolidateCostmaps(half, prev_grids, consolidated_grid);
+  //consolidateCostmaps(half, prev_grids, consolidated_grid);
+  //ROS_INFO("Got consolidated_grid");
   
   // Push this grid onto prev_grids
   prev_grids.push_back(half);
   if(prev_grids.size() > num_costmaps_accumulate)
   {
-    prev_grids.pop_back();
+    prev_grids.erase(prev_grids.begin(), prev_grids.begin()+1);
   }
 
-  // Publish the consolidated costmap
-  pub_cons_costmap.publish(consolidated_grid);
+  // Publish the modified costmap(s)
+  pub_half_costmap.publish(half);
+  //pub_cons_costmap.publish(consolidated_grid);
 
-  // Make a pointer for the consolidated costmap
-  boost::shared_ptr<nav_msgs::OccupancyGrid> cg_ptr = boost::make_shared<nav_msgs::OccupancyGrid>(consolidated_grid);
+  // Make a pointer for the modified costmap
+  //boost::shared_ptr<nav_msgs::OccupancyGrid> cg_ptr = boost::make_shared<nav_msgs::OccupancyGrid>(consolidated_grid);
+  boost::shared_ptr<nav_msgs::OccupancyGrid> cg_ptr = boost::make_shared<nav_msgs::OccupancyGrid>(half);
   //*grid = *cg_ptr;
   //global_grid = *cg_ptr;
 
@@ -1218,17 +1224,21 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    ********************************************
    */
 
-  CirclePacker c(cg_ptr); // (If using consolidated costmaps)
-  //CirclePacker c(grid);
+  CirclePacker c(cg_ptr); // (If using modified costmap)
+  //CirclePacker c(grid); // (If not modifying costmap)
   //std::vector<Circle> cirs_myblobs = c.go();
   //std::vector<Circle> cirs = c.goHough();
   //std::vector<Circle> cirs = c.goMinEncCir();
   std::vector<Circle> cirs = c.goMyBlobs();
 
+  //ROS_INFO("Finished getting cirs");
+
   /*
    * Discard any circles too close to boundaries because those are likely walls
    */
   removeWallObs(cirs);
+
+  //ROS_INFO("Finished removing wall obstacles");
   
 
   /*
@@ -1243,12 +1253,12 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   }
 
   cirs = over;
-  //ROS_INFO("cirs array finalized:");
+  /*ROS_INFO("cirs array finalized:");
   for(int i=0;i<cirs.size();i++)
   {
-    //ROS_INFO("i: %i", i);
-    //ROS_INFO("Circle %i: (%f,%f) radius: %f", i, cirs[i].center.x, cirs[i].center.y, cirs[i].radius);
-  }
+    ROS_INFO("i: %i", i);
+    ROS_INFO("Circle %i: (%f,%f) radius: %f", i, cirs[i].center.x, cirs[i].center.y, cirs[i].radius);
+  }*/
 
 
   /*
@@ -1323,18 +1333,48 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    * Predict velocities
    */
   std::vector<Velocity> velocities = predictVelocities(cm, d_elapsed);
+
+  // Average the velocities
   
-  for(int i=0;i<velocities.size();i++)
+  for(int i=0;i<cir_obs.size();i++)
   {
+    //ROS_INFO("i: %i cir_obs.size(): %i velocities.size(): %i", i, (int)cir_obs.size(), (int)velocities.size());
+    cir_obs[i]->vels.push_back(velocities[i]);
+    if(cir_obs[i]->vels.size() > num_velocity_count)
+    {
+      cir_obs[i]->vels.erase( cir_obs[i]->vels.begin(), cir_obs[i]->vels.begin()+1 );
+    }
+
+    float v=0;
+    for(int n=0;n<cir_obs[i]->vels.size();n++)
+    {
+      //ROS_INFO("n: %i Adding %f", n, cir_obs[i]->vels[n].v);
+      v += cir_obs[i]->vels[n].v;
+    }
+    v /= cir_obs[i]->vels.size();
+    //ROS_INFO("Averaged v: %f", v);
+
+    float theta = cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1];
+    float vx = v*cos(theta);
+    float vy = v*sin(theta);
+
+    // Set values
     if(velocities[i].v < 0.1)
     {
       velocities[i].v   = 0;
       velocities[i].vx  = 0;
       velocities[i].vy  = 0;
     }
+    else
+    {
+      velocities[i].v   = v;
+      velocities[i].vx  = vx;
+      velocities[i].vy  = vy;
+    }
     //ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
-    cir_obs[i]->vel = velocities[i];
+    //cir_obs[i]->vel = velocities[i];
   }
+
 
   // Push on velocities for data
   prev_velocities.push_back(velocities);

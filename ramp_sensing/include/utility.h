@@ -85,6 +85,7 @@ struct CircleOb
   std::vector<Circle> prevCirs;
   std::vector<double> prevTheta;
   Velocity vel;
+  std::vector<Velocity> vels;
   double vx, vy, v;
   double theta, w;
 };
