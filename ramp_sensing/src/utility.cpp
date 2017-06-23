@@ -108,6 +108,18 @@ const double Utility::findDistanceBetweenAngles(const double a1, const double a2
 } // End findDistanceBetweenAngles
 
 
+const double Utility::findAngleBetweenAngles(const double a1, const double a2) const
+{
+  double result;
+
+  double delta_theta = findDistanceBetweenAngles(a1, a2);
+  ROS_INFO("delta_theta: %f", delta_theta);
+
+  // Displace a1
+  result = displaceAngle(a1, delta_theta/2.);
+
+  return result;
+}
 
 const double Utility::displaceAngle(const double a1, double a2) const {
 

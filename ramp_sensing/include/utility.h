@@ -88,6 +88,7 @@ struct CircleOb
   std::vector<Velocity> vels;
   double vx, vy, v;
   double theta, w;
+  int i_prevThetaCir;
 };
 
 
@@ -114,6 +115,8 @@ class Utility {
     const double findAngleFromAToB(const std::vector<double> a, const std::vector<double> b) const;
 
     const double findDistanceBetweenAngles(const double a1, const double a2) const;
+
+    const double findAngleBetweenAngles(const double a1, const double a2) const;
     
     const double displaceAngle(const double a1, double a2) const;
 
