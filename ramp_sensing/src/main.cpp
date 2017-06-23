@@ -1322,24 +1322,14 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    * Circle positions are finalized at this point
    */
 
+
+
+
    /*
     * Compute orientations
     */
   
-  /*if(num_costmaps % num_costmap_freq_theta == 0 || cirs.size() > prev_valid_cirs.size())
-  {
-    ROS_INFO("num_costmaps: %i", num_costmaps);
-    std::vector<double> thetas = predictTheta();
-    ROS_INFO("Done getting thetas");
-    for(int i=0;i<thetas.size();i++)
-    {
-      ROS_INFO("i: %i thetas.size(): %i cir_obs.size(): %i", i, (int)thetas.size(), (int)cir_obs.size());
-      ROS_INFO("thetas[%i]: %f", i, thetas[i]);
-      cir_obs[i]->prevTheta.push_back(thetas[i]);
-      cir_obs[i]->i_prevThetaCir = cir_obs[i]->prevCirs.size();
-    }
-  }*/
-  
+  // Check the costmap frequency
   if(num_costmaps % num_costmap_freq_theta == 0 || cirs.size() > prev_valid_cirs.size())
   {
     // Average the theta values
@@ -1358,14 +1348,14 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
       double theta = cir_obs[i]->prevTheta[0];
       for(int j=1;j<cir_obs[i]->prevTheta.size();j++)
       {
-        //ROS_INFO("j: %i theta: %f next theta: %f result: %f", j, theta, cir_obs[i]->prevTheta[j], util.findAngleBetweenAngles(theta, cir_obs[i]->prevTheta[j]));
         theta = util.findAngleBetweenAngles(theta, cir_obs[i]->prevTheta[j]);
+        //ROS_INFO("j: %i theta: %f next theta: %f result: %f", j, theta, cir_obs[i]->prevTheta[j], util.findAngleBetweenAngles(theta, cir_obs[i]->prevTheta[j]));
       }
 
       // Set new theta value
       cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] = theta;
     }
-  }
+  } // end if costmap is considered for predicting theta values
 
 
 
