@@ -16,7 +16,7 @@ only_sensing: false
 # If false, control cycles are cut off
 moving_robot: true
 
-gens_before_control_cycle: 20
+gens_before_control_cycle: 50
 
 pop_traj_type: 1 #0=holonomic, 1=hybrid
 
@@ -44,13 +44,14 @@ use_start_param: true
 #obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom', '/obstacle_3/odom']
 #obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity', '/obstacle_2/mobile_base/commands/velocity', '/obstacle_3/mobile_base/commands/velocity']
 #obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom']
-#obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity', '/obstacle_2/mobile_base/commands/velocity']
+obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity']
+obstacle_delays: [0]
 
 # Stage simulator obstacle topics
 # No obstacles
-obstacle_odoms: []
-obstacle_vels: []
-obstacle_delays: []
+#obstacle_odoms: []
+#obstacle_vels: []
+#obstacle_delays: []
 
 #obstacle_odoms: ['/robot_1/odom', '/robot_2/odom']
 #obstacle_vels: ['/robot_1/cmd_vel', '/robot_2/cmd_vel']

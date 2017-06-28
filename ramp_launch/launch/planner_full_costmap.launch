@@ -37,5 +37,7 @@
 <node name="ramp_planner" pkg="ramp_planner" type="ramp_planner" output="screen" />
 
 
+<!-- Obstacle node -->
+<node name="obstacle_twist" pkg="ramp_planner" type="obstacle_twist_all" output="screen" />
 
 </launch>

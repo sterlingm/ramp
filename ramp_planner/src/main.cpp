@@ -95,7 +95,7 @@ void loadParameters(const ros::NodeHandle handle)
   }
   else 
   {
-    ROS_ERROR("Did not find parameter robot_info/id");
+    //ROS_ERROR("Did not find parameter robot_info/id");
   }
 
   // Get the radius of the robot
@@ -105,27 +105,27 @@ void loadParameters(const ros::NodeHandle handle)
   }
   else 
   {
-    ROS_ERROR("Did not find parameter robot_info/radius");
+    //ROS_ERROR("Did not find parameter robot_info/radius");
   }
 
   if(handle.hasParam("ramp/global_frame"))
   {
     handle.getParam("ramp/global_frame", global_frame);
-    ROS_INFO("global_frame: %s", global_frame.c_str());
+    //ROS_INFO("global_frame: %s", global_frame.c_str());
   }
   else
   {
-    ROS_ERROR("Could not find rosparam ramp/global_frame");
+    //ROS_ERROR("Could not find rosparam ramp/global_frame");
   }
 
   if(handle.hasParam("ramp/update_topic"))
   {
     handle.getParam("ramp/update_topic", update_topic);
-    ROS_INFO("update_topic: %s", update_topic.c_str());
+    //ROS_INFO("update_topic: %s", update_topic.c_str());
   }
   else
   {
-    ROS_ERROR("Could not find rosparam ramp/update_topic");
+    //ROS_ERROR("Could not find rosparam ramp/update_topic");
   }
   
   if(handle.hasParam("ramp/shrink_ranges"))
@@ -153,7 +153,7 @@ void loadParameters(const ros::NodeHandle handle)
   }
   else 
   {
-    ROS_ERROR("Did not find parameters robot_info/DOF_min, robot_info/DOF_max");
+    //ROS_ERROR("Did not find parameters robot_info/DOF_min, robot_info/DOF_max");
   }
 
   /*
@@ -169,13 +169,13 @@ void loadParameters(const ros::NodeHandle handle)
     handle.getParam("costmap_node/costmap/origin_x", costmap_origin_x);
     handle.getParam("costmap_node/costmap/origin_y", costmap_origin_y);
 
-    ROS_INFO("Got costmap parameters. w: %f h: %f x: %f y: %f", costmap_width, costmap_height, costmap_origin_x, costmap_origin_y);
+    //ROS_INFO("Got costmap parameters. w: %f h: %f x: %f y: %f", costmap_width, costmap_height, costmap_origin_x, costmap_origin_y);
 
     float x_max = costmap_width + costmap_origin_x;
     float x_min = costmap_origin_x;
     float y_max = costmap_height + costmap_origin_y;
     float y_min = costmap_origin_y;
-    ROS_INFO("x_max: %f x_min: %f y_max: %f y_min: %f", x_max, x_min, y_max, y_min);
+    //ROS_INFO("x_max: %f x_min: %f y_max: %f y_min: %f", x_max, x_min, y_max, y_min);
     
     std::vector<double> dof_min, dof_max;
     dof_min.push_back(x_min);
@@ -202,7 +202,7 @@ void loadParameters(const ros::NodeHandle handle)
   }
   else 
   {
-    ROS_ERROR("Did not find parameters robot_info/start, robot_info/goal");
+    //ROS_ERROR("Did not find parameters robot_info/start, robot_info/goal");
   }
 
 
@@ -259,13 +259,13 @@ void loadParameters(const ros::NodeHandle handle)
   if(handle.hasParam("ramp/fixed_control_cycle_rate")) 
   {
     handle.getParam("ramp/fixed_control_cycle_rate", t_cc_rate);
-    ROS_INFO("t_cc_rate: %f", t_cc_rate);
+    //ROS_INFO("t_cc_rate: %f", t_cc_rate);
   }
   
   if(handle.hasParam("ramp/pop_traj_type")) 
   {
     handle.getParam("ramp/pop_traj_type", pop_type);
-    ROS_INFO("pop_type: %s", pop_type ? "Partial Bezier" : "All Straight");
+    //ROS_INFO("pop_type: %s", pop_type ? "Partial Bezier" : "All Straight");
     switch (pop_type) 
     {
       case 0:
@@ -280,7 +280,7 @@ void loadParameters(const ros::NodeHandle handle)
   if(handle.hasParam("ramp/error_reduction")) 
   {
     handle.getParam("ramp/error_reduction", errorReduction);
-    ROS_INFO("errorReduction: %s", errorReduction ? "True" : "False");
+    //ROS_INFO("errorReduction: %s", errorReduction ? "True" : "False");
   }
 
 
@@ -300,7 +300,7 @@ void loadParameters(const ros::NodeHandle handle)
 
 void pubStartGoalMarkers()
 {
-  ROS_INFO("In pubStartGoalMarkers");
+  //ROS_INFO("In pubStartGoalMarkers");
   visualization_msgs::MarkerArray result;
 
   // Make Markers for both positions
@@ -372,12 +372,12 @@ void pubStartGoalMarkers()
   result.markers.push_back(goal_marker);
 
   while(pub_rviz.getNumSubscribers() == 0) {}
-  ROS_INFO("# of subscribers: %i", (int)pub_rviz.getNumSubscribers());
+  //ROS_INFO("# of subscribers: %i", (int)pub_rviz.getNumSubscribers());
 
   pub_rviz.publish(result);
   pub_rviz.publish(result);
   
-  ROS_INFO("Exiting pubStartGoalMarkers");
+  //ROS_INFO("Exiting pubStartGoalMarkers");
 }
 
 
@@ -424,11 +424,11 @@ int main(int argc, char** argv)
     if(listener_.waitForTransform(global_frame, "map", ros::Time(0), d))
     {
       listener_.lookupTransform(global_frame, "map", ros::Time(0), my_planner.tf_global_costmap_);
-      ROS_INFO("Costmap tf: translate: (%f, %f) rotation: %f", my_planner.tf_global_costmap_.getOrigin().getX(), my_planner.tf_global_costmap_.getOrigin().getX(), my_planner.tf_global_costmap_.getRotation().getAngle());
+      //ROS_INFO("Costmap tf: translate: (%f, %f) rotation: %f", my_planner.tf_global_costmap_.getOrigin().getX(), my_planner.tf_global_costmap_.getOrigin().getX(), my_planner.tf_global_costmap_.getRotation().getAngle());
     }
     else
     {
-      ROS_INFO("Frame \"map\" does not exist");
+      //ROS_INFO("Frame \"map\" does not exist");
     }
   }
 
@@ -439,7 +439,7 @@ int main(int argc, char** argv)
   tf::TransformListener listen;
   listen.waitForTransform(global_frame, "odom", ros::Time(0), ros::Duration(2.0));
   listen.lookupTransform(global_frame, "odom", ros::Time(0), my_planner.tf_global_odom_);
-  ROS_INFO("Odom tf: translate: (%f, %f) rotation: %f", my_planner.tf_global_odom_.getOrigin().getX(), my_planner.tf_global_odom_.getOrigin().getX(), my_planner.tf_global_odom_.getRotation().getAngle());
+  //ROS_INFO("Odom tf: translate: (%f, %f) rotation: %f", my_planner.tf_global_odom_.getOrigin().getX(), my_planner.tf_global_odom_.getOrigin().getX(), my_planner.tf_global_odom_.getRotation().getAngle());
   
   my_planner.tf_global_odom_rot_ = my_planner.tf_global_odom_;
   my_planner.tf_global_odom_rot_.setOrigin( tf::Vector3(0, 0, 0) );
@@ -452,7 +452,7 @@ int main(int argc, char** argv)
     if( start.msg_.positions[i] < ranges[i].msg_.min || start.msg_.positions[i] > ranges[i].msg_.max ||
         goal.msg_.positions[i] < ranges[i].msg_.min || goal.msg_.positions[i] > ranges[i].msg_.max )
     {
-      ROS_ERROR("Either the Start or goal position is not within DOF ranges, exiting ramp_planner");
+      //ROS_ERROR("Either the Start or goal position is not within DOF ranges, exiting ramp_planner");
       exit(1);
     }
   }
@@ -460,7 +460,7 @@ int main(int argc, char** argv)
   /*
    * All parameters are loaded
    */
-  ROS_INFO("Parameters loaded. Please review them and press Enter to continue");
+  //ROS_INFO("Parameters loaded. Please review them and press Enter to continue");
   //std::cin.get();
  
   // Initialize the planner
@@ -473,7 +473,7 @@ int main(int argc, char** argv)
   std::cout<<"\nGoal: "<<my_planner.goal_.toString();
 
   pubStartGoalMarkers();
-  //ROS_INFO("Done with pubStartGoalMarkers");
+  ////ROS_INFO("Done with pubStartGoalMarkers");
 
   
   //testSwitch();
@@ -492,7 +492,7 @@ int main(int argc, char** argv)
   {
     start_planner = false;
     handle.setParam("ramp/start_planner", false);
-    ROS_INFO("Waiting for param ramp/start_planner to be true");
+    //ROS_INFO("Waiting for param ramp/start_planner to be true");
     while(!start_planner)
     {
       handle.param("ramp/start_planner", start_planner, false);
