@@ -498,6 +498,7 @@ int main(int argc, char** argv)
       handle.param("ramp/start_planner", start_planner, false);
     }
   }
+  ROS_INFO("Starting Planner!");
   
   my_planner.go();
 

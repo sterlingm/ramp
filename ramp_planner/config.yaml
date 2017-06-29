@@ -14,7 +14,7 @@ error_reduction: true
 only_sensing: false
 
 # If false, control cycles are cut off
-moving_robot: true
+moving_robot: false
 
 gens_before_control_cycle: 50
 

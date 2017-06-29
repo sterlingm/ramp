@@ -234,7 +234,9 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   Population pop_obs;
   Population copy = population_;
 
-  // For each obstacle, predict its trajectory
+  /*
+   * Predict obstacle trajectories
+   */
   for(uint8_t i=0;i<msg.obstacles.size();i++)
   {
     RampTrajectory ob_temp_trj = getPredictedTrajectory(msg.obstacles.at(i));
@@ -256,6 +258,9 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
 
   ros::Time s = ros::Time::now();
 
+  /*
+   * Update population with new starting time
+   */
   if(cc_started_)
   {
     ros::Duration d_since_cc = ros::Time::now() - t_prevCC_;
@@ -264,12 +269,19 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     population_.setStartTime(t_start_new); 
   }
 
-  if(d.toSec() < (controlCycle_.toSec()-0.1))
+  /*
+   * Evaluate population if we're not almost at the next CC
+   */
+  //ROS_INFO("d.toSec(): %f controlCycle_.toSec(): %f", d.toSec(), controlCycle_.toSec());
+  if(d.toSec() < (controlCycle_.toSec()-0.1) || !moving_robot_)
   {
     evaluatePopulation();
   } // end if below threshold since last CC
   
   
+  /*
+   * Evaluate movingOn to check for imminent collision
+   */
   if(cc_started_)
   {
     ////////ROS_INFO("Evaluating movingOn_ in SC");
@@ -277,7 +289,9 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     moving_on_coll_ = !movingOn_.msg_.feasible;
   }
 
-  // Find direction of closest obstacle for "move" operator
+  /*
+   * Find direction of closest obstacle for "move" operator
+   */  
   if(ob_trajectory_.size() > 0)
   {
     uint8_t i_closest=0;
@@ -2839,11 +2853,11 @@ const MotionState Planner::errorCorrection()
 void Planner::planningCycleCallback() 
 {
   ros::Time t_start = ros::Time::now();
-  //////ROS_INFO("*************************************************");
+  //ROS_INFO("*************************************************");
   //ROS_INFO("Planning cycle occurring, generation %i", generation_);
   ////////ROS_INFO("  e.last_expected: %f\n  e.last_real: %f\n  current_expected: %f\n  current_real: %f\n  profile.last_duration: %f", e.last_expected.toSec(), e.last_real.toSec(), e.current_expected.toSec(), e.current_real.toSec(), e.profile.last_duration.toSec());
   ////ROS_INFO("Time since last: %f", (e.current_real - e.last_real).toSec());
-  //////ROS_INFO("*************************************************");
+  //ROS_INFO("*************************************************");
  
   ////////ROS_INFO("Time since last CC: %f", (ros::Time::now()-t_prevCC_).toSec());
 
@@ -3505,6 +3519,7 @@ void Planner::sendBest() {
 /** Send the whole population of trajectories to the trajectory viewer */
 void Planner::sendPopulation()
 {
+  //ROS_INFO("In Planner::sendPopulation");
   //ROS_INFO("Time since last sendPopulation(): %f", (ros::Time::now() - t_prevSendPop_).toSec());
 
   /*
@@ -3960,14 +3975,14 @@ void Planner::go()
   
   // initialize population
   initPopulation();
-  //ROS_INFO("Population initialized");
+  ROS_INFO("Population initialized");
   evaluatePopulation();
-  //ROS_INFO("Initial population evaluated");
+  ROS_INFO("Initial population evaluated");
   //sendPopulation();
   //std::cin.get();
  
 
-
+  // Seed the population
   if(seedPopulation_) 
   {
     std::cout<<"\nSeeding transPopulation\n";
@@ -3991,7 +4006,7 @@ void Planner::go()
   }
 
 
-  // Create sub-transPops if enabled
+  // Create sub-populations if enabled
   if(subPopulations_) 
   {
     population_.createSubPopulations();
@@ -3999,12 +4014,7 @@ void Planner::go()
   }
 
 
-  // Initialize transtransPopulation
-  population_       = population_;
-
   t_start_ = ros::Time::now();
-
-  //////ROS_INFO("Planning Cycles started!");
 
   
   h_parameters_.setCCStarted(false); 
@@ -4013,24 +4023,22 @@ void Planner::go()
   int num_pc = generationsBeforeCC_; 
   if(num_pc < 0)
   {
-    ////////ROS_WARN("num_pc is less than zero: %i - Setting num_pc = 0", num_pc);
     num_pc = 0;
   }
   //ROS_INFO("generationsBeforeCC_: %i generationsPerCC_: %i num_pc: %i", generationsBeforeCC_, generationsPerCC_, num_pc);
 
+  // Run # of planning cycles before control cycles start
+  ROS_INFO("Starting pre planning cycles");
   ros::Rate r(20);
   // Wait for the specified number of generations before starting CC's
   while(generation_ < num_pc) 
   {
-    //ROS_INFO("In first while");
-    planningCycleCallback(); //ROS_INFO("Done with PC Callback"); r.sleep(); //ROS_INFO("Slept, now spinning"); ros::spinOnce(); //ROS_INFO("Done spinning once");
+    planningCycleCallback(); 
   }
  
-  //ROS_INFO("Starting CCs at t: %f", ros::Time::now().toSec());
+  ROS_INFO("Starting CCs at t: %f", ros::Time::now().toSec());
 
-  // Right before starting CC, make sure transtransPopulation is updated
-  population_ = population_;
-
+  // Initialze diff_ for adjustment procedures
   diff_ = diff_.zero(3);
   
   // Start the control cycles
@@ -4039,33 +4047,42 @@ void Planner::go()
     controlCycleTimer_.start();
     imminentCollisionTimer_.start();
     ob_dists_timer_.start();
-    sendPopTimer_.start();
+    ROS_INFO("CCs started");
   }
 
-  ////////ROS_INFO("CCs started");
+  // Start Timer to send population to rviz
+  sendPopTimer_.start();
 
  
+  /*
+   * Main loop begins here
+   */
+
   // Do planning until robot has reached goal
   // D = 0.4 if considering mobile base, 0.2 otherwise
   ros::Time t_start = ros::Time::now();
   goalThreshold_ = 0.25;
   while( (latestUpdate_.comparePosition(goal_, false) > goalThreshold_) && ros::ok()) 
   {
-    //ROS_INFO("Top of main while");
     if(!only_sensing_)
     {
       planningCycleCallback();
     }
     r.sleep();
-    //ROS_INFO("Done sleeping");
     ros::spinOnce(); 
-    //ROS_INFO("Done spinning");
   } // end while
+
+  /*
+   * Main loop over, report data, stop timers, misc clean up
+   */
+
+
+
   ros::Duration t_execution = ros::Time::now() - t_start;
   reportData();
   //////ROS_INFO("Total execution time: %f", t_execution.toSec());
 
-  ////////ROS_INFO("Planning done!");
+  ROS_INFO("Planning done!");
   ////////ROS_INFO("latestUpdate_: %s\ngoal: %s", latestUpdate_.toString().c_str(), goal_.toString().c_str());
   
   // Stop timer
