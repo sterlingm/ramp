@@ -326,11 +326,11 @@ void pubStartGoalMarkers()
   // Set positions
   start_marker.pose.position.x = start.msg_.positions[0];
   start_marker.pose.position.y = start.msg_.positions[1];
-  start_marker.pose.position.z = start.msg_.positions[2];
+  start_marker.pose.position.z = 0.01;
   
   goal_marker.pose.position.x = goal.msg_.positions[0];
   goal_marker.pose.position.y = goal.msg_.positions[1];
-  goal_marker.pose.position.z = goal.msg_.positions[2];
+  goal_marker.pose.position.z = 0.01;
 
   // Set orientations
   start_marker.pose.orientation.x = 0.0;

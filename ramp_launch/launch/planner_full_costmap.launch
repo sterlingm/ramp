@@ -10,11 +10,12 @@
 
 <!-- START NODES -->
 
-<!-- Costmap
+<!-- Costmap -->
 <node name="costmap_node" pkg="costmap_2d" type="costmap_2d_node" output="log" >
   <rosparam file="$(find ramp_launch)/launch/costmap_param/my_rolling_costmap.yaml" command="load" />
+  <!-- <rosparam file="$(find ramp_launch)/launch/costmap_param/my_static_costmap.yaml" command="load" /> -->
 </node>
-<include file="$(find laser_filters)/launch/range_filter.launch" /> -->
+<include file="$(find laser_filters)/launch/range_filter.launch" />
 
 
 <!-- Reset odometry -->
