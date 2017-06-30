@@ -2,7 +2,7 @@
 #include<tf/transform_broadcaster.h>
 
 tf::Transform T_map_odom;
-double t_future = 10;
+double t_future = 4.6;
 
 void sendTransform(const ros::TimerEvent& e)
 {

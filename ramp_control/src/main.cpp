@@ -135,6 +135,7 @@ int main(int argc, char** argv)
 
   tf::TransformListener listen;
   listen.waitForTransform(global_frame, "odom", ros::Time(0), ros::Duration(2.0));
+  ROS_INFO("Time: %f", ros::Time::now().toSec());
   listen.lookupTransform(global_frame, "odom", ros::Time(0), robot.tf_global_odom_);
   ROS_INFO("(ramp_control) Odom tf: translate: (%f, %f) rotation: %f", robot.tf_global_odom_.getOrigin().getX(), robot.tf_global_odom_.getOrigin().getX(), robot.tf_global_odom_.getRotation().getAngle());
   robot.tf_rot_ = robot.tf_global_odom_.getRotation().getAngle();

@@ -74,7 +74,7 @@ double radius_threshold = 0.5;
 int num_costmaps_accumulate = 5;
 int num_velocity_count      = 3;
 int num_theta_count         = 1;
-int num_costmap_freq_theta  = 4;
+int num_costmap_freq_theta  = 10;
 
 double initial_theta        = PI;
 
@@ -591,7 +591,7 @@ void publishMarkers(const ros::TimerEvent& e)
   text.text = num_obs.str();
 
   // Set poses
-  text.pose.position.x = 2;
+  text.pose.position.x = 8;
   text.pose.position.y = 3.5;
   text.pose.position.z = 0.1;
   text.color.r = 0;
@@ -1200,34 +1200,34 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   /*
    * Only use half of the costmap since the kinect can only see in front of the robot
    */
-  nav_msgs::OccupancyGrid half;
-  halfCostmap(grid, half);
+  //nav_msgs::OccupancyGrid half;
+  //halfCostmap(grid, half);
 
   ////ROS_INFO("New costmap size: %i", (int)grid->data.size());
 
-  //double grid_resolution = grid->info.resolution; 
-  //global_grid = *grid;
+  double grid_resolution = grid->info.resolution; 
+  global_grid = *grid;
   
-  double grid_resolution = half.info.resolution; 
-  global_grid = half;
+  //double grid_resolution = half.info.resolution; 
+  //global_grid = half;
 
   ////ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
   // Consolidate this occupancy grid with prev ones
   nav_msgs::OccupancyGrid consolidated_grid;
-  consolidateCostmaps(half, prev_grids, consolidated_grid);
-  //consolidateCostmaps(*grid, prev_grids, consolidated_grid);
+  //consolidateCostmaps(half, prev_grids, consolidated_grid);
+  consolidateCostmaps(*grid, prev_grids, consolidated_grid);
   
   ////ROS_INFO("Finished getting consolidated_grid");
   
   // Push this grid onto prev_grids
-  prev_grids.push_back(half);
+  prev_grids.push_back(global_grid);
   if(prev_grids.size() > num_costmaps_accumulate)
   {
     prev_grids.erase(prev_grids.begin(), prev_grids.begin()+1);
   }
 
   // Publish the modified costmap(s)
-  pub_half_costmap.publish(half);
+  //pub_half_costmap.publish(half);
   pub_cons_costmap.publish(consolidated_grid);
 
   // Make a pointer for the modified costmap

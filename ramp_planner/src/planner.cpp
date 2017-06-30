@@ -2873,7 +2873,7 @@ void Planner::planningCycleCallback()
   // errorReduction is true
   // Not driving on curve
   if(errorReduction_ && !imminent_collision_ && cc_started_ && generation_ % 1 == 0 &&
-      !(fabs(latestUpdate_.msg_.velocities.at(2)) > 0.1 && sqrt(pow(latestUpdate_.msg_.velocities[0],2) + pow(latestUpdate_.msg_.velocities[1],2)) > 0.01))
+      !(fabs(latestUpdate_.msg_.velocities.at(2)) > 0.2 && sqrt(pow(latestUpdate_.msg_.velocities[0],2) + pow(latestUpdate_.msg_.velocities[1],2)) > 0.01))
   {
     ros::Time t_start_error = ros::Time::now();
       
@@ -3236,7 +3236,7 @@ void Planner::getTransPop(const Population& pop, const RampTrajectory& movingOn,
 void Planner::doControlCycle() 
 {
   ////////ROS_WARN("Control Cycle %i occurring at Time: %f", num_cc_, ros::Time::now().toSec());
-  //ROS_INFO("controlCycle_: %f", controlCycle_.toSec());
+  ROS_INFO("controlCycle_: %f", controlCycle_.toSec());
   //////ROS_INFO("Time between control cycles: %f", (ros::Time::now() - t_prevCC_).toSec());
   t_prevCC_ = ros::Time::now();
   ////////ROS_INFO("Number of planning cycles that occurred between CC's: %i", c_pc_);
@@ -3257,7 +3257,7 @@ void Planner::doControlCycle()
 
   // Send the best trajectory and set movingOn
   //////////ROS_INFO("Sending best");
-  //ROS_INFO("bestT: %s", bestT.toString().c_str());
+  ROS_INFO("bestT: %s", bestT.toString().c_str());
   sendBest();
   //////////ROS_INFO("After sendBest");
 
