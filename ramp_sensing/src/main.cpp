@@ -71,7 +71,7 @@ std::vector<double> d_avg_values;
 double dist_threshold = 0.5;
 double radius_threshold = 0.5;
 
-int num_costmaps_accumulate = 5;
+int num_costmaps_accumulate = 3;
 int num_velocity_count      = 3;
 int num_theta_count         = 1;
 int num_costmap_freq_theta  = 10;
@@ -703,8 +703,12 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
       // Add on change in radius
       if(cm.size()>0)
       {
-        dist += cm[0].delta_r;
-        ROS_INFO("Adding delta r: %f to dist, new dist: %f", cm[0].delta_r, dist);
+        // Check if previous velocity was nonzero
+        if(cir_obs[i]->vels[cir_obs[i]->vels.size()-1].v > 0.1)
+        {
+          dist += cm[0].delta_r;
+          ROS_INFO("Prev v: %f Adding delta r: %f to dist, new dist: %f", cir_obs[i]->vels[cir_obs[i]->vels.size()-1].v, cm[0].delta_r, dist);
+        }
         
         // If so, then make theta be towards the robot
         //theta = PI;
@@ -1424,8 +1428,11 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
       velocities[i].vx  = vx;
       velocities[i].vy  = vy;
     }
+
+    // Set updated velocity value
+    cir_obs[i]->vels[cir_obs[i]->vels.size()-1] = velocities[i];
+    cir_obs[i]->vel = velocities[i];
     ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
-    //cir_obs[i]->vel = velocities[i];
   }
 
 
