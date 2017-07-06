@@ -731,6 +731,12 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
       temp.v  = linear_v;
       temp.w  = w;
       ROS_INFO("dist: %f t: %f vx: %f vy: %f speed: %f theta: %f w: %f", dist, d_elapsed.toSec(), temp.vx, temp.vy, linear_v, theta, w);
+
+      if(dist > 0.1)
+      {
+        ROS_INFO("Setting moving = true, dist: %f", dist);
+        cir_obs[i]->moving = true;
+      }
       
       predicted_velocities.push_back(temp);
     }
@@ -1422,17 +1428,28 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     float vy = v*sin(theta);
 
     // Set values
-    if(velocities[i].v < 0.1)
+    if(velocities[i].v < 0.1 || !cir_obs[i]->moving)
     {
       velocities[i].v   = 0;
       velocities[i].vx  = 0;
       velocities[i].vy  = 0;
+
+      // Increment static count
+      cir_obs[i]->static_count++;
+      if(cir_obs[i]->static_count > 5)
+      {
+        ROS_INFO("Setting moving = false, static_count: %i", cir_obs[i]->static_count);
+        cir_obs[i]->moving = false;
+      }
     }
     else
     {
       velocities[i].v   = v;
       velocities[i].vx  = vx;
       velocities[i].vy  = vy;
+
+      // Reset static_count
+      cir_obs[i]->static_count = 0;
     }
 
     // Set updated velocity value
