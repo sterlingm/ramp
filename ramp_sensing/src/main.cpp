@@ -72,7 +72,7 @@ double dist_threshold = 0.5;
 double radius_threshold = 0.5;
 
 int num_costmaps_accumulate = 3;
-int num_velocity_count      = 3;
+int num_velocity_count      = 10;
 int num_theta_count         = 1;
 int num_costmap_freq_theta  = 10;
 
@@ -101,8 +101,8 @@ double SIGMA_SYSTEM_NOISE_Y = 0.1;
 //MatrixWrapper::Matrix* H=0;
 BFL::LinearAnalyticConditionalGaussian* meas_pdf = 0;
 BFL::LinearAnalyticMeasurementModelGaussianUncertainty* meas_model = 0;
-double MU_MEAS_NOISE = 0.0005;
-double SIGMA_MEAS_NOISE = 0.0005;
+double MU_MEAS_NOISE    = 0.0000001;
+double SIGMA_MEAS_NOISE = 0.0000001;
 
 // Input vector
 MatrixWrapper::ColumnVector u(STATE_SIZE);
@@ -704,11 +704,11 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
       if(cm.size()>0)
       {
         // Check if previous velocity was nonzero
-        if(cir_obs[i]->vels[cir_obs[i]->vels.size()-1].v > 0.1)
-        {
+        //if(cir_obs[i]->vels[cir_obs[i]->vels.size()-1].v > 0.1)
+        //{
           dist += cm[0].delta_r;
           ROS_INFO("Prev v: %f Adding delta r: %f to dist, new dist: %f", cir_obs[i]->vels[cir_obs[i]->vels.size()-1].v, cm[0].delta_r, dist);
-        }
+        //}
         
         // If so, then make theta be towards the robot
         //theta = PI;
@@ -1260,6 +1260,12 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   //std::vector<Circle> cirs = c.goHough();
   //std::vector<Circle> cirs = c.goMinEncCir();
   std::vector<Circle> cirs = c.goMyBlobs();
+
+  ROS_INFO("cirs array initial (right after goMyBlos()):");
+  for(int i=0;i<cirs.size();i++)
+  {
+    ROS_INFO("Circle %i: (%f,%f) radius: %f", i, cirs[i].center.x, cirs[i].center.y, cirs[i].radius);
+  }
 
   ROS_INFO("Finished getting cirs");
 
