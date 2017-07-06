@@ -89,6 +89,9 @@ struct CircleOb
   double vx, vy, v;
   double theta, w;
   int i_prevThetaCir;
+
+  int static_count=0;
+  bool moving=true;
 };
 
 
