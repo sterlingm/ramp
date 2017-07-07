@@ -88,7 +88,7 @@ bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
       MobileBase mobileBase;
       if(!mobileBase.trajectoryRequest(treq, tres))
       {
-        res.error = true;
+        tres.error = true;
       }
 
       tres.trajectory.holonomic_path = treq.path;

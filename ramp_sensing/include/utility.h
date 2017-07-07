@@ -92,6 +92,7 @@ struct CircleOb
 
   int static_count=0;
   bool moving=true;
+  bool hasMoved=false;
 };
 
 
