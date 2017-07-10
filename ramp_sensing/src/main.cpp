@@ -823,7 +823,7 @@ CircleOb* createCircleOb(Circle temp)
 
 
 
-void consolidateCostmaps(const nav_msgs::OccupancyGrid g1, const nav_msgs::OccupancyGrid g2, nav_msgs::OccupancyGrid& result)
+void accumulateCostmaps(const nav_msgs::OccupancyGrid g1, const nav_msgs::OccupancyGrid g2, nav_msgs::OccupancyGrid& result)
 {
   //ROS_INFO("In consolidateCostmaps(OccupancyGrid, OccupancyGrid, OccupancyGrid)");
   //ROS_INFO("g1.data.size(): %i", (int)g1.data.size());
@@ -842,7 +842,7 @@ void consolidateCostmaps(const nav_msgs::OccupancyGrid g1, const nav_msgs::Occup
   //ROS_INFO("After for loops, result.size(): %i", (int)result.data.size());
 }
 
-void consolidateCostmaps(const nav_msgs::OccupancyGrid gi, const std::vector<nav_msgs::OccupancyGrid> prev_grids, nav_msgs::OccupancyGrid& result)
+void accumulateCostmaps(const nav_msgs::OccupancyGrid gi, const std::vector<nav_msgs::OccupancyGrid> prev_grids, nav_msgs::OccupancyGrid& result)
 {
   //ROS_INFO("In consolidateCostmaps(OccupancyGrid, vector<OccupancyGrid>, OccupancyGrid)");
   //ROS_INFO("gi.size(): %i", (int)gi.data.size());
@@ -858,7 +858,7 @@ void consolidateCostmaps(const nav_msgs::OccupancyGrid gi, const std::vector<nav
     for(int i=0;i<prev_grids.size();i++)
     {
       ////ROS_INFO("Consolidating with previous grid %i, prev_grid[%i].size(): %i", i, i, (int)prev_grids[i].data.size());
-      consolidateCostmaps(temp, prev_grids[i], result);
+      accumulateCostmaps(temp, prev_grids[i], result);
       ////ROS_INFO("New result size: %i", (int)result.data.size());
       temp = result;
     }
@@ -1230,9 +1230,9 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
   //ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
   // Consolidate this occupancy grid with prev ones
-  nav_msgs::OccupancyGrid consolidated_grid;
+  nav_msgs::OccupancyGrid accumulated_grid;
   //consolidateCostmaps(half, prev_grids, consolidated_grid);
-  consolidateCostmaps(*grid, prev_grids, consolidated_grid);
+  accumulateCostmaps(*grid, prev_grids, accumulated_grid);
   
   //ROS_INFO("Finished getting consolidated_grid");
   
@@ -1245,10 +1245,10 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
   // Publish the modified costmap(s)
   //pub_half_costmap.publish(half);
-  pub_cons_costmap.publish(consolidated_grid);
+  pub_cons_costmap.publish(accumulated_grid);
 
   // Make a pointer for the modified costmap
-  boost::shared_ptr<nav_msgs::OccupancyGrid> cg_ptr = boost::make_shared<nav_msgs::OccupancyGrid>(consolidated_grid);
+  boost::shared_ptr<nav_msgs::OccupancyGrid> cg_ptr = boost::make_shared<nav_msgs::OccupancyGrid>(accumulated_grid);
   //boost::shared_ptr<nav_msgs::OccupancyGrid> cg_ptr = boost::make_shared<nav_msgs::OccupancyGrid>(half);
 
   //ROS_INFO("consolidated_grid.data.size(): %i", (int)consolidated_grid.data.size());
@@ -1674,7 +1674,7 @@ int main(int argc, char** argv)
   //Publishers
   pub_obj = handle.advertise<ramp_msgs::ObstacleList>("obstacles", 1);
   pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1);
-  pub_cons_costmap = handle.advertise<nav_msgs::OccupancyGrid>("consolidated_costmap", 1);
+  pub_cons_costmap = handle.advertise<nav_msgs::OccupancyGrid>("accumulated_costmap", 1);
   pub_half_costmap = handle.advertise<nav_msgs::OccupancyGrid>("half_costmap", 1);
 
   //Timers
