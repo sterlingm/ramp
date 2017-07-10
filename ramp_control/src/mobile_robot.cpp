@@ -241,7 +241,7 @@ void MobileRobot::sendTwist() const
   // If we have the simulation up, publish to cmd_vel
   //if(sim_) 
   //{
-    pub_cmd_vel_.publish(twist_);
+  pub_cmd_vel_.publish(twist_);
   //}
   
   //ROS_INFO("Exiting MobileRobot::sendTwist()");
