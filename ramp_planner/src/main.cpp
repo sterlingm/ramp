@@ -474,29 +474,23 @@ int main(int argc, char** argv)
 
   pubStartGoalMarkers();
   ////ROS_INFO("Done with pubStartGoalMarkers");
-
-  
-  //testSwitch();
-  //exit(1);
-  
-  //my_planner.pubMapOdom_ = ros::Duration(0.1);
-  //my_planner.pubMapOdomTimer_ = handle.createTimer(my_planner.pubMapOdom_, &Planner::pubMapOdomCb, &my_planner);
  
  
   /******* Start the planner *******/
-  std::cout<<"\nPress Enter to start the planner\n";
-  
-  std::cin.get(); 
-
   if(use_start_param)
   {
     start_planner = false;
     handle.setParam("ramp/start_planner", false);
-    //ROS_INFO("Waiting for param ramp/start_planner to be true");
+    ROS_INFO("Waiting for param ramp/start_planner to be true");
     while(!start_planner)
     {
       handle.param("ramp/start_planner", start_planner, false);
     }
+  }
+  else
+  {
+    std::cout<<"\nPress Enter to start the planner\n";
+    std::cin.get(); 
   }
   ROS_INFO("Starting Planner!");
   
