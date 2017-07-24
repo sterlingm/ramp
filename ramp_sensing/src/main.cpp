@@ -11,9 +11,9 @@
 #include "nav_msgs/OccupancyGrid.h"
 #include "map_msgs/OccupancyGridUpdate.h"
 #include "circle_packer.h"
+#include "circle_filter.h"
 #include <visualization_msgs/MarkerArray.h>
 #include "utility.h"
-#include "circle_filter.h"
 
 
 #include <bfl/filter/extendedkalmanfilter.h>
@@ -1291,6 +1291,9 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   std::vector<Circle> over;
   if(cirs.size() > 0)
   {
+    /*
+     * Redo finding the radius!
+     */
     c.combineOverlappingCircles(cirs, over);
   }
 

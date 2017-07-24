@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     ROS_INFO("model_names[%i]: %s", i, model_names[i].c_str());
   }
 
-  for(int i=0;i<2;i++)
+  for(int i=0;i<model_names.size();i++)
   {
     // Get initial state of the object
     std::string model_name = model_names[i];

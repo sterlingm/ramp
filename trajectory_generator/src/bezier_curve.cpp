@@ -7,7 +7,7 @@ BezierCurve::BezierCurve() : initialized_(false), deallocated_(false), reachedVM
   reflexxesData_.rml = 0;
   reflexxesData_.inputParameters  = 0;
   reflexxesData_.outputParameters = 0;
-  MAX_SPEED = 0.33f;
+  MAX_SPEED_LINEAR = 0.33f;
 }
 
 BezierCurve::~BezierCurve() 
@@ -44,10 +44,13 @@ void BezierCurve::dealloc() {
 
 
 
-void BezierCurve::init(const ramp_msgs::BezierCurve bi, const ramp_msgs::MotionState ms_current) 
+void BezierCurve::init(const ramp_msgs::BezierCurve bi, const ramp_msgs::MotionState ms_current, const double max_speed_linear, const double max_speed_angular) 
 {
   segmentPoints_.clear();
   controlPoints_.clear();
+
+  MAX_SPEED_LINEAR  = max_speed_linear;
+  MAX_SPEED_ANGULAR = max_speed_angular;
 
   segmentPoints_  = bi.segmentPoints;
   l_              = bi.l;
@@ -124,7 +127,7 @@ const bool BezierCurve::verify() const
 {
   ////ROS_INFO("In BezierCurve::verify()");
 
-  double v_max = MAX_SPEED;
+  double v_max = MAX_SPEED_LINEAR;
   double w_max = (2.f*PI)/3.f;
   ////ROS_INFO("v_max: %f w_max: %f", v_max, w_max);
 
@@ -285,7 +288,7 @@ const ramp_msgs::MotionState BezierCurve::getInitialState()
   
   ////ROS_INFO("ryse: %f run: %f slope: %f theta: %f l: %f", ryse, run, slope, theta, l);
 
-  double v_max = MAX_SPEED;
+  double v_max = MAX_SPEED_LINEAR;
 
   // If change in y is greater
   // no change in x
@@ -363,9 +366,9 @@ const bool BezierCurve::satisfiesConstraints(const double u_dot, const double u_
   double y_dot = ((B_*t_R_min_)+D_)*u_dot;
   double v = sqrt( pow(x_dot,2) + pow(y_dot,2) );
 
-  //////////////ROS_INFO("x_dot: %f y_dot: %f v: %f MAX_SPEED: %f", x_dot, y_dot, v, MAX_SPEED);
+  //////////////ROS_INFO("x_dot: %f y_dot: %f v: %f MAX_SPEED_LINEAR: %f", x_dot, y_dot, v, MAX_SPEED_LINEAR);
 
-  if(v > MAX_SPEED)
+  if(v > MAX_SPEED_LINEAR)
   {
     return false;
   }

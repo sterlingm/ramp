@@ -10,6 +10,8 @@ int                 id;
 MotionState         start, goal;
 std::vector<Range>  ranges;
 double              radius;
+double              max_speed_linear;
+double              max_speed_angular;
 int                 population_size;
 int                 gensBeforeCC;
 bool                sub_populations;
@@ -153,9 +155,29 @@ void loadParameters(const ros::NodeHandle handle)
   }
   else 
   {
-    //ROS_ERROR("Did not find parameters robot_info/DOF_min, robot_info/DOF_max");
+    ROS_ERROR("Did not find parameters robot_info/DOF_min, robot_info/DOF_max");
+    exit(1);
   }
 
+  if(handle.hasParam("robot_info/max_speed_linear"))
+  {
+    handle.getParam("robot_info/max_speed_linear", max_speed_linear);
+  }
+  else
+  {
+    ROS_ERROR("Did not find robot_info/max_speed_linear rosparam");
+    exit(1);
+  }
+
+  if(handle.hasParam("robot_info/max_speed_angular"))
+  {
+    handle.getParam("robot_info/max_speed_angular", max_speed_angular);
+  }
+  else
+  {
+    ROS_ERROR("Did not find robot_info/max_speed_angular rosparam");
+    exit(1);
+  }
   /*
    * Check for all costmap parameters!
    */
@@ -202,7 +224,8 @@ void loadParameters(const ros::NodeHandle handle)
   }
   else 
   {
-    //ROS_ERROR("Did not find parameters robot_info/start, robot_info/goal");
+    ROS_ERROR("Did not find parameters robot_info/start, robot_info/goal");
+    exit(1);
   }
 
 
@@ -433,6 +456,7 @@ int main(int argc, char** argv)
   }
 
   d.sleep();
+
   /*
    * Get the transform from odom to global frame
    */
@@ -452,7 +476,7 @@ int main(int argc, char** argv)
     if( start.msg_.positions[i] < ranges[i].msg_.min || start.msg_.positions[i] > ranges[i].msg_.max ||
         goal.msg_.positions[i] < ranges[i].msg_.min || goal.msg_.positions[i] > ranges[i].msg_.max )
     {
-      //ROS_ERROR("Either the Start or goal position is not within DOF ranges, exiting ramp_planner");
+      ROS_ERROR("Either the Start or goal position is not within DOF ranges, exiting ramp_planner");
       exit(1);
     }
   }
@@ -460,11 +484,9 @@ int main(int argc, char** argv)
   /*
    * All parameters are loaded
    */
-  //ROS_INFO("Parameters loaded. Please review them and press Enter to continue");
-  //std::cin.get();
  
   // Initialize the planner
-  my_planner.init(id, handle, start, goal, ranges, population_size, radius, sub_populations, global_frame, update_topic, pt, gensBeforeCC, t_pc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
+  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, global_frame, update_topic, pt, gensBeforeCC, t_pc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
   my_planner.modifications_   = modifications;
   my_planner.evaluations_     = evaluations;
   my_planner.seedPopulation_  = seedPopulation;
