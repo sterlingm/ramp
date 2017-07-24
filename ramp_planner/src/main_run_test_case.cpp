@@ -10,6 +10,8 @@ Planner             my_planner;
 int                 id;
 MotionState         start, goal;
 std::vector<Range>  ranges;
+double              max_speed_linear;
+double              max_speed_angular;
 int                 population_size;
 double              radius;
 int                 gensBeforeCC;
@@ -122,6 +124,23 @@ void loadParameters(const ros::NodeHandle handle)
     ROS_ERROR("Did not find parameters robot_info/start, robot_info/goal");
   }
 
+  if(handle.hasParam("robot_info/max_speed_linear"))
+  {
+    handle.getParam("robot_info/max_speed_linear", max_speed_linear);
+  }
+  else
+  {
+    ROS_ERROR("Did not find robot_info/max_speed_linear rosparam");
+  }
+
+  if(handle.hasParam("robot_info/max_speed_angular"))
+  {
+    handle.getParam("robot_info/max_speed_angular", max_speed_angular);
+  }
+  else
+  {
+    ROS_ERROR("Did not find robot_info/max_speed_angular rosparam");
+  }
 
 
   if(handle.hasParam("ramp/population_size")) 
@@ -496,7 +515,7 @@ int main(int argc, char** argv) {
      */
 
     /** Initialize the Planner */ 
-    my_planner.init(id, handle, start, goal, ranges, population_size, radius, sub_populations, "global_frame", "update_topic", pt, gensBeforeCC, 
+    my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, "global_frame", "update_topic", pt, gensBeforeCC, 
         t_pc_rate, t_cc_rate, errorReduction);
     my_planner.modifications_   = modifications;
     my_planner.evaluations_     = evaluations;

@@ -10,6 +10,10 @@ radius: 0.2
 DOF_min: [0,    0,  -3.14159]
 DOF_max: [3.5,   3.5,  3.14159]
 
+# Units are m/s
+max_speed_linear: 0.33
+max_speed_angular: 1.5708
+
 # relative to map
 start: [0, 0, 0.785]
 goal:  [3.5, 3.5, 0.785]

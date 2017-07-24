@@ -57,6 +57,8 @@ class Planner {
     MotionState start_;
     MotionState goal_;
     std::vector<Range> ranges_;
+    double max_speed_linear_;
+    double max_speed_angular_;
 
     // Starting motion state for planning cycle
     MotionState startPlanning_;
@@ -116,6 +118,8 @@ class Planner {
               const MotionState         s,                
               const MotionState         g, 
               const std::vector<Range>  r,                
+              const double              max_speed_linear,
+              const double              max_speed_angular,
               const int                 population_size, 
               const double              robot_radius,
               const bool                sub_populations,  
@@ -147,7 +151,6 @@ class Planner {
     
     // Modify trajectory or path
     const std::vector<Path> modifyPath();
-
     void modifyTrajec(std::vector<RampTrajectory>& result);
 
 

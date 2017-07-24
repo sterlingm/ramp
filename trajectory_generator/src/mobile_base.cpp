@@ -6,7 +6,7 @@ MobileBase::MobileBase() : planning_full_(false), i_XDOF_(0), i_THETADOF_(1)
   reflexxesData_.rml = 0;
   reflexxesData_.inputParameters = 0;
   reflexxesData_.outputParameters = 0;
-  MAX_SPEED = 0.33;
+  MAX_SPEED_LINEAR = 0.33;
 } 
 
 
@@ -61,8 +61,8 @@ void MobileBase::initReflexxes()
 
   // Set up the motion constraints (max velocity, acceleration and jerk)
   // Maximum velocity   
-  reflexxesData_.inputParameters->MaxVelocityVector->VecData[0] = MAX_SPEED * cos(PI/4.f);
-  reflexxesData_.inputParameters->MaxVelocityVector->VecData[1] = (2.f*PI)/3.f;
+  reflexxesData_.inputParameters->MaxVelocityVector->VecData[0] = MAX_SPEED_LINEAR * cos(PI/4.f);
+  reflexxesData_.inputParameters->MaxVelocityVector->VecData[1] = MAX_SPEED_ANGULAR;
   
 
   // Maximum acceleration
@@ -97,6 +97,10 @@ void MobileBase::init(const ramp_msgs::TrajectoryRequest req)
 
   // Store the path
   path_ = req.path;
+
+  // Set max speeds
+  MAX_SPEED_LINEAR  = req.max_speed_linear;
+  MAX_SPEED_ANGULAR = req.max_speed_angular;
 
   // Set print
   print_ = req.print;
@@ -721,7 +725,7 @@ void MobileBase::bezier(ramp_msgs::Path& p, bool only_curve, std::vector<BezierC
         bi.ms_begin         = p_copy.points.at(0).motionState;
         bi.l                = lambda;
 
-        bc.init(bi, path_.points.at(0).motionState);
+        bc.init(bi, path_.points.at(0).motionState, MAX_SPEED_LINEAR, MAX_SPEED_ANGULAR);
       } // end if bezierStart
 
       // If a "normal" bezier trajectory,
@@ -745,7 +749,7 @@ void MobileBase::bezier(ramp_msgs::Path& p, bool only_curve, std::vector<BezierC
 
        
 
-        bc.init(bi, path_.points.at(0).motionState);
+        bc.init(bi, path_.points.at(0).motionState, MAX_SPEED_LINEAR, MAX_SPEED_ANGULAR);
       } // end else "normal" trajectory
 
 
@@ -772,7 +776,7 @@ void MobileBase::bezier(ramp_msgs::Path& p, bool only_curve, std::vector<BezierC
 
         bc.segmentPoints_.clear();
         bc.controlPoints_.clear();
-        bc.init(bi, path_.points.at(0).motionState);
+        bc.init(bi, path_.points.at(0).motionState, MAX_SPEED_LINEAR, MAX_SPEED_ANGULAR);
        
         
         verified = bc.verify();
@@ -1577,7 +1581,7 @@ bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
     else
     {
       ////ROS_INFO("calculating x_dot and y_dot");
-      x_dot = MAX_SPEED * cos(theta);
+      x_dot = MAX_SPEED_LINEAR * cos(theta);
       y_dot = x_dot*tan(theta);
     }
     ////ROS_INFO("x_dot: %f y_dot: %f", x_dot, y_dot);

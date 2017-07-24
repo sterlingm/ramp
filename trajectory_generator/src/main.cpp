@@ -81,6 +81,7 @@ bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
       treq.segments++;
     }
 
+    // Build trajectory
     if(treq.type != PREDICTION) 
     {
       fixDuplicates(treq);

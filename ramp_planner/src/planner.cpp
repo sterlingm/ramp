@@ -1048,6 +1048,9 @@ void Planner::buildTrajectoryRequest(const Path path, const std::vector<ramp_msg
   result.path           = path.buildPathMsg();
   result.type           = population_.type_;
 
+  result.max_speed_linear   = max_speed_linear_;
+  result.max_speed_angular  = max_speed_angular_;
+
   // If path size > 2, assign a curve
   if(path.size() > 2) 
   {
@@ -1618,7 +1621,7 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
 {
   //ROS_INFO("In Planner::init");
 
@@ -1654,6 +1657,10 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
 
   // Set the ranges vector
   ranges_ = r;
+
+  // Set max speeds
+  max_speed_linear_   = max_speed_linear;
+  max_speed_angular_  = max_speed_angular;
 
   // Initialize the start and goal
   initStartGoal(s, g);

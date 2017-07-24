@@ -403,7 +403,7 @@ void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector
     j = i+1;
 
     // This gets called before converting to global coordinates 1 = 5cm = 0.05m
-    double inflate = 2.5;
+    double inflate = 0;
     double threshold = 0.;
 
     while(j<cs.size())
@@ -414,9 +414,6 @@ void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector
       Circle cj = cs[j];
       //////////ROS_INFO("cj - Center: (%f, %f) Radius: %f", cj.center.x, cj.center.y, cj.radius);
      
-      double max_r = ci.radius > cj.radius ? ci.radius : cj.radius;
-      threshold = max_r + inflate;
-
       double d = utility_.positionDistance(ci.center.x, ci.center.y, cj.center.x, cj.center.y);
       //////////ROS_INFO("d: %f threshold: %f", d, threshold);
 
@@ -433,7 +430,6 @@ void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector
         cs[i] = temp;
         ci = temp;
         cs.erase(cs.begin()+j, cs.begin()+j+1);
-        //result.erase(cs.begin()+j, cs.begin()+j+1);
 
         // Then, decrement j to get next circle for comparison
         j--;
@@ -705,13 +701,13 @@ std::vector<Circle> CirclePacker::go()
 
   // Make object
   // Ptr line works with my work machine, but I get an error about the create(params) method on my laptop
-  cv::Ptr<cv::SimpleBlobDetector> blobs_detector = cv::SimpleBlobDetector::create(params);   
-  //cv::SimpleBlobDetector blobs_detector(params);   
+  //cv::Ptr<cv::SimpleBlobDetector> blobs_detector = cv::SimpleBlobDetector::create(params);   
+  cv::SimpleBlobDetector blobs_detector(params);   
 
   // Detect blobs
   std::vector<cv::KeyPoint> keypoints;
   ros::Time t_start = ros::Time::now();
-  blobs_detector->detect(src, keypoints);
+  blobs_detector.detect(src, keypoints);
   ros::Duration d_blobs = ros::Time::now() - t_start;
   ////////ROS_INFO("d_blobs: %f", d_blobs.toSec());
 
