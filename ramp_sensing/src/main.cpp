@@ -1313,22 +1313,22 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    */
 
   /*
-   * Convert centers radii to the global frame
+   * Convert centers and radii to the global frame
    */ 
-   double x_origin = global_grid.info.origin.position.x;
-   double y_origin = global_grid.info.origin.position.y;
-   //ROS_INFO("About to convert to global coordinates, cirs.size(): %i cir_obs.size(): %i", (int)cirs.size(), (int)cir_obs.size());
-   //ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
-   for(int i=0;i<cirs.size();i++)
-   {
-     //ROS_INFO("cir_obs[%i] center: (%f,%f): ", i, cirs[i].center.x, cirs[i].center.y);
-     double x = (cirs[i].center.x * global_grid.info.resolution) + x_origin;
-     double y = (cirs[i].center.y * global_grid.info.resolution) + y_origin;
-     cirs[i].center.x = x;
-     cirs[i].center.y = y;
-     cirs[i].radius *= global_grid.info.resolution;
-     //ROS_INFO("New Point: (%f,%f) New Radius: %f ", x, y, cirs[i].radius);
-   }
+  double x_origin = global_grid.info.origin.position.x;
+  double y_origin = global_grid.info.origin.position.y;
+  //ROS_INFO("About to convert to global coordinates, cirs.size(): %i cir_obs.size(): %i", (int)cirs.size(), (int)cir_obs.size());
+  //ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
+  for(int i=0;i<cirs.size();i++)
+  {
+    //ROS_INFO("cir_obs[%i] center: (%f,%f): ", i, cirs[i].center.x, cirs[i].center.y);
+    double x = (cirs[i].center.x * global_grid.info.resolution) + x_origin;
+    double y = (cirs[i].center.y * global_grid.info.resolution) + y_origin;
+    cirs[i].center.x = x;
+    cirs[i].center.y = y;
+    cirs[i].radius *= global_grid.info.resolution;
+    //ROS_INFO("New Point: (%f,%f) New Radius: %f ", x, y, cirs[i].radius);
+  }
    
 
   /*

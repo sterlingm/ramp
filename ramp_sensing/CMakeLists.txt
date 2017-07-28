@@ -33,6 +33,10 @@ add_executable(${PROJECT_NAME} src/circle_filter.cpp src/circle_packer.cpp src/G
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBS} ${BFL_LIBRARIES})
 add_dependencies(${PROJECT_NAME} ramp_msgs_generate_messages_cpp)
 
+add_executable(hilbert_data src/main_hilbert_data.cpp)
+target_link_libraries(hilbert_data ${catkin_LIBRARIES} ${OpenCV_LIBS} ${BFL_LIBRARIES})
+add_dependencies(hilbert_data ramp_msgs_generate_messages_cpp)
+
 add_executable(pub_laser_tf src/main_laser_frame.cpp)
 target_link_libraries(pub_laser_tf ${catkin_LIBRARIES})
 
