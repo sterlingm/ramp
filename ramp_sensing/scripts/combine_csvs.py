@@ -20,12 +20,11 @@ def main():
 
     # Get all files in directory
     files = \
-    os.listdir('/home/sterlingm/ros_workspace/src/ramp/ramp_sensing/occ_map_data')
+    os.listdir('/home/sterlingm/ros_workspace/src/ramp/ramp_sensing/data/occ_map_data')
     print files
 
     f_result = \
-    open('/home/sterlingm/ros_workspace/src/ramp/ramp_sensing/occ_map_data.csv', 
-            'w')
+    open('/home/sterlingm/ros_workspace/src/ramp/ramp_sensing/data/occ_map_data/all.csv', 'w')
 
     # Persist the time step value through the files
     timeStep = 0
@@ -34,8 +33,8 @@ def main():
     # Go through each file
     for i,fname in enumerate(files):
         p = \
-        os.path.join('/home/sterlingm/ros_workspace/src/ramp/ramp_sensing/occ_map_data', 
-                fname)
+        os.path.join('/home/sterlingm/ros_workspace/src/ramp/ramp_sensing/data/occ_map_data', fname)
+        print p
         f = open(p, 'r')
 
         # Get the lines
@@ -87,8 +86,7 @@ def main():
 
     # Open the file again to get the total number of lines
     f_result = \
-    open('/home/sterlingm/ros_workspace/src/ramp/ramp_sensing/occ_map_data.csv', 
-            'r')
+    open('/home/sterlingm/ros_workspace/src/ramp/ramp_sensing/data/occ_map_data/all.csv', 'r')
     
     # Get total number of lines
     lines = f_result.read().split('\n')
