@@ -1,7 +1,7 @@
 #include "modifier.h"
 
 
-Modifier::Modifier(const ros::NodeHandle& h, const unsigned int n) : num_ops(n), move_dir_(101), move_dist_(101)
+Modifier::Modifier(const ros::NodeHandle& h, const unsigned int n) : num_ops(n), move_dir_(0), move_dist_(101), move_ob_r_(0.5)
 {
   h_mod_req_ = new ModificationRequestHandler(h);
 }
@@ -69,10 +69,10 @@ const std::string Modifier::getOperator() const
 const std::vector<int> Modifier::getTargets(const std::string& op, const Population& pop) 
 {
   //ROS_INFO("In Modifier::getTargets");
-  //////ROS_INFO("pop.paths_.size(): %i", (int)pop.paths_.size());
-  //////ROS_INFO("pop.trajec.size(): %i", (int)pop.trajectories_.size());
-  //////ROS_INFO("Pop: %s", pop.toString().c_str());
-  //////ROS_INFO("op: %s", op.c_str());
+  ////////ROS_INFO("pop.paths_.size(): %i", (int)pop.paths_.size());
+  ////////ROS_INFO("pop.trajec.size(): %i", (int)pop.trajectories_.size());
+  ////////ROS_INFO("Pop: %s", pop.toString().c_str());
+  //ROS_INFO("op: %s", op.c_str());
   std::vector<int> result;
 
   // Get random path(s) to modify
@@ -112,19 +112,19 @@ void Modifier::buildModificationRequest(const Population& pop, bool imminent_col
 
   if(!imminent_collision || (move_dist_ > 100 && move_dir_ > 100))
   {
-    ////ROS_INFO("Modifier: No IC");
+    //////ROS_INFO("Modifier: No IC");
     result.request.op = getOperator();
     targets           = getTargets(result.request.op, pop);
   }
   else
   {
-    ////ROS_INFO("Modifier: Calling Move because IC exists");
+    //ROS_INFO("Modifier: Calling Move because IC exists");
     result.request.op = "move";
     targets.push_back(pop.calcBestIndex());  
   }
 
 
-  //////ROS_INFO("targets.size(): %i", (int)targets.size());
+  ////////ROS_INFO("targets.size(): %i", (int)targets.size());
   for(unsigned int i=0;i<targets.size();i++) 
   {
     //std::cout<<"\nTarget index: "<<targets.at(i);
@@ -133,9 +133,11 @@ void Modifier::buildModificationRequest(const Population& pop, bool imminent_col
         pop.paths_.at(targets.at(i)).buildPathMsg());
   }
 
-  result.request.move_dir = move_dir_;
-  result.request.move_dist = move_dist_;
+  //ROS_INFO("move_dir_: %f move_dist: %f move_ob_r_: %f", move_dir_, move_dist_, move_ob_r_);
 
+  result.request.move_dir   = move_dir_;
+  result.request.move_dist  = move_dist_;
+  result.request.move_ob_r  = move_ob_r_;
 } // End buildModificationRequest
 
 
@@ -144,20 +146,18 @@ void Modifier::buildModificationRequest(const Population& pop, bool imminent_col
 /** This method performs all the tasks for path modification */
 const std::vector<Path> Modifier::perform(const Population& pop, bool imminent_collision) 
 {
-  //////ROS_INFO("In Modifier::perform");
+  //ROS_INFO("In Modifier::perform");
   std::vector<Path> result;
  
   // Build a modification request srv 
   ros::Time t_b = ros::Time::now();
   ramp_msgs::ModificationRequest mr;
   buildModificationRequest(pop, imminent_collision, mr); 
-  //////ROS_INFO("ModificationResult built, pop size: %i # of paths: %i", (int)pop.size(), (int)mr.response.mod_paths.size()); 
+  ////ROS_INFO("ModificationResult built, pop size: %i # of paths: %i", (int)pop.size(), (int)mr.response.mod_paths.size()); 
 
-  //////ROS_INFO("Requesting modification");
   // If the request was successful
   if(h_mod_req_->request(mr)) 
   {
-    //////ROS_INFO("Got modification");
     ros::Time t_m = ros::Time::now();
     
     // Push on the modified paths
@@ -168,6 +168,6 @@ const std::vector<Path> Modifier::perform(const Population& pop, bool imminent_c
     }
   } // end inner if 
 
-  //////ROS_INFO("Exiting Modifier::perform");
+  //ROS_INFO("Exiting Modifier::perform");
   return result;
 }

@@ -18,6 +18,17 @@ const double Utility::positionDistance(const std::vector<double> a, const std::v
   return sqrt( pow(d_x,2) + pow(d_y,2) );
 } // End euclideanDistance
 
+const double Utility::positionDistance(const double ax, const double ay, const double bx, const double by) const
+{
+  std::vector<double> a, b;
+
+  a.push_back(ax);
+  a.push_back(ay);
+  b.push_back(bx);
+  b.push_back(by);
+
+  return positionDistance(a, b);
+}
 
 /** This method returns the angle that will form a straight line from position a to position b. a and b are [x, y] vectors. */
 const double Utility::findAngleFromAToB(const std::vector<double> a, const std::vector<double> b) const 
@@ -97,6 +108,17 @@ const double Utility::findDistanceBetweenAngles(const double a1, const double a2
 } // End findDistanceBetweenAngles
 
 
+const double Utility::findAngleBetweenAngles(const double a1, const double a2) const
+{
+  double result;
+
+  double delta_theta = findDistanceBetweenAngles(a1, a2);
+
+  // Displace a1
+  result = displaceAngle(a1, delta_theta/2.);
+
+  return result;
+}
 
 const double Utility::displaceAngle(const double a1, double a2) const {
 
@@ -111,6 +133,10 @@ const double Utility::displaceAngle(const double a1, double a2) const {
 } // End displaceAngle
 
 
+bool Utility::compareCircleMatches(const CircleMatch& a, const CircleMatch& b)
+{
+  return a.dist < b.dist;
+}
 
 
 const std::string Utility::toString(const ramp_msgs::Path path) const {

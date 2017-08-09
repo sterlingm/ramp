@@ -11,10 +11,10 @@ class Change {
     const ramp_msgs::Path perform();
 
     ramp_msgs::Path path_;
+    Utility utility_;
 
   private:
     Constraints checkConstraints_;
-    Utility utility_;
 };
 
 #endif

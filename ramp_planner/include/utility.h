@@ -15,8 +15,14 @@
 #include "ramp_msgs/Path.h"
 #include "ramp_msgs/ObstacleList.h"
 #include "std_msgs/Bool.h"
+#include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include <tf/transform_datatypes.h>
+#include <tf/transform_listener.h>
 #include <ros/console.h>
+
+/*
+ * Change this class to a singleton pattern
+ */
 
 #define PI 3.14159f
 

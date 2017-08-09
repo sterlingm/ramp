@@ -22,7 +22,7 @@ void fixDuplicates(ramp_msgs::TrajectoryRequest& req)
 
     if(utility.positionDistance(a.positions, b.positions) < 0.01)
     {
-      /*ROS_WARN("Consecutive duplicate knot points in path:\nPath[%i]:\n%s\nand\nPath[%i]\n%s\nRemoving knot point at 
+      /*//ROS_WARN("Consecutive duplicate knot points in path:\nPath[%i]:\n%s\nand\nPath[%i]\n%s\nRemoving knot point at 
           index %i", i+1,
           utility.toString(a).c_str(),
           i+1,
@@ -81,6 +81,7 @@ bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
       treq.segments++;
     }
 
+    // Build trajectory
     if(treq.type != PREDICTION) 
     {
       fixDuplicates(treq);
@@ -88,29 +89,30 @@ bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
       MobileBase mobileBase;
       if(!mobileBase.trajectoryRequest(treq, tres))
       {
-        res.error = true;
+        tres.error = true;
       }
 
       tres.trajectory.holonomic_path = treq.path;
     }
     else if(treq.path.points.size() > 0) 
     {
-      //ROS_INFO("In prediction");
+      ////ROS_INFO("In prediction");
       Prediction prediction;
       prediction.trajectoryRequest(treq, tres);
     }
 
     if( tres.trajectory.i_knotPoints[0] == tres.trajectory.i_knotPoints[1] )
     {
-      //ROS_WARN("First two knot points are equal!");
+      ////ROS_WARN("First two knot points are equal!");
     }
     //ROS_INFO("Response: %s", utility.toString(tres).c_str());
-  
+    
+    
     res.resps.push_back(tres);
   }
 
   ros::Time t_end = ros::Time::now();
-  //ROS_INFO("t_end: %f", (t_end-t_start).toSec());
+  ////ROS_INFO("t_end: %f", (t_end-t_start).toSec());
   return true;
 }
 
@@ -118,7 +120,7 @@ bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
  //Main function
 int main(int argc, char** argv) {
 
-  // Initialize the ROS node 
+  // Initialize the //ROS node 
   ros::init(argc, argv, "reflexxes");
   ros::NodeHandle n;
 
@@ -131,8 +133,10 @@ int main(int argc, char** argv) {
 
   ros::AsyncSpinner spinner(8);
   spinner.start();
-  ROS_INFO("Spinning ...");
+  //ROS_INFO("Spinning ...");
   ros::waitForShutdown();
+
+  ros::shutdown();
 
   return 0; 
 }

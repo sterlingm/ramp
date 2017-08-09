@@ -4,4 +4,5 @@
 
 <rosparam file="$(find ramp_launch)/launch/config/robot_0.yaml" command="load" ns="robot_info/" />
 
+
 </launch>

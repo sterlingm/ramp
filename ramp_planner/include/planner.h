@@ -10,9 +10,12 @@
 #include "modifier.h"
 #include "population.h"
 #include "control_handler.h"
+#include "rviz_handler.h"
 #include "parameter_handler.h"
 #include "bezier_curve.h"
 #include <type_traits>
+#include <tf/transform_broadcaster.h>
+
 
 struct ModificationResult 
 {
@@ -54,6 +57,8 @@ class Planner {
     MotionState start_;
     MotionState goal_;
     std::vector<Range> ranges_;
+    double max_speed_linear_;
+    double max_speed_angular_;
 
     // Starting motion state for planning cycle
     MotionState startPlanning_;
@@ -81,6 +86,10 @@ class Planner {
     ros::Timer imminentCollisionTimer_;
     ros::Duration imminentCollisionCycle_;
    
+    // Publishing p=map c=odom
+    ros::Timer pubMapOdomTimer_;
+    ros::Duration pubMapOdom_;
+    void pubMapOdomCb(const ros::TimerEvent& e);
     
     // Robot ID
     int id_;
@@ -109,20 +118,32 @@ class Planner {
               const MotionState         s,                
               const MotionState         g, 
               const std::vector<Range>  r,                
+              const double              max_speed_linear,
+              const double              max_speed_angular,
               const int                 population_size, 
+              const double              robot_radius,
               const bool                sub_populations,  
+              const std::string         global_frame,
+              const std::string         update_topic,
               const TrajectoryType      pop_type=HYBRID,
               const int                 gens_before_cc=0,
               const double              t_pc_rate=2.,
               const double              t_fixed_cc=2.,
+              const bool                only_sensing=0,
+              const bool                moving_robot=1,
               const bool                errorReduction=0);
     
     // Send the best trajectory to the control package
     void sendBest();
     
     // Send the whole population to the trajectory viewer
-    void sendPopulation(const Population& pop) const;
+    ros::Duration sendPop_;
+    ros::Timer sendPopTimer_;
+    ros::Time t_prevSendPop_;
+    void sendPopulationCb(const ros::TimerEvent& t);
+    void sendPopulation();
     void displayTrajectory(const ramp_msgs::RampTrajectory traj) const;
+    void buildLineList(const RampTrajectory& trajec, int id, visualization_msgs::Marker& result) const;
 
     // Evaluate the population 
     void evaluateTrajectory(RampTrajectory& t, bool full=true) const;
@@ -130,7 +151,6 @@ class Planner {
     
     // Modify trajectory or path
     const std::vector<Path> modifyPath();
-
     void modifyTrajec(std::vector<RampTrajectory>& result);
 
 
@@ -205,6 +225,7 @@ class Planner {
     const std::vector<MotionState> setMi(const RampTrajectory& trj_current) const;
 
     std::vector<RampTrajectory> ob_trajectory_;
+    std::vector<double> ob_radii_;
 
 
     const MotionType findMotionType(const ramp_msgs::Obstacle ob) const;
@@ -212,7 +233,8 @@ class Planner {
     const ramp_msgs::Path getObstaclePath(const ramp_msgs::Obstacle ob, const MotionType mt) const;
     
     void sensingCycleCallback     (const ramp_msgs::ObstacleList& msg);
-    void updateCallback(const ramp_msgs::MotionState& msg);
+    void updateCbPose(const geometry_msgs::PoseWithCovarianceStamped msg);
+    void updateCbControlNode(const ramp_msgs::MotionState& msg);
 
     /** Data */
 
@@ -425,6 +447,7 @@ class Planner {
     TrajectoryRequestHandler*   h_traj_req_;
     EvaluationRequestHandler*   h_eval_req_;
     ControlHandler*             h_control_;
+    RvizHandler*                h_rviz_;
     Modifier*                   modifier_;
 
     // Parameter handler
@@ -482,6 +505,23 @@ class Planner {
     bool log_switching_;
     int num_mods_;
     int num_succ_mods_;
+
+    double robot_radius_;
+
+    bool only_sensing_;
+    bool moving_robot_;
+    int id_line_list_;
+
+    std::string global_frame_;
+    std::string update_topic_;
+    
+    // Using a TransformListener is too inconsistent to rely on
+    // because sometimes the tfs are there, sometimes it gives me the
+    // "have to extrapolate future data" error, so instead 
+    // store a transform and manually apply it since the tf is static
+    tf::StampedTransform tf_global_costmap_;
+    tf::StampedTransform tf_global_odom_;
+    tf::StampedTransform tf_global_odom_rot_;
 };
 
 #endif

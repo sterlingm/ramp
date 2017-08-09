@@ -10,7 +10,10 @@ Planner             my_planner;
 int                 id;
 MotionState         start, goal;
 std::vector<Range>  ranges;
+double              max_speed_linear;
+double              max_speed_angular;
 int                 population_size;
+double              radius;
 int                 gensBeforeCC;
 bool                sub_populations;
 bool                modifications;
@@ -80,6 +83,15 @@ void loadParameters(const ros::NodeHandle handle)
     ROS_ERROR("Did not find parameter robot_info/id");
   }
 
+  // Get the radius of the robot
+  if(handle.hasParam("robot_info/radius")) 
+  {
+    handle.getParam("robot_info/radius", radius);
+  }
+  else 
+  {
+    ROS_ERROR("Did not find parameter robot_info/radius");
+  }
 
   // Get the dofs
   if(handle.hasParam("robot_info/DOF_min") && 
@@ -112,6 +124,23 @@ void loadParameters(const ros::NodeHandle handle)
     ROS_ERROR("Did not find parameters robot_info/start, robot_info/goal");
   }
 
+  if(handle.hasParam("robot_info/max_speed_linear"))
+  {
+    handle.getParam("robot_info/max_speed_linear", max_speed_linear);
+  }
+  else
+  {
+    ROS_ERROR("Did not find robot_info/max_speed_linear rosparam");
+  }
+
+  if(handle.hasParam("robot_info/max_speed_angular"))
+  {
+    handle.getParam("robot_info/max_speed_angular", max_speed_angular);
+  }
+  else
+  {
+    ROS_ERROR("Did not find robot_info/max_speed_angular rosparam");
+  }
 
 
   if(handle.hasParam("ramp/population_size")) 
@@ -424,7 +453,7 @@ int main(int argc, char** argv) {
   ros::Rate r(100);
   
   ros::Subscriber sub_sc_     = handle.subscribe("obstacles", 1, &Planner::sensingCycleCallback,  &my_planner);
-  ros::Subscriber sub_update_ = handle.subscribe("update",    1, &Planner::updateCallback,        &my_planner);
+  ros::Subscriber sub_update_ = handle.subscribe("update",    1, &Planner::updateCbControlNode,        &my_planner);
 
   ros::ServiceClient client_reset = handle.serviceClient<std_srvs::Empty>("reset_positions");
   std_srvs::Empty reset_srv;
@@ -486,7 +515,7 @@ int main(int argc, char** argv) {
      */
 
     /** Initialize the Planner */ 
-    my_planner.init(id, handle, start, goal, ranges, population_size, sub_populations, pt, gensBeforeCC, 
+    my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, "global_frame", "update_topic", pt, gensBeforeCC, 
         t_pc_rate, t_cc_rate, errorReduction);
     my_planner.modifications_   = modifications;
     my_planner.evaluations_     = evaluations;

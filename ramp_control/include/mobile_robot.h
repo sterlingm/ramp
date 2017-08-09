@@ -8,6 +8,8 @@
 #include "tf/transform_datatypes.h"
 #include "ramp_msgs/MotionState.h"
 #include "std_msgs/Bool.h"
+#include <tf/transform_datatypes.h>
+#include <tf/transform_listener.h>
 #include <math.h>
 
 class MobileRobot
@@ -57,6 +59,11 @@ class MobileRobot
   
   std::vector<ros::Duration> t_points_;
   ros::Time t_prev_traj_;
+
+
+
+  tf::StampedTransform tf_global_odom_;
+  double tf_rot_;
 
   private:
 

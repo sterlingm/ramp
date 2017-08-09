@@ -19,6 +19,7 @@ class Modifier {
     unsigned int num_ops;
     double move_dir_;
     double move_dist_;
+    double move_ob_r_;
 
   private:
     const std::string getOperator() const;

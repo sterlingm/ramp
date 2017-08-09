@@ -1,67 +1,17 @@
 #ifndef CIRCLE_PACKER
 #define CIRCLE_PACKER
 #include "utility.h"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
 #include "GridMap2D.h"
 #include <nav_msgs/OccupancyGrid.h>
 #include <queue>
 #include <visualization_msgs/Marker.h>
-
-struct Edge
-{
-  cv::Point start;
-  cv::Point end;
-};
-
-struct Normal
-{
-  double a, b, c;
-};
-
-struct Triangle
-{
-  std::vector<Edge> edges;
-};
-
-
-struct Polygon
-{
-  std::vector<Edge> edges;
-  std::vector<Normal> normals;
-};
-
-struct Cell
-{
-  cv::Point p;
-  double dist;
-};
-
-struct Point
-{
-  double x;
-  double y;
-};
-
-struct Circle
-{
-  Point center;
-  double radius;
-};
-
-struct CompareDist
-{
-  bool operator()(const Cell& c1, const Cell& c2)
-  {
-    return c1.dist < c2.dist;
-  }
-};
 
 
 class CirclePacker 
 {
   public:
     CirclePacker(nav_msgs::OccupancyGridConstPtr);
+    CirclePacker(nav_msgs::OccupancyGrid);
     ~CirclePacker();
 
     void convertOGtoMat(nav_msgs::OccupancyGridConstPtr);
@@ -74,21 +24,32 @@ class CirclePacker
     Normal computeNormal(Edge);
     bool cellInPoly(Polygon, cv::Point);
 
-    visualization_msgs::Marker getMarkerForCircle(const Circle c) const;
-    std::vector<visualization_msgs::Marker> getMarkers(const std::vector<Circle> cirs) const;
+    void combineTwoCircles(const Circle a, const Circle b, Circle& result) const;
+    void combineOverlappingCircles(std::vector<Circle> cs, std::vector<Circle>& result) const;
+
+
+    Point findCenterOfPixels(const std::vector<cv::Point> pixels) const;
+    std::vector<double> getWeights(const std::vector<cv::Point> pixels, const Point center) const;
     
     std::vector<Circle> getCirclesFromPoly(Polygon);
     std::vector<Circle> getCirclesFromEdgeSets(const std::vector< std::vector<Edge> > edge_sets);
     std::vector<Circle> getCirclesFromEdges(const std::vector<Edge> edges, const cv::Point robot_cen);
+
     
     std::vector<Triangle> triangulatePolygon(const Polygon&);
 
+    Circle getCircleFromKeypoint(const cv::KeyPoint k) const;
     std::vector<Circle> go();
+    std::vector<Circle> goCorners();
+    std::vector<Circle> goHough();
+    std::vector<Circle> goMinEncCir();
+    std::vector<Circle> goMyBlobs();
+    std::vector<cv::RotatedRect> goEllipse();
   private:
 
     Utility utility_;
 
-    cv::Mat src, src_gray;
+    cv::Mat src;
     cv::Mat dst, detected_edges;
 
     nav_msgs::OccupancyGrid grid_;
@@ -102,6 +63,7 @@ class CirclePacker
     int kernel_size = 3;
     std::string window_name = "Edge Map";
 
+    double obSizeThreshold = 3.0; // res = 5cm
 };
 
 #endif
