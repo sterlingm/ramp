@@ -7,11 +7,14 @@
 #include "utility.h"
 #include "circle_packer.h"
 
+
+
 class Obstacle 
 {
   public:
     Obstacle();
     Obstacle(const nav_msgs::Odometry p);
+    Obstacle(float radius, int costmap_width, int costmap_height, float costmap_origin_x, float costmap_origin_y, float costmap_res, float global_grid_origin_x, float global_grid_origin_y);
     ~Obstacle(); 
 
     /** Data Members */
@@ -34,11 +37,22 @@ class Obstacle
 
     void update(const nav_msgs::Odometry o);
 
-    void update(const Circle c);
+    void update(const Circle c, const Velocity& v, const double theta);
 
-    void doTF();
+    void doTF(bool odom=true);
 
   private:
+    int costmap_width_;
+    int costmap_height_;
+    float costmap_origin_x_;
+    float costmap_origin_y_;
+    float costmap_res_;
+    float x_translate_costmap_;
+    float y_translate_costmap_;
+    float global_grid_origin_x_;
+    float global_grid_origin_y_;
+    float radius_;
+
     Utility utility_;
 };
 

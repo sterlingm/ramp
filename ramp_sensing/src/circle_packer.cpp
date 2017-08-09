@@ -4,41 +4,50 @@
 
 CirclePacker::CirclePacker(nav_msgs::OccupancyGridConstPtr g)
 {
-  //ROS_INFO("In CirclePacker::CirclePacker()");
   grid_ = *g;
   convertOGtoMat(g);
 }
 
-CirclePacker::~CirclePacker() {}
+CirclePacker::~CirclePacker() 
+{
+  src.release();
+  detected_edges.release();
+  dst.release();
+}
+
+
+
+
+
+
+
+
+
 
 void CirclePacker::convertOGtoMat(nav_msgs::OccupancyGridConstPtr g)
 {
-  //ROS_INFO("In CirclePacker::convertOGtoMat");
+  ////ROS_INFO("In CirclePacker::convertOGtoMat");
 
   
   // Use the GridMap2D library to convert from nav_msgs::OccupancyGrid to cv::Mat
   gridmap_2d::GridMap2D gmap(g, false);
+  ////ROS_INFO("Done with making GridMap2D");
 
-  // Create a window
-  //cv::namedWindow("testing", CV_WINDOW_AUTOSIZE);
-
+  // Set src
   src = gmap.binaryMap();
-
-  // Show the image
-  //cv::imshow("testing", src);
-
-  // PRESS ESC TO BEFORE CLOSING WINDOW, OTHERWISE THE PROGRAM WILL HANG
-  //cv::waitKey(0);
+  ////ROS_INFO("Done calling gmap.binaryMap()");
+  
+  ////ROS_INFO("Exiting CirclePacker::convertOGtoMat");
 }
 
 void CirclePacker::CannyThreshold(int, void*)
 {
   /// Reduce noise with a kernel 3x3
   blur( src, detected_edges, cv::Size(3,3) );
+  
+  imshow("after blur src", detected_edges);
+  cv::waitKey(0);
 
-  //std::cout<<"\nDetected Edges: "<<detected_edges;
-  //ROS_INFO("detected_edges type: %i", detected_edges.type());
-  //ROS_INFO("lowThreshold: %i", lowThreshold);
 
   // Somehow, lowThreshold is being converted to unsigned int before this point
   // its value is 32767 (-1 for unsigned 4-byte int)
@@ -56,7 +65,7 @@ void CirclePacker::CannyThreshold(int, void*)
   src.copyTo( dst, detected_edges);
   //cv::imshow("detected_edges", dst);
   //cv::waitKey(0);
-  //imshow( window_name, dst );
+  imshow( window_name, dst );
 }
 
 double CirclePacker::getMinDistToPoly(const Polygon& poly, const Cell& cell)
@@ -177,6 +186,7 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)
     vertices.push_back(poly.edges[i].end);
   }
   
+  // Find minimum and maximum x and y
   double MAX_LENGTH= vertices[0].y;
   double MAX_WIDTH = vertices[0].x;
   double MIN_LENGTH= vertices[0].y;
@@ -203,8 +213,12 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)
   }
 
   double round = 1;
+
+  // Find number of cells in both directions
   int width_count = (MAX_WIDTH - MIN_WIDTH) / round;
   int length_count = (MAX_LENGTH - MIN_LENGTH) / round;
+
+  // Start from the center
   double start_x = MIN_WIDTH + round/2.f;
   double start_y = MIN_LENGTH + round/2.f;
 
@@ -346,68 +360,174 @@ std::vector<Triangle> CirclePacker::triangulatePolygon(const Polygon& poly)
 }
 
 
-visualization_msgs::Marker CirclePacker::getMarkerForCircle(const Circle c) const
+void CirclePacker::combineTwoCircles(const Circle a, const Circle b, Circle& result) const
 {
-  visualization_msgs::Marker result;
+  // Get the midpoint between the arcles
+  std::vector<double> vec, midpoint;
+  vec.push_back( b.center.x - a.center.x );
+  vec.push_back( b.center.y - a.center.y );
 
-  result.header.stamp = ros::Time::now();
-  result.header.frame_id = "/base_footprint";
-  result.ns = "basic_shapes";
-  result.id = 0;
-  
-  result.type = visualization_msgs::Marker::SPHERE;
-  result.action = visualization_msgs::Marker::ADD;
-  result.pose.position.x = c.center.x;
-  result.pose.position.y = c.center.y;
-  result.pose.position.z = 0;
-  result.pose.orientation.x = 0.0;
-  result.pose.orientation.y = 0.0;
-  result.pose.orientation.z = 0.0;
-  result.pose.orientation.w = 1.0;
-  result.scale.x = c.radius*2.f;
-  result.scale.y = c.radius*2.f;
-  result.scale.z = 0.01;
-  result.color.r = 0;
-  result.color.g = 1;
-  result.color.b = 0;
-  result.color.a = 1;
-  result.lifetime = ros::Duration();
+  ////////ROS_INFO("vec: [%f, %f]", vec[0], vec[1]);
 
-  return result;
+  midpoint.push_back( a.center.x + (0.5*vec[0]) ); 
+  midpoint.push_back( a.center.y + (0.5*vec[1]) ); 
+
+  ////////ROS_INFO("midpoint: (%f, %f)", midpoint[0], midpoint[1]);
+
+  // Get the distance from the midpoint to each center
+  double d_mid_i = utility_.positionDistance(midpoint[0], midpoint[1], a.center.x, a.center.y);
+  double d_mid_ii = utility_.positionDistance(midpoint[0], midpoint[1], b.center.x, b.center.y);
+
+  double R = d_mid_i > d_mid_ii ? d_mid_i+a.radius : d_mid_ii+b.radius;
+
+  ////////ROS_INFO("d_mid_i: %f d_mid_ii: %f R: %f", d_mid_i, d_mid_ii, R);
+
+  result.center.x = midpoint[0];
+  result.center.y = midpoint[1];
+  result.radius = R;
 }
 
 
-
-std::vector<visualization_msgs::Marker> CirclePacker::getMarkers(const std::vector<Circle> cirs) const
+// result is a final list of circles: contains both the combined ones and the ones that were not combined
+void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector<Circle>& result) const
 {
-  std::vector<visualization_msgs::Marker> result;
+  ////////ROS_INFO("In combineOverlappingCircles");
+  int pairs, i=0, j=0;
 
-  for(int i=0;i<cirs.size();i++)
+  while(i<cs.size()-1)
   {
-    result.push_back(getMarkerForCircle(cirs[i]));
+    //////////ROS_INFO("i: %i", i);
+    Circle ci = cs[i];
+    //////////ROS_INFO("ci - Center: (%f, %f) Radius: %f", ci.center.x, ci.center.y, ci.radius);
+    
+    j = i+1;
+
+    // This gets called before converting to global coordinates 1 = 5cm = 0.05m
+    double inflate = 0;
+    double threshold = 0.;
+
+    while(j<cs.size())
+    {
+      //////////ROS_INFO("j: %i", j);
+
+      // Check if they overlap
+      Circle cj = cs[j];
+      //////////ROS_INFO("cj - Center: (%f, %f) Radius: %f", cj.center.x, cj.center.y, cj.radius);
+     
+      double d = utility_.positionDistance(ci.center.x, ci.center.y, cj.center.x, cj.center.y);
+      //////////ROS_INFO("d: %f threshold: %f", d, threshold);
+
+      if(d < threshold)
+      {
+        // Combine them
+        Circle temp;
+        combineTwoCircles(ci, cj, temp);
+        //////////ROS_INFO("Result - Center: (%f, %f) Radius: %f", temp.center.x, temp.center.y, temp.radius);
+
+        // If combined, replace both circles with overlapping circle
+        // Replace i by setting it to temp, erase the circle at j
+        result.push_back(temp);
+        cs[i] = temp;
+        ci = temp;
+        cs.erase(cs.begin()+j, cs.begin()+j+1);
+
+        // Then, decrement j to get next circle for comparison
+        j--;
+      }
+
+      j++;
+    } // end inner while
+
+    i++;
+  } // end outter while
+
+  result = cs;
+} // End combineOverlappingCircles
+
+
+
+
+Point CirclePacker::findCenterOfPixels(const std::vector<cv::Point> pixels) const
+{
+  Point result;
+  if(pixels.size() > 0)
+  {
+    int x_min = pixels[0].x, y_min = pixels[0].y, x_max = x_min, y_max = y_min;
+
+    for(int i=1;i<pixels.size();i++)
+    {
+      if(pixels[i].x < x_min)
+      {
+        x_min = pixels[i].x;
+      }
+      if(pixels[i].x > x_max)
+      {
+        x_max = pixels[i].x;
+      }
+      if(pixels[i].y < y_min)
+      {
+        y_min = pixels[i].y;
+      }
+      if(pixels[i].y > y_max)
+      {
+        y_max = pixels[i].y;
+      }
+    }
+  
+    result.x = (x_min + x_max) / 2.f;
+    result.y = (y_min + y_max) / 2.f;
   }
 
   return result;
 }
 
+std::vector<double> CirclePacker::getWeights(const std::vector<cv::Point> pixels, const Point center) const
+{
+  std::vector<double> result;
+
+  int weight = 2;
+
+  for(int i=0;i<pixels.size();i++)
+  {
+    double dist = utility_.positionDistance(pixels[i].x, pixels[i].y, center.x, center.y);
+
+    result.push_back(weight * dist); 
+  }
+
+  return result;
+}
 
 std::vector<Circle> CirclePacker::getCirclesFromEdgeSets(const std::vector< std::vector<Edge> > edge_sets)
 {
   std::vector<Circle> result;
+  //////////ROS_INFO("In CirclePacker::getCirclesFromEdgeSets");
 
-  //ROS_INFO("In CirclePacker::getCirclesFromEdgeSets");
+ 
+  std::vector<Point> means;
 
+  // For each edge set (i.e. polygon)
   for(int i=0;i<edge_sets.size();i++)
   {
-    //ROS_INFO("Edge set %i", i);
+    ////////ROS_INFO("Edge set %i", i);
+      
+    Point temp_center;
+  
     // For each set of edges, find the minimum and maximum values for x and y
+    // Find the mean of x and y
     int x_min = edge_sets[i][0].start.x, 
-        y_min = edge_sets[i][0].start.y, 
-        x_max = x_min, 
-        y_max = y_min;
+    y_min = edge_sets[i][0].start.y, 
+    x_max = x_min, 
+    y_max = y_min; 
+    int x_mean = edge_sets[i][0].start.x;
+    int y_mean = edge_sets[i][0].start.y;
     for(int j=1;j<edge_sets[i].size();j++)
     {
-      //ROS_INFO("\tEdge %i - start: (%i,%i) end: (%i,%i)", j, edge_sets[i][j].start.y, edge_sets[i][j].start.x, edge_sets[i][j].end.y, edge_sets[i][j].end.x);
+      x_mean += edge_sets[i][j].start.x;
+      y_mean += edge_sets[i][j].start.y;
+
+      ////////ROS_INFO("\tEdge %i - start: (%i,%i) end: (%i,%i)", j, edge_sets[i][j].start.y, edge_sets[i][j].start.x, edge_sets[i][j].end.y, edge_sets[i][j].end.x);
+
+      // Get the minimum and maximum x and y values to compute the circle's radius
       if( edge_sets[i][j].start.x < x_min )
       {
         x_min = edge_sets[i][j].start.x;
@@ -423,37 +543,59 @@ std::vector<Circle> CirclePacker::getCirclesFromEdgeSets(const std::vector< std:
       if( edge_sets[i][j].start.y > y_max )
       {
         y_max = edge_sets[i][j].start.y;
-      } 
+      }
     } // end inner for
 
-    //ROS_INFO("\tx_min: %i x_max: %i y_min: %i y_max: %i", x_min, x_max, y_min, y_max);
+    x_mean /= edge_sets[i].size();
+    y_mean /= edge_sets[i].size();
+
+    // Swap x and y
+    temp_center.x = y_mean;
+    temp_center.y = x_mean;
+    means.push_back(temp_center);
+    
+    // For each edge set, build a Data object
+    /*Data d(edge_sets[i].size(), X.data(), Y.data());
+    CircleFit cf = CircleFitFitByTaubin(d);
+    cf.print();
+
+    CircleFit out;
+    CircleFitByLevenbergMarquardtFull(d, cf, 0.1, out);
+    out.print();*/
+    
+
+    //////////ROS_INFO("\tx_min: %i x_max: %i y_min: %i y_max: %i", x_min, x_max, y_min, y_max);
 
     // Get difference between min+max for both x and y
     double x_diff = fabs(x_max - x_min);
     double y_diff = fabs(y_max - y_min);
 
-    //ROS_INFO("\tx_diff: %f y_diff: %f", x_diff, y_diff);
+    //////////ROS_INFO("\tx_diff: %f y_diff: %f", x_diff, y_diff);
 
     // Set radius to half of the largest difference (half because difference would be diameter)
     double r = x_diff > y_diff ? x_diff/2.f : y_diff/2.f;
 
-    // Find approximate center 
-    // FLIP X AND Y!!
-    Point cen; 
-    cen.x = (y_max + y_min) / 2.f;
-    cen.y = (x_max + x_min) / 2.f;
-
-    // Translate the center by 0.075cm in both directions
-    cen.x+=1.5;
-    cen.y+=1.5;
-
-    //ROS_INFO("\tCenter: (%f,%f) Radius: %f", cen.x, cen.y, r);
+    /*  
+     * Find approximate center by taking half of min and max in both directions
+     */
+    //****************************************************************************
+    // FLIP/SWAP X AND Y!!
+    // This is necessary because when Gridmap converts between
+    // a costmap and a Mat, it flips the costmap values to conform 
+    // to the OpenCV image coordinate system 
+    // which starts in the top left corner, x points right, y points down
+    //****************************************************************************
 
     Circle temp;
 
+    // Translate the center by 0.075cm in both directions
     // Inflate radius by 20cm
     temp.radius = r+4;
-    temp.center = cen;
+    temp.center = temp_center;
+    temp.center.x += 1.5;
+    temp.center.y += 1.5;
+    
+    ////////ROS_INFO("\tCenter: (%f,%f) Radius: %f", temp.center.x, temp.center.y, temp.radius);
 
     result.push_back(temp);
   } // end outter for
@@ -469,7 +611,7 @@ std::vector<Circle> CirclePacker::getCirclesFromEdges(const std::vector<Edge> ed
   {
     Circle temp;
 
-    //ROS_INFO("Edge endpoints: (%i,%i) (%i,%i)", edges[i].start.x, edges[i].start.y, edges[i].end.x, edges[i].end.y);
+    //////////ROS_INFO("Edge endpoints: (%i,%i) (%i,%i)", edges[i].start.x, edges[i].start.y, edges[i].end.x, edges[i].end.y);
 
     // Get length of edge to use as diameter of circle
     double dist = sqrt( pow(edges[i].end.x - edges[i].start.x, 2) + pow(edges[i].end.y - edges[i].start.y, 2) );
@@ -498,7 +640,7 @@ std::vector<Circle> CirclePacker::getCirclesFromEdges(const std::vector<Edge> ed
     double x_cen = x_mid + delta_x;
     double y_cen = y_mid + delta_y;
 
-    //ROS_INFO("Edge midpoint: (%f, %f) theta: %f phi: %f psi: %f Circle center: (%f, %f)", x_mid, y_mid, theta, phi, psi, x_cen, y_cen);
+    //////////ROS_INFO("Edge midpoint: (%f, %f) theta: %f phi: %f psi: %f Circle center: (%f, %f)", x_mid, y_mid, theta, phi, psi, x_cen, y_cen);
 
     temp.center.x = x_cen;
     temp.center.y = y_cen;
@@ -510,12 +652,84 @@ std::vector<Circle> CirclePacker::getCirclesFromEdges(const std::vector<Edge> ed
 }
 
 
+Circle CirclePacker::getCircleFromKeypoint(const cv::KeyPoint k) const
+{
+  Circle result;
+
+  // Swap x and y because of axis flipping
+  result.center.x = k.pt.y;
+  result.center.y = k.pt.x;
+
+  result.radius = k.size;
+
+  return result;
+}
+
+
 std::vector<Circle> CirclePacker::go()
 {
+  ////////ROS_INFO("In CirclePacker::go()");
   std::vector<Circle> result;
 
   // Create a matrix of the same size and type as src
   dst.create( src.size(), src.type() );
+  ////////ROS_INFO("Done with dst.create");
+
+  // Convert to grayscale
+  //cvtColor(src, src_gray, CV_BGR2GRAY);
+
+  // Get the edges
+  ros::Time t_start_edge_detect = ros::Time::now();
+  CannyThreshold(0, 0);
+  ros::Duration d_edges_detect(ros::Time::now()-t_start_edge_detect);
+  ////////ROS_INFO("Done with CannyThreshold");
+
+  /*
+   * Detect blobs
+   */
+
+  // Setup params
+  cv::SimpleBlobDetector::Params params;
+  params.minDistBetweenBlobs = 1.f;
+  params.filterByInertia = false;
+  params.filterByConvexity = false;
+  params.filterByColor = false;
+  params.filterByCircularity = false;
+  params.filterByArea = true;
+  params.minArea = 5.f;
+  params.maxArea = 5000.0f;
+
+  // Make object
+  // Ptr line works with my work machine, but I get an error about the create(params) method on my laptop
+  //cv::Ptr<cv::SimpleBlobDetector> blobs_detector = cv::SimpleBlobDetector::create(params);   
+  cv::SimpleBlobDetector blobs_detector(params);   
+
+  // Detect blobs
+  std::vector<cv::KeyPoint> keypoints;
+  ros::Time t_start = ros::Time::now();
+  blobs_detector.detect(src, keypoints);
+  ros::Duration d_blobs = ros::Time::now() - t_start;
+  ////////ROS_INFO("d_blobs: %f", d_blobs.toSec());
+
+  ////////ROS_INFO("Keypoints size: %i", (int)keypoints.size());
+
+  for(int i=0;i<keypoints.size();i++)
+  {
+    ////////ROS_INFO("Keypoint %i: pt: (%f, %f) class_id: %i angle: %f size: %f", i, keypoints[i].pt.x, keypoints[i].pt.y, keypoints[i].class_id, keypoints[i].angle, keypoints[i].size);
+    result.push_back(getCircleFromKeypoint(keypoints[i]));
+  }
+  return result;
+}
+
+
+std::vector<Circle> CirclePacker::goCorners()
+{
+  ////////ROS_INFO("In CirclePacker::go()");
+  std::vector<Circle> result;
+
+  // Create a matrix of the same size and type as src
+  dst.create( src.size(), src.type() );
+  ////////ROS_INFO("Done with dst.create");
 
   // Convert to grayscale
   //cvtColor(src, src_gray, CV_BGR2GRAY);
@@ -525,157 +739,299 @@ std::vector<Circle> CirclePacker::go()
   CannyThreshold(0, 0);
   ros::Duration d_edges_detect(ros::Time::now()-t_start_edge_detect);
 
-  
-  // Get the contour points
-  ros::Time t_start_contour = ros::Time::now();
+  /*
+   * Detect corners
+   */
+  int blockSize = 4;
+  int apertureSize = 9;
+  double k = 0.04;
+  ros::Time t_start_corner_detect = ros::Time::now();
+  cv::cornerHarris(src, dst, blockSize, apertureSize, k, cv::BORDER_DEFAULT);
+  ros::Duration d_corner_detect = ros::Time::now() - t_start_corner_detect;
+  ////////ROS_INFO("d_corner_detect: %f", d_corner_detect.toSec());
 
-  std::vector< std::vector<cv::Point> > detected_contours;
+  ////////ROS_INFO("dst.rows: %i dst.cols: %i", dst.rows, dst.cols);
+  for(int j=0;j<dst.rows;j++)
+  {
+    for(int i=0;i<dst.cols;i++)
+    {
+      if( (int) dst.at<float>(j,i) > 200)
+      {
+        Circle c;
+        c.center.x = j;
+        c.center.y = i;
+        c.radius = 10;
+        result.push_back(c);
+      }
+    }
+  }
+
+  return result;
+}
+
+
+std::vector<cv::RotatedRect> CirclePacker::goEllipse()
+{
+  ////////ROS_INFO("In CirclePacker::go()");
+  std::vector<cv::RotatedRect> result;
+
+  // Create a matrix of the same size and type as src
+  dst.create( src.size(), src.type() );
+  ////////ROS_INFO("Done with dst.create");
+
+  // Convert to grayscale
+  //cvtColor(src, src_gray, CV_BGR2GRAY);
+
+  // Get the edges
+  ros::Time t_start_edge_detect = ros::Time::now();
+  CannyThreshold(0, 0);
+  ros::Duration d_edges_detect(ros::Time::now()-t_start_edge_detect);
+
+  // Get contours
+  std::vector< std::vector<cv::Point> > contours;
   std::vector<cv::Vec4i> hierarchy;
-  cv::findContours(detected_edges, detected_contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-  
-  ros::Duration d_contour(ros::Time::now() - t_start_contour);
+  findContours( src, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
 
-  //ROS_INFO("detected_contours size: %i", (int)detected_contours.size());
+  // Get ellipses
+  std::vector<cv::RotatedRect> minEllipse( contours.size() );
+  for(int i=0;i<contours.size();i++)
+  {
+    minEllipse[i] = fitEllipse(cv::Mat(contours[i]));
+    ////////ROS_INFO("Ellipse %i: (%f, %f)", i, minEllipse[i].center.x, minEllipse[i].center.y);
+  }
+
+  return minEllipse;
+}
+
+
+std::vector<Circle> CirclePacker::goHough()
+{
+  ////////ROS_INFO("In CirclePacker::go()");
+  std::vector<Circle> result;
+
+  // Create a matrix of the same size and type as src
+  dst.create( src.size(), src.type() );
+  ////////ROS_INFO("Done with dst.create");
+
+  // Convert to grayscale
+  //cvtColor(src, src_gray, CV_BGR2GRAY);
+
+  std::vector<cv::Vec3f> circles;
+  cv::HoughCircles(src, circles, CV_HOUGH_GRADIENT, 0.5, 5, 200, 10, 10, 0);
+
+  for(int i=0;i<circles.size();i++)
+  {
+    Circle temp;
+    temp.center.x = circles[i][1];
+    temp.center.y = circles[i][0];
+    temp.radius = circles[i][2];
+
+    result.push_back(temp);
+  }
+
+  return result;
+}
+
+
+std::vector<Circle> CirclePacker::goMinEncCir()
+{
+  std::vector<Circle> result;
+
+  dst.create( src.size(), src.type() );
+  
+  // Get the edges
+  ros::Time t_start_edge_detect = ros::Time::now();
+  CannyThreshold(0, 0);
+  ros::Duration d_edges_detect(ros::Time::now()-t_start_edge_detect);
+
+  // Get contours
+  std::vector< std::vector<cv::Point> > contours;
+  std::vector<cv::Vec4i> hierarchy;
+  findContours( src, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
+
+  std::vector<cv::Point2f> centers(contours.size());
+  std::vector<float> radii(contours.size());
+  // For each contour, find the minimum enclosing circle
+  for(int i=0;i<contours.size();i++)
+  {
+    cv::minEnclosingCircle(contours[i], centers[i], radii[i]);
+
+    Circle temp;
+    temp.center.x = centers[i].y;
+    temp.center.y = centers[i].x;
+    temp.radius = radii[i];
+    
+    result.push_back(temp);    
+  }
+
+
+  return result;
+}
+
+
+std::vector<Circle> CirclePacker::goMyBlobs()
+{
+  ////ROS_INFO("In CirclePacker::goMyBlobs()");
+  std::vector<Circle> result;
+
+  // Create a matrix of the same size and type as src
+  dst.create( src.size(), src.type() );
+
+  // Get the edges
+  /*ros::Time t_start_edge_detect = ros::Time::now();
+  CannyThreshold(0, 0);
+  ros::Duration d_edges_detect(ros::Time::now()-t_start_edge_detect);*/
 
   /*
-   * Get every edge in 1 vector, and make a circle for each edge
+   * Detect blobs
    */
+  // Get contours
+  std::vector< std::vector<cv::Point> > contours;
+  std::vector<cv::Vec4i> hierarchy;
+  findContours( src, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
+  ////////ROS_INFO("contours.size(): %i", (int)contours.size());
 
-  // Make Edges from detected contour points (endpoints of edges)
-  std::vector< std::vector<Edge> > edge_sets;
-  std::vector<Edge> edges;
-  for(int i=0;i<detected_contours.size();i++)
+  // Go through each set of contour points
+  for(int i=0;i<contours.size();i++)
   {
-    std::vector<Edge> set;
-    //ROS_INFO("detected_contours[%i].size(): %i", i, (int)detected_contours[i].size());
-    for(int j=0;j<detected_contours[i].size()-1;j++)
+    //ROS_INFO("contours[%i].size(): %i", i, (int)contours[i].size());
+    Circle c;
+    std::vector<cv::Point2f> obs_points;
+
+    // Draw contours
+    cv::Mat drawing = cv::Mat::zeros( src.size(), CV_8UC3 );
+    for( int j = 0; j< contours.size(); j++ )
     {
-      //ROS_INFO("detected_contours[%i][%i]: (%i, %i)", i, j, detected_contours[i][j].x, detected_contours[i][j].y);
-      Edge temp;
-      temp.start.x = detected_contours[i][j].x;
-      temp.start.y = detected_contours[i][j].y;
-
-      temp.end.x = detected_contours[i][j+1].x;
-      temp.end.y = detected_contours[i][j+1].y;
-
-      edges.push_back(temp);
-      set.push_back(temp);
+      cv::Scalar color = cv::Scalar( 0, 0, 255 );
+      drawContours( drawing, contours, j, color, 2, 8, hierarchy, 0, cv::Point() );
     }
+
+    /// Show in a window
+    //imshow( "Contours", drawing );
+    //cv::waitKey(0);
+
+    // Check that there are at least a min number of contour points
+    // This is because we usually get massive circles (radius>1000) when there
+    // are only a few points
+    if(contours[i].size() < 10)
+    {
+      continue;
+    }
+
+    /*
+     *  Get all the points within the contour region that are obstacle pixels
+     */
+
+    // Get min and max values
+    int x_min = contours[i][0].x, x_max=x_min, y_min = contours[i][0].y, y_max=y_min;
+    for(int j=0;j<contours[i].size();j++)
+    {
+      cv::Point2f p = contours[i][j];
+
+      if(p.x < x_min)
+      {
+        x_min = p.x;
+      }
+      if(p.x > x_max)
+      {
+        x_max = p.x;
+      }
+      if(p.y < y_min)
+      {
+        y_min = p.y;
+      }
+      if(p.y > y_max)
+      {
+        y_max = p.y;
+      }
+
+      //obs_points.push_back(p);
+    } // end for each contour point
+
+    /*
+     * Go through the region and collect all obstacle pixels
+     */
+    int num_ob=0, num_free=0;
+    for(int x=x_min;x<=x_max;x++)
+    {
+      for(int y=y_min;y<=y_max;y++)
+      {
+        int pixel = src.at<uchar>(y, x);
+        //ROS_INFO("Point (%i,%i) pixel value: %i", y, x, pixel);
+
+        // If the value is less than some threshold for obstacle pixels
+        if(pixel < 100)
+        {
+          cv::Point2f p;
+          p.x = x;
+          p.y = y;
+          obs_points.push_back(p);
+          num_ob++;
+        }
+        else num_free++;
+      } // end inner for
+    } // end for each pixel in region
+
+    //ROS_INFO("obs_points.size(): %i", (int)obs_points.size());
+
+    float x=0, y=0;
+    for(int j=0;j<obs_points.size();j++)
+    {
+      x+=obs_points[j].x;
+      y+=obs_points[j].y; 
+    }
+    x /= obs_points.size();
+    y /= obs_points.size();
+    //ROS_INFO("Average center: (%f,%f)", x, y);
+
+    // Set the center value
+    c.center.x = y;
+    c.center.y = x;
     
-    Edge temp;
-    temp.start.x = detected_contours[i][detected_contours[i].size()-1].x;
-    temp.start.y = detected_contours[i][detected_contours[i].size()-1].y;
-
-    temp.end.x = detected_contours[i][0].x;
-    temp.end.y = detected_contours[i][0].y;
-
-    edges.push_back(temp);
-    set.push_back(temp);
-
-    edge_sets.push_back(set);
-  }
-  //ROS_INFO("Edges.size(): %i", (int)edges.size());
-
-
-
-
-
-  /*ros::Time t_start_cirs_from_edges = ros::Time::now();
-  
-  cv::Point robo_cen;
-  robo_cen.x = 0;
-  robo_cen.y = 0;
-
-  std::vector<Circle> cirs_from_edges = getCirclesFromEdges(edges, robo_cen);
-  ros::Duration d_cirs_from_edges(ros::Time::now() - t_start_cirs_from_edges);
-
-  //ROS_INFO("cirs_from_edges size: %i", (int)cirs_from_edges.size());
-  for(int i=0;i<cirs_from_edges.size();i++)
-  {
-    ROS_INFO("Circle %i - Center: (%i, %i) Radius: %f", i, cirs_from_edges[i].center.x, cirs_from_edges[i].center.y, cirs_from_edges[i].radius);
-  }*/
-
-  ros::Time t_start_cirs_from_sets = ros::Time::now();
-  std::vector<Circle> cirs_from_sets = getCirclesFromEdgeSets(edge_sets);
-  ros::Duration d_cirs_from_sets(ros::Time::now() - t_start_cirs_from_sets);
-
-  for(int i=0;i<cirs_from_sets.size();i++)
-  {
-    //ROS_INFO("Circle %i - Center: (%f, %f) Radius: %f", i, cirs_from_sets[i].center.x, cirs_from_sets[i].center.y, cirs_from_sets[i].radius);
-    result.push_back(cirs_from_sets[i]);
-  }
-
-
-  /*
-   * Get every set of edges, and make a circle for each set
-   */
-
-
-  // Find convex hull for each set of contour points
-  /*std::vector< std::vector<cv::Point> > hull(detected_contours.size());
-  for(int i=0;i<detected_contours.size();i++)
-  {
-    cv::convexHull( detected_contours[i], hull[i], false );
-  }
-  
-  ROS_INFO("hull.size(): %i", (int)hull.size());
-  
-  // Build a polygon for each convex hull
-  for(int h=0;h<hull.size();h++)
-  {
-    Polygon p;
-    for(int i=0;i<hull[h].size()-1;i++)
+    /*
+     * Get the dist of each pixel to the center
+     */
+    std::vector<double> dists;
+    double max_dist = -1;
+    for (size_t pointIdx = 0; pointIdx<obs_points.size(); pointIdx++)
     {
-      std::cout<<"\nPoint "<<i<<" ("<<hull[h][i].x<<", "<<hull[h][i].y<<")";
-      Edge temp;
-      temp.start.x = hull[h][i].x;
-      temp.start.y = hull[h][i].y;
+      cv::Point2f pt = obs_points[pointIdx];
+      double d = utility_.positionDistance(c.center.x, c.center.y, pt.y, pt.x);
+      ////////ROS_INFO("Point %i, d: %f", pointIdx, d);
+      dists.push_back(d);
 
-      temp.end.x = hull[h][i+1].x;
-      temp.end.y = hull[h][i+1].y;
-
-      p.edges.push_back(temp);
-    }
-    
-    // Last edge
-    Edge temp;
-    temp.start.x = hull[h][hull[h].size()-1].x;
-    temp.start.y = hull[h][hull[h].size()-1].y;
-
-    temp.end.x = hull[h][0].x;
-    temp.end.y = hull[h][0].y;
-
-    p.edges.push_back(temp);
-   
-    // Build the set of normals for the polygon 
-    for(int i=0;i<p.edges.size();i++)
+      if(d > max_dist)
+      {
+        max_dist = d;
+      }
+    } // end for
+    /*//////ROS_INFO("max_dist: %f", max_dist);
+    //////ROS_INFO("obs_points.size(): %i", (int)obs_points.size());
+    //////ROS_INFO("dist from center:");
+    for(int j=0;j<obs_points.size();j++)
     {
-      p.normals.push_back(computeNormal(p.edges[i]));
-    }
-    
-    // Pack the polygon and return the set of circles 
-    std::vector<Circle> cirs = getCirclesFromPoly(p);
-    ROS_INFO("cirs.size(): %i", (int)cirs.size());
+      cv::Point2f pt = obs_points[j];
+      double d = utility_.positionDistance(c.center.x, c.center.y, pt.y, pt.x);
+      //////ROS_INFO("Point %i: (%f,%f) d: %f", j, pt.y, pt.x, d);
+    }*/
 
-    result.push_back(cirs);
-  }
-  
-  ROS_INFO("result size: %i", (int)result.size());
-  for(int i=0;i<result.size();i++)
-  {
-    ROS_INFO("result[%i].size(): %i", i, (int)result[i].size());
-    for(int j=0;j<result[i].size();j++)
+    // Compute the radius based on the dist
+    //std::sort(dists.begin(), dists.end());
+    //c.radius = (dists[(dists.size() - 1) / 2] + dists[dists.size() / 2]) / 2.;
+    c.radius = max_dist;
+
+    obs_points.clear();
+    dists.clear();
+
+    ////////ROS_INFO("c.radius: %f obSizeThreshold: %f", c.radius, obSizeThreshold);
+
+    // Only push on circles that are above a size threshold
+    if(c.radius > obSizeThreshold)
     {
-      ROS_INFO("Circle %i, Center: (%i, %i) Radius: %f", j, result[i][j].center.x, result[i][j].center.y, result[i][j].radius);
+      result.push_back(c);
     }
-  }*/
+  } // end for each set of contour points
 
-  ROS_INFO("d_edges_detect: %f", d_edges_detect.toSec());
-  ROS_INFO("d_contour: %f", d_contour.toSec());
-  //ROS_INFO("d_cirs_from_edges: %f", d_cirs_from_edges.toSec());
-  ROS_INFO("d_cirs_from_sets: %f", d_cirs_from_sets.toSec());
-
-  //ROS_INFO("Leaving go()");
-
+  ////ROS_INFO("Exiting CirclePacker::goMyBlobs()");
   return result;
 }

@@ -20,8 +20,7 @@ public:
 
 
   // Get Bezier curves over the path
-  const std::vector<BezierCurve> bezier(ramp_msgs::Path& p, const bool only_curve);
-  void bezierOOP(ramp_msgs::Path& p, bool only_curve, std::vector<BezierCurve>& result);
+  void bezier(ramp_msgs::Path& p, bool only_curve, std::vector<BezierCurve>& result);
 
 
   TrajectoryType type_;
@@ -68,7 +67,8 @@ private:
   uint8_t segments_;
   bool planning_full_;
 
-  double MAX_SPEED;
+  double MAX_SPEED_LINEAR;
+  double MAX_SPEED_ANGULAR;
 
   const uint8_t i_XDOF_;
   const uint8_t i_THETADOF_;

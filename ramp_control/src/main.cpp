@@ -26,7 +26,8 @@ void init_advertisers_subscribers(MobileRobot& robot, ros::NodeHandle& handle, b
   robot.pub_twist_ = handle.advertise<geometry_msgs::Twist>(MobileRobot::TOPIC_STR_TWIST, 1000);
   robot.pub_update_ = handle.advertise<ramp_msgs::MotionState>(MobileRobot::TOPIC_STR_UPDATE, 1000);
 
-  if(simulation) {
+  if(simulation) 
+  {
     robot.pub_cmd_vel_ = handle.advertise<geometry_msgs::Twist>("cmd_vel", 10);
   }
  
@@ -49,6 +50,8 @@ void reportData(int sig)
     sum += robot.t_points_[i].toSec();
   }
   ROS_INFO("Average point time: %f", (sum / robot.t_points_.size()));
+
+  ros::shutdown();
 }
 
 
@@ -72,8 +75,8 @@ void reportData(int sig)
 
 
 
-int main(int argc, char** argv) {
-
+int main(int argc, char** argv) 
+{
   ros::init(argc, argv, "ramp_control");
 
 
@@ -83,10 +86,22 @@ int main(int argc, char** argv) {
   ros::Subscriber sub_traj = handle.subscribe("bestTrajec", 1, trajCallback);
 
   setvbuf(stdout, NULL, _IOLBF, 4096);
- 
-  //handle.param("ramp_control/orientation", robot.initial_theta_, 0.785);
-  handle_local.param("orientation", robot.initial_theta_, -0.785);
-  std::cout<<"\n*********robot.orientation: "<<robot.initial_theta_;
+
+
+  // Get the start and goal vectors
+  std::vector<float> p_start;
+  if(handle.hasParam("robot_info/start"))
+  {
+    handle.getParam("robot_info/start", p_start);
+    robot.initial_theta_ = p_start[2];
+  }
+  else 
+  {
+    ROS_ERROR("ramp_control: Did not find parameters robot_info/start, robot_info/goal\nSetting initial_theta_ to 0");
+    robot.initial_theta_ = 0.f;
+  }
+  
+  ROS_INFO("robot.orientation: %f", robot.initial_theta_);
 
   bool sim=false;
   handle_local.param("simulation", sim, true);
@@ -99,8 +114,38 @@ int main(int argc, char** argv) {
   ROS_INFO("check_imminent_coll: %s", check_imminent_coll ? "True" : "False");
   robot.check_imminent_coll_ = check_imminent_coll;
 
+
+  std::string global_frame;
+  if(handle.hasParam("/ramp/global_frame"))
+  {
+    handle.getParam("/ramp/global_frame", global_frame);
+    ROS_INFO("global_frame: %s", global_frame.c_str());
+  }
+  else
+  {
+    ROS_ERROR("Could not find rosparam ramp/global_frame");
+  }
+
+
+  /*
+   * Get transform information from odom to the frame the planner uses
+   */
+  ros::Duration d(0.5);
+  d.sleep();
+
+  tf::TransformListener listen;
+  listen.waitForTransform(global_frame, "odom", ros::Time(0), ros::Duration(2.0));
+  ROS_INFO("Time: %f", ros::Time::now().toSec());
+  listen.lookupTransform(global_frame, "odom", ros::Time(0), robot.tf_global_odom_);
+  ROS_INFO("(ramp_control) Odom tf: translate: (%f, %f) rotation: %f", robot.tf_global_odom_.getOrigin().getX(), robot.tf_global_odom_.getOrigin().getX(), robot.tf_global_odom_.getRotation().getAngle());
+  robot.tf_rot_ = robot.tf_global_odom_.getRotation().getAngle();
+  
+
+
+
   // Initialize publishers and subscribers
   init_advertisers_subscribers(robot, handle, sim);
+
 
 
   // Make a blank ramp_msgs::RampTrajectory

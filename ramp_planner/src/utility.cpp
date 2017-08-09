@@ -109,7 +109,7 @@ const double Utility::findAngleFromAToB(const std::vector<double> a, const std::
 
 
 /** This method returns distance between orientations a1 and a2. The distance is in the range [-PI, PI]. */
-const double Utility::findDistanceBetweenAngles(const double a1, const double a2) const 
+const double Utility::findDistanceBetweenAngles(const double a1, const double a2) const
 {
   double result;
   double difference = a2 - a1;
@@ -122,7 +122,7 @@ const double Utility::findDistanceBetweenAngles(const double a1, const double a2
   }
 
   // If difference < -pi, the result should be in [0,PI] range
-  else if(difference < -PI) 
+  else if(difference < -PI)
   {
     result = difference + (2*PI);
   }
@@ -138,8 +138,8 @@ const double Utility::findDistanceBetweenAngles(const double a1, const double a2
 
 
 
-const double Utility::displaceAngle(const double a1, double a2) const {
-
+const double Utility::displaceAngle(const double a1, double a2) const 
+{
   a2 = fmodf(a2, 2*PI);
 
   if(a2 > PI) 
@@ -362,6 +362,7 @@ const std::string Utility::toString(const ramp_msgs::Obstacle ob) const
 
   result<<"Pose: ("<<ob.ob_ms.positions[0]<<", "<<ob.ob_ms.positions[1]<<", "<<ob.ob_ms.positions[2]<<")";
   result<<"Twist: ("<<ob.ob_ms.velocities[0]<<", "<<ob.ob_ms.velocities[1]<<", "<<ob.ob_ms.velocities[2]<<")";
+  result<<"Radius: "<<ob.radius;
 
   return result.str();
 }

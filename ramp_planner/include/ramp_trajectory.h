@@ -27,6 +27,8 @@ class RampTrajectory
     const std::string    toString()                             const;
     const RampTrajectory getSubTrajectory(const float t)        const;
     const RampTrajectory getSubTrajectoryPost(const double t)   const;
+    
+    bool stopRotateInFirstSec() const;
 
     const RampTrajectory concatenate(const RampTrajectory traj, const uint8_t kp=0) const;
 

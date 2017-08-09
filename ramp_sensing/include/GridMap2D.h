@@ -128,6 +128,9 @@ public:
   const cv::Mat& distanceMap() const {return m_distMap;}
   /// @return the cv::Mat binary image.
   const cv::Mat& binaryMap() const {return m_binaryMap;}
+
+  const cv::Mat& probMap() const {return m_probMap;}
+
   /// @return the size of the cv::Mat binary image. Note that x/y are swapped wrt. height/width
   inline const CvSize size() const {return m_binaryMap.size();}
 
@@ -136,6 +139,7 @@ public:
 
 protected:
   cv::Mat m_binaryMap;	///< binary occupancy map. 255: free, 0 occupied.
+  cv::Mat m_probMap;
   cv::Mat m_distMap;		///< distance map (in meter)
   nav_msgs::MapMetaData m_mapInfo;
   std::string m_frameId;	///< "map" frame where ROS OccupancyGrid originated from

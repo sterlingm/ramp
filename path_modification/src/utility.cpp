@@ -1,12 +1,27 @@
 #include "utility.h"
 
-Utility::Utility() {
-  for(unsigned int i=0;i<3;i++) {
+Utility::Utility() 
+{
+  for(unsigned int i=0;i<3;i++) 
+  {
     ramp_msgs::Range temp;
-    temp.min = (i < 2 ? 0   : -PI);
-    temp.max = (i < 2 ? 2 :  PI);
+    switch (i) 
+    {
+      case 0:
+        temp.min = -7;
+        temp.max = 13;
+        break;
+      case 1:
+        temp.min = -1.7;
+        temp.max = 0.3;
+        break;
+      case 2:
+        temp.min = -PI;
+        temp.max = PI;
+        break;
+    }
     standardRanges_.push_back(temp);
-  }
+  } // end for
 }
 
 
