@@ -94,6 +94,7 @@ void SLike(const int index, const double v, const double w, const double t)
 void driveStraight(const int index, const double v, const double t)
 {
   //ROS_INFO("In driveStraight");
+  //ROS_INFO("index: %f v: %f t: %f", index, v, t);
 
   ros::Rate r(25);
   ros::Duration d(t);
@@ -109,7 +110,8 @@ void driveStraight(const int index, const double v, const double t)
   int i=0;
   // Drive forward
   ros::Time start = ros::Time::now();
-  while(ros::ok() && (ros::Time::now() - start < d) && !ob_ic.at(index))
+  //while(ros::ok() && (ros::Time::now() - start < d) && !ob_ic.at(index))
+  while(ros::ok() && (ros::Time::now() - start < d))
   {
     /*if(i % 50 == 0)
     {
@@ -123,41 +125,31 @@ void driveStraight(const int index, const double v, const double t)
 
 void publishToOb(const ros::TimerEvent e, const int index)
 {
-  ROS_INFO("index: %i", index);
-  ROS_INFO("Elapsed time: %f", (ros::Time::now() - node_start).toSec());
+  //ROS_INFO("index: %i", index);
+  //ROS_INFO("Elapsed time: %f", (ros::Time::now() - node_start).toSec());
 
 
   ros::Rate r(5);
   ros::Duration d(1.5);
   geometry_msgs::Twist twist;
   
-  twist.linear.x = 0.28f;
+  twist.linear.x = 0.33f;
   twist.linear.y = 0.f;
   twist.linear.z = 0.f;
   twist.angular.x = 0.f;
   twist.angular.y = 0.f;
   twist.angular.z = 0.f;
 
+  // Just one obstacle
+  driveStraight(index, 0.33f, 5);
+
   /*
    * Set motion for Obstacle 1
    */
-  if(index == 1)
+  /*if(index == 1)
   {
-    
-    
     //turn(index, 0.33, 0.33, 10);
     driveStraight(index, 0.33, 10);
-    
-    //d = ros::Duration(4);
-
-    //twist.angular.z = (index == 1) ? 0.32 : 0.4;
-    // Drive forward
-    /*ros::Time t = ros::Time::now();
-    while(ros::Time::now() - t < d)
-    {
-      //ob_pubs.at(index).publish(twist);
-      r.sleep();
-    } // end while*/
   } // end Obstacle 1
 
 
@@ -174,7 +166,7 @@ void publishToOb(const ros::TimerEvent e, const int index)
 
 
     // Self-rotate
-    /*twist.linear.x = 0;
+    twist.linear.x = 0;
     twist.angular.z = 0.44;
 
     d = ros::Duration(1.5);
@@ -189,7 +181,7 @@ void publishToOb(const ros::TimerEvent e, const int index)
 
 
     // Translate+rotate
-    twist.linear.x = 0.25;
+    /*twist.linear.x = 0.25;
     //twist.angular.z = -0.68;
 
     d = ros::Duration(1.5f);
@@ -255,7 +247,7 @@ void publishToOb(const ros::TimerEvent e, const int index)
       r.sleep();
     }
 
-  } // end if turtlebot
+  } // end if turtlebot*/
 
   
   // Stop

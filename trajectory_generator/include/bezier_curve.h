@@ -11,7 +11,7 @@ public:
   BezierCurve();
   ~BezierCurve();
 
-  void init(const ramp_msgs::BezierCurve bi, const ramp_msgs::MotionState ms_current);
+  void init(const ramp_msgs::BezierCurve bi, const ramp_msgs::MotionState ms_current, const double max_speed_linear, const double max_speed_angular);
  
  
 
@@ -56,7 +56,8 @@ private:
   double        theta_dot_prev_         ;
 
 
-  double MAX_SPEED;
+  double MAX_SPEED_LINEAR;
+  double MAX_SPEED_ANGULAR;
 
 
   void initReflexxes()    ;
@@ -88,8 +89,7 @@ private:
 
 
   // TODO: Make const
-  const ramp_msgs::MotionState buildMotionState(const ReflexxesData data);
-  void buildMotionStateOOP(const ReflexxesData& data, ramp_msgs::MotionState& result);
+  void buildMotionState(const ReflexxesData& data, ramp_msgs::MotionState& result);
 
   const ReflexxesData adjustTargets(const ReflexxesData data) const;
 };

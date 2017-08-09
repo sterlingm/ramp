@@ -1,6 +1,7 @@
 #ifndef RANGE_H
 #define RANGE_H
 #include "ramp_msgs/Range.h"
+#include <ros/console.h>
 
 class Range {
   public:

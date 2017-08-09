@@ -55,10 +55,10 @@ const double Orientation::perform(const ramp_msgs::RampTrajectory& trj)
     double deltaTheta = fabs( utility_.findDistanceBetweenAngles(currentTheta_, thetaNec) );
     //ROS_INFO("thetaNec: %f currentTheta_: %f deltaTheta: %f", thetaNec, currentTheta_, deltaTheta);
 
-    double normalize = PI;
-    deltaTheta /= normalize;
-
     // Normalize
+    //double normalize = PI;
+    //deltaTheta /= normalize;
+
     result += deltaTheta;
   }
 
