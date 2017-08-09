@@ -196,12 +196,16 @@ def writeMap(bhm_mdl, fname_read, fname_write):
     print len(lines)
     # For each line, get the location
     for i,l in enumerate(lines):
-        # Split l by commas
-        t = l.split(',')
-        if int(t[0]) == 0:
-            x = float(t[1])
-            y = float(t[2])
-            locs.append([x, y])
+        print i
+        print l
+        # Sometimes the last entry is empty
+        if l != '':
+            # Split l by commas
+            t = l.split(',')
+            if int(t[0]) == 0:
+                x = float(t[1])
+                y = float(t[2])
+                locs.append([x, y])
     locs_array = np.array(locs)
         
     p = bhm_mdl.predict_proba(locs_array)
@@ -239,14 +243,13 @@ def main_bhm():
 
         #p = os.path.join('occ_map_data', fname)
         
-    p = os.path.join(dir_combined, 'occ_map_data.csv')
+    p = os.path.join(dir_combined, 'all.csv')
     print('Calling load_parameters')
     [fn_train, fn_test, fn_test_occ_noocc, fn_test_occ, cell_resolution, 
             cell_max_min, skip, thresh, gamma] = load_parameters('sim', p)
     print('Done load_parameters')
     print('cell_resolution: (%d,%d)' % (cell_resolution[0], cell_resolution[1]))
     print(cell_max_min)
-
 
     #read data
     g = pd.read_csv(fn_train, delimiter=',').values
@@ -347,6 +350,7 @@ def main_bhm():
     print('Done training Hilbert map, writing map to file')
     # Write map 
     writeMap(bhm_mdl, p, os.path.join(ros_pkg_path, 'hilbert_map.csv'))
+
 
 
 if __name__ == '__main__':
