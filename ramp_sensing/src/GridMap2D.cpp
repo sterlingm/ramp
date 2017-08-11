@@ -45,6 +45,12 @@ GridMap2D::GridMap2D(const nav_msgs::OccupancyGridConstPtr& gridMap, bool unknow
 
 }
 
+GridMap2D::GridMap2D(const nav_msgs::OccupancyGrid& gridMap, bool unknown_as_obstacle) {
+
+  setMap(gridMap, unknown_as_obstacle);
+
+}
+
 GridMap2D::GridMap2D(const GridMap2D& other)
  : m_binaryMap(other.m_binaryMap.clone()),
    m_distMap(other.m_distMap.clone()),
@@ -62,6 +68,43 @@ void GridMap2D::updateDistanceMap(){
   cv::distanceTransform(m_binaryMap, m_distMap, CV_DIST_L2, CV_DIST_MASK_PRECISE);
   // distance map now contains distance in meters:
   m_distMap = m_distMap * m_mapInfo.resolution;
+}
+
+void GridMap2D::setMap(const nav_msgs::OccupancyGrid& grid_map, bool unknown_as_obstacle)
+{
+  m_mapInfo = grid_map.info;
+  m_frameId = grid_map.header.frame_id;
+  // allocate map structs so that x/y in the world correspond to x/y in the image
+  // (=> cv::Mat is rotated by 90 deg, because it's row-major!)
+  m_binaryMap = cv::Mat(m_mapInfo.width, m_mapInfo.height, CV_8UC1);
+  m_probMap = cv::Mat(m_mapInfo.width, m_mapInfo.height, CV_8UC1);
+  m_distMap = cv::Mat(m_binaryMap.size(), CV_32FC1);
+
+  std::vector<signed char>::const_iterator mapDataIter = grid_map.data.begin();
+
+  //TODO check / param
+  unsigned char map_occ_thres = 70;
+
+  // iterate over map, store in image
+  // (0,0) is lower left corner of OccupancyGrid
+  for(unsigned int j = 0; j < m_mapInfo.height; ++j){
+    for(unsigned int i = 0; i < m_mapInfo.width; ++i){
+      m_probMap.at<uchar>(i,j) = *mapDataIter; 
+
+      if (*mapDataIter > map_occ_thres
+          || (unknown_as_obstacle && *mapDataIter < 0))
+      {
+        m_binaryMap.at<uchar>(i,j) = OCCUPIED;
+      } else{
+        m_binaryMap.at<uchar>(i,j) = FREE;
+      }
+      ++mapDataIter;
+    }
+  }
+
+  updateDistanceMap();
+
+  //ROS_INFO("GridMap2D created with %d x %d cells at %f resolution.", m_mapInfo.width, m_mapInfo.height, m_mapInfo.resolution);
 }
 
 void GridMap2D::setMap(const nav_msgs::OccupancyGridConstPtr& grid_map, bool unknown_as_obstacle){
