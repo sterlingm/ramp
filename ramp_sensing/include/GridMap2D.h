@@ -51,6 +51,7 @@ public:
   GridMap2D();
   ///@brief Create from nav_msgs::OccupancyGrid
   GridMap2D(const nav_msgs::OccupancyGridConstPtr& grid_map, bool unknown_as_obstacle = false);
+  GridMap2D(const nav_msgs::OccupancyGrid& grid_map, bool unknown_as_obstacle = false);
   ///@brief Copy constructor, performs a deep copy of underlying data structures
   GridMap2D(const GridMap2D& other);
   virtual ~GridMap2D();
@@ -110,6 +111,7 @@ public:
 
   ///@brief Initialize map from a ROS OccupancyGrid message
   void setMap(const nav_msgs::OccupancyGridConstPtr& grid_map, bool unknown_as_obstacle = false);
+  void setMap(const nav_msgs::OccupancyGrid& grid_map, bool unknown_as_obstacle = false);
 
   ///@brief Converts back into a ROS nav_msgs::OccupancyGrid msg
   nav_msgs::OccupancyGrid toOccupancyGridMsg() const;
