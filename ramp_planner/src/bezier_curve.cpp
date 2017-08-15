@@ -17,7 +17,7 @@ void BezierCurve::init(const std::vector<MotionState> segment_points, const doub
   segmentPoints_ = segment_points;
   l_ = lambda;
   
-  MAX_SPEED_ = 1.;
+  MAX_SPEED_ = 0.33f;
 
   ms_max_.msg_.velocities.push_back(0.707);
   ms_max_.msg_.velocities.push_back(0.707);

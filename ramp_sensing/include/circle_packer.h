@@ -12,6 +12,7 @@ class CirclePacker
   public:
     CirclePacker(nav_msgs::OccupancyGridConstPtr);
     CirclePacker(nav_msgs::OccupancyGrid);
+    CirclePacker(cv::Mat grid);
     ~CirclePacker();
 
     void convertOGtoMat(nav_msgs::OccupancyGridConstPtr);
@@ -43,7 +44,7 @@ class CirclePacker
     std::vector<Circle> goCorners();
     std::vector<Circle> goHough();
     std::vector<Circle> goMinEncCir();
-    std::vector<Circle> goMyBlobs();
+    std::vector<Circle> goMyBlobs(bool hmap=false);
     std::vector<cv::RotatedRect> goEllipse();
   private:
 

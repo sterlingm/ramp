@@ -49,8 +49,8 @@ TrajectoryView::TrajectoryView(QWidget *parent)
 {
     width_ = 540;
     height_ = 540;
-    maxWidthMeters_ = 2.5f;
-    maxHeightMeters_ = 10.f;
+    maxWidthMeters_ = 2.f;
+    maxHeightMeters_ = 2.f;
 
     // Setup the scene
     QGraphicsScene *scene = new QGraphicsScene(this);
@@ -150,9 +150,8 @@ void TrajectoryView::drawPopulation() {
     /*
      * 2.5x10 
      */ 
-    //addLine(start_x, start_y, end_x, end_y)
     // Horizontal lines
-    for(int i=0;i<=maxHeightMeters_;i++)
+    /*for(int i=0;i<=maxHeightMeters_;i++)
     {
       this->scene()->addLine(0, metersToPixels(i+0.1, false), width_-10, metersToPixels(i+0.1, false), pen);
     }
@@ -169,34 +168,13 @@ void TrajectoryView::drawPopulation() {
     {
       ROS_INFO("Drawing last line");
       this->scene()->addLine(metersToPixels(maxWidthMeters_, true), 0, metersToPixels(maxWidthMeters_, true), metersToPixels(height_-10, false), pen);
-    }
+    }*/
     
     
-    //ROS_INFO("old width_: %i height_: %i", width_, height_);
-    width_ = (height_ * 3.f) / 10.f;
-    //ROS_INFO("new width_: %i", width_);
-    size_changed_manual();
-    
-
-    /*this->scene()->addLine(0, metersToPixels(10, false), width_-20, metersToPixels(10, false), pen);
-
-    this->scene()->addLine(0, metersToPixels(3.5, false), width_-20, metersToPixels(3.5, false), pen);
-    this->scene()->addLine(metersToPixels(3.5, true), 0, metersToPixels(3.5, true), metersToPixels(3.5, false), pen);
-    
-    this->scene()->addLine(0, metersToPixels(3, false), width_-20, metersToPixels(3, false), pen);
-    this->scene()->addLine(metersToPixels(3, true), 0, metersToPixels(3, true), metersToPixels(3.5, false), pen);
-    
-    this->scene()->addLine(0, metersToPixels(2, false), width_-20, metersToPixels(2, false), pen);
-    this->scene()->addLine(metersToPixels(2, true), 0, metersToPixels(2, true), metersToPixels(3.5, false), pen);
-    
-    this->scene()->addLine(0, metersToPixels(1, false), width_-20, metersToPixels(1, false), pen);
-    this->scene()->addLine(metersToPixels(1, true), 0, metersToPixels(1, true), metersToPixels(3.5, false), pen);*/
-  
-
     /*
      * 2m square
      */
-    /*this->scene()->addLine(0, metersToPixels(2, false), width_-20, metersToPixels(2, false), pen);
+    this->scene()->addLine(0, metersToPixels(2, false), width_-20, metersToPixels(2, false), pen);
     this->scene()->addLine(metersToPixels(2, true), 0, metersToPixels(2, true), metersToPixels(2, false), pen);
     
     this->scene()->addLine(0, metersToPixels(1, false), width_-20, metersToPixels(1, false), pen);
@@ -206,9 +184,18 @@ void TrajectoryView::drawPopulation() {
     this->scene()->addLine(metersToPixels(1.5, true), 0, metersToPixels(1.5, true), metersToPixels(2, false), pen);
     
     this->scene()->addLine(0, metersToPixels(0.5, false), width_-20, metersToPixels(0.5, false), pen);
-    this->scene()->addLine(metersToPixels(0.5, true), 0, metersToPixels(0.5, true), metersToPixels(2, false), pen);*/
+    this->scene()->addLine(metersToPixels(0.5, true), 0, metersToPixels(0.5, true), metersToPixels(2, false), pen);
+    
+  
+  // Call this to make the display take up whole window from the beginning
+  //ROS_INFO("old width_: %i height_: %i", width_, height_);
+  width_ = (height_ * 2.f) / 2.f;
+  //ROS_INFO("new width_: %i", width_);
+  size_changed_manual();
+   
 
-  double radius = 0.5;
+
+  double radius = 0.2;
   int radiusPixels = metersToPixels(radius, true);
 
   QPen penTraj;

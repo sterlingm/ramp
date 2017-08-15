@@ -53,7 +53,7 @@ corobot
 (		  
   name "r0"
   #pose [ 0 0 0 0 ] 
-  pose [0 0 0 90]
+  pose [0 0 0 45]
   #pose [ 1.5 3.5 0 -90 ] 
   #pose [0.344 0.196 0 0]
   #pose [ 0 0 0 29.745 ] 
