@@ -164,6 +164,7 @@ class BayesianHilbertMap(LinearClassifierMixin, BaseEstimator):
 def load_parameters(case, fname):
     cell_resolution = (0.5,0.5)
     cell_max_min = (0, 5.0, -0.45, 3.0)
+    gamma = 0.05
     parameters = \
         {'sim': \
              (fname,
@@ -174,7 +175,7 @@ def load_parameters(case, fname):
               cell_max_min,
               2,
               0.3,
-              0.06
+              gamma
             ),
         }
 
@@ -209,13 +210,14 @@ def writeMap(bhm_mdl, fname_read, fname_write):
     locs_array = np.array(locs)
         
     p = bhm_mdl.predict_proba(locs_array)
+    gamma = bhm_mdl.gamma
 
     # Open file for writing
     f = open(fname_write, 'w') 
 
     for i,l in enumerate(locs_array):
         # Make a string (x,y,prob)
-        s = "%f,%f,%f" % (l[0], l[1], p[i][1])
+        s = "%f,%f,%f,%f" % (l[0], l[1], p[i][1], gamma)
         
         # Write to file
         f.write(s + os.linesep)
