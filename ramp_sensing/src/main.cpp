@@ -146,11 +146,11 @@ void initDOF(const std::vector<double> dof_min, const std::vector<double> dof_ma
     ramp_msgs::Range temp;
     temp.min = dof_min.at(i);
     temp.max = dof_max.at(i);
-    if(i == 0 || i == 1)
+    /*if(i == 0 || i == 1)
     {
       temp.min += radius;
       temp.max -= radius;
-    }
+    }*/
     ranges.push_back(temp); 
   }
 
@@ -838,20 +838,24 @@ CircleOb* createCircleOb(Circle temp)
 
 
 
-void accumulateCostmaps(const nav_msgs::OccupancyGrid g1, const nav_msgs::OccupancyGrid g2, nav_msgs::OccupancyGrid& result)
+void accumulateCostmaps(const nav_msgs::OccupancyGrid& g1, const nav_msgs::OccupancyGrid& g2, nav_msgs::OccupancyGrid& result)
 {
   //ROS_INFO("In consolidateCostmaps(OccupancyGrid, OccupancyGrid, OccupancyGrid)");
-  //ROS_INFO("g1.data.size(): %i", (int)g1.data.size());
+  //ROS_INFO("g1.data.size(): %i g2.data.size(): %i", (int)g1.data.size(), (int)g2.data.size());
   result = g1;
   //ROS_INFO("g1.info.width: %i g1.info.height: %i", g1.info.width, g1.info.height);
   //ROS_INFO("Before for loops, result.size(): %i", (int)result.data.size());
-  for(int r=0;r<g1.info.width;r++)
+  for(int r=0;r<g1.info.width && r<g2.info.width;r++)
   {
     int r_offset = g1.info.height*r;
-    for(int c=0;c<g1.info.height;c++)
+    for(int c=0;c<g1.info.height && c<g2.info.height;c++)
     {
       ////ROS_INFO("r_offset: %i c: %i r_offset+c: %i", r_offset, c, r_offset+c);
-      result.data[r_offset + c] = g1.data[r_offset + c] | g2.data[r_offset + c];
+      result.data[r_offset + c] = (g1.data[r_offset + c] | g2.data[r_offset + c]);
+      /*if(!g1.data[r_offset + c] && !g2.data[r_offset + c] && result.data[r_offset+c])
+      {
+        ROS_INFO("g1.data[%i]: %i g2.data: %i result: %i", r_offset+c, g1.data[r_offset+c], g2.data[r_offset+c], result.data[r_offset+c]);
+      }*/
     }
   }
   //ROS_INFO("After for loops, result.size(): %i", (int)result.data.size());
@@ -1172,12 +1176,12 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   float h = grid->info.height * res;
   tf::Transform tf_g_to_base = tf_base_to_global.inverse();
 
-  float x_min=0;
-  float y_min=0;
-  float x_max=3.5;
-  float y_max=3.5;
+  float x_min=ranges[0].min;
+  float y_min=ranges[1].min;
+  float x_max=ranges[0].max;
+  float y_max=ranges[1].max;
   
-  ROS_INFO("costmap origin: (%f,%f) width: %i height: %i resolution: %f w: %f h: %f", grid->info.origin.position.x, grid->info.origin.position.y, grid->info.width, grid->info.height, grid->info.resolution, w, h);
+  //ROS_INFO("costmap origin: (%f,%f) width: %i height: %i resolution: %f w: %f h: %f", grid->info.origin.position.x, grid->info.origin.position.y, grid->info.width, grid->info.height, grid->info.resolution, w, h);
 
   // a = costmap origin
   tf::Vector3 p_a(grid->info.origin.position.x, grid->info.origin.position.y, 0);
@@ -1200,10 +1204,10 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
 
   for(int i=0;i<p_vec.size();i++)
   {
-    ROS_INFO("p_vec[%i]: (%f,%f)", i, p_vec[i].getX(), p_vec[i].getY());
+    //ROS_INFO("p_vec[%i]: (%f,%f)", i, p_vec[i].getX(), p_vec[i].getY());
     tf::Vector3 p_i_w = tf_base_to_global * p_vec[i];
     p_w_vec.push_back(p_i_w);
-    ROS_INFO("p_w_vec[%i]: (%f,%f)", i, p_w_vec[i].getX(), p_w_vec[i].getY());
+    //ROS_INFO("p_w_vec[%i]: (%f,%f)", i, p_w_vec[i].getX(), p_w_vec[i].getY());
   }
 
 
@@ -1212,19 +1216,19 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   float delta_x_max = fabs(x_max - p_c.getX());
   float delta_y_min = fabs(y_min - p_a.getY());
   float delta_y_max = fabs(y_max - p_c.getY());
-  ROS_INFO("delta_x_min: %f delta_x_max: %f delta_y_min: %f delta_y_max: %f", delta_x_min, delta_x_max, delta_y_min, delta_y_max);
+  //ROS_INFO("delta_x_min: %f delta_x_max: %f delta_y_min: %f delta_y_max: %f", delta_x_min, delta_x_max, delta_y_min, delta_y_max);
   
   int x_min_ind = delta_x_min / res;
   int x_max_ind = delta_x_max / res;
   int y_min_ind = delta_y_min / res;
   int y_max_ind = delta_y_max / res;
-  ROS_INFO("x_min_ind: %i x_max_ind: %i y_min_ind: %i y_max_ind: %i", x_min_ind, x_max_ind, y_min_ind, y_max_ind);
+  //ROS_INFO("x_min_ind: %i x_max_ind: %i y_min_ind: %i y_max_ind: %i", x_min_ind, x_max_ind, y_min_ind, y_max_ind);
 
   int width_new   = grid->info.width  - x_max_ind - x_min_ind;
   int height_new  = grid->info.height - y_max_ind - y_min_ind;
-  ROS_INFO("width_new: %i height_new: %i", width_new, height_new);
+  /*ROS_INFO("width_new: %i height_new: %i", width_new, height_new);
   ROS_INFO("grid->info.height-y_max_ind: %i", grid->info.height-y_max_ind);
-  ROS_INFO("grid->info.width-x_max_ind: %i", grid->info.width-x_max_ind);
+  ROS_INFO("grid->info.width-x_max_ind: %i", grid->info.width-x_max_ind);*/
   for(int c=y_min_ind;c<grid->info.height-y_max_ind;c++)
   {
     int c_offset = (c*grid->info.width);
@@ -1241,6 +1245,8 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   result.info.origin.position.x += (x_min_ind*res);
   result.info.origin.position.y += (y_min_ind*res);
 
+  //ROS_INFO("result.info.width: %i result.info.height: %i", result.info.width, result.info.height);
+  //ROS_INFO("result.info.origin.position: (%f,%f)", result.info.origin.position.x, result.info.origin.position.y);
 }
 
 
@@ -1322,19 +1328,19 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   cropCostmap(grid, cropped);
 
   double grid_resolution = grid->info.resolution; 
-  global_grid = *grid;
-
-  global_grid = cropped;
   
-  //double grid_resolution = half.info.resolution; 
+  //global_grid = *grid;
+  global_grid = cropped;
   //global_grid = half;
+  
 
   //ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
   // Consolidate this occupancy grid with prev ones
   nav_msgs::OccupancyGrid accumulated_grid;
   //consolidateCostmaps(half, prev_grids, consolidated_grid);
   //accumulateCostmaps(*grid, prev_grids, accumulated_grid);
-  accumulateCostmaps(cropped, prev_grids, accumulated_grid);
+  //accumulateCostmaps(cropped, prev_grids, accumulated_grid);
+  accumulated_grid = cropped;
   
   //ROS_INFO("Finished getting consolidated_grid");
   
@@ -1346,7 +1352,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   }
 
   // Publish the modified costmap(s)
-  pub_half_costmap.publish(cropped);
+  //pub_half_costmap.publish(half);
   pub_cons_costmap.publish(accumulated_grid);
 
   // Make a pointer for the modified costmap
@@ -1445,6 +1451,11 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   /*for(int i=0;i<cir_obs.size();i++)
   {
     //ROS_INFO("cir_obs[%i]->cir.center.x: %f cir_obs[%i]->cir.center.y: %f cir_obs[%i]->cir.radius: %f", i, cir_obs[i]->cir.center.x, i, cir_obs[i]->cir.center.y, i, cir_obs[i]->cir.radius);
+  }*/
+
+  /*if(cirs.size() > prev_valid_cirs.size())
+  {
+    ROS_INFO("More circles! cirs.size(): %i prev_valid_cirs.size(): %i", (int)cirs.size(), (int)prev_valid_cirs.size());
   }*/
 
 
@@ -1775,7 +1786,7 @@ int main(int argc, char** argv)
 
   ros::Duration d(2.5);
 
-  tf::TransformListener listener;
+  /*tf::TransformListener listener;
   if(listener.waitForTransform(global_frame, robot_base_frame, ros::Time(0), d))
   {
     listener.lookupTransform(global_frame, robot_base_frame, ros::Time(0), tf_base_to_global);
@@ -1785,7 +1796,7 @@ int main(int argc, char** argv)
   else
   {
     ROS_ERROR("Could not find global tf");
-  }
+  }*/
 
 
   ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);
