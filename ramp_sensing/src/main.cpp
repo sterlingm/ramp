@@ -34,7 +34,6 @@ ramp_msgs::ObstacleList list;
 std::vector< std::string > ob_odoms;
 std::map< std::string, uint8_t > topic_index_map;
 nav_msgs::OccupancyGrid global_grid;
-std::string global_frame;
 
 double radius;
 std::vector<double> dof_min;
@@ -77,6 +76,11 @@ int num_theta_count         = 1;
 int num_costmap_freq_theta  = 5;
 
 double initial_theta        = PI;
+              
+
+std::string robot_base_frame, global_frame;
+tf::StampedTransform tf_base_to_global;
+
 
 /*********************************
  * Variables for BFL
@@ -179,7 +183,7 @@ void loadParameters(const ros::NodeHandle& handle)
   }
   else 
   {
-    //ROS_ERROR("Did not find parameter robot_info/radius");
+    ROS_ERROR("Did not find parameter robot_info/radius");
   }
 
   // Get the dofs
@@ -194,16 +198,27 @@ void loadParameters(const ros::NodeHandle& handle)
   }
   else 
   {
-    //ROS_ERROR("Did not find parameters robot_info/DOF_min, robot_info/DOF_max");
+    ROS_ERROR("Did not find parameters robot_info/DOF_min, robot_info/DOF_max");
   }
 
   if(handle.hasParam("/ramp/global_frame"))
   {
     handle.getParam("/ramp/global_frame", global_frame);
+    ROS_INFO("global_frame: %s", global_frame.c_str());
   }
   else
   {
-    //ROS_ERROR("Did not find rosparam /ramp/global_frame");
+    ROS_ERROR("Did not find rosparam /ramp/global_frame");
+  }
+
+  if(handle.hasParam("/costmap_node/costmap/robot_base_frame"))
+  {
+    handle.getParam("/costmap_node/costmap/robot_base_frame", robot_base_frame);
+    ROS_INFO("robot_base_frame: %s", robot_base_frame.c_str());
+  }
+  else
+  {
+    ROS_ERROR("Did not find rosparam /costmap_node/costmap/robot_base_frame");
   }
 
 }
@@ -1148,6 +1163,84 @@ Point getGlobalCoords(const Circle& cir)
 }
 
 
+void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::OccupancyGrid& result)
+{
+  // This are the static bounds
+  // a is the lower-left corner, then go in cw order
+  float res = grid->info.resolution;
+  float w = grid->info.width  * res;
+  float h = grid->info.height * res;
+  tf::Transform tf_g_to_base = tf_base_to_global.inverse();
+
+  float x_min=0;
+  float y_min=0;
+  float x_max=3.5;
+  float y_max=3.5;
+  
+  ROS_INFO("costmap origin: (%f,%f) width: %i height: %i resolution: %f w: %f h: %f", grid->info.origin.position.x, grid->info.origin.position.y, grid->info.width, grid->info.height, grid->info.resolution, w, h);
+
+  // a = costmap origin
+  tf::Vector3 p_a(grid->info.origin.position.x, grid->info.origin.position.y, 0);
+
+  // b = top-left
+  tf::Vector3 p_b(p_a.getX(), p_a.getY()+h, 0);
+
+  // c = top-right
+  tf::Vector3 p_c(p_a.getX()+w, p_a.getY()+h, 0);
+
+  // d = bottom-right
+  tf::Vector3 p_d(p_a.getX()+w, p_a.getY(), 0);
+
+
+  std::vector<tf::Vector3> p_vec, p_w_vec;
+  p_vec.push_back(p_a);
+  p_vec.push_back(p_b);
+  p_vec.push_back(p_c);
+  p_vec.push_back(p_d);
+
+  for(int i=0;i<p_vec.size();i++)
+  {
+    ROS_INFO("p_vec[%i]: (%f,%f)", i, p_vec[i].getX(), p_vec[i].getY());
+    tf::Vector3 p_i_w = tf_base_to_global * p_vec[i];
+    p_w_vec.push_back(p_i_w);
+    ROS_INFO("p_w_vec[%i]: (%f,%f)", i, p_w_vec[i].getX(), p_w_vec[i].getY());
+  }
+
+
+  // Check if we need to crop
+  float delta_x_min = fabs(x_min - p_a.getX());
+  float delta_x_max = fabs(x_max - p_c.getX());
+  float delta_y_min = fabs(y_min - p_a.getY());
+  float delta_y_max = fabs(y_max - p_c.getY());
+  ROS_INFO("delta_x_min: %f delta_x_max: %f delta_y_min: %f delta_y_max: %f", delta_x_min, delta_x_max, delta_y_min, delta_y_max);
+  
+  int x_min_ind = delta_x_min / res;
+  int x_max_ind = delta_x_max / res;
+  int y_min_ind = delta_y_min / res;
+  int y_max_ind = delta_y_max / res;
+  ROS_INFO("x_min_ind: %i x_max_ind: %i y_min_ind: %i y_max_ind: %i", x_min_ind, x_max_ind, y_min_ind, y_max_ind);
+
+  int width_new   = grid->info.width - x_max_ind - x_min_ind;
+  int height_new  = grid->info.height - y_max_ind - y_min_ind;
+  ROS_INFO("width_new: %i height_new: %i", width_new, height_new);
+  for(int c=y_min_ind;c<grid->info.height-y_max_ind;c++)
+  {
+    int c_offset = (c*width_new);
+    for(int r=x_min_ind;r<grid->info.width-x_max_ind;r++)
+    {
+      result.data.push_back(grid->data[c_offset + r]);
+    }
+  }
+
+  result.info = grid->info;
+  result.info.width = width_new;
+  result.info.height = height_new;
+  result.info.origin.position.x += (x_min_ind*res);
+  result.info.origin.position.y += (y_min_ind*res);
+
+}
+
+
 void removeWallObs(std::vector<Circle>& cirs)
 {
   int i=0;
@@ -1221,6 +1314,9 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   //halfCostmap(grid, half);
 
   //ROS_INFO("New costmap size: %i", (int)grid->data.size());
+  
+  nav_msgs::OccupancyGrid cropped;
+  cropCostmap(grid, cropped);
 
   double grid_resolution = grid->info.resolution; 
   global_grid = *grid;
@@ -1244,7 +1340,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   }
 
   // Publish the modified costmap(s)
-  //pub_half_costmap.publish(half);
+  pub_half_costmap.publish(cropped);
   pub_cons_costmap.publish(accumulated_grid);
 
   // Make a pointer for the modified costmap
@@ -1671,6 +1767,20 @@ int main(int argc, char** argv)
   init_measurement_model();
   init_prior_model();
 
+  ros::Duration d(2.5);
+
+  tf::TransformListener listener;
+  if(listener.waitForTransform(global_frame, robot_base_frame, ros::Time(0), d))
+  {
+    listener.lookupTransform(global_frame, robot_base_frame, ros::Time(0), tf_base_to_global);
+    //listener.lookupTransform(robot_base_frame, global_frame, ros::Time(0), tf_base_to_global);
+    ROS_INFO("Base to global tf: translate: (%f, %f) rotation: %f", tf_base_to_global.getOrigin().getX(), tf_base_to_global.getOrigin().getX(), tf_base_to_global.getRotation().getAngle());
+  }
+  else
+  {
+    ROS_ERROR("Could not find global tf");
+  }
+
 
   ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);
 
@@ -1684,10 +1794,10 @@ int main(int argc, char** argv)
   ros::Timer timer = handle.createTimer(ros::Duration(1.f / rate), publishList);
   timer_markers = handle.createTimer(ros::Duration(1.f/10.f), publishMarkers);
 
-  
+ 
   // Set function to run at shutdown
   signal(SIGINT, reportPredictedVelocity);
-   
+ 
 
   printf("\nSpinning\n");
 
