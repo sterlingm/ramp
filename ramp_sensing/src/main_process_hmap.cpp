@@ -166,7 +166,7 @@ vector<cv::Point> bhFindLocalMaximum(InputArray _src,int neighbor=2)
 
 void thresholdHilbertMap(Mat hmap, Mat& result)
 {
-  threshold(hmap, result, 51, 255, CV_THRESH_BINARY);
+  threshold(hmap, result, 50, 255, CV_THRESH_BINARY);
   imshow("threshold", result);
   waitKey(0);
 }
@@ -241,6 +241,8 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
   double x_origin = hmap.map.info.origin.position.x / hmap.map.info.resolution;
   double y_origin = hmap.map.info.origin.position.y / hmap.map.info.resolution;
   double gamma = hmap.gamma;
+  double sigma = sqrt( (1.f/2.f*gamma) );
+  ROS_INFO("gamma: %f sigma: %f", gamma, sigma);
   ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
   for(int i=0;i<obs.size();i++)
   {
@@ -257,7 +259,7 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
     inner_radii.markers.push_back(getMarker(obs[i], i+obs.size()));
 
     // Make radius bigger and get new circle
-    obs[i].radius += (gamma * obs[i].radius);
+    obs[i].radius += sigma;
     outer_radii.markers.push_back(getMarker(obs[i], i));
   }
 
