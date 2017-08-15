@@ -1220,14 +1220,17 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   int y_max_ind = delta_y_max / res;
   ROS_INFO("x_min_ind: %i x_max_ind: %i y_min_ind: %i y_max_ind: %i", x_min_ind, x_max_ind, y_min_ind, y_max_ind);
 
-  int width_new   = grid->info.width - x_max_ind - x_min_ind;
+  int width_new   = grid->info.width  - x_max_ind - x_min_ind;
   int height_new  = grid->info.height - y_max_ind - y_min_ind;
   ROS_INFO("width_new: %i height_new: %i", width_new, height_new);
+  ROS_INFO("grid->info.height-y_max_ind: %i", grid->info.height-y_max_ind);
+  ROS_INFO("grid->info.width-x_max_ind: %i", grid->info.width-x_max_ind);
   for(int c=y_min_ind;c<grid->info.height-y_max_ind;c++)
   {
-    int c_offset = (c*width_new);
+    int c_offset = (c*grid->info.width);
     for(int r=x_min_ind;r<grid->info.width-x_max_ind;r++)
     {
+      //ROS_INFO("c: %i c_offset: %i r: %i total: %i", c, c_offset, r, c_offset+r);
       result.data.push_back(grid->data[c_offset + r]);
     }
   }
@@ -1282,7 +1285,7 @@ void halfCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
     int c_offset = (c*grid->info.width);// + grid->info.width/2;
     for(int r=grid->info.width/2;r<grid->info.width;r++)
     {
-      ////ROS_INFO("c: %i c_offset: %i r: %i total: %i", c, c_offset, r, c_offset+r);
+      //ROS_INFO("c: %i c_offset: %i r: %i total: %i", c, c_offset, r, c_offset+r);
       result.data.push_back(grid->data[c_offset + r]);
     }
   }
@@ -1320,6 +1323,8 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
   double grid_resolution = grid->info.resolution; 
   global_grid = *grid;
+
+  global_grid = cropped;
   
   //double grid_resolution = half.info.resolution; 
   //global_grid = half;
@@ -1328,7 +1333,8 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   // Consolidate this occupancy grid with prev ones
   nav_msgs::OccupancyGrid accumulated_grid;
   //consolidateCostmaps(half, prev_grids, consolidated_grid);
-  accumulateCostmaps(*grid, prev_grids, accumulated_grid);
+  //accumulateCostmaps(*grid, prev_grids, accumulated_grid);
+  accumulateCostmaps(cropped, prev_grids, accumulated_grid);
   
   //ROS_INFO("Finished getting consolidated_grid");
   
@@ -1374,7 +1380,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   /*
    * Discard any circles too close to boundaries because those are likely walls
    */
-  removeWallObs(cirs);
+  //removeWallObs(cirs);
 
   //ROS_INFO("Finished removing wall obstacles");
   
