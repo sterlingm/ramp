@@ -900,7 +900,7 @@ std::vector<Circle> CirclePacker::goMyBlobs(bool hmap)
   // Go through each set of contour points
   for(int i=0;i<contours.size();i++)
   {
-    ROS_INFO("contours[%i].size(): %i", i, (int)contours[i].size());
+    //ROS_INFO("contours[%i].size(): %i", i, (int)contours[i].size());
     Circle c;
     std::vector<cv::Point2f> obs_points;
 
