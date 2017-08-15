@@ -102,7 +102,7 @@ void Path::offsetPositions(const MotionState diff)
   for(uint8_t i=0;i<msg_.points.size()-1;i++)
   {
     MotionState temp(msg_.points[i].motionState);
-    temp.subtractPosition(diff);
+    temp.add(diff);
     msg_.points[i].motionState = temp.msg_;
   }
 }
