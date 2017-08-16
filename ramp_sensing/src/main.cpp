@@ -840,18 +840,43 @@ CircleOb* createCircleOb(Circle temp)
 
 void accumulateCostmaps(const nav_msgs::OccupancyGrid& g1, const nav_msgs::OccupancyGrid& g2, nav_msgs::OccupancyGrid& result)
 {
-  //ROS_INFO("In consolidateCostmaps(OccupancyGrid, OccupancyGrid, OccupancyGrid)");
-  //ROS_INFO("g1.data.size(): %i g2.data.size(): %i", (int)g1.data.size(), (int)g2.data.size());
+  ROS_INFO("In asscumulateCostmaps(OccupancyGrid, OccupancyGrid, OccupancyGrid)");
+  ROS_INFO("g1.data.size(): %i g2.data.size(): %i", (int)g1.data.size(), (int)g2.data.size());
+  ROS_INFO("g1.w: %i g1.h: %i g2.w: %i g2.h: %i", g1.info.width, g1.info.height, g2.info.width, g2.info.height);
   result = g1;
+
+  float ox = g2.info.origin.position.x - g1.info.origin.position.x;
+  float oy = g2.info.origin.position.y - g1.info.origin.position.y;
+
+  int i_x_offset = ox / g2.info.resolution;
+  int x_off_g1 = ox > 0 ? i_x_offset : 0;
+  int x_off_g2 = ox < 0 ? i_x_offset : 0;
+
+  int i_y_offset = (oy / g2.info.resolution) * g1.info.width;
+  int y_off_g1 = ox > 0 ? i_y_offset : 0;
+  int y_off_g2 = ox < 0 ? i_y_offset : 0;
+
+  int i_offset_g  = x_off_g1 + y_off_g1;
+  int i_offset_gg = x_off_g2 + y_off_g2;
+
+  if(i_offset_g > 0 || i_offset_gg > 0)
+  {
+    ROS_INFO("Hey look");
+  }
+
+  ROS_INFO("ox: %f oy: %f i_x_offset: %i x_off_g1: %i x_off_g2: %i i_y_offset: %i y_off_g1: %i y_off_g2: %i i_offset_g: %i i_offset_gg: %i", 
+      ox, oy, i_x_offset, x_off_g1, x_off_g2, i_y_offset, y_off_g1, y_off_g2, i_offset_g, i_offset_gg);
+
   //ROS_INFO("g1.info.width: %i g1.info.height: %i", g1.info.width, g1.info.height);
   //ROS_INFO("Before for loops, result.size(): %i", (int)result.data.size());
-  for(int r=0;r<g1.info.width && r<g2.info.width;r++)
+  for(int c=0;c<g1.info.height && c<g2.info.height;c++)
   {
-    int r_offset = g1.info.height*r;
-    for(int c=0;c<g1.info.height && c<g2.info.height;c++)
+    int c_offset = g1.info.width < g2.info.width ? g1.info.width*c : g2.info.width;
+    for(int r=0;r<g1.info.width && r<g2.info.width;r++)
     {
-      ////ROS_INFO("r_offset: %i c: %i r_offset+c: %i", r_offset, c, r_offset+c);
-      result.data[r_offset + c] = (g1.data[r_offset + c] | g2.data[r_offset + c]);
+      
+      //result.data[c_offset + r] = (g1.data[c_offset + r + i_offset_g] | g2.data[c_offset + r + i_offset_gg]);
+      result.data[c_offset + r] = (g1.data[c_offset + r] | g2.data[c_offset + r]);
       /*if(!g1.data[r_offset + c] && !g2.data[r_offset + c] && result.data[r_offset+c])
       {
         ROS_INFO("g1.data[%i]: %i g2.data: %i result: %i", r_offset+c, g1.data[r_offset+c], g2.data[r_offset+c], result.data[r_offset+c]);
@@ -1339,8 +1364,8 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   nav_msgs::OccupancyGrid accumulated_grid;
   //consolidateCostmaps(half, prev_grids, consolidated_grid);
   //accumulateCostmaps(*grid, prev_grids, accumulated_grid);
-  //accumulateCostmaps(cropped, prev_grids, accumulated_grid);
-  accumulated_grid = cropped;
+  accumulateCostmaps(cropped, prev_grids, accumulated_grid);
+  //accumulated_grid = cropped;
   
   //ROS_INFO("Finished getting consolidated_grid");
   
