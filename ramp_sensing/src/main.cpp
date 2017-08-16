@@ -1181,7 +1181,7 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   float x_max=ranges[0].max;
   float y_max=ranges[1].max;
   
-  //ROS_INFO("costmap origin: (%f,%f) width: %i height: %i resolution: %f w: %f h: %f", grid->info.origin.position.x, grid->info.origin.position.y, grid->info.width, grid->info.height, grid->info.resolution, w, h);
+  ROS_INFO("costmap origin: (%f,%f) width: %i height: %i resolution: %f w: %f h: %f", grid->info.origin.position.x, grid->info.origin.position.y, grid->info.width, grid->info.height, grid->info.resolution, w, h);
 
   // a = costmap origin
   tf::Vector3 p_a(grid->info.origin.position.x, grid->info.origin.position.y, 0);
@@ -1204,10 +1204,10 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
 
   for(int i=0;i<p_vec.size();i++)
   {
-    //ROS_INFO("p_vec[%i]: (%f,%f)", i, p_vec[i].getX(), p_vec[i].getY());
+    ROS_INFO("p_vec[%i]: (%f,%f)", i, p_vec[i].getX(), p_vec[i].getY());
     tf::Vector3 p_i_w = tf_base_to_global * p_vec[i];
     p_w_vec.push_back(p_i_w);
-    //ROS_INFO("p_w_vec[%i]: (%f,%f)", i, p_w_vec[i].getX(), p_w_vec[i].getY());
+    ROS_INFO("p_w_vec[%i]: (%f,%f)", i, p_w_vec[i].getX(), p_w_vec[i].getY());
   }
 
 
@@ -1216,19 +1216,19 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   float delta_x_max = fabs(x_max - p_c.getX());
   float delta_y_min = fabs(y_min - p_a.getY());
   float delta_y_max = fabs(y_max - p_c.getY());
-  //ROS_INFO("delta_x_min: %f delta_x_max: %f delta_y_min: %f delta_y_max: %f", delta_x_min, delta_x_max, delta_y_min, delta_y_max);
+  ROS_INFO("delta_x_min: %f delta_x_max: %f delta_y_min: %f delta_y_max: %f", delta_x_min, delta_x_max, delta_y_min, delta_y_max);
   
-  int x_min_ind = delta_x_min / res;
-  int x_max_ind = delta_x_max / res;
-  int y_min_ind = delta_y_min / res;
-  int y_max_ind = delta_y_max / res;
-  //ROS_INFO("x_min_ind: %i x_max_ind: %i y_min_ind: %i y_max_ind: %i", x_min_ind, x_max_ind, y_min_ind, y_max_ind);
+  int x_min_ind = p_a.getX() < x_min ? delta_x_min / res : 0;
+  int x_max_ind = p_c.getX() > x_max ? delta_x_max / res : 0;
+  int y_min_ind = p_a.getY() < y_min ? delta_y_min / res : 0;
+  int y_max_ind = p_c.getY() > y_max ? delta_y_max / res : 0;
+  ROS_INFO("x_min_ind: %i x_max_ind: %i y_min_ind: %i y_max_ind: %i", x_min_ind, x_max_ind, y_min_ind, y_max_ind);
 
   int width_new   = grid->info.width  - x_max_ind - x_min_ind;
   int height_new  = grid->info.height - y_max_ind - y_min_ind;
-  /*ROS_INFO("width_new: %i height_new: %i", width_new, height_new);
+  ROS_INFO("width_new: %i height_new: %i", width_new, height_new);
   ROS_INFO("grid->info.height-y_max_ind: %i", grid->info.height-y_max_ind);
-  ROS_INFO("grid->info.width-x_max_ind: %i", grid->info.width-x_max_ind);*/
+  ROS_INFO("grid->info.width-x_max_ind: %i", grid->info.width-x_max_ind);
   for(int c=y_min_ind;c<grid->info.height-y_max_ind;c++)
   {
     int c_offset = (c*grid->info.width);
@@ -1245,8 +1245,8 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   result.info.origin.position.x += (x_min_ind*res);
   result.info.origin.position.y += (y_min_ind*res);
 
-  //ROS_INFO("result.info.width: %i result.info.height: %i", result.info.width, result.info.height);
-  //ROS_INFO("result.info.origin.position: (%f,%f)", result.info.origin.position.x, result.info.origin.position.y);
+  ROS_INFO("result.info.width: %i result.info.height: %i", result.info.width, result.info.height);
+  ROS_INFO("result.info.origin.position: (%f,%f)", result.info.origin.position.x, result.info.origin.position.y);
 }
 
 
