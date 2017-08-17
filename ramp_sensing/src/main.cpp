@@ -26,9 +26,11 @@
 std::vector<CircleOb*> cir_obs;
 std::vector<Circle> cirs_pos;
 
+nav_msgs::OccupancyGrid global_costmap;
+
 Utility util;
 double rate=10;
-ros::Publisher pub_obj, pub_rviz, pub_cons_costmap, pub_half_costmap;
+ros::Publisher pub_obj, pub_rviz, pub_cons_costmap, pub_half_costmap, pub_global_costmap;
 std::vector< Obstacle> obs;
 ramp_msgs::ObstacleList list;
 std::vector< std::string > ob_odoms;
@@ -836,16 +838,69 @@ CircleOb* createCircleOb(Circle temp)
 
 
 
+void transformCostmap(nav_msgs::OccupancyGrid& g)
+{
+  //ROS_INFO("In transformCostmap");
+  tf::Vector3 p(g.info.origin.position.x, g.info.origin.position.y, 0);
+  float res = g.info.resolution;
+  int w = g.info.width;
+  int h = g.info.height;
+  //ROS_INFO("p: (%f,%f) w: %i h: %i", p.getX(), p.getY(), w, h);
+
+  tf::Vector3 p_global(global_costmap.info.origin.position.x, global_costmap.info.origin.position.y, 0);
+  //ROS_INFO("p_global: (%f,%f)", p_global.getX(), p_global.getY());
+
+ 
+  float delta_x = g.info.origin.position.x - global_costmap.info.origin.position.x;
+  float delta_y = g.info.origin.position.y - global_costmap.info.origin.position.y;
+  int i_dx = delta_x / res;
+  int i_dy = (delta_y / res) * global_costmap.info.width;
+  //ROS_INFO("delta_x: %f delta_y: %f i_dx: %i i_dy: %i", delta_x, delta_y, i_dx, i_dy);
+
+  for(int i=0;i<g.data.size();i++)
+  {
+    float r = (i / w) * res;
+    float c = ((i % w)+1) * res;
+    //ROS_INFO("r: %f c: %f", r, c);
+
+    float x = c;
+    float y = r;
+
+
+    // Convert to global
+    x += p.getX();
+    y += p.getY();
+
+    // Get index on global costmap
+    int c_global = (i % g.info.width) % global_costmap.info.width;
+    // divide to get rid of remainder, then re-multiply by width
+    int r_global = (i / g.info.width) * global_costmap.info.width;
+    //float x_gl = (c_global*res) + global_costmap.info.origin.position.x;
+    //float y_gl = (r_global*res) + global_costmap.info.origin.position.y;
+    //ROS_INFO("Before considering origin, c_global: %i r_global: %i", c_global, r_global);
+
+    c_global += i_dx <= -(c/res) ? -(c/res) * global_costmap.info.width : i_dx;
+    r_global += i_dy;
+
+    int i_global = r_global + c_global;
+    //ROS_INFO("x: %f y: %f c_global: %i r_global: %i i: %i i_global: %i global.size(): %i", x, y, c_global, r_global, i, i_global, (int)global_costmap.data.size());
+
+    if(i_global > 0 && i_global < global_costmap.data.size())
+    {
+      global_costmap.data[i_global] = g.data[i];
+    }
+  }
+}
 
 
 void accumulateCostmaps(const nav_msgs::OccupancyGrid& g1, const nav_msgs::OccupancyGrid& g2, nav_msgs::OccupancyGrid& result)
 {
-  ROS_INFO("In asscumulateCostmaps(OccupancyGrid, OccupancyGrid, OccupancyGrid)");
+  /*ROS_INFO("In asscumulateCostmaps(OccupancyGrid, OccupancyGrid, OccupancyGrid)");
   ROS_INFO("g1.data.size(): %i g2.data.size(): %i", (int)g1.data.size(), (int)g2.data.size());
-  ROS_INFO("g1.w: %i g1.h: %i g2.w: %i g2.h: %i", g1.info.width, g1.info.height, g2.info.width, g2.info.height);
+  ROS_INFO("g1.w: %i g1.h: %i g2.w: %i g2.h: %i", g1.info.width, g1.info.height, g2.info.width, g2.info.height);*/
   result = g1;
 
-  float ox = g2.info.origin.position.x - g1.info.origin.position.x;
+  /*float ox = g2.info.origin.position.x - g1.info.origin.position.x;
   float oy = g2.info.origin.position.y - g1.info.origin.position.y;
 
   int i_x_offset = ox / g2.info.resolution;
@@ -859,13 +914,8 @@ void accumulateCostmaps(const nav_msgs::OccupancyGrid& g1, const nav_msgs::Occup
   int i_offset_g  = x_off_g1 + y_off_g1;
   int i_offset_gg = x_off_g2 + y_off_g2;
 
-  if(i_offset_g > 0 || i_offset_gg > 0)
-  {
-    ROS_INFO("Hey look");
-  }
-
   ROS_INFO("ox: %f oy: %f i_x_offset: %i x_off_g1: %i x_off_g2: %i i_y_offset: %i y_off_g1: %i y_off_g2: %i i_offset_g: %i i_offset_gg: %i", 
-      ox, oy, i_x_offset, x_off_g1, x_off_g2, i_y_offset, y_off_g1, y_off_g2, i_offset_g, i_offset_gg);
+      ox, oy, i_x_offset, x_off_g1, x_off_g2, i_y_offset, y_off_g1, y_off_g2, i_offset_g, i_offset_gg);*/
 
   //ROS_INFO("g1.info.width: %i g1.info.height: %i", g1.info.width, g1.info.height);
   //ROS_INFO("Before for loops, result.size(): %i", (int)result.data.size());
@@ -1206,7 +1256,7 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   float x_max=ranges[0].max;
   float y_max=ranges[1].max;
   
-  ROS_INFO("costmap origin: (%f,%f) width: %i height: %i resolution: %f w: %f h: %f", grid->info.origin.position.x, grid->info.origin.position.y, grid->info.width, grid->info.height, grid->info.resolution, w, h);
+  //ROS_INFO("costmap origin: (%f,%f) width: %i height: %i resolution: %f w: %f h: %f", grid->info.origin.position.x, grid->info.origin.position.y, grid->info.width, grid->info.height, grid->info.resolution, w, h);
 
   // a = costmap origin
   tf::Vector3 p_a(grid->info.origin.position.x, grid->info.origin.position.y, 0);
@@ -1229,10 +1279,10 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
 
   for(int i=0;i<p_vec.size();i++)
   {
-    ROS_INFO("p_vec[%i]: (%f,%f)", i, p_vec[i].getX(), p_vec[i].getY());
+    //ROS_INFO("p_vec[%i]: (%f,%f)", i, p_vec[i].getX(), p_vec[i].getY());
     tf::Vector3 p_i_w = tf_base_to_global * p_vec[i];
     p_w_vec.push_back(p_i_w);
-    ROS_INFO("p_w_vec[%i]: (%f,%f)", i, p_w_vec[i].getX(), p_w_vec[i].getY());
+    //ROS_INFO("p_w_vec[%i]: (%f,%f)", i, p_w_vec[i].getX(), p_w_vec[i].getY());
   }
 
 
@@ -1241,19 +1291,19 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   float delta_x_max = fabs(x_max - p_c.getX());
   float delta_y_min = fabs(y_min - p_a.getY());
   float delta_y_max = fabs(y_max - p_c.getY());
-  ROS_INFO("delta_x_min: %f delta_x_max: %f delta_y_min: %f delta_y_max: %f", delta_x_min, delta_x_max, delta_y_min, delta_y_max);
+  //ROS_INFO("delta_x_min: %f delta_x_max: %f delta_y_min: %f delta_y_max: %f", delta_x_min, delta_x_max, delta_y_min, delta_y_max);
   
   int x_min_ind = p_a.getX() < x_min ? delta_x_min / res : 0;
   int x_max_ind = p_c.getX() > x_max ? delta_x_max / res : 0;
   int y_min_ind = p_a.getY() < y_min ? delta_y_min / res : 0;
   int y_max_ind = p_c.getY() > y_max ? delta_y_max / res : 0;
-  ROS_INFO("x_min_ind: %i x_max_ind: %i y_min_ind: %i y_max_ind: %i", x_min_ind, x_max_ind, y_min_ind, y_max_ind);
+  //ROS_INFO("x_min_ind: %i x_max_ind: %i y_min_ind: %i y_max_ind: %i", x_min_ind, x_max_ind, y_min_ind, y_max_ind);
 
   int width_new   = grid->info.width  - x_max_ind - x_min_ind;
   int height_new  = grid->info.height - y_max_ind - y_min_ind;
-  ROS_INFO("width_new: %i height_new: %i", width_new, height_new);
+  /*ROS_INFO("width_new: %i height_new: %i", width_new, height_new);
   ROS_INFO("grid->info.height-y_max_ind: %i", grid->info.height-y_max_ind);
-  ROS_INFO("grid->info.width-x_max_ind: %i", grid->info.width-x_max_ind);
+  ROS_INFO("grid->info.width-x_max_ind: %i", grid->info.width-x_max_ind);*/
   for(int c=y_min_ind;c<grid->info.height-y_max_ind;c++)
   {
     int c_offset = (c*grid->info.width);
@@ -1270,8 +1320,8 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   result.info.origin.position.x += (x_min_ind*res);
   result.info.origin.position.y += (y_min_ind*res);
 
-  ROS_INFO("result.info.width: %i result.info.height: %i", result.info.width, result.info.height);
-  ROS_INFO("result.info.origin.position: (%f,%f)", result.info.origin.position.x, result.info.origin.position.y);
+  //ROS_INFO("result.info.width: %i result.info.height: %i", result.info.width, result.info.height);
+  //ROS_INFO("result.info.origin.position: (%f,%f)", result.info.origin.position.x, result.info.origin.position.y);
 }
 
 
@@ -1332,6 +1382,34 @@ void halfCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   //ROS_INFO("Exiting halfCostmap");
 }
 
+void initGlobalMap()
+{
+  ROS_INFO("In initGlobalMap");
+  if(ranges.size() > 1)
+  {
+    global_costmap.info.resolution = 0.05;
+
+    global_costmap.info.origin.position.x = ranges[0].min;
+    global_costmap.info.origin.position.y = ranges[1].min;
+    global_costmap.info.width             = ((ranges[0].max - ranges[0].min) / global_costmap.info.resolution)+1;
+    global_costmap.info.height            = ((ranges[1].max - ranges[1].min) / global_costmap.info.resolution)+1;
+
+
+    size_t size = global_costmap.info.width * global_costmap.info.height;
+    global_costmap.data.reserve(size);
+    for(int i=0;i<size;i++)
+    {
+      global_costmap.data.push_back(-1);
+    }
+    
+    ROS_INFO("Global CM origin: (%f,%f) w: %i h: %i size: %i", global_costmap.info.origin.position.x, global_costmap.info.origin.position.y, global_costmap.info.width, global_costmap.info.height, (int)global_costmap.data.size());
+  }
+  else
+  {
+    ROS_ERROR("Cannot set global costmap until rosparams are loaded");
+  }
+}
+
 
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
@@ -1352,6 +1430,9 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   nav_msgs::OccupancyGrid cropped;
   cropCostmap(grid, cropped);
 
+  transformCostmap(cropped);
+  pub_global_costmap.publish(global_costmap);
+
   double grid_resolution = grid->info.resolution; 
   
   //global_grid = *grid;
@@ -1364,13 +1445,15 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   nav_msgs::OccupancyGrid accumulated_grid;
   //consolidateCostmaps(half, prev_grids, consolidated_grid);
   //accumulateCostmaps(*grid, prev_grids, accumulated_grid);
-  accumulateCostmaps(cropped, prev_grids, accumulated_grid);
+  //accumulateCostmaps(cropped, prev_grids, accumulated_grid);
+  accumulateCostmaps(global_costmap, prev_grids, accumulated_grid);
   //accumulated_grid = cropped;
   
   //ROS_INFO("Finished getting consolidated_grid");
   
   // Push this grid onto prev_grids
-  prev_grids.push_back(global_grid);
+  //prev_grids.push_back(global_grid);
+  prev_grids.push_back(global_costmap);
   if(prev_grids.size() > num_costmaps_accumulate)
   {
     prev_grids.erase(prev_grids.begin(), prev_grids.begin()+1);
@@ -1802,6 +1885,7 @@ int main(int argc, char** argv)
   } // end for*/
 
   loadParameters(handle);
+  initGlobalMap();
 
 
   // Initialize the Kalman Filter
@@ -1831,6 +1915,7 @@ int main(int argc, char** argv)
   pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1);
   pub_cons_costmap = handle.advertise<nav_msgs::OccupancyGrid>("accumulated_costmap", 1);
   pub_half_costmap = handle.advertise<nav_msgs::OccupancyGrid>("half_costmap", 1);
+  pub_global_costmap = handle.advertise<nav_msgs::OccupancyGrid>("global_costmap", 1);
 
   //Timers
   ros::Timer timer = handle.createTimer(ros::Duration(1.f / rate), publishList);
