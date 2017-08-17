@@ -1448,6 +1448,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   //accumulateCostmaps(cropped, prev_grids, accumulated_grid);
   accumulateCostmaps(global_costmap, prev_grids, accumulated_grid);
   //accumulated_grid = cropped;
+  global_grid = global_costmap;
   
   //ROS_INFO("Finished getting consolidated_grid");
   
