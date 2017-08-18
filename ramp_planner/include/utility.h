@@ -14,6 +14,7 @@
 #include "ramp_msgs/RampTrajectory.h"
 #include "ramp_msgs/Path.h"
 #include "ramp_msgs/ObstacleList.h"
+#include "ramp_msgs/HilbertMap.h"
 #include "std_msgs/Bool.h"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include <tf/transform_datatypes.h>

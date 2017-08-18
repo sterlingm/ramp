@@ -37,7 +37,7 @@ add_executable(convert_hilbert_data src/main_convert_map_to_hilbert_data.cpp)
 target_link_libraries(convert_hilbert_data ${catkin_LIBRARIES} ${OpenCV_LIBS} ${BFL_LIBRARIES})
 add_dependencies(convert_hilbert_data ramp_msgs_generate_messages_cpp)
 
-add_executable(process_hmap src/main_process_hmap.cpp src/circle_packer.cpp src/GridMap2D.cpp src/utility.cpp)
+add_executable(process_hmap src/main_process_hmap.cpp src/circle_packer.cpp src/GridMap2D.cpp src/obstacle.cpp src/utility.cpp)
 target_link_libraries(process_hmap ${catkin_LIBRARIES} ${OpenCV_LIBS} ${BFL_LIBRARIES})
 add_dependencies(process_hmap ramp_msgs_generate_messages_cpp)
 

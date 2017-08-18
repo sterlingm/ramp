@@ -240,6 +240,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   for(uint8_t i=0;i<msg.obstacles.size();i++)
   {
     RampTrajectory ob_temp_trj = getPredictedTrajectory(msg.obstacles.at(i));
+    // Set the trajectories (check if ob_trajectory is populated first)
     if(ob_trajectory_.size() < i+1)
     {
       ob_trajectory_.push_back(ob_temp_trj);
@@ -1091,13 +1092,14 @@ void Planner::buildTrajectoryRequest(const Path path, ramp_msgs::TrajectoryReque
 }
 
 
-void Planner::buildEvaluationSrv(std::vector<RampTrajectory>& trajecs, ramp_msgs::EvaluationSrv& srv) const
+void Planner::buildEvaluationSrv(std::vector<RampTrajectory>& trajecs, ramp_msgs::EvaluationSrv& srv, bool hmap) const
 {
   for(uint16_t i=0;i<trajecs.size();i++)
   {
     ramp_msgs::EvaluationRequest req;
     buildEvaluationRequest(trajecs[i], req);
     srv.request.reqs.push_back(req);
+    req.init_eval = hmap;
   }
 }
 
@@ -1682,6 +1684,8 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   moving_robot_         = moving_robot;
   errorReduction_       = errorReduction;
   generationsPerCC_     = controlCycle_.toSec() / planningCycle_.toSec();
+
+  evalHMap = false;
   //ROS_INFO("Exiting Planner::init");
 } // End init
 
@@ -3620,10 +3624,10 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
 
 
 
-void Planner::requestEvaluation(std::vector<RampTrajectory>& trajecs) 
+void Planner::requestEvaluation(std::vector<RampTrajectory>& trajecs, bool hmap)
 {
   ramp_msgs::EvaluationSrv srv;
-  buildEvaluationSrv(trajecs, srv);
+  buildEvaluationSrv(trajecs, srv, hmap);
 
   ros::Time t_start = ros::Time::now();
   if(h_eval_req_->request(srv))
@@ -3699,9 +3703,9 @@ void Planner::evaluateTrajectory(RampTrajectory& t, bool full) const
 }
 
 
-void Planner::evaluatePopulation()
+void Planner::evaluatePopulation(bool hmap)
 {
-  requestEvaluation(population_.trajectories_);
+  requestEvaluation(population_.trajectories_, hmap);
 }
 
 
@@ -3973,6 +3977,38 @@ void Planner::goTest(float sec)
 
 
 
+void Planner::hilbertMapObsCb(const ramp_msgs::ObstacleList& hmapObs)
+{
+  ROS_INFO("In Planner::hilbertMapObsCb");
+
+  /*
+   * Build an evaluation request
+   */
+  // Create trajectories for hmap obstacles
+  for(int i=0;i<hmapObs.obstacles.size();i++)
+  {
+    RampTrajectory ob_trj = getPredictedTrajectory(hmapObs.obstacles[i]);
+    if(ob_trajectory_.size() < i+1)
+    {
+      ob_trajectory_.push_back(ob_trj);
+      ob_radii_.push_back(hmapObs.obstacles[i].radius);
+    }
+    else
+    {
+      ob_trajectory_.at(i) = ob_trj;
+      ob_radii_.at(i) = hmapObs.obstacles[i].radius;
+    }
+  }
+
+  
+  evaluatePopulation(true);
+
+  
+  evalHMap = true;
+  
+  ROS_INFO("Exiting Planner::hilbertMapObsCb");
+}
+
 
 void Planner::go() 
 {
@@ -3983,6 +4019,13 @@ void Planner::go()
   // initialize population
   initPopulation();
   ROS_INFO("Population initialized");
+  ROS_INFO("Waiting to evaluate pop based on Hilbert map");
+  
+  while(!evalHMap)
+  {
+    ros::spinOnce();
+  }
+
   evaluatePopulation();
   ROS_INFO("Initial population evaluated");
   //sendPopulation();
@@ -4025,7 +4068,6 @@ void Planner::go()
 
   
   h_parameters_.setCCStarted(false); 
-
 
   int num_pc = generationsBeforeCC_; 
   if(num_pc < 0)

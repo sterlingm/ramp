@@ -425,8 +425,9 @@ int main(int argc, char** argv)
   {
     ros::Subscriber sub_updatePose_ = handle.subscribe(update_topic, 1, &Planner::updateCbPose, &my_planner);
   }
-  ros::Subscriber sub_updateVel_ = handle.subscribe("update", 1, &Planner::updateCbControlNode, &my_planner);
-  ros::Subscriber sub_sc_ = handle.subscribe("obstacles", 1, &Planner::sensingCycleCallback, &my_planner);
+  ros::Subscriber sub_updateVel_  = handle.subscribe("update", 1, &Planner::updateCbControlNode, &my_planner);
+  ros::Subscriber sub_sc_         = handle.subscribe("obstacles", 1, &Planner::sensingCycleCallback, &my_planner);
+  ros::Subscriber sub_hmap        = handle.subscribe("hmap_obstacles", 1, &Planner::hilbertMapObsCb, &my_planner);
 
   pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 10);
 

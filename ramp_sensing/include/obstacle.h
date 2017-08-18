@@ -41,6 +41,7 @@ class Obstacle
 
     void doTF(bool odom=true);
 
+    float radius_;
   private:
     int costmap_width_;
     int costmap_height_;
@@ -51,7 +52,6 @@ class Obstacle
     float y_translate_costmap_;
     float global_grid_origin_x_;
     float global_grid_origin_y_;
-    float radius_;
 
     Utility utility_;
 };

@@ -147,7 +147,7 @@ class Planner {
 
     // Evaluate the population 
     void evaluateTrajectory(RampTrajectory& t, bool full=true) const;
-    void evaluatePopulation();
+    void evaluatePopulation(bool hmap=false);
     
     // Modify trajectory or path
     const std::vector<Path> modifyPath();
@@ -175,7 +175,7 @@ class Planner {
 
 
 
-    void buildEvaluationSrv(std::vector<RampTrajectory>& trajecs, ramp_msgs::EvaluationSrv& result) const;
+    void buildEvaluationSrv(std::vector<RampTrajectory>& trajecs, ramp_msgs::EvaluationSrv& result, bool hmap=false) const;
     void buildEvaluationSrv(const RampTrajectory& trajec, ramp_msgs::EvaluationSrv& result) const;
     void buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::EvaluationRequest& result, bool full=true) const;
 
@@ -194,7 +194,7 @@ class Planner {
 
 
     // Many trajectories
-    void requestEvaluation(std::vector<RampTrajectory>& trajecs);
+    void requestEvaluation(std::vector<RampTrajectory>& trajecs, bool hmap=false);
 
     // One trajectory
     void requestEvaluation(ramp_msgs::EvaluationRequest& request) const;
@@ -235,6 +235,10 @@ class Planner {
     void sensingCycleCallback     (const ramp_msgs::ObstacleList& msg);
     void updateCbPose(const geometry_msgs::PoseWithCovarianceStamped msg);
     void updateCbControlNode(const ramp_msgs::MotionState& msg);
+
+
+    void hilbertMapObsCb(const ramp_msgs::ObstacleList& hmapObs);
+
 
     /** Data */
 
@@ -522,6 +526,9 @@ class Planner {
     tf::StampedTransform tf_global_costmap_;
     tf::StampedTransform tf_global_odom_;
     tf::StampedTransform tf_global_odom_rot_;
+
+
+    bool evalHMap;
 };
 
 #endif

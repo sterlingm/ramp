@@ -7,6 +7,8 @@
 #include <vector>
 #include "circle_packer.h"
 #include "ramp_msgs/HilbertMap.h"
+#include "ramp_msgs/ObstacleList.h"
+#include "obstacle.h"
 
 using namespace std;
 using namespace cv;
@@ -15,8 +17,10 @@ Mat hmap_mat;
 Mat hmap_edges;
 
 
-ros::Publisher pub_rviz;
+ros::Publisher pub_rviz, pub_obs;
 visualization_msgs::MarkerArray inner_radii, outer_radii;
+ramp_msgs::ObstacleList hmap_obs;
+
 
 
 void CannyThreshold(int, void*)
@@ -24,8 +28,8 @@ void CannyThreshold(int, void*)
   /// Reduce noise with a kernel 3x3
   blur( hmap_mat, hmap_edges, Size(3,3) );
   
-  imshow("after blur src", hmap_edges);
-  waitKey(0);
+  //imshow("after blur src", hmap_edges);
+  //waitKey(0);
 
 
   // Somehow, lowThreshold is being converted to unsigned int before this point
@@ -38,8 +42,8 @@ void CannyThreshold(int, void*)
   /// Canny detector
   Canny( hmap_edges, hmap_edges, lowThreshold, lowThreshold*ratio, kernel_size );
 
-  imshow( "hmap_edges", hmap_edges);
-  waitKey(0);
+  //imshow( "hmap_edges", hmap_edges);
+  //waitKey(0);
 }
 
 
@@ -103,32 +107,25 @@ vector<cv::Point> bhFindLocalMaximum(InputArray _src,int neighbor=2)
 
   // Dilate
   dilate(peak_img,peak_img,Mat(),cv::Point(-1,-1),neighbor);
-  imshow("dilate", peak_img);
+  //imshow("dilate", peak_img);
   peak_img = peak_img - src;
   resize(peak_img, peak_img, Size(peak_img.cols*4, peak_img.rows*4));
-  imshow("dilate-src", peak_img);
+  //imshow("dilate-src", peak_img);
 
-  
-  waitKey(0);
 
   Mat flat_img;
   erode(src,flat_img,Mat(),cv::Point(-1,-1),neighbor);
-  imshow("erode", flat_img);
+  //imshow("erode", flat_img);
   flat_img = src - flat_img;
-  imshow("erode-src", flat_img);
-
-  waitKey(0);
+  //imshow("erode-src", flat_img);
 
 
   threshold(peak_img,peak_img,0,255,CV_THRESH_BINARY);
   threshold(flat_img,flat_img,0,255,CV_THRESH_BINARY);
   bitwise_not(flat_img,flat_img);
 
-  imshow("thr_dil", peak_img);
-  imshow("thr_ero", flat_img);
-  waitKey(0);
-  
-  printf("\nDone threshold\n");
+  //imshow("thr_dil", peak_img);
+  //imshow("thr_ero", flat_img);
 
   // Set 255 to any pixels that flat_img has nonzero value
   peak_img.setTo(cv::Scalar::all(255),flat_img);
@@ -168,7 +165,7 @@ void thresholdHilbertMap(Mat hmap, Mat& result)
 {
   threshold(hmap, result, 50, 255, CV_THRESH_BINARY);
   imshow("threshold", result);
-  waitKey(0);
+  //waitKey(0);
 }
 
 
@@ -227,7 +224,7 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
   // Create cv::Mat  
   hmap_mat = hmap_gmap.probMap();
   cv::transpose(hmap_mat, hmap_mat);
-  imshow("hmap", hmap_mat);
+  //imshow("hmap", hmap_mat);
 
   Mat hmap_thresh;
 
@@ -244,13 +241,16 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
   double sigma = sqrt( (1.f/2.f*gamma) );
   ROS_INFO("gamma: %f sigma: %f", gamma, sigma);
   ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
+  Velocity v_zero;
+  double theta = 0;
+
+  hmap_obs.obstacles.clear();
   for(int i=0;i<obs.size();i++)
   {
     ROS_INFO("Before Obstacle %i: Center - (%f,%f) Radius - %f", i, obs[i].center.x, obs[i].center.y, obs[i].radius);
     resize(hmap_thresh, hmap_thresh, Size(hmap_thresh.cols*4, hmap_thresh.rows*4));
     hmap_thresh.at<uchar>(obs[i].center.x, obs[i].center.y) = 128;
-    imshow("center", hmap_thresh);
-    waitKey(0);
+    //imshow("center", hmap_thresh);
 
     obs[i].center.x = (obs[i].center.x * hmap.map.info.resolution) + hmap.map.info.origin.position.x;
     obs[i].center.y = (obs[i].center.y * hmap.map.info.resolution) + hmap.map.info.origin.position.y;
@@ -258,9 +258,18 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
     ROS_INFO("After Obstacle %i: Center - (%f,%f) Radius - %f", i, obs[i].center.x, obs[i].center.y, obs[i].radius);
     inner_radii.markers.push_back(getMarker(obs[i], i+obs.size()));
 
+    
+    Obstacle o(obs[i].radius, hmap.map.info.width, hmap.map.info.height, hmap.map.info.origin.position.x, hmap.map.info.origin.position.y, hmap.map.info.resolution, hmap.map.info.origin.position.x, hmap.map.info.origin.position.y);
+    o.update(obs[i], v_zero, theta);
+    hmap_obs.obstacles.push_back(o.msg_);
+
     // Make radius bigger and get new circle
     obs[i].radius += sigma;
     outer_radii.markers.push_back(getMarker(obs[i], i));
+
+    o.radius_ += sigma;
+    o.msg_.radius += sigma;
+    hmap_obs.obstacles.push_back(o.msg_);
   }
 
   for(int i=0;i<inner_radii.markers.size();i++)
@@ -271,80 +280,12 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
     inner_radii.markers[i].pose.position.z += 0.01;
   }
 
+
+
+
   pub_rviz.publish(outer_radii);
   pub_rviz.publish(inner_radii);
-  
-
-  /*double minV = 0;
-  double maxV = 100;
-  cv::Point min, max;
-  minMaxLoc(hmap_mat, &minV, &maxV, &min, &max);
-  ROS_INFO("min: (%i,%i)", min.x, min.y);
-  ROS_INFO("max: (%i,%i)", max.x, max.y);*/
-
-  /*
-   * Dilation method
-   * Dilate with 0 in middle of kernel, then compare image pixel > dilated image pixel
-   * Needs peaks to be sharp, can't find peak when gradient is too smooth
-   */
-  // Create kernel
-  /*int kernalSize = 3;
-  Mat1b kernelLM(Size(kernalSize, kernalSize), 1);
-  kernelLM.at<uchar>(kernalSize/2, kernalSize/2) = 0;
-  Mat imageLM;
-
-  // Gaussian blur the image
-  //GaussianBlur(hmap_mat, hmap_mat, Size(3,3), 0, 0);
-  //imshow("blurred", hmap_mat);
-
-  dilate(hmap_mat, imageLM, kernelLM);
-  imshow("dilated",imageLM);
-  Mat1b localMaxima = (hmap_mat > imageLM);
-  for(int i=25;i<35;i++)
-    for(int j=30;j<40;j++)
-      ROS_INFO("hmap_mat[%i][%i]: %i", i, j, hmap_mat.at<uchar>(i,j));
-  imshow("localMax", localMaxima);
-  waitKey(0);
-
-  std::vector<cv::Point> locations;   // output, locations of non-zero pixels
-  cv::findNonZero(localMaxima, locations);
-  for(int i=0;i<locations.size();i++)
-  {
-    cv::Point pnt = locations[i];
-    ROS_INFO("Local maxima %i: (%i,%i)", i, pnt.x, pnt.y);
-    hmap_mat.at<uchar>(pnt.x, pnt.y) = 255;
-  }
-  imshow("maxima", hmap_mat);
-  waitKey(0);*/
-
-
-
-  /*
-   * Contour method
-   * Dilate+Erode and subtract from original to get boundaries, then get contours and use centroid point
-   * It finds the region that dilation can't get, but it doesn't get the corner point
-   * cannot find boundary of corner point
-   */
-  /*vector<cv::Point> locations = bhFindLocalMaximum(hmap_mat, 10);
-  for(int i=0;i<locations.size();i++)
-  {
-    cv::Point pnt = locations[i];
-    ROS_INFO("Local maxima %i: (%i,%i)", i, pnt.x, pnt.y);
-    hmap_mat.at<uchar>(pnt.y, pnt.x) = 255;
-  }
-  imshow("hmap", hmap_mat);
-  waitKey(0);*/
-
-
-  
-
-
-  //hmap_mat.at<uchar>(min.y,min.x) = 255;
-  //hmap_mat.at<uchar>(max.y,max.x) = 255;
-  //imshow("Local Maxima", localMaxima);
-  //waitKey(0);
-  //getHist();
-  //CannyThreshold(0,0);
+  pub_obs.publish(hmap_obs); 
 }
 
 
@@ -355,6 +296,7 @@ int main(int argc, char** argv)
 
   ros::Subscriber sub_hmap = handle.subscribe("/hilbert_map", 10, &hmapCb);
   pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1);
+  pub_obs = handle.advertise<ramp_msgs::ObstacleList>("hmap_obstacles", 1);
   
   printf("\nSpinning\n");
   ros::spin();

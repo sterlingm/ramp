@@ -10,3 +10,4 @@ bool full_eval
 
 bool consider_trans
 bool trans_possible
+bool init_eval
