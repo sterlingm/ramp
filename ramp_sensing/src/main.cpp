@@ -82,6 +82,8 @@ double initial_theta        = PI;
 
 std::string robot_base_frame, global_frame;
 tf::StampedTransform tf_base_to_global;
+  
+std::vector<Attachment> attachs;
 
 
 /*********************************
@@ -585,6 +587,42 @@ void publishMarkers(const ros::TimerEvent& e)
     // Push onto texts 
     texts.push_back(text);
     arrows.push_back(arrow);
+  }
+
+
+  // Create lines for the attachments
+  for(int i=0;i<attachs.size();i++)
+  {
+    visualization_msgs::Marker lineList;
+    lineList.header.stamp = ros::Time::now();
+    lineList.id = (markers.size()*2)+i;
+    lineList.header.frame_id = global_frame;
+    lineList.ns = "basic_shapes";
+    lineList.type = visualization_msgs::Marker::LINE_LIST;
+    lineList.action = visualization_msgs::Marker::ADD;
+
+    for(int j=0;j<attachs[i].cirs.size()-1;j++)
+    {
+      geometry_msgs::Point p;
+      p.x = cir_obs[ attachs[i].cirs[j] ]->cir.center.x;
+      p.y = cir_obs[ attachs[i].cirs[j] ]->cir.center.y;
+      p.z = 0.2;
+      geometry_msgs::Point p_end;
+      p_end.x = cir_obs[ attachs[i].cirs[j+1] ]->cir.center.x;
+      p_end.y = cir_obs[ attachs[i].cirs[j+1] ]->cir.center.y;
+      p_end.z = 0.2;
+      lineList.points.push_back(p);
+      lineList.points.push_back(p_end);
+    }
+
+    lineList.color.r = 0.0;
+    lineList.color.g = 0.0;
+    lineList.color.b = 1.0;
+    lineList.color.a = 1.0;
+
+    lineList.scale.x = 0.05;
+
+    result.markers.push_back(lineList);
   }
 
 
@@ -1502,19 +1540,33 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
   /*
    * Combine overlapping circles
-   */
+   
   // This seg faults if I don't check size > 0
   // Figure out why...
-  std::vector<Circle> over;
   if(cirs.size() > 0)
   {
-    /*
-     * Redo finding the radius!
-     */
+    std::vector<Circle> over;
     c.combineOverlappingCircles(cirs, over);
+    cirs = over;
+  }*/
+
+  // Get attachments
+  attachs.clear();
+  if(cirs.size() > 0)
+  {
+    ROS_INFO("Before detectAttachedCircles, cirs.size(): %i", (int)cirs.size());
+    c.detectAttachedCircles(cirs, attachs);  
+    ROS_INFO("After detectAttachedCircles, cirs.size(): %i", (int)cirs.size());
+  }
+  for(int i=0;i<attachs.size();i++)
+  {
+    ROS_INFO("Attachment %i:", i);
+    for(int j=0;j<attachs[i].cirs.size();j++)
+    {
+      ROS_INFO("%i", attachs[i].cirs[j]);
+    }
   }
 
-  cirs = over;
   //ROS_INFO("cirs array finalized:");
   /*for(int i=0;i<cirs.size();i++)
   {
@@ -1546,7 +1598,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     cirs[i].radius *= global_grid.info.resolution;
     //ROS_INFO("New Point: (%f,%f) New Radius: %f ", x, y, cirs[i].radius);
   }
-   
+ 
 
   /*
    * Data association
@@ -1684,6 +1736,39 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     cir_obs[i]->vels[cir_obs[i]->vels.size()-1] = velocities[i];
     cir_obs[i]->vel = velocities[i];
     //ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
+  }
+
+
+  /*
+   * Handle attachments
+   */
+  for(int i=0;i<attachs.size();i++)
+  {
+    ROS_INFO("Attachment %i", i);
+    // Get max speed among attached obstacles
+    int i_max_speed=0;
+    for(int j=0;j<attachs[i].cirs.size();j++)
+    {
+      int i_cir = attachs[i].cirs[j];
+      if(cir_obs[i_cir]->vel.v > cir_obs[i_max_speed]->vel.v)
+      {
+        i_max_speed = i_cir;
+      }
+    }
+
+    double max_speed = cir_obs[i_max_speed]->vel.v;
+    double theta = cir_obs[i_max_speed]->prevTheta[cir_obs[i_max_speed]->prevTheta.size()-1];
+    ROS_INFO("max_speed: %f theta: %f", max_speed, theta);
+
+    // Based on max speed, set all circles speeds and thetas in attachment
+    for(int j=0;j<attachs[i].cirs.size();j++)
+    {
+      int i_cir = attachs[i].cirs[j];
+      cir_obs[ i_cir ]->vel.v = max_speed;
+      cir_obs[ i_cir ]->theta = theta;
+      cir_obs[i_cir]->prevTheta[cir_obs[i_cir]->prevTheta.size()-1] = theta;
+      velocities[ i_cir ].v = max_speed;
+    }
   }
 
 
