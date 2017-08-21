@@ -388,12 +388,64 @@ void CirclePacker::combineTwoCircles(const Circle a, const Circle b, Circle& res
   result.radius = R;
 }
 
+/*
+ * Make sure attachments don't override each other
+ */
+void CirclePacker::detectAttachedCircles(const std::vector<Circle>& cs, std::vector<Attachment>& result) const
+{
+  ROS_INFO("In detectAttachedCircles");
+
+  double threshold  = 0;
+  double R          = 0;
+  double d          = 0;
+  double scale      = -0.25;
+  int i=0;
+  while(i<cs.size()-1)
+  {
+    Circle ci = cs[i];
+
+    int j = i+1;
+
+    // Go through remaining circles
+    while(j<cs.size())
+    {
+      Circle cj = cs[j];
+      
+      // Get R, distance threshold, and distance between circle centers
+      R = ci.radius + cj.radius;
+      threshold = ci.radius < cj.radius ? R-(scale*ci.radius) : R-(scale*cj.radius);
+
+      d = utility_.positionDistance(ci.center.x, ci.center.y, cj.center.x, cj.center.y);
+
+      // If distance is below threshold, then attach the two circles
+      if(d < threshold)
+      {
+        ROS_INFO("Creating attachment %i and %i", i, j);
+        Attachment temp;
+        temp.cirs.push_back(i);
+        temp.cirs.push_back(j);
+        result.push_back(temp);
+      }
+
+      j++;
+    } // end inner while
+
+    i++;
+  } // end outer while
+
+  ROS_INFO("Exiting detectAttachedCircles"); 
+}
 
 // result is a final list of circles: contains both the combined ones and the ones that were not combined
+// This gets called before converting to global coordinates 1 = 5cm = 0.05m
 void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector<Circle>& result) const
 {
-  ////////ROS_INFO("In combineOverlappingCircles");
+  ROS_INFO("In combineOverlappingCircles");
   int pairs, i=0, j=0;
+
+  // Initialize variables
+  double scale = 0.75;
+  double threshold = 0.;
 
   while(i<cs.size()-1)
   {
@@ -403,9 +455,6 @@ void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector
     
     j = i+1;
 
-    // This gets called before converting to global coordinates 1 = 5cm = 0.05m
-    double inflate = 0;
-    double threshold = 0.;
 
     while(j<cs.size())
     {
@@ -414,12 +463,16 @@ void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector
       // Check if they overlap
       Circle cj = cs[j];
       //////////ROS_INFO("cj - Center: (%f, %f) Radius: %f", cj.center.x, cj.center.y, cj.radius);
-     
+
+      double R = ci.radius + cj.radius;
+      threshold = ci.radius < cj.radius ? R-(scale*ci.radius) : R-(scale*cj.radius);
+
       double d = utility_.positionDistance(ci.center.x, ci.center.y, cj.center.x, cj.center.y);
-      //////////ROS_INFO("d: %f threshold: %f", d, threshold);
 
       if(d < threshold)
       {
+        ROS_INFO("Combining circles d: %f threshold: %f", d, threshold);
+
         // Combine them
         Circle temp;
         combineTwoCircles(ci, cj, temp);
