@@ -398,7 +398,7 @@ void CirclePacker::detectAttachedCircles(const std::vector<Circle>& cs, std::vec
   double threshold  = 0;
   double R          = 0;
   double d          = 0;
-  double scale      = -0.25;
+  double scale      = 0.1;
   int i=0;
   while(i<cs.size()-1)
   {
