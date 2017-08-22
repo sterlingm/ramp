@@ -596,7 +596,7 @@ void publishMarkers(const ros::TimerEvent& e)
   // Create lines for the attachments
   for(int i=0;i<attachs.size();i++)
   {
-    ROS_INFO("i: %i attachs.size(): %i", i, (int)attachs.size());
+    //ROS_INFO("i: %i attachs.size(): %i", i, (int)attachs.size());
     visualization_msgs::Marker lineList;
     lineList.header.stamp = ros::Time::now();
     lineList.id = (markers.size()*2)+i;
@@ -607,7 +607,7 @@ void publishMarkers(const ros::TimerEvent& e)
 
     for(int j=0;j<attachs[i].cirs.size()-1;j+=2)
     {
-      ROS_INFO("j: %i attachs[i].cirs.size(): %i", j, (int)attachs[i].cirs.size());
+      //ROS_INFO("j: %i attachs[i].cirs.size(): %i", j, (int)attachs[i].cirs.size());
       geometry_msgs::Point p;
       p.x = cir_obs[ attachs[i].cirs[j] ]->cir.center.x;
       p.y = cir_obs[ attachs[i].cirs[j] ]->cir.center.y;
@@ -619,11 +619,11 @@ void publishMarkers(const ros::TimerEvent& e)
       lineList.points.push_back(p);
       lineList.points.push_back(p_end);
     }
-    ROS_INFO("lineList.points.size(): %i", (int)lineList.points.size());
+    /*ROS_INFO("lineList.points.size(): %i", (int)lineList.points.size());
     for(int j=0;j<lineList.points.size();j++)
     {
       ROS_INFO("lineList.points[%i]: (%f,%f)", j, lineList.points[j].x, lineList.points[j].y);
-    }
+    }*/
 
     lineList.color.r = 0.0;
     lineList.color.g = 0.0;
@@ -1736,25 +1736,23 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   attachs.clear();
   if(cirs.size() > 0)
   {
-    ROS_INFO("Before detectAttachedCircles, cirs.size(): %i", (int)cirs.size());
     c.detectAttachedCircles(cir_obs, attachs);  
-    ROS_INFO("After detectAttachedCircles, cirs.size(): %i", (int)cirs.size());
   }
-  for(int i=0;i<attachs.size();i++)
+  /*for(int i=0;i<attachs.size();i++)
   {
     ROS_INFO("Attachment %i:", i);
     for(int j=0;j<attachs[i].cirs.size();j++)
     {
       ROS_INFO("%i", attachs[i].cirs[j]);
     }
-  }
+  }*/
 
   /*
    * Handle attachments
    */
   for(int i=0;i<attachs.size();i++)
   {
-    ROS_INFO("Attachment %i", i);
+    //ROS_INFO("Attachment %i", i);
     // Get max speed among attached obstacles
     int i_max_speed=0;
     float speed_average = 0;
@@ -1766,7 +1764,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     speed_average /= attachs[i].cirs.size();
 
     double theta = cir_obs[i_max_speed]->prevTheta[cir_obs[i_max_speed]->prevTheta.size()-1];
-    ROS_INFO("attachs.size(): %i i: %i", (int)attachs.size(), i);
+    //ROS_INFO("attachs.size(): %i i: %i", (int)attachs.size(), i);
 
     // Based on max speed, set all circles speeds and thetas in attachment
     for(int j=0;j<attachs[i].cirs.size();j++)
