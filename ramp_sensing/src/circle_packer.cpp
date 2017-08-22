@@ -393,7 +393,7 @@ void CirclePacker::combineTwoCircles(const Circle a, const Circle b, Circle& res
  */
 void CirclePacker::detectAttachedCircles(const std::vector<CircleOb*>& cir_obs, std::vector<Attachment>& result) const
 {
-  ROS_INFO("In detectAttachedCircles");
+  //ROS_INFO("In detectAttachedCircles");
 
   double threshold  = 0;
   double R          = 0;
@@ -411,8 +411,8 @@ void CirclePacker::detectAttachedCircles(const std::vector<CircleOb*>& cir_obs, 
     {
       Circle cj = cir_obs[j]->cir;
       
-      ROS_INFO("Trying i: %i j: %i", i, j);
-      ROS_INFO("Centers i: (%f,%f) j: (%f,%f)", ci.center.x, ci.center.y, cj.center.x, cj.center.y);
+      //ROS_INFO("Trying i: %i j: %i", i, j);
+      //ROS_INFO("Centers i: (%f,%f) j: (%f,%f)", ci.center.x, ci.center.y, cj.center.x, cj.center.y);
       
       // Get R, distance threshold, and distance between circle centers
       R = ci.radius + cj.radius;
@@ -421,12 +421,12 @@ void CirclePacker::detectAttachedCircles(const std::vector<CircleOb*>& cir_obs, 
 
       d = utility_.positionDistance(ci.center.x, ci.center.y, cj.center.x, cj.center.y);
 
-      ROS_INFO("ci.r: %f cj.r: %f R: %f threshold: %f d: %f", ci.radius, cj.radius, R, threshold, d);
+      //ROS_INFO("ci.r: %f cj.r: %f R: %f threshold: %f d: %f", ci.radius, cj.radius, R, threshold, d);
 
       // If distance is below threshold, then attach the two circles
       if(d < threshold)
       {
-        ROS_INFO("Creating attachment %i and %i", i, j);
+        //ROS_INFO("Creating attachment %i and %i", i, j);
         Attachment temp;
         temp.cirs.push_back(i);
         temp.cirs.push_back(j);
@@ -439,7 +439,7 @@ void CirclePacker::detectAttachedCircles(const std::vector<CircleOb*>& cir_obs, 
     i++;
   } // end outer while
 
-  ROS_INFO("Exiting detectAttachedCircles"); 
+  //ROS_INFO("Exiting detectAttachedCircles"); 
 }
 
 // result is a final list of circles: contains both the combined ones and the ones that were not combined
