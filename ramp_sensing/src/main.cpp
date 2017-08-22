@@ -593,6 +593,7 @@ void publishMarkers(const ros::TimerEvent& e)
   // Create lines for the attachments
   for(int i=0;i<attachs.size();i++)
   {
+    ROS_INFO("i: %i attachs.size(): %i", i, (int)attachs.size());
     visualization_msgs::Marker lineList;
     lineList.header.stamp = ros::Time::now();
     lineList.id = (markers.size()*2)+i;
@@ -601,8 +602,9 @@ void publishMarkers(const ros::TimerEvent& e)
     lineList.type = visualization_msgs::Marker::LINE_LIST;
     lineList.action = visualization_msgs::Marker::ADD;
 
-    for(int j=0;j<attachs[i].cirs.size()-1;j++)
+    for(int j=0;j<attachs[i].cirs.size()-1;j+=2)
     {
+      ROS_INFO("j: %i attachs[i].cirs.size(): %i", j, (int)attachs[i].cirs.size());
       geometry_msgs::Point p;
       p.x = cir_obs[ attachs[i].cirs[j] ]->cir.center.x;
       p.y = cir_obs[ attachs[i].cirs[j] ]->cir.center.y;
@@ -613,6 +615,11 @@ void publishMarkers(const ros::TimerEvent& e)
       p_end.z = 0.2;
       lineList.points.push_back(p);
       lineList.points.push_back(p_end);
+    }
+    ROS_INFO("lineList.points.size(): %i", (int)lineList.points.size());
+    for(int j=0;j<lineList.points.size();j++)
+    {
+      ROS_INFO("lineList.points[%i]: (%f,%f)", j, lineList.points[j].x, lineList.points[j].y);
     }
 
     lineList.color.r = 0.0;
@@ -1759,17 +1766,30 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     double max_speed = cir_obs[i_max_speed]->vel.v;
     double theta = cir_obs[i_max_speed]->prevTheta[cir_obs[i_max_speed]->prevTheta.size()-1];
     ROS_INFO("max_speed: %f theta: %f", max_speed, theta);
+    ROS_INFO("attachs.size(): %i i: %i", (int)attachs.size(), i);
 
     // Based on max speed, set all circles speeds and thetas in attachment
     for(int j=0;j<attachs[i].cirs.size();j++)
     {
-      int i_cir = attachs[i].cirs[j];
-      cir_obs[ i_cir ]->vel.v = max_speed;
-      cir_obs[ i_cir ]->theta = theta;
-      cir_obs[i_cir]->prevTheta[cir_obs[i_cir]->prevTheta.size()-1] = theta;
+      //ROS_INFO("j: %i attachs[%i].cirs.size(): %i", j, i, (int)attachs[i].cirs.size());
+      int i_cir   = attachs[i].cirs[j];
+      int i_theta = cir_obs[i_cir]->prevTheta.size()-1;
+      //ROS_INFO("i_cir: %i i_theta: %i cir_obs.size(): %i velocities.size(): %i", i_cir, i_theta, (int)cir_obs.size(), (int)velocities.size());
+      //cir_obs[ i_cir ]->vel.v = max_speed;
+      //cir_obs[ i_cir ]->theta = theta;
+
+      if(cir_obs[i_cir]->prevTheta.size() > 0)
+      {
+        cir_obs[ i_cir ]->prevTheta[i_theta] = theta;
+      }
+      else
+      {
+        cir_obs[ i_cir ]->prevTheta.push_back(theta);
+      }
+      
       velocities[ i_cir ].v = max_speed;
-    }
-  }
+    } // end inner for
+  } // end outer for
 
 
   // Push on velocities for data
