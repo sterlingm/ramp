@@ -1560,23 +1560,6 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     cirs = over;
   }*/
 
-  // Get attachments
-  attachs.clear();
-  if(cirs.size() > 0)
-  {
-    ROS_INFO("Before detectAttachedCircles, cirs.size(): %i", (int)cirs.size());
-    c.detectAttachedCircles(cirs, attachs);  
-    ROS_INFO("After detectAttachedCircles, cirs.size(): %i", (int)cirs.size());
-  }
-  for(int i=0;i<attachs.size();i++)
-  {
-    ROS_INFO("Attachment %i:", i);
-    for(int j=0;j<attachs[i].cirs.size();j++)
-    {
-      ROS_INFO("%i", attachs[i].cirs[j]);
-    }
-  }
-
   //ROS_INFO("cirs array finalized:");
   /*for(int i=0;i<cirs.size();i++)
   {
@@ -1748,6 +1731,23 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     //ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
   }
 
+
+  // Get attachments
+  attachs.clear();
+  if(cirs.size() > 0)
+  {
+    ROS_INFO("Before detectAttachedCircles, cirs.size(): %i", (int)cirs.size());
+    c.detectAttachedCircles(cir_obs, attachs);  
+    ROS_INFO("After detectAttachedCircles, cirs.size(): %i", (int)cirs.size());
+  }
+  for(int i=0;i<attachs.size();i++)
+  {
+    ROS_INFO("Attachment %i:", i);
+    for(int j=0;j<attachs[i].cirs.size();j++)
+    {
+      ROS_INFO("%i", attachs[i].cirs[j]);
+    }
+  }
 
   /*
    * Handle attachments

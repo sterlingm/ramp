@@ -30,7 +30,7 @@ class CirclePacker
     Normal computeNormal(Edge);
     bool cellInPoly(Polygon, cv::Point);
 
-    void detectAttachedCircles(const std::vector<Circle>& cs, std::vector<Attachment>& result) const;
+    void detectAttachedCircles(const std::vector<CircleOb*>& cir_obs, std::vector<Attachment>& result) const;
     void combineTwoCircles(const Circle a, const Circle b, Circle& result) const;
     void combineOverlappingCircles(std::vector<Circle> cs, std::vector<Circle>& result) const;
 
