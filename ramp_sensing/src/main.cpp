@@ -72,10 +72,13 @@ std::vector<double> d_avg_values;
 double dist_threshold = 0.5;
 double radius_threshold = 0.5;
 
-int num_costmaps_accumulate = 3;
+int num_costmaps_accumulate = 5;
 int num_velocity_count      = 10;
 int num_theta_count         = 1;
 int num_costmap_freq_theta  = 5;
+
+double static_v_threshold   = 0.2;
+int    ob_not_moving_count  = 7;
 
 double initial_theta        = PI;
               
@@ -1711,8 +1714,8 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     float vx = v*cos(theta);
     float vy = v*sin(theta);
 
-    // Set values
-    if(velocities[i].v < 0.11 || !cir_obs[i]->moving)
+    // Set values, check for static obstacles
+    if(velocities[i].v < static_v_threshold || !cir_obs[i]->moving)
     {
       velocities[i].v   = 0;
       velocities[i].vx  = 0;
@@ -1720,7 +1723,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
       // Increment static count
       cir_obs[i]->static_count++;
-      if(cir_obs[i]->static_count > 7)
+      if(cir_obs[i]->static_count > ob_not_moving_count)
       {
         //ROS_INFO("Setting moving = false, static_count: %i", cir_obs[i]->static_count);
         cir_obs[i]->moving = false;
@@ -1754,18 +1757,15 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     ROS_INFO("Attachment %i", i);
     // Get max speed among attached obstacles
     int i_max_speed=0;
+    float speed_average = 0;
     for(int j=0;j<attachs[i].cirs.size();j++)
     {
       int i_cir = attachs[i].cirs[j];
-      if(cir_obs[i_cir]->vel.v > cir_obs[i_max_speed]->vel.v)
-      {
-        i_max_speed = i_cir;
-      }
+      speed_average += cir_obs[i_cir]->vel.v;
     }
+    speed_average /= attachs[i].cirs.size();
 
-    double max_speed = cir_obs[i_max_speed]->vel.v;
     double theta = cir_obs[i_max_speed]->prevTheta[cir_obs[i_max_speed]->prevTheta.size()-1];
-    ROS_INFO("max_speed: %f theta: %f", max_speed, theta);
     ROS_INFO("attachs.size(): %i i: %i", (int)attachs.size(), i);
 
     // Based on max speed, set all circles speeds and thetas in attachment
@@ -1775,7 +1775,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
       int i_cir   = attachs[i].cirs[j];
       int i_theta = cir_obs[i_cir]->prevTheta.size()-1;
       //ROS_INFO("i_cir: %i i_theta: %i cir_obs.size(): %i velocities.size(): %i", i_cir, i_theta, (int)cir_obs.size(), (int)velocities.size());
-      //cir_obs[ i_cir ]->vel.v = max_speed;
+      cir_obs[ i_cir ]->vel.v = speed_average;
       //cir_obs[ i_cir ]->theta = theta;
 
       if(cir_obs[i_cir]->prevTheta.size() > 0)
@@ -1787,7 +1787,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
         cir_obs[ i_cir ]->prevTheta.push_back(theta);
       }
       
-      velocities[ i_cir ].v = max_speed;
+      velocities[ i_cir ].v = speed_average;
     } // end inner for
   } // end outer for
 
