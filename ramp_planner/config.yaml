@@ -38,7 +38,9 @@ update_topic: "odom"
 
 shrink_ranges: false
 
-use_start_param: true
+use_start_param: false
+
+use_hilbert_map: true
 
 # Turtlebot obstacle topics
 #obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom', '/obstacle_3/odom']

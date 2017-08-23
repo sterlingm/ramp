@@ -3999,10 +3999,8 @@ void Planner::hilbertMapObsCb(const ramp_msgs::ObstacleList& hmapObs)
       ob_radii_.at(i) = hmapObs.obstacles[i].radius;
     }
   }
-
   
-  evaluatePopulation(true);
-
+  //evaluatePopulation(true);
   
   evalHMap = true;
   
@@ -4019,17 +4017,11 @@ void Planner::go()
   // initialize population
   initPopulation();
   ROS_INFO("Population initialized");
-  ROS_INFO("Waiting to evaluate pop based on Hilbert map");
   
-  while(!evalHMap)
-  {
-    ros::spinOnce();
-  }
-
-  evaluatePopulation();
+  evaluatePopulation(evalHMap);
   ROS_INFO("Initial population evaluated");
   //sendPopulation();
-  //std::cin.get();
+  std::cin.get();
  
 
   // Seed the population

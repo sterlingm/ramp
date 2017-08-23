@@ -35,6 +35,7 @@ ros::Publisher pub_rviz;
 
 bool use_start_param;
 bool start_planner;
+bool use_hilbert_map;
 
 
 // Initializes a vector of Ranges that the Planner is initialized with
@@ -140,6 +141,13 @@ void loadParameters(const ros::NodeHandle handle)
   {
     handle.getParam("ramp/use_start_param", use_start_param);
     std::cout<<"\nuse_start_param: "<<use_start_param;
+  }
+
+
+  if(handle.hasParam("ramp/use_hilbert_map"))
+  {
+    handle.getParam("ramp/use_hilbert_map", use_hilbert_map);
+    std::cout<<"\nuse_hilbert_map: "<<use_hilbert_map;
   }
 
 
@@ -516,7 +524,22 @@ int main(int argc, char** argv)
     std::cin.get(); 
   }
   ROS_INFO("Starting Planner!");
-  
+
+
+  if(use_hilbert_map)
+  {
+    ROS_INFO("Waiting to get hilbert map obstacles on topic /hmap_obstacles");
+    // Wait until we get the hilbert map
+    while(!my_planner.evalHMap)
+    {
+      ros::spinOnce();
+    }
+    ROS_INFO("Got hilbert map!");
+  }
+  else
+  {
+  }
+ 
   my_planner.go();
 
 
