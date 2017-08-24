@@ -58,7 +58,7 @@ bool handleRequest(ramp_msgs::EvaluationSrv::Request& reqs,
       res.t_firstCollision = ros::Duration(9999.f);
     }
 
-    //ROS_INFO("Done evaluating, fitness: %f feasible: %s t_firstCollision: %f", res.fitness, res.feasible ? "True" : "False", res.t_firstCollision.toSec());
+    ROS_INFO("Done evaluating, fitness: %f feasible: %s t_firstCollision: %f", res.fitness, res.feasible ? "True" : "False", res.t_firstCollision.toSec());
     ros::Time t_vec = ros::Time::now();
     resps.resps.push_back(res);
     

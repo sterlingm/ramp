@@ -2,7 +2,7 @@
 #include "mobile_robot.h"
 
 const std::string MobileRobot::TOPIC_STR_PHIDGET_MOTOR="PhidgetMotor";
-const std::string MobileRobot::TOPIC_STR_ODOMETRY="odometry";
+const std::string MobileRobot::TOPIC_STR_ODOMETRY="odom";
 const std::string MobileRobot::TOPIC_STR_UPDATE="update";
 const std::string MobileRobot::TOPIC_STR_TWIST="twist";
 const std::string MobileRobot::TOPIC_STR_IC="imminent_collision";

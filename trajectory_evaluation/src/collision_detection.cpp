@@ -15,10 +15,10 @@ void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory,
   min_dist_ = 100;
   for(uint8_t i=0;i<obstacle_trjs.size() && !result.collision_;i++)
   {
-    //ROS_INFO("Ob radius: %f", obstacle_radii[i]);
-    //ROS_INFO("Ob traj: %s", utility_.toString(obstacle_trjs[i]).c_str());
+    ROS_INFO("Ob radius: %f", obstacle_radii[i]);
+    ROS_INFO("Ob traj: %s", utility_.toString(obstacle_trjs[i]).c_str());
     double d_min = query(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), robot_radius, obstacle_radii[i], result);
-    //ROS_INFO("d_min: %f", d_min);
+    ROS_INFO("d_min: %f", d_min);
 
     if(d_min < min_dist_)
     {

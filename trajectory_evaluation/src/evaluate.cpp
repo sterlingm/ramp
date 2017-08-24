@@ -4,7 +4,7 @@ Evaluate::Evaluate() : Q_coll_(10000.f), Q_kine_(100000.f), orientation_infeasib
 
 void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res)
 {
-  //////ROS_INFO("In Evaluate::perform()");
+  ROS_INFO("In Evaluate::perform()");
   //ros::Time t_start = ros::Time::now();
   
   /*
@@ -57,11 +57,10 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
 }
 
 
-// Redo this method at some point
-// It's modiftying trj AND returning a value
+// Modifies the trajectory member of EvaluationRequest&
 void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er) 
 {
-  //ROS_INFO("In Evaluate::performFeasibility");
+  ROS_INFO("In Evaluate::performFeasibility");
   ros::Time t_start = ros::Time::now();
 
   // Check collision
@@ -70,7 +69,8 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
   ros::Duration d_numeric   = ros::Time::now() - t_numeric_start;
   t_numeric_.push_back(d_numeric);
 
-  //ROS_INFO("result.collision: %s", qr_.collision_ ? "True" : "False");
+  ROS_INFO("result.collision: %s", qr_.collision_ ? "True" : "False");
+
   /*ros::Time t_analy_start = ros::Time::now();
   cd_.perform(er.trajectory, er.obstacle_trjs, qr_);
   ros::Duration d_analy = ros::Time::now() - t_analy_start;
@@ -83,9 +83,7 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
   ramp_msgs::RampTrajectory* trj = &er.trajectory;
   
   bool moving_forward =     (fabs( sqrt(  (trj->trajectory.points[0].velocities[0]*trj->trajectory.points[0].velocities[0]) +
-                                  (trj->trajectory.points[0].velocities[1]*trj->trajectory.points[0].velocities[1]))) > 0)
-                ? true 
-                : false;
+                                  (trj->trajectory.points[0].velocities[1]*trj->trajectory.points[0].velocities[1]))) > 0) ? true : false;
 
   if(!er.imminent_collision && er.consider_trans && !er.trans_possible)
   {
@@ -97,7 +95,7 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
     //ROS_INFO("er.imminent_collision: %s er.consider_trans: %s er.trans_possible: %s", er.imminent_collision ? "True" : "False", er.consider_trans ? "True" : "False", er.trans_possible ? "True" : "False");
   }
   
-  //////////ROS_INFO("performFeasibility time: %f", (ros::Time::now() - t_start).toSec());
+  ROS_INFO("performFeasibility time: %f", (ros::Time::now() - t_start).toSec());
 }
 
 
