@@ -28,6 +28,7 @@ class CirclePacker
     void combineTwoCircles(const Circle a, const Circle b, Circle& result) const;
     void combineOverlappingCircles(std::vector<Circle> cs, std::vector<Circle>& result) const;
 
+    std::vector<Polygon> getPolygonsFromContours(std::vector< std::vector<cv::Point> > contour_points) const;
 
     Point findCenterOfPixels(const std::vector<cv::Point> pixels) const;
     std::vector<double> getWeights(const std::vector<cv::Point> pixels, const Point center) const;

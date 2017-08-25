@@ -160,12 +160,12 @@ bool CirclePacker::cellInPoly(Polygon poly, cv::Point cell)
 {
   for(int i=0;i<poly.normals.size();i++)
   {
-    //std::cout<<"\nnormal a: "<<poly.normals[i].a<<" b: "<<poly.normals[i].b<<" c: "<<poly.normals[i].c;
+    std::cout<<"\nnormal a: "<<poly.normals[i].a<<" b: "<<poly.normals[i].b<<" c: "<<poly.normals[i].c;
     double d = poly.normals[i].a*cell.x + poly.normals[i].b*cell.y + poly.normals[i].c;
-    //std::cout<<"\ncell center: "<<cell.x<<", "<<cell.y<<" d: "<<d;
+    std::cout<<"\ncell center: "<<cell.x<<", "<<cell.y<<" d: "<<d;
     if(d > -0.000001)
     {
-      //std::cout<<"\nNot in polygon";
+      std::cout<<"\nNot in polygon";
       return false;
     }
   }
@@ -223,6 +223,7 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)
   double start_x = MIN_WIDTH + round/2.f;
   double start_y = MIN_LENGTH + round/2.f;
 
+  ROS_INFO("MAX_WIDTH: %f MIN_WIDTH: %f MAX_LENGTH: %f MIN_LENGTH: %f width_count: %i length_count: %i start_x: %f start_y: %f", MAX_WIDTH, MIN_WIDTH, MAX_LENGTH, MIN_LENGTH, width_count, length_count, start_x, start_y);
   //std::cout<<"\nMAX_WIDTH: "<<MAX_WIDTH<<" MAX_LENGTH: "<<MAX_LENGTH<<" width_count: "<<width_count<<" length_count: "<<length_count;
 
   std::vector<Cell> cells;
@@ -246,6 +247,7 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)
       }
     }
   }
+  ROS_INFO("cells.size(): %i", (int)cells.size());
   
 
   std::vector<Cell> reduced_cells = cells;
@@ -264,6 +266,7 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)
       reduced_cells.clear();
       deleteCellsInCir(cells, result[result.size()-1], reduced_cells);
     }
+    ROS_INFO("reduced_cells.size(): %i", (int)reduced_cells.size());
 
     // Recalculate the distance, include existing circles!
     // For each cell, compute distance to the closest polygon edge
@@ -271,8 +274,12 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)
     {
       Cell& cell = reduced_cells[i];
 
+      ROS_INFO("Cell %i: (%i,%i)", i, cell.p.x, cell.p.y);
+
       double min_d=getMinDistToPoly(poly, cell);
       double min_cir=getMinDistToCirs(result,cell);
+
+      ROS_INFO("min_d: %f min_cir: %f", min_d, min_cir);
 
       if(min_d < min_cir || min_cir < 0)
       {
@@ -869,6 +876,50 @@ std::vector<Circle> CirclePacker::goMinEncCir()
   return result;
 }
 
+std::vector<Polygon> CirclePacker::getPolygonsFromContours(std::vector< std::vector<cv::Point> > contours) const
+{
+  std::vector<Polygon> result;
+
+  // Set the edges for each polygon
+  for(int i=0;i<contours.size();i++)
+  {
+    Polygon p;
+
+    // Get edges
+    for(int j=0;j<contours[i].size();j++)
+    {
+      Edge e;
+      
+      e.start = contours[i][j];
+      if(j == contours[i].size()-1)
+      {
+        e.end = contours[i][0];
+      }
+      else
+      {
+        e.end   = contours[i][j+1];
+      }
+      p.edges.push_back(e);
+    }
+
+    // Get normals
+    for(int j=0;j<p.edges.size();j++)
+    {
+      Normal n;
+      
+      n.a = p.edges[j].end.y - p.edges[j].start.y;
+      n.b = p.edges[j].start.x - p.edges[j].end.x;
+
+      p.normals.push_back(n);
+    }
+
+    result.push_back(p);
+  }
+
+  
+  return result;
+}
+
 
 std::vector<Circle> CirclePacker::goMyBlobs(bool hmap)
 {
@@ -895,6 +946,22 @@ std::vector<Circle> CirclePacker::goMyBlobs(bool hmap)
 
   // ***** findContours modifies src! *****
   findContours( srcCopy, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
+
+  std::vector<Polygon> ps = getPolygonsFromContours(contours);
+  for(int i=0;i<ps.size();i++)
+  {
+    ROS_INFO("Polygon %i", i);
+    for(int j=0;j<ps[i].edges.size();j++)
+    {
+      ROS_INFO("  Edge %i - Start: (%i,%i) End: (%i,%i)", j, ps[i].edges[j].start.x, ps[i].edges[j].start.y, ps[i].edges[j].end.x, ps[i].edges[j].end.y);
+    }
+    std::vector<Circle> cs = getCirclesFromPoly(ps[i]);   
+    for(int j=0;j<cs.size();j++)
+    {
+      result.push_back(cs[j]);
+    }
+  }
+  return result;
   ////////ROS_INFO("contours.size(): %i", (int)contours.size());
   
   // Go through each set of contour points
