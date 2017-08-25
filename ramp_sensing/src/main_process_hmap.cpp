@@ -161,11 +161,11 @@ vector<cv::Point> bhFindLocalMaximum(InputArray _src,int neighbor=2)
 }
 
 
-void thresholdHilbertMap(Mat hmap, Mat& result)
+void thresholdHilbertMap(Mat hmap, Mat& result, int thresholdValue)
 {
-  threshold(hmap, result, 50, 255, CV_THRESH_BINARY);
+  threshold(hmap, result, thresholdValue, 255, CV_THRESH_BINARY);
   imshow("threshold", result);
-  //waitKey(0);
+  waitKey(0);
 }
 
 
@@ -227,8 +227,9 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
   //imshow("hmap", hmap_mat);
 
   Mat hmap_thresh;
+  int threshold = 25;
 
-  thresholdHilbertMap(hmap_mat, hmap_thresh);
+  thresholdHilbertMap(hmap_mat, hmap_thresh, threshold);
 
   CirclePacker cp(hmap_thresh);
   std::vector<Circle> obs = cp.goMyBlobs(true);
