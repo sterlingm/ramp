@@ -164,8 +164,8 @@ vector<cv::Point> bhFindLocalMaximum(InputArray _src,int neighbor=2)
 void thresholdHilbertMap(Mat hmap, Mat& result, int thresholdValue)
 {
   threshold(hmap, result, thresholdValue, 255, CV_THRESH_BINARY);
-  imshow("threshold", result);
-  waitKey(0);
+  //imshow("threshold", result);
+  //waitKey(0);
 }
 
 
@@ -208,8 +208,8 @@ visualization_msgs::Marker getMarker(Circle cir, int id)
   result.color.r = 0;
   result.color.g = 1;
   result.color.b = 0;
-  result.color.a = 1;
-  result.lifetime = ros::Duration(10);
+  result.color.a = 0.1;
+  result.lifetime = ros::Duration(60);
 
 
   return result;
@@ -231,11 +231,29 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
 
   thresholdHilbertMap(hmap_mat, hmap_thresh, threshold);
 
+  /*
+   * Do circle packing on all hmap obstacles
+   */
   CirclePacker cp(hmap_thresh);
   std::vector<Circle> obs = cp.goCirclePacking();
+
+  /*
+   * Delete any circles with radius below a threshold
+   */
+  int i=0;
+  while(i<obs.size())
+  {
+    if(obs[i].radius < 2)
+    {
+      obs.erase(obs.begin()+i);
+      i--;
+    }
+    i++;
+  }
   ROS_INFO("obs.size(): %i", (int)obs.size());
   ROS_INFO("hmap origin: (%f,%f) resolution: %f", hmap.map.info.origin.position.x, hmap.map.info.origin.position.y, hmap.map.info.resolution);
   
+  // Get map details
   double x_origin = hmap.map.info.origin.position.x / hmap.map.info.resolution;
   double y_origin = hmap.map.info.origin.position.y / hmap.map.info.resolution;
   double gamma = hmap.gamma;
@@ -245,14 +263,15 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
   Velocity v_zero;
   double theta = 0;
 
+  /*
+   * Create an Obstacle instance for each circle
+   */
   hmap_obs.obstacles.clear();
   for(int i=0;i<obs.size();i++)
   {
     ROS_INFO("Before Obstacle %i: Center - (%f,%f) Radius - %f", i, obs[i].center.x, obs[i].center.y, obs[i].radius);
-    //resize(hmap_thresh, hmap_thresh, Size(hmap_thresh.cols*4, hmap_thresh.rows*4));
-    //hmap_thresh.at<uchar>(obs[i].center.x, obs[i].center.y) = 128;
-    //imshow("center", hmap_thresh);
 
+    // Set obstacle values
     obs[i].center.x = (obs[i].center.x * hmap.map.info.resolution) + hmap.map.info.origin.position.x;
     obs[i].center.y = (obs[i].center.y * hmap.map.info.resolution) + hmap.map.info.origin.position.y;
     obs[i].radius *= hmap.map.info.resolution;
@@ -279,6 +298,7 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
     inner_radii.markers[i].color.r = 255;
     inner_radii.markers[i].color.g = 0;
     inner_radii.markers[i].color.b = 0;
+    inner_radii.markers[i].color.a = 1;
     inner_radii.markers[i].pose.position.z += 0.01;
   }
 

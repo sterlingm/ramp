@@ -227,6 +227,10 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)
   ROS_INFO("MAX_WIDTH: %f MIN_WIDTH: %f MAX_LENGTH: %f MIN_LENGTH: %f width_count: %i length_count: %i start_x: %f start_y: %f", MAX_WIDTH, MIN_WIDTH, MAX_LENGTH, MIN_LENGTH, width_count, length_count, start_x, start_y);
   //std::cout<<"\nMAX_WIDTH: "<<MAX_WIDTH<<" MAX_LENGTH: "<<MAX_LENGTH<<" width_count: "<<width_count<<" length_count: "<<length_count;
 
+
+  /*
+   * Create cells inside the polygon
+   */
   std::vector<Cell> cells;
  
   for(int i=0;i<width_count;i++)
@@ -254,6 +258,9 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)
   std::vector<Cell> reduced_cells = cells;
 
 
+  /*
+   * Main algorithm loop
+   */
   while(cells.size() > 0)
   {
     //std::cout<<"\nIn while cells.size(): "<<cells.size()<<" result.size(): "<<result.size();
@@ -261,7 +268,9 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)
 
     std::priority_queue<Cell, std::vector<Cell>, CompareDist> updated_pq;
 
-    // Delete all cells whose centers lie in the largest circle
+    /*
+     *  Delete all cells whose centers lie in the largest circle
+     */
     if(result.size() > 0)
     {
       reduced_cells.clear();
@@ -269,19 +278,22 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)
     }
     ROS_INFO("reduced_cells.size(): %i", (int)reduced_cells.size());
 
-    // Recalculate the distance, include existing circles!
-    // For each cell, compute distance to the closest polygon edge
+    /*
+     *  Recalculate the distance, include existing circles!
+     */
     for(int i=0;i<reduced_cells.size();i++)
     {
       Cell& cell = reduced_cells[i];
 
       ROS_INFO("Cell %i: (%i,%i)", i, cell.p.x, cell.p.y);
 
+      // Get min distance to polygon edges and set of circles already created
       double min_d=getMinDistToPoly(poly, cell);
-      double min_cir=getMinDistToCirs(result,cell);
+      double min_cir=getMinDistToCirs(result, cell);
 
       ROS_INFO("min_d: %f min_cir: %f", min_d, min_cir);
 
+      // Set new distance value
       if(min_d < min_cir || min_cir < 0)
       {
         cell.dist = min_d;
@@ -294,9 +306,14 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)
       updated_pq.push(cell);
     } // end for each cell
 
+    /*
+     * If cells remain in priority queue
+     * Create a new circle from that cell
+     */
     if(!updated_pq.empty())
     {
       Cell c = updated_pq.top();
+
       Circle temp;
 
       temp.center.x = c.p.x;
@@ -305,7 +322,7 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)
 
       result.push_back(temp);
     }
-  }
+  } // end while
   
   /*std::cout<<"\nFinal number of circles: "<<result.size();
   for(int i=0;i<result.size();i++)
@@ -922,6 +939,8 @@ std::vector<Polygon> CirclePacker::getPolygonsFromContours(std::vector< std::vec
   return result;
 }
 
+
+
 /*
  * Returns a vector of Circle objects that are packed into each obstacle
  */
@@ -982,7 +1001,7 @@ std::vector<Circle> CirclePacker::goCirclePacking()
     }
   }
   ////////ROS_INFO("contours.size(): %i", (int)contours.size());
-  
+ 
 
   /*
    * Draw contours and hulls
@@ -997,8 +1016,8 @@ std::vector<Circle> CirclePacker::goCirclePacking()
   }
 
   /// Show in a window
-  imshow( "Contours", drawing );
-  cv::waitKey(0);
+  //imshow( "Contours", drawing );
+  //cv::waitKey(0);
 
   return result;
 }

@@ -1098,8 +1098,8 @@ void Planner::buildEvaluationSrv(std::vector<RampTrajectory>& trajecs, ramp_msgs
   {
     ramp_msgs::EvaluationRequest req;
     buildEvaluationRequest(trajecs[i], req);
-    srv.request.reqs.push_back(req);
     req.init_eval = hmap;
+    srv.request.reqs.push_back(req);
   }
 }
 
@@ -4017,11 +4017,13 @@ void Planner::go()
   // initialize population
   initPopulation();
   ROS_INFO("Population initialized");
+  ROS_INFO("evalHMap: %s", evalHMap ? "True" : "False");
   
   evaluatePopulation(evalHMap);
   ROS_INFO("Initial population evaluated");
   //sendPopulation();
-  std::cin.get();
+  //std::cin.get();
+  exit(1);
  
 
   // Seed the population
