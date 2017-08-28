@@ -156,6 +156,7 @@ Normal CirclePacker::computeNormal(Edge e)
 }
 
 
+
 bool CirclePacker::cellInPoly(Polygon poly, cv::Point cell)
 {
   for(int i=0;i<poly.normals.size();i++)
@@ -909,6 +910,7 @@ std::vector<Polygon> CirclePacker::getPolygonsFromContours(std::vector< std::vec
       
       n.a = p.edges[j].end.y - p.edges[j].start.y;
       n.b = p.edges[j].start.x - p.edges[j].end.x;
+      n.c = -n.a*p.edges[j].start.x - n.b*p.edges[j].start.y;
 
       p.normals.push_back(n);
     }
@@ -920,7 +922,93 @@ std::vector<Polygon> CirclePacker::getPolygonsFromContours(std::vector< std::vec
   return result;
 }
 
+/*
+ * Returns a vector of Circle objects that are packed into each obstacle
+ */
+std::vector<Circle> CirclePacker::goCirclePacking()
+{
+  ////ROS_INFO("In CirclePacker::goMyBlobs()");
+  std::vector<Circle> result;
 
+  // Create a matrix of the same size and type as src
+  dst.create( src.size(), src.type() );
+  
+  cv::Mat srcCopy;
+  src.copyTo(srcCopy);
+
+  /*
+   * Detect contours
+   */
+  std::vector< std::vector<cv::Point> > contours;
+  std::vector<cv::Vec4i> hierarchy;
+
+  // ***** findContours modifies src! *****
+  findContours( srcCopy, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
+
+
+  /*
+   * Get convex hull for each contour
+   */
+  std::vector< std::vector<cv::Point> > hull(contours.size());
+  for(int i=0;i<contours.size();i++)
+  {
+    cv::convexHull(cv::Mat(contours[i]), hull[i], false);
+  }
+
+  /*
+   * Get list of Polygon objects that represent each convex hull
+   */
+  std::vector<Polygon> ps = getPolygonsFromContours(hull);
+
+  /*
+   * For each polygon, pack it with circles
+   */
+  for(int i=0;i<ps.size();i++)
+  {
+    // Print polygon information
+    ROS_INFO("Polygon %i", i);
+    for(int j=0;j<ps[i].edges.size();j++)
+    {
+      ROS_INFO("  Edge %i - Start: (%i,%i) End: (%i,%i)", j, ps[i].edges[j].start.x, ps[i].edges[j].start.y, ps[i].edges[j].end.x, ps[i].edges[j].end.y);
+    }
+
+    // Get circles inside polygon
+    std::vector<Circle> cs = getCirclesFromPoly(ps[i]);   
+
+    // Push onto result
+    for(int j=0;j<cs.size();j++)
+    {
+      result.push_back(cs[j]);
+    }
+  }
+  ////////ROS_INFO("contours.size(): %i", (int)contours.size());
+  
+
+  /*
+   * Draw contours and hulls
+   */
+  cv::Mat drawing = cv::Mat::zeros( src.size(), CV_8UC3 );
+  for( int j = 0; j< contours.size(); j++ )
+  {
+    cv::Scalar color = cv::Scalar( 0, 0, 255 );
+    cv::Scalar colorHull = cv::Scalar( 0, 255, 0 );
+    drawContours( drawing, contours, j, color, 2, 8, hierarchy, 0, cv::Point() );
+    drawContours( drawing, hull, j, colorHull, 2, 8, hierarchy, 0, cv::Point() );
+  }
+
+  /// Show in a window
+  imshow( "Contours", drawing );
+  cv::waitKey(0);
+
+  return result;
+}
+
+
+
+/*
+ * Return a vector of Circle objects that bound each obstacle in the grid
+ * hmap = true if finding hilbert map obstacles
+ */
 std::vector<Circle> CirclePacker::goMyBlobs(bool hmap)
 {
   ////ROS_INFO("In CirclePacker::goMyBlobs()");
@@ -947,41 +1035,33 @@ std::vector<Circle> CirclePacker::goMyBlobs(bool hmap)
   // ***** findContours modifies src! *****
   findContours( srcCopy, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
 
-  std::vector<Polygon> ps = getPolygonsFromContours(contours);
-  for(int i=0;i<ps.size();i++)
-  {
-    ROS_INFO("Polygon %i", i);
-    for(int j=0;j<ps[i].edges.size();j++)
-    {
-      ROS_INFO("  Edge %i - Start: (%i,%i) End: (%i,%i)", j, ps[i].edges[j].start.x, ps[i].edges[j].start.y, ps[i].edges[j].end.x, ps[i].edges[j].end.y);
-    }
-    std::vector<Circle> cs = getCirclesFromPoly(ps[i]);   
-    for(int j=0;j<cs.size();j++)
-    {
-      result.push_back(cs[j]);
-    }
-  }
-  return result;
+
   ////////ROS_INFO("contours.size(): %i", (int)contours.size());
   
+  /*
+   * Draw contours
+   
+  cv::Mat drawing = cv::Mat::zeros( src.size(), CV_8UC3 );
+  for( int j = 0; j< contours.size(); j++ )
+  {
+    cv::Scalar color = cv::Scalar( 0, 0, 255 );
+    drawContours( drawing, contours, j, color, 2, 8, hierarchy, 0, cv::Point() );
+  }
+
+  /// Show in a window
+  imshow( "Contours", drawing );
+  cv::waitKey(0);*/
+
+
+  /*
+   * Find circle for each set of contour points
+   */
   // Go through each set of contour points
   for(int i=0;i<contours.size();i++)
   {
     //ROS_INFO("contours[%i].size(): %i", i, (int)contours[i].size());
     Circle c;
     std::vector<cv::Point2f> obs_points;
-
-    // Draw contours
-    cv::Mat drawing = cv::Mat::zeros( src.size(), CV_8UC3 );
-    for( int j = 0; j< contours.size(); j++ )
-    {
-      cv::Scalar color = cv::Scalar( 0, 0, 255 );
-      drawContours( drawing, contours, j, color, 2, 8, hierarchy, 0, cv::Point() );
-    }
-
-    /// Show in a window
-    //imshow( "Contours", drawing );
-    //cv::waitKey(0);
 
     // Check that there are at least a min number of contour points
     // This is because we usually get massive circles (radius>1000) when there
