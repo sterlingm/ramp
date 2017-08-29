@@ -157,7 +157,7 @@ Normal CirclePacker::computeNormal(Edge e)
 
 
 
-bool CirclePacker::cellInPoly(Polygon poly, cv::Point cell)
+bool CirclePacker::cellInPoly(const Polygon& poly, const cv::Point& cell) const
 {
   for(int i=0;i<poly.normals.size();i++)
   {
@@ -174,21 +174,22 @@ bool CirclePacker::cellInPoly(Polygon poly, cv::Point cell)
   return true;
 }
 
-
-std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)
+std::vector<Cell> CirclePacker::getCellsInPolygon(const Polygon& poly) const
 {
-  //std::cout<<"\n# of edges: "<<poly.edges.size();
-  std::vector<Circle> result;
-  std::vector<cv::Point> vertices;
+  std::vector<Cell> result;
   
-  // Push on all vertices
+  /*
+   *  Get all vertices of polygon
+   */
+  std::vector<cv::Point> vertices;
   for(int i=0;i<poly.edges.size();i++)
   {
     vertices.push_back(poly.edges[i].start);
-    vertices.push_back(poly.edges[i].end);
   }
   
-  // Find minimum and maximum x and y
+  /*
+   *  Find minimum and maximum x and y
+   */
   double MAX_LENGTH= vertices[0].y;
   double MAX_WIDTH = vertices[0].x;
   double MIN_LENGTH= vertices[0].y;
@@ -224,15 +225,9 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)
   double start_x = MIN_WIDTH + round/2.f;
   double start_y = MIN_LENGTH + round/2.f;
 
-  ROS_INFO("MAX_WIDTH: %f MIN_WIDTH: %f MAX_LENGTH: %f MIN_LENGTH: %f width_count: %i length_count: %i start_x: %f start_y: %f", MAX_WIDTH, MIN_WIDTH, MAX_LENGTH, MIN_LENGTH, width_count, length_count, start_x, start_y);
-  //std::cout<<"\nMAX_WIDTH: "<<MAX_WIDTH<<" MAX_LENGTH: "<<MAX_LENGTH<<" width_count: "<<width_count<<" length_count: "<<length_count;
-
-
   /*
-   * Create cells inside the polygon
-   */
-  std::vector<Cell> cells;
- 
+   * Check each cell in bounds
+   */ 
   for(int i=0;i<width_count;i++)
   {
     for(int j=0;j<length_count;j++)
@@ -248,10 +243,24 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)
 
       if(cellInPoly(poly, temp.p))
       {
-        cells.push_back(temp);
+        result.push_back(temp);
       }
     }
   }
+
+  return result;
+}
+
+
+std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly, double min_r)
+{
+  //std::cout<<"\n# of edges: "<<poly.edges.size();
+  std::vector<Circle> result;
+
+  /*
+   * Create cells inside the polygon
+   */
+  std::vector<Cell> cells = getCellsInPolygon(poly);
   ROS_INFO("cells.size(): %i", (int)cells.size());
   
 
@@ -268,11 +277,19 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly)
 
     std::priority_queue<Cell, std::vector<Cell>, CompareDist> updated_pq;
 
+
     /*
      *  Delete all cells whose centers lie in the largest circle
      */
     if(result.size() > 0)
     {
+      // Exit if we are at minimum radius threshold
+      if(result[ result.size()-1 ].radius < min_r)
+      {
+        break;
+      }
+
+      // Otherwise, remove cells that overlap with most recently added circle
       reduced_cells.clear();
       deleteCellsInCir(cells, result[result.size()-1], reduced_cells);
     }
@@ -944,7 +961,7 @@ std::vector<Polygon> CirclePacker::getPolygonsFromContours(std::vector< std::vec
 /*
  * Returns a vector of Circle objects that are packed into each obstacle
  */
-std::vector<Circle> CirclePacker::goCirclePacking()
+std::vector<Circle> CirclePacker::goCirclePacking(double min_r)
 {
   ////ROS_INFO("In CirclePacker::goMyBlobs()");
   std::vector<Circle> result;
@@ -992,7 +1009,7 @@ std::vector<Circle> CirclePacker::goCirclePacking()
     }
 
     // Get circles inside polygon
-    std::vector<Circle> cs = getCirclesFromPoly(ps[i]);   
+    std::vector<Circle> cs = getCirclesFromPoly(ps[i], min_r);   
 
     // Push onto result
     for(int j=0;j<cs.size();j++)

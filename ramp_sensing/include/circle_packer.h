@@ -23,7 +23,7 @@ class CirclePacker
     void deleteCellsInCir(const std::vector<Cell>&, const Circle, std::vector<Cell>&);
 
     Normal computeNormal(Edge);
-    bool cellInPoly(Polygon, cv::Point);
+    bool cellInPoly(const Polygon&, const cv::Point&) const;
 
     void combineTwoCircles(const Circle a, const Circle b, Circle& result) const;
     void combineOverlappingCircles(std::vector<Circle> cs, std::vector<Circle>& result) const;
@@ -33,7 +33,11 @@ class CirclePacker
     Point findCenterOfPixels(const std::vector<cv::Point> pixels) const;
     std::vector<double> getWeights(const std::vector<cv::Point> pixels, const Point center) const;
     
-    std::vector<Circle> getCirclesFromPoly(Polygon);
+
+
+    std::vector<Cell> getCellsInPolygon(const Polygon& p) const; 
+
+    std::vector<Circle> getCirclesFromPoly(Polygon, double min_r=0);
     std::vector<Circle> getCirclesFromEdgeSets(const std::vector< std::vector<Edge> > edge_sets);
     std::vector<Circle> getCirclesFromEdges(const std::vector<Edge> edges, const cv::Point robot_cen);
 
@@ -46,7 +50,7 @@ class CirclePacker
     std::vector<Circle> goHough();
     std::vector<Circle> goMinEncCir();
     std::vector<Circle> goMyBlobs(bool hmap=false);
-    std::vector<Circle> goCirclePacking();
+    std::vector<Circle> goCirclePacking(double min_r=0);
     std::vector<cv::RotatedRect> goEllipse();
   private:
 

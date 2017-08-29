@@ -235,21 +235,8 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
    * Do circle packing on all hmap obstacles
    */
   CirclePacker cp(hmap_thresh);
-  std::vector<Circle> obs = cp.goCirclePacking();
+  std::vector<Circle> obs = cp.goCirclePacking(2.0f);
 
-  /*
-   * Delete any circles with radius below a threshold
-   */
-  int i=0;
-  while(i<obs.size())
-  {
-    if(obs[i].radius < 2)
-    {
-      obs.erase(obs.begin()+i);
-      i--;
-    }
-    i++;
-  }
   ROS_INFO("obs.size(): %i", (int)obs.size());
   ROS_INFO("hmap origin: (%f,%f) resolution: %f", hmap.map.info.origin.position.x, hmap.map.info.origin.position.y, hmap.map.info.resolution);
   
@@ -271,7 +258,7 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
   {
     ROS_INFO("Before Obstacle %i: Center - (%f,%f) Radius - %f", i, obs[i].center.x, obs[i].center.y, obs[i].radius);
 
-    // Set obstacle values
+    // Convert position and radius to global coords and resolution
     obs[i].center.x = (obs[i].center.x * hmap.map.info.resolution) + hmap.map.info.origin.position.x;
     obs[i].center.y = (obs[i].center.y * hmap.map.info.resolution) + hmap.map.info.origin.position.y;
     obs[i].radius *= hmap.map.info.resolution;
@@ -279,6 +266,7 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
     inner_radii.markers.push_back(getMarker(obs[i], i+obs.size()));
 
     
+    // Create Obstacle
     Obstacle o(obs[i].radius, hmap.map.info.width, hmap.map.info.height, hmap.map.info.origin.position.x, hmap.map.info.origin.position.y, hmap.map.info.resolution, hmap.map.info.origin.position.x, hmap.map.info.origin.position.y);
     o.update(obs[i], v_zero, theta);
     hmap_obs.obstacles.push_back(o.msg_);
