@@ -9,6 +9,7 @@
 #include "ramp_msgs/HilbertMap.h"
 #include "ramp_msgs/ObstacleList.h"
 #include "obstacle.h"
+#include "packed_obstacle.h"
 
 using namespace std;
 using namespace cv;
@@ -208,11 +209,20 @@ visualization_msgs::Marker getMarker(Circle cir, int id)
   result.color.r = 0;
   result.color.g = 1;
   result.color.b = 0;
-  result.color.a = 0.1;
+  result.color.a = 0.5;
   result.lifetime = ros::Duration(60);
 
 
   return result;
+}
+
+visualization_msgs::Marker getMarker(ramp_msgs::Circle cir, int id)
+{
+  Circle c;
+  c.center.x = cir.center.x;
+  c.center.y = cir.center.y;
+  c.radius = cir.radius;
+  return getMarker(c, id);
 }
 
 void hmapCb(const ramp_msgs::HilbertMap& hmap)
@@ -235,9 +245,9 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
    * Do circle packing on all hmap obstacles
    */
   CirclePacker cp(hmap_thresh);
-  std::vector<Circle> obs = cp.goCirclePacking(2.0f);
+  std::vector< std::vector<Circle> > ob_cirs = cp.goCirclePacking(2.0f);
 
-  ROS_INFO("obs.size(): %i", (int)obs.size());
+  ROS_INFO("ob_cirs.size(): %i", (int)ob_cirs.size());
   ROS_INFO("hmap origin: (%f,%f) resolution: %f", hmap.map.info.origin.position.x, hmap.map.info.origin.position.y, hmap.map.info.resolution);
   
   // Get map details
@@ -251,33 +261,47 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
   double theta = 0;
 
   /*
-   * Create an Obstacle instance for each circle
+   * Create a PackedObstacle instance for each circle
    */
   hmap_obs.obstacles.clear();
-  for(int i=0;i<obs.size();i++)
+  for(int i=0;i<ob_cirs.size();i++)
   {
-    ROS_INFO("Before Obstacle %i: Center - (%f,%f) Radius - %f", i, obs[i].center.x, obs[i].center.y, obs[i].radius);
+    // Convert circles to global coordinates
+    for(int j=0;j<ob_cirs[i].size();j++)
+    {
+      // Convert position and radius to global coords and resolution
+      ob_cirs[i][j].center.x = (ob_cirs[i][j].center.x * hmap.map.info.resolution) + hmap.map.info.origin.position.x;
+      ob_cirs[i][j].center.y = (ob_cirs[i][j].center.y * hmap.map.info.resolution) + hmap.map.info.origin.position.y;
+      ob_cirs[i][j].radius *= hmap.map.info.resolution;
+    }
+    // Create PackedObstacle object
+    PackedObstacle pOb(ob_cirs[i]);
+    hmap_obs.packed_obs.push_back(pOb.msg_);
 
-    // Convert position and radius to global coords and resolution
-    obs[i].center.x = (obs[i].center.x * hmap.map.info.resolution) + hmap.map.info.origin.position.x;
-    obs[i].center.y = (obs[i].center.y * hmap.map.info.resolution) + hmap.map.info.origin.position.y;
-    obs[i].radius *= hmap.map.info.resolution;
-    ROS_INFO("After Obstacle %i: Center - (%f,%f) Radius - %f", i, obs[i].center.x, obs[i].center.y, obs[i].radius);
-    inner_radii.markers.push_back(getMarker(obs[i], i+obs.size()));
+    /*ROS_INFO("Before Obstacle %i: Center - (%f,%f) Radius - %f", i, ob_cirs[i].center.x, ob_cirs[i].center.y, ob_cirs[i].radius);
 
-    
-    // Create Obstacle
-    Obstacle o(obs[i].radius, hmap.map.info.width, hmap.map.info.height, hmap.map.info.origin.position.x, hmap.map.info.origin.position.y, hmap.map.info.resolution, hmap.map.info.origin.position.x, hmap.map.info.origin.position.y);
-    o.update(obs[i], v_zero, theta);
-    hmap_obs.obstacles.push_back(o.msg_);
+    inner_radii.markers.push_back(getMarker(ob_cirs[i], i+ob_cirs.size()));
 
     // Make radius bigger and get new circle
-    obs[i].radius += sigma;
-    outer_radii.markers.push_back(getMarker(obs[i], i));
+    ob_cirs[i].radius += sigma;
+    outer_radii.markers.push_back(getMarker(ob_cirs[i], i));
 
     o.radius_ += sigma;
     o.msg_.radius += sigma;
-    hmap_obs.obstacles.push_back(o.msg_);
+    //hmap_obs.packed_obs.push_back(o.msg_);*/
+  }
+
+  // For each PackedObstacle, make markers for each circle
+  for(int i=0;i<hmap_obs.packed_obs.size();i++)
+  {
+    for(int j=0;j<hmap_obs.packed_obs[i].circles.size();j++)
+    {
+      inner_radii.markers.push_back(getMarker(hmap_obs.packed_obs[i].circles[j], i*j));
+      
+      // Increase radius for outer circle
+      hmap_obs.packed_obs[i].circles[j].radius += sigma;
+      outer_radii.markers.push_back(getMarker(hmap_obs.packed_obs[i].circles[j], pow(i*j+5,2)));
+    }
   }
   ROS_INFO("Done creating Obstacle objects");
 
@@ -287,13 +311,13 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
     inner_radii.markers[i].color.g = 0;
     inner_radii.markers[i].color.b = 0;
     inner_radii.markers[i].color.a = 1;
-    inner_radii.markers[i].pose.position.z += 0.01;
+    inner_radii.markers[i].pose.position.z += 0.1;
   }
 
 
 
 
-  //pub_rviz.publish(outer_radii);
+  pub_rviz.publish(outer_radii);
   pub_rviz.publish(inner_radii);
   pub_obs.publish(hmap_obs); 
 }

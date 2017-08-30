@@ -50,7 +50,7 @@ class CirclePacker
     std::vector<Circle> goHough();
     std::vector<Circle> goMinEncCir();
     std::vector<Circle> goMyBlobs(bool hmap=false);
-    std::vector<Circle> goCirclePacking(double min_r=0);
+    std::vector< std::vector<Circle> > goCirclePacking(double min_r=0);
     std::vector<cv::RotatedRect> goEllipse();
   private:
 

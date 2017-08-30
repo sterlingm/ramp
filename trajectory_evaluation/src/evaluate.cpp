@@ -24,7 +24,14 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   /*
    * Compute feasibility
    */
-  performFeasibility(req);
+  if(req.init_eval)
+  {
+    performFeasibilityHmap(req);
+  }
+  else
+  {
+    performFeasibility(req);
+  }
 
   // Set response members
   req.trajectory.feasible = !qr_.collision_ && !orientation_infeasible_;
@@ -71,20 +78,12 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
 
   ROS_INFO("result.collision: %s", qr_.collision_ ? "True" : "False");
 
-  /*ros::Time t_analy_start = ros::Time::now();
-  cd_.perform(er.trajectory, er.obstacle_trjs, qr_);
-  ros::Duration d_analy = ros::Time::now() - t_analy_start;
-  t_analy_.push_back(d_analy);*/
-
+  // Set feasibility due to collision
   //////ROS_INFO("feasible: %s", er.trajectory.feasible ? "True" : "False");
   er.trajectory.feasible            = !qr_.collision_;
   er.trajectory.t_firstCollision    = ros::Duration(qr_.t_firstCollision_);
 
-  ramp_msgs::RampTrajectory* trj = &er.trajectory;
-  
-  bool moving_forward =     (fabs( sqrt(  (trj->trajectory.points[0].velocities[0]*trj->trajectory.points[0].velocities[0]) +
-                                  (trj->trajectory.points[0].velocities[1]*trj->trajectory.points[0].velocities[1]))) > 0) ? true : false;
-
+  // Set infeasibility due to orientation
   if(!er.imminent_collision && er.consider_trans && !er.trans_possible)
   {
     //ROS_INFO("In final if statement");
@@ -96,6 +95,34 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
   }
   
   ROS_INFO("performFeasibility time: %f", (ros::Time::now() - t_start).toSec());
+}
+
+
+void Evaluate::performFeasibilityHmap(ramp_msgs::EvaluationRequest& er)
+{
+  ROS_INFO("In Evaluate::performFeasibilityHmap");
+
+  /*
+   ****************************************************************************************************
+             PackedObstacle does not include outer radii circles for Hilbert map obstacles 
+   ****************************************************************************************************
+   */
+  std::vector<ramp_msgs::PackedObstacle> obs = er.packed_obs;
+  cd_.performPackedObs(er.trajectory, obs, er.robot_radius, qr_);
+
+  // Do collision against inner radii
+  for(int i=0;i<er.obstacle_trjs.size();i++)
+  {
+    ROS_INFO("er.obstacle_radii[%i]: %f", i, er.obstacle_radii[i]);
+    ROS_INFO("er.obstacle_trjs[%i]: %s", i, utility_.toString(er.obstacle_trjs[i]).c_str());
+  }
+  
+
+  // Do collision against outer radii
+  
+
+
+  ROS_INFO("Exiting Evaluate::performFeasibilityHmap");
 }
 
 
@@ -147,6 +174,9 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     ////ROS_INFO("i_end: %i", (int)i_end);
     ////ROS_INFO("trj.holonomic_path.points.size(): %i", (int)trj.holonomic_path.points.size());
 
+    /*
+     * Estimate time needed for remaining segments
+     */
     // For each segment in remaining holonomic path,
     // accumulate the distance and orientation change needed for remaining segment
     double dist=0;
@@ -165,6 +195,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     }
     ////ROS_INFO("dist: %f delta_theta: %f", dist, delta_theta);
 
+    // Set velocity values
     double max_v=0.25/2;
     double max_w=PI/8.f;
 
@@ -174,6 +205,9 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
 
     ////ROS_INFO("estimated_linear: %f estimated_rotation: %f", estimated_linear, estimated_rotation);
 
+    /*
+     * Set cost variables
+     */
     T += (estimated_linear + estimated_rotation);
 
     // Orientation
@@ -212,11 +246,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
   {
     //////ROS_INFO("In else(infeasible)"); 
     
-    // penalties += orientation_.getPenalty();
-    
-    //////////ROS_INFO("trj.t_firstColl: %f", trj.t_firstCollision.toSec());
-
-    // Add the Penalty for being infeasible due to collision, at some point i was limiting the time to 10s, but i don't know why
+    // Add the Penalty for being infeasible due to collision, at some point i was limiting the time to 10s, but I don't know why
     if(trj.t_firstCollision.toSec() > 0 && trj.t_firstCollision.toSec() < 9998)
     {
       //ROS_INFO("In if t_firstCollision: %f", trj.t_firstCollision.toSec());

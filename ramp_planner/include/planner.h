@@ -226,6 +226,7 @@ class Planner {
 
     std::vector<RampTrajectory> ob_trajectory_;
     std::vector<double> ob_radii_;
+    std::vector<ramp_msgs::PackedObstacle> obs_packed_;
 
 
     const MotionType findMotionType(const ramp_msgs::Obstacle ob) const;

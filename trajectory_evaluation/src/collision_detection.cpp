@@ -28,6 +28,43 @@ void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory,
 }
 
 
+void CollisionDetection::performPackedObs(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::PackedObstacle>& obs, const double& robot_r, QueryResult& result)
+{
+  result.collision_ = false;
+  for(uint8_t i=0;i<obs.size();i++)
+  {
+    queryPacked(trajectory.trajectory.points, obs[i], trajectory.t_start.toSec(), robot_r, result);   
+  }
+}
+
+
+
+void CollisionDetection::queryPacked(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const ramp_msgs::PackedObstacle& ob, const double& traj_start, const double& robot_r, QueryResult& result) const
+{
+
+  double t_start = segment[0].time_from_start.toSec();
+
+  int i=0;
+  for(int i=0;i<segment.size();i++)
+  {
+    const trajectory_msgs::JointTrajectoryPoint* p_i = &segment[i];
+
+    // Compare point to each circle
+    for(int j=0;j<ob.circles.size();j++)
+    {
+      double dist_threshold = ob.circles[i].radius + robot_r;
+      double dist = sqrt( pow(p_i->positions[0] - ob.circles[j].center.x,2) + pow(p_i->positions[1] - ob.circles[j].center.y,2) );
+
+      if(dist <= dist_threshold)
+      {
+      }
+    }
+
+    i++;
+  }
+}
+
+
 
 /** Returns true if trajectory_ is in collision with any of the objects */
 void CollisionDetection::perform(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, QueryResult& result)  
@@ -1675,7 +1712,7 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
   // Initialize to -1 because all dist values are >= 0
   double d_min=100;
 
-  for(i=0;i<segment.size();i++) 
+  for(i=0;i<segment.size();i++)
   //for(i=0;i<49;i++) 
   {
 

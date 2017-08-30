@@ -15,6 +15,7 @@ class Evaluate {
 
     void perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res);
     void performFeasibility(ramp_msgs::EvaluationRequest& er);
+    void performFeasibilityHmap(ramp_msgs::EvaluationRequest& er);
     void performFitness(ramp_msgs::RampTrajectory& trj, const double& offset, double& result);
 
     /** Different evaluation criteria */
@@ -22,7 +23,7 @@ class Evaluate {
     Orientation orientation_;
 
     ramp_msgs::EvaluationResponse res_;
-    
+
     CollisionDetection cd_;
     CollisionDetection::QueryResult qr_;
 

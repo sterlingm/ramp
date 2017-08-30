@@ -261,6 +261,7 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly, double min_r)
    * Create cells inside the polygon
    */
   std::vector<Cell> cells = getCellsInPolygon(poly);
+  
   ROS_INFO("cells.size(): %i", (int)cells.size());
   
 
@@ -961,10 +962,10 @@ std::vector<Polygon> CirclePacker::getPolygonsFromContours(std::vector< std::vec
 /*
  * Returns a vector of Circle objects that are packed into each obstacle
  */
-std::vector<Circle> CirclePacker::goCirclePacking(double min_r)
+std::vector< std::vector<Circle> > CirclePacker::goCirclePacking(double min_r)
 {
   ////ROS_INFO("In CirclePacker::goMyBlobs()");
-  std::vector<Circle> result;
+  std::vector< std::vector<Circle> > result;
 
   // Create a matrix of the same size and type as src
   dst.create( src.size(), src.type() );
@@ -1010,12 +1011,7 @@ std::vector<Circle> CirclePacker::goCirclePacking(double min_r)
 
     // Get circles inside polygon
     std::vector<Circle> cs = getCirclesFromPoly(ps[i], min_r);   
-
-    // Push onto result
-    for(int j=0;j<cs.size();j++)
-    {
-      result.push_back(cs[j]);
-    }
+    result.push_back(cs);
   }
   ////////ROS_INFO("contours.size(): %i", (int)contours.size());
  

@@ -12,6 +12,7 @@
 #include <time.h>
 #include "ramp_msgs/RampTrajectory.h"
 #include "ramp_msgs/Path.h"
+#include "ramp_msgs/ObstacleList.h"
 #include <tf/transform_datatypes.h>
 #include <ros/console.h>
 #include "ros/ros.h"

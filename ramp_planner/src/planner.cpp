@@ -1135,11 +1135,19 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
     result.theta_cc = result.currentTheta;
   }
 
+  /*
+   * Set dynamic obstacle trajectories
+   */
   for(uint8_t i=0;i<ob_trajectory_.size();i++)
   {
     result.obstacle_trjs.push_back(ob_trajectory_[i].msg_);
     result.obstacle_radii.push_back(ob_radii_[i]);
   }
+
+  /*
+   * Set packed obstacles (static or hmap obstacles)
+   */
+  result.packed_obs = obs_packed_;
 
   ////////ROS_INFO("imminent_collision: %s", imminent_collision_ ? "True" : "False");
   
@@ -3985,7 +3993,7 @@ void Planner::hilbertMapObsCb(const ramp_msgs::ObstacleList& hmapObs)
    * Build an evaluation request
    */
   // Create trajectories for hmap obstacles
-  for(int i=0;i<hmapObs.obstacles.size();i++)
+  for(int i=0;i<hmapObs.packed_obs.size();i++)
   {
     RampTrajectory ob_trj = getPredictedTrajectory(hmapObs.obstacles[i]);
     if(ob_trajectory_.size() < i+1)
@@ -3999,7 +4007,9 @@ void Planner::hilbertMapObsCb(const ramp_msgs::ObstacleList& hmapObs)
       ob_radii_.at(i) = hmapObs.obstacles[i].radius;
     }
   }
-  
+ 
+
+  obs_packed_ = hmapObs.packed_obs;
   //evaluatePopulation(true);
   
   evalHMap = true;
@@ -4021,6 +4031,7 @@ void Planner::go()
   
   evaluatePopulation(evalHMap);
   ROS_INFO("Initial population evaluated");
+  obs_packed_.clear();
   //sendPopulation();
   //std::cin.get();
   exit(1);
