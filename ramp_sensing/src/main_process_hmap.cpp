@@ -1,15 +1,23 @@
 #include<iostream>
 #include<ros/ros.h>
 #include<nav_msgs/OccupancyGrid.h>
+#include<visualization_msgs/MarkerArray.h>
 #include "utility.h"
 #include "GridMap2D.h"
 #include <vector>
+#include "circle_packer.h"
+#include "ramp_msgs/HilbertMap.h"
 
 using namespace std;
 using namespace cv;
 
 Mat hmap_mat;
 Mat hmap_edges;
+
+
+ros::Publisher pub_rviz;
+visualization_msgs::MarkerArray inner_radii, outer_radii;
+
 
 void CannyThreshold(int, void*)
 {
@@ -33,47 +41,6 @@ void CannyThreshold(int, void*)
   imshow( "hmap_edges", hmap_edges);
   waitKey(0);
 }
-
-
-
-void getHist()
-{
-  /*
-   * Get histogram
-   */
-  int histSize = 100;
-  float range[]  = {0, 100};
-  const float* histRange = {range};
-  
-  bool uniform = true;
-  bool accumulate = false;
-
-  Mat hist;
-  calcHist(&hmap_mat, 1, 0, Mat(), hist, 1, &histSize, &histRange, uniform, accumulate);
-
-
-  /*
-   * Draw and display histogram
-   */
-  int hist_w=512; int hist_h=400;
-  int bin_w = cvRound( (double)hist_w/histSize );
-  
-  Mat histImage(hist_h, hist_w, CV_8UC3, Scalar(0,0,0));
-
-  /// Normalize the result to [ 0, histImage.rows ]
-  normalize(hist, hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
-
-    /// Draw for each channel
-  for( int i = 1; i < histSize; i++ )
-  {
-    line( histImage, cv::Point( bin_w*(i-1), hist_h - cvRound(hist.at<float>(i-1)) ), cv::Point( bin_w*(i), hist_h - cvRound(hist.at<float>(i)) ), Scalar( 255, 0, 0), 2, 8, 0  );
-  }
-
-  imshow("Histogram", histImage);
-  waitKey(0);
-}
-
-
 
 
 
@@ -124,37 +91,6 @@ vector<cv::Point> bhContoursCenter(const vector<vector< cv::Point> >& contours,b
   }
 
   return result;
-}
-
-void contoursTwo(Mat& src)
-{
-  std::vector<std::vector<cv::Point>> contours;
-  std::vector<Vec4i> hierarchy;
-  findContours(src,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
-
-
-  RNG rng(12345);
-   /// Draw contours
-  Mat drawing = Mat::zeros( src.size(), CV_8UC3 );
-  for( int i = 0; i< contours.size(); i++ )
-  {
-    Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-    drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, cv::Point() );
-  }
-
-  vector<cv::Point> maxima = bhContoursCenter(contours, true);
-  /// Show in a window
-  namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
-  imshow( "Contours", drawing );
-  
-  for(int i=0;i<maxima.size();i++)
-  {
-    cv::Point pnt = maxima[i];
-    ROS_INFO("Local maxima %i: (%i,%i)", i, pnt.x, pnt.y);
-    src.at<uchar>(pnt.x, pnt.y) = 255;
-  }
-  imshow("maxima", src);
-  waitKey(0);
 }
 
 
@@ -228,15 +164,116 @@ vector<cv::Point> bhFindLocalMaximum(InputArray _src,int neighbor=2)
 }
 
 
-void hmapCb(nav_msgs::OccupancyGridConstPtr hmap)
+void thresholdHilbertMap(Mat hmap, Mat& result)
+{
+  threshold(hmap, result, 50, 255, CV_THRESH_BINARY);
+  imshow("threshold", result);
+  waitKey(0);
+}
+
+
+visualization_msgs::Marker getMarker(Circle cir, int id)
+{
+  visualization_msgs::Marker result;
+
+  result.header.stamp = ros::Time::now();
+  result.header.frame_id = "map";
+      
+  result.ns = "basic_shapes";
+  result.id = id;
+  
+  result.type = visualization_msgs::Marker::SPHERE;
+  result.action = visualization_msgs::Marker::ADD;
+
+  // Set x and y
+  double x = cir.center.x;
+  double y = cir.center.y;
+
+  result.pose.position.x = x;
+  result.pose.position.y = y;
+  result.pose.position.z = 0;
+  result.pose.orientation.x = 0.0;
+  result.pose.orientation.y = 0.0;
+  result.pose.orientation.z = 0.0;
+  result.pose.orientation.w = 1.0;
+      
+  double radius = cir.radius;
+  //ROS_INFO("result info x: %f y: %f radius: %f", x, y, radius);
+  
+  /*obs[i].cir_.center.x = x;
+  obs[i].cir_.center.y = y;
+  obs[i].cir_.radius = radius;*/
+  
+  // scale values are the diameter so use the radius*2
+  result.scale.x = radius*2.00f;
+  result.scale.y = radius*2.00f;
+  result.scale.z = 0.1;
+  result.color.r = 0;
+  result.color.g = 1;
+  result.color.b = 0;
+  result.color.a = 1;
+  result.lifetime = ros::Duration(10);
+
+
+  return result;
+}
+
+void hmapCb(const ramp_msgs::HilbertMap& hmap)
 {
   printf("\nIn hmapCb\n");
-  gridmap_2d::GridMap2D hmap_gmap(hmap, false);
+
+  gridmap_2d::GridMap2D hmap_gmap(hmap.map, false); 
+  
+  // Create cv::Mat  
   hmap_mat = hmap_gmap.probMap();
   cv::transpose(hmap_mat, hmap_mat);
-  cv::flip(hmap_mat, hmap_mat, 0);
   imshow("hmap", hmap_mat);
-  //waitKey(0);
+
+  Mat hmap_thresh;
+
+  thresholdHilbertMap(hmap_mat, hmap_thresh);
+
+  CirclePacker cp(hmap_thresh);
+  std::vector<Circle> obs = cp.goMyBlobs(true);
+  ROS_INFO("obs.size(): %i", (int)obs.size());
+  ROS_INFO("hmap origin: (%f,%f) resolution: %f", hmap.map.info.origin.position.x, hmap.map.info.origin.position.y, hmap.map.info.resolution);
+  
+  double x_origin = hmap.map.info.origin.position.x / hmap.map.info.resolution;
+  double y_origin = hmap.map.info.origin.position.y / hmap.map.info.resolution;
+  double gamma = hmap.gamma;
+  double sigma = sqrt( (1.f/2.f*gamma) );
+  ROS_INFO("gamma: %f sigma: %f", gamma, sigma);
+  ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
+  for(int i=0;i<obs.size();i++)
+  {
+    ROS_INFO("Before Obstacle %i: Center - (%f,%f) Radius - %f", i, obs[i].center.x, obs[i].center.y, obs[i].radius);
+    resize(hmap_thresh, hmap_thresh, Size(hmap_thresh.cols*4, hmap_thresh.rows*4));
+    hmap_thresh.at<uchar>(obs[i].center.x, obs[i].center.y) = 128;
+    imshow("center", hmap_thresh);
+    waitKey(0);
+
+    obs[i].center.x = (obs[i].center.x * hmap.map.info.resolution) + hmap.map.info.origin.position.x;
+    obs[i].center.y = (obs[i].center.y * hmap.map.info.resolution) + hmap.map.info.origin.position.y;
+    obs[i].radius *= hmap.map.info.resolution;
+    ROS_INFO("After Obstacle %i: Center - (%f,%f) Radius - %f", i, obs[i].center.x, obs[i].center.y, obs[i].radius);
+    inner_radii.markers.push_back(getMarker(obs[i], i+obs.size()));
+
+    // Make radius bigger and get new circle
+    obs[i].radius += sigma;
+    outer_radii.markers.push_back(getMarker(obs[i], i));
+  }
+
+  for(int i=0;i<inner_radii.markers.size();i++)
+  {
+    inner_radii.markers[i].color.r = 255;
+    inner_radii.markers[i].color.g = 0;
+    inner_radii.markers[i].color.b = 0;
+    inner_radii.markers[i].pose.position.z += 0.01;
+  }
+
+  pub_rviz.publish(outer_radii);
+  pub_rviz.publish(inner_radii);
+  
 
   /*double minV = 0;
   double maxV = 100;
@@ -251,7 +288,7 @@ void hmapCb(nav_msgs::OccupancyGridConstPtr hmap)
    * Needs peaks to be sharp, can't find peak when gradient is too smooth
    */
   // Create kernel
-  int kernalSize = 3;
+  /*int kernalSize = 3;
   Mat1b kernelLM(Size(kernalSize, kernalSize), 1);
   kernelLM.at<uchar>(kernalSize/2, kernalSize/2) = 0;
   Mat imageLM;
@@ -278,7 +315,7 @@ void hmapCb(nav_msgs::OccupancyGridConstPtr hmap)
     hmap_mat.at<uchar>(pnt.x, pnt.y) = 255;
   }
   imshow("maxima", hmap_mat);
-  waitKey(0);
+  waitKey(0);*/
 
 
 
@@ -299,13 +336,6 @@ void hmapCb(nav_msgs::OccupancyGridConstPtr hmap)
   waitKey(0);*/
 
 
-
-  /*
-   * Contour method number 2
-   * Apply contours to raw image
-   * Doesn't work at all - contour goes around whole image
-   */
-  //contoursTwo(hmap_mat);
   
 
 
@@ -324,6 +354,7 @@ int main(int argc, char** argv)
   ros::NodeHandle handle;
 
   ros::Subscriber sub_hmap = handle.subscribe("/hilbert_map", 10, &hmapCb);
+  pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1);
   
   printf("\nSpinning\n");
   ros::spin();

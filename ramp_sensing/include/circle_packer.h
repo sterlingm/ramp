@@ -6,12 +6,18 @@
 #include <queue>
 #include <visualization_msgs/Marker.h>
 
+struct Attachment
+{
+  std::vector<int> cirs;
+};
+
 
 class CirclePacker 
 {
   public:
     CirclePacker(nav_msgs::OccupancyGridConstPtr);
     CirclePacker(nav_msgs::OccupancyGrid);
+    CirclePacker(cv::Mat grid);
     ~CirclePacker();
 
     void convertOGtoMat(nav_msgs::OccupancyGridConstPtr);
@@ -24,6 +30,7 @@ class CirclePacker
     Normal computeNormal(Edge);
     bool cellInPoly(Polygon, cv::Point);
 
+    void detectAttachedCircles(const std::vector<CircleOb*>& cir_obs, std::vector<Attachment>& result) const;
     void combineTwoCircles(const Circle a, const Circle b, Circle& result) const;
     void combineOverlappingCircles(std::vector<Circle> cs, std::vector<Circle>& result) const;
 
@@ -43,7 +50,7 @@ class CirclePacker
     std::vector<Circle> goCorners();
     std::vector<Circle> goHough();
     std::vector<Circle> goMinEncCir();
-    std::vector<Circle> goMyBlobs();
+    std::vector<Circle> goMyBlobs(bool hmap=false);
     std::vector<cv::RotatedRect> goEllipse();
   private:
 
