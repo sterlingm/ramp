@@ -617,7 +617,7 @@ void MobileBase::bezier(ramp_msgs::Path& p, bool only_curve, std::vector<BezierC
   // Set the index of which knot point to stop at
   //int stop = (req_.type == TRANSITION) ? 3 : 2; 
   int stop = req_.bezierCurves.size()+1;
-  std::cout<<"\nstop: "<<stop;
+  //std::cout<<"\nstop: "<<stop;
 
   // TODO: Add a check to see if a curve exists in the request to prevent index out of bounds crashes
 
