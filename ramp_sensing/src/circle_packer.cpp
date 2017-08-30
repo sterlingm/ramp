@@ -8,6 +8,11 @@ CirclePacker::CirclePacker(nav_msgs::OccupancyGridConstPtr g)
   convertOGtoMat(g);
 }
 
+CirclePacker::CirclePacker(cv::Mat grid)
+{
+  grid.copyTo(src);
+}
+
 CirclePacker::~CirclePacker() 
 {
   src.release();
@@ -45,10 +50,6 @@ void CirclePacker::CannyThreshold(int, void*)
   /// Reduce noise with a kernel 3x3
   blur( src, detected_edges, cv::Size(3,3) );
   
-  imshow("after blur src", detected_edges);
-  cv::waitKey(0);
-
-
   // Somehow, lowThreshold is being converted to unsigned int before this point
   // its value is 32767 (-1 for unsigned 4-byte int)
   // Set the value back to 0 for edge detection to work
@@ -387,12 +388,70 @@ void CirclePacker::combineTwoCircles(const Circle a, const Circle b, Circle& res
   result.radius = R;
 }
 
+/*
+ * Make sure attachments don't override each other
+ */
+void CirclePacker::detectAttachedCircles(const std::vector<CircleOb*>& cir_obs, std::vector<Attachment>& result) const
+{
+  //ROS_INFO("In detectAttachedCircles");
+
+  double threshold  = 0;
+  double R          = 0;
+  double d          = 0;
+  double scale      = 0.1;
+  int i=0;
+  while(i<cir_obs.size()-1)
+  {
+    Circle ci = cir_obs[i]->cir;
+
+    int j = i+1;
+
+    // Go through remaining circles
+    while(j<cir_obs.size())
+    {
+      Circle cj = cir_obs[j]->cir;
+      
+      //ROS_INFO("Trying i: %i j: %i", i, j);
+      //ROS_INFO("Centers i: (%f,%f) j: (%f,%f)", ci.center.x, ci.center.y, cj.center.x, cj.center.y);
+      
+      // Get R, distance threshold, and distance between circle centers
+      R = ci.radius + cj.radius;
+      threshold = ci.radius < cj.radius ? R-(scale*ci.radius) : R-(scale*cj.radius);
+      threshold = R + 0.2;
+
+      d = utility_.positionDistance(ci.center.x, ci.center.y, cj.center.x, cj.center.y);
+
+      //ROS_INFO("ci.r: %f cj.r: %f R: %f threshold: %f d: %f", ci.radius, cj.radius, R, threshold, d);
+
+      // If distance is below threshold, then attach the two circles
+      if(d < threshold)
+      {
+        //ROS_INFO("Creating attachment %i and %i", i, j);
+        Attachment temp;
+        temp.cirs.push_back(i);
+        temp.cirs.push_back(j);
+        result.push_back(temp);
+      }
+
+      j++;
+    } // end inner while
+
+    i++;
+  } // end outer while
+
+  //ROS_INFO("Exiting detectAttachedCircles"); 
+}
 
 // result is a final list of circles: contains both the combined ones and the ones that were not combined
+// This gets called before converting to global coordinates 1 = 5cm = 0.05m
 void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector<Circle>& result) const
 {
-  ////////ROS_INFO("In combineOverlappingCircles");
+  ROS_INFO("In combineOverlappingCircles");
   int pairs, i=0, j=0;
+
+  // Initialize variables
+  double scale = 0.75;
+  double threshold = 0.;
 
   while(i<cs.size()-1)
   {
@@ -402,9 +461,6 @@ void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector
     
     j = i+1;
 
-    // This gets called before converting to global coordinates 1 = 5cm = 0.05m
-    double inflate = 0;
-    double threshold = 0.;
 
     while(j<cs.size())
     {
@@ -413,12 +469,16 @@ void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector
       // Check if they overlap
       Circle cj = cs[j];
       //////////ROS_INFO("cj - Center: (%f, %f) Radius: %f", cj.center.x, cj.center.y, cj.radius);
-     
+
+      double R = ci.radius + cj.radius;
+      threshold = ci.radius < cj.radius ? R-(scale*ci.radius) : R-(scale*cj.radius);
+
       double d = utility_.positionDistance(ci.center.x, ci.center.y, cj.center.x, cj.center.y);
-      //////////ROS_INFO("d: %f threshold: %f", d, threshold);
 
       if(d < threshold)
       {
+        ROS_INFO("Combining circles d: %f threshold: %f", d, threshold);
+
         // Combine them
         Circle temp;
         combineTwoCircles(ci, cj, temp);
@@ -869,28 +929,33 @@ std::vector<Circle> CirclePacker::goMinEncCir()
 }
 
 
-std::vector<Circle> CirclePacker::goMyBlobs()
+std::vector<Circle> CirclePacker::goMyBlobs(bool hmap)
 {
   ////ROS_INFO("In CirclePacker::goMyBlobs()");
   std::vector<Circle> result;
 
   // Create a matrix of the same size and type as src
   dst.create( src.size(), src.type() );
+  
+  cv::Mat srcCopy;
+  src.copyTo(srcCopy);
 
   // Get the edges
   /*ros::Time t_start_edge_detect = ros::Time::now();
   CannyThreshold(0, 0);
   ros::Duration d_edges_detect(ros::Time::now()-t_start_edge_detect);*/
-
+  
   /*
    * Detect blobs
    */
   // Get contours
   std::vector< std::vector<cv::Point> > contours;
   std::vector<cv::Vec4i> hierarchy;
-  findContours( src, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
-  ////////ROS_INFO("contours.size(): %i", (int)contours.size());
 
+  // ***** findContours modifies src! *****
+  findContours( srcCopy, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
+  ////////ROS_INFO("contours.size(): %i", (int)contours.size());
+  
   // Go through each set of contour points
   for(int i=0;i<contours.size();i++)
   {
@@ -913,7 +978,7 @@ std::vector<Circle> CirclePacker::goMyBlobs()
     // Check that there are at least a min number of contour points
     // This is because we usually get massive circles (radius>1000) when there
     // are only a few points
-    if(contours[i].size() < 10)
+    if(contours[i].size() < 10 && !hmap)
     {
       continue;
     }
@@ -985,8 +1050,9 @@ std::vector<Circle> CirclePacker::goMyBlobs()
     //ROS_INFO("Average center: (%f,%f)", x, y);
 
     // Set the center value
-    c.center.x = y;
-    c.center.y = x;
+    // If not operating on hilbert map, flip coordinates
+    c.center.x = hmap ? x : y;
+    c.center.y = hmap ? y : x;
     
     /*
      * Get the dist of each pixel to the center
@@ -996,8 +1062,9 @@ std::vector<Circle> CirclePacker::goMyBlobs()
     for (size_t pointIdx = 0; pointIdx<obs_points.size(); pointIdx++)
     {
       cv::Point2f pt = obs_points[pointIdx];
-      double d = utility_.positionDistance(c.center.x, c.center.y, pt.y, pt.x);
-      ////////ROS_INFO("Point %i, d: %f", pointIdx, d);
+      double d = hmap ? utility_.positionDistance(c.center.x, c.center.y, pt.x, pt.y) 
+                      : utility_.positionDistance(c.center.x, c.center.y, pt.y, pt.x);
+      //ROS_INFO("Point %i, d: %f", pointIdx, d);
       dists.push_back(d);
 
       if(d > max_dist)
