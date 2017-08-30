@@ -3,7 +3,9 @@ import rospy
 import os
 import rospkg
 from nav_msgs.msg import OccupancyGrid
+from ramp_msgs.msg import HilbertMap
 
+# hilbert_map.csv gets written in my_main_SBHM.py
 def main():
     rospy.init_node('hmap', anonymous=False)
     
@@ -23,6 +25,8 @@ def main():
     xs = []
     ys = []
 
+    gamma = 0
+
     # For each line
     for i,l in enumerate(lines):
         print l
@@ -37,6 +41,10 @@ def main():
 
             xs.append(float(nums[0]))
             ys.append(float(nums[1]))
+
+            if gamma == 0:
+                gamma = float(nums[3])
+                print('gamma: %f' % gamma)
 
     x_min = min(xs)
     x_max = max(xs)
@@ -59,13 +67,17 @@ def main():
     #grid.info.height = len(lines
 
     # Create Publisher 
-    pub = rospy.Publisher('hilbert_map', OccupancyGrid, queue_size=1)
+    pub = rospy.Publisher('hilbert_map', HilbertMap, queue_size=1)
+    pubRviz = rospy.Publisher('hilbert_map_grid', OccupancyGrid, queue_size=1)
+
+    hmap = HilbertMap()
+    hmap.map = grid
+    hmap.gamma = gamma
 
     v = raw_input("Press Enter to publish grid")
 
-    pub.publish(grid)
-    pub.publish(grid)
-    pub.publish(grid)
+    pub.publish(hmap)
+    pubRviz.publish(hmap.map)
 
 
     print('\nExiting normally\n')
