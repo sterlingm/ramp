@@ -1,4 +1,4 @@
-population_size: 10
+population_size: 4
 
 sub_populations: false 
 
@@ -30,7 +30,7 @@ eval_weight_T: 1.75
 # This is because high values of D are good so we add 1/D to the fitness cost
 eval_weight_D: 10
 
-eval_weight_A: 0.25
+eval_weight_A: 0.01
 
 global_frame: "map"
 
