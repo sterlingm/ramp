@@ -4,7 +4,7 @@ Evaluate::Evaluate() : Q_coll_(10000.f), Q_kine_(100000.f), orientation_infeasib
 
 void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res)
 {
-  //////ROS_INFO("In Evaluate::perform()");
+  ROS_INFO("In Evaluate::perform()");
   //ros::Time t_start = ros::Time::now();
   
   /*
@@ -16,7 +16,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
 
   // Set imminent collision
   imminent_collision_ = req.imminent_collision;
-  //////ROS_INFO("imminent_collision_: %s", imminent_collision_ ? "True" : "False");
+  ROS_INFO("imminent_collision_: %s", imminent_collision_ ? "True" : "False");
 
   // Reset orientation_infeasible for new trajectory
   orientation_infeasible_ = false;
@@ -30,7 +30,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   req.trajectory.feasible = !qr_.collision_ && !orientation_infeasible_;
   res.feasible = !qr_.collision_ && !orientation_infeasible_;
   req.trajectory.feasible = res.feasible;
-  ////ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
+  ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
   ////ROS_INFO("performFeasibility: %f", (ros::Time::now()-t_start).toSec());
 
   if(qr_.collision_)
@@ -82,12 +82,8 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
 
   ramp_msgs::RampTrajectory* trj = &er.trajectory;
   
-  bool moving_forward =     (fabs( sqrt(  (trj->trajectory.points[0].velocities[0]*trj->trajectory.points[0].velocities[0]) +
-                                  (trj->trajectory.points[0].velocities[1]*trj->trajectory.points[0].velocities[1]))) > 0)
-                ? true 
-                : false;
-
-  if(!er.imminent_collision && er.consider_trans && !er.trans_possible)
+  if((!er.imminent_collision && er.consider_trans && !er.trans_possible) ||
+      orientation_.getDeltaTheta(*trj) > 1.5708)
   {
     //ROS_INFO("In final if statement");
     orientation_infeasible_ = true;
@@ -181,6 +177,9 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     // Orientation
     double A = orientation_.perform(trj);
 
+    /*double v = sqrt( pow(trj.trajectory.points[0].velocities[0],2) + pow(trj.trajectory.points[1].velocities[1],2) );
+    A_weight_ = v;*/
+
     // Minimum distance to any obstacle
     double D = cd_.min_dist_;
     
@@ -212,7 +211,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
 
   else
   {
-    //////ROS_INFO("In else(infeasible)"); 
+    ROS_INFO("In else(infeasible)"); 
     
     // penalties += orientation_.getPenalty();
     
@@ -232,14 +231,15 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
       penalties += Q_coll_;
     }
 
-    // If infeasible due to orientation change
+    // If infeasible due to orientation change (i.e. no smooth curve)
     // If there is imminent collision, do not add this penalty (it's okay to stop and rotate)
-    if(orientation_infeasible_ && !imminent_collision_)
+    if(orientation_infeasible_)// && !imminent_collision_)
     {
-      //ROS_INFO("In if orientation_infeasible_: %f", orientation_.getDeltaTheta(trj));
-      //ROS_INFO("Orientation penalty: %f", Q_kine_ * (orientation_.getDeltaTheta(trj) / PI));
+      ROS_INFO("In if orientation_infeasible_: %f", orientation_.getDeltaTheta(trj));
 
       double delta_theta = orientation_.getDeltaTheta(trj) < 0.11 ? 0.1 : orientation_.getDeltaTheta(trj);
+      
+      ROS_INFO("delta_theta: %f getDeltaTheta: %f Orientation penalty: %f", delta_theta, orientation_.getDeltaTheta(trj), Q_kine_ * (orientation_.getDeltaTheta(trj) / PI));
 
       penalties += Q_kine_ * (delta_theta / PI);
     }
@@ -249,5 +249,5 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
   result = (1. / (cost + penalties));
 
   //////////ROS_INFO("performFitness time: %f", (ros::Time::now() - t_start).toSec());
-  ////////ROS_INFO("Exiting Evaluate::performFitness");
+  ROS_INFO("Exiting Evaluate::performFitness");
 } //End performFitness
