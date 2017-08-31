@@ -10,7 +10,7 @@ class Move {
     Move(const ramp_msgs::Path p);
 
     const ramp_msgs::Path perform();
-    const std::vector<double> getNewPosition(const double value, const double bound, const double theta, const double r, bool x_dim) const;
+    const std::vector<double> getNewPosition(const double value, const double other_value, const double bound, const double theta, const double r, bool x_dim) const;
 
     ramp_msgs::Path path_;
     double dir_;

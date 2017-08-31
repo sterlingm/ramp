@@ -10,7 +10,7 @@ costmap:
     update_frequency: 20
     publish_frequency: 20
     width: 7.0
-    height: 5.0
+    height: 7.0
     obstacle_range: 10.0
     raytrace_range: 10.0
     transform_tolerance: 1.0

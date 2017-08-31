@@ -226,7 +226,6 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   //ROS_INFO("msg: %s", utility_.toString(msg).c_str());
 
   ros::Time start = ros::Time::now();
-  ros::Duration d(start - t_prevCC_);
   
   ob_trajectory_.clear();
   ob_radii_.clear();
@@ -272,6 +271,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   /*
    * Evaluate population if we're not almost at the next CC
    */
+  ros::Duration d = ros::Time::now()-t_prevCC_;
   //ROS_INFO("d.toSec(): %f controlCycle_.toSec(): %f", d.toSec(), controlCycle_.toSec());
   if(d.toSec() < (controlCycle_.toSec()-0.1) || !moving_robot_)
   {
@@ -284,10 +284,25 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
    */
   if(cc_started_)
   {
+    bool feasBeforeEval = movingOn_.msg_.feasible;
+
     ////////ROS_INFO("Evaluating movingOn_ in SC");
     evaluateTrajectory(movingOn_, false);
     moving_on_coll_ = !movingOn_.msg_.feasible;
-  }
+
+    // if movingOn changed to feasible
+    if(!feasBeforeEval && movingOn_.msg_.feasible)
+    {
+      // set lastFeasible change
+      t_lastFeasible_ = ros::Time::now();
+    }
+    // else if movingOn changed to infeasible
+    else if(feasBeforeEval && !movingOn_.msg_.feasible)
+    {
+      // Add elapsed time onto d_moving_feas_t
+      d_moving_feas_t_ = d_moving_feas_t_ + ros::Duration(ros::Time::now() - t_lastFeasible_);
+    }
+  } // end if evaluating movingOn
 
   /*
    * Find direction of closest obstacle for "move" operator
@@ -308,6 +323,9 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
         ob_trajectory_.at(i_closest).msg_.trajectory.points.at(0).positions);
     double dist = fabs(utility_.positionDistance(latestUpdate_.msg_.positions, 
           ob_trajectory_.at(i_closest).msg_.trajectory.points.at(0).positions));
+
+    // Record data
+    min_dist_obs_.push_back(dist);
 
     //ROS_INFO("SENSING CYCLE dir: %f", dir);
     if( fabs(dir) < 0.001 )
@@ -331,6 +349,8 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   ////////ROS_INFO("movingOn_ Feasible: %s", movingOn_.msg_.feasible ? "True" : "False");
 
   sc_durs_.push_back( ros::Time::now() - start );
+
+  num_scs_++;
   
   //sendPopulation();
   
@@ -1441,6 +1461,11 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
     imminent_collision_ = false;
   }
 
+  if(imminent_collision_)
+  {
+    d_time_in_ic_ = d_time_in_ic_ + imminentCollisionCycle_;
+  }
+
   h_control_->sendIC(ic);
 
   //ROS_INFO("Exiting Planner::imminentCollisionCallback");
@@ -1621,7 +1646,7 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int gens_before_cc, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
 {
   //ROS_INFO("In Planner::init");
 
@@ -1682,6 +1707,17 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   moving_robot_         = moving_robot;
   errorReduction_       = errorReduction;
   generationsPerCC_     = controlCycle_.toSec() / planningCycle_.toSec();
+
+
+  // Data to collect
+  num_pcs_  = 0;
+  num_scs_  = 0;
+  num_ccs_  = 0;
+  pop_size_ = populationSize_;
+  sc_freq_  = t_sc_rate;
+  //width_  = ranges_[0].msg_.max - ranges_[0].msg_.min; 
+  //height_ = ranges_[1].msg_.max - ranges_[1].msg_.min; 
+
   //ROS_INFO("Exiting Planner::init");
 } // End init
 
@@ -2134,52 +2170,6 @@ const bool Planner::checkIfSwitchCurveNecessary(const RampTrajectory from, const
 
 
 
-void Planner::computeFullSwitch(const RampTrajectory& from, const RampTrajectory& to, RampTrajectory& result)
-{
-  ////ROS_INFO("In Planner::computeFullSwitch");
-  ////////ROS_INFO("to: %s", to.toString().c_str());
-
-  // Get transition trajectory
-  ros::Time tt = ros::Time::now();
-  std::vector<RampTrajectory> trajecs;
-  switchTrajectory(from, to, trajecs);
-  //////////ROS_INFO("Time spent getting switch trajectory: %f", (ros::Time::now()-tt).toSec());
-
-  // If a switch was possible
-  if(trajecs.size() > 0)
-  {
-    result = trajecs.at(1);
-    Path p = result.msg_.holonomic_path;
-    //////////ROS_INFO("Before eval, T_new.path: %s", T_new.path_.toString().c_str());
-    //////ROS_INFO("to.msg.holonomic_path: %s", utility_.toString(to.msg_.holonomic_path).c_str());;
-
-    // Evaluate T_new
-    //ramp_msgs::EvaluationRequest er = buildEvaluationRequest(T_new);
-    requestEvaluation(result);
-
-    // Set misc members
-    result.transitionTraj_ = trajecs.at(0).msg_;
-    result.msg_.holonomic_path = p.msg_;
-
-    // Set result
-    //result                  = T_new;
-    //result.transitionTraj_  = trajecs.at(0).msg_;
-    //////////ROS_INFO("result.transitionTraj.size(): %i", (int)result.transitionTraj_.trajectory.points.size());
-
-    //////////ROS_INFO("After eval, T_new.path: %s", T_new.path_.toString().c_str());
-  }
-
-  // If a switch was not possible, just return
-  // the holonomic trajectory
-  else
-  {
-    //////////ROS_WARN("A switch was not possible, returning \"to\" trajectory: %s", to.toString().c_str());
-    result = to;
-  }
-
-  ////////ROS_INFO("Full switch result: %s", result.toString().c_str());
-  //////ROS_INFO("Exiting Planner::computeFullSwitch");
-} // End computeFullSwitch
 
 
 
@@ -2324,106 +2314,6 @@ bool Planner::predictTransition(const RampTrajectory& from, const RampTrajectory
   ////ROS_WARN("No possible curve could be planned");
   return false;
 }
-
-
-void Planner::switchTrajectory(const RampTrajectory& from, const RampTrajectory& to, std::vector<RampTrajectory>& result)
-{
-  if(log_enter_exit_)
-  {
-    //////ROS_INFO("In Planner::switchTrajectory");
-  }
-  
-  ////////ROS_INFO("from: %s\nto.path: %s", from.toString().c_str(), to.toString().c_str());
-
-  /*
-   * Find the best planning cycle to switch 
-   */
-  
-  // TODO: Use current CC time or fixed cc time? Come back to this.
-  //uint8_t deltasPerCC = (controlCycle_.toSec()+0.0001) / delta_t_switch_;
-  uint8_t deltasPerCC = (t_fixed_cc_+0.0001) / delta_t_switch_;
-
-  uint8_t delta_t_now = (ros::Time::now() - t_prevCC_).toSec() / delta_t_switch_;
-  ////////ROS_INFO("(ros::Time::now() - t_prevCC_): %f", (ros::Time::now() - t_prevCC_).toSec());
-  
-  double  delta_t     = ((deltasPerCC+1)*delta_t_switch_);
-  ////////ROS_INFO("deltasPerCC: %i delta_t_now: %i delta_t: %f", deltasPerCC, delta_t_now, delta_t);
-  
-  for(int i_delta_t=deltasPerCC-1; i_delta_t > (delta_t_now+1); i_delta_t--)
-  {
-    double t_pc = i_delta_t * delta_t_switch_;
-    //////ROS_INFO("i_delta_t: %i delta_t_switch_: %f t_pc: %f", i_delta_t, delta_t_switch_, t_pc);
-
-    MotionState ms = from.getPointAtTime(t_pc);
-
-    if(predictTransition(from, to, t_pc))
-    {
-      //////ROS_INFO("Prediction successful - stopping at t_pc: %f", t_pc);
-      delta_t = t_pc;
-      break;
-    }
-    /*else
-    {
-      //////ROS_INFO("Prediction returns false");
-    }*/
-  } // end for each delta t
- 
-
-  /*
-   * Call getTransitionTrajectory
-   * if we can find one before next CC
-   */
-  if(delta_t  < ((deltasPerCC+1)*delta_t_switch_))
-  {
-    //RampTrajectory switching  = getTransitionTrajectory(from, to, delta_t);
-    //RampTrajectory full       = switching.clone();
-    RampTrajectory switching, full;
-    getTransitionTrajectory(from, to, delta_t, switching);
-    full = switching;
-    //////ROS_INFO("Switching trajectory: %s", switching.toString().c_str());
-
-    // If robot is at goal, full should only be 1 point,
-    // check for this to prevent crashing
-    if(full.msg_.i_knotPoints.size() > 1)
-    {
-      // Keep a counter for the knot points
-      // Start at 1 because that should be the starting knot point of the curve
-      int c_kp = 1;
-      
-      ////////ROS_INFO("c_kp: %i", c_kp);
-      ////////ROS_INFO("c_kp: %i i_knotPoints.size(): %i", c_kp, (int)to.msg_.i_knotPoints.size());
-      
-      ////////ROS_INFO("full.path: %s", full.msg_.holonomic_path.toString().c_str());
-
-      // Set full as the concatenating of switching and to
-      full        = switching.concatenate(to, c_kp);
-      
-      ////////ROS_INFO("full.path: %s", full.msg_.holonomic_path.toString().c_str());
-
-
-      // Set the proper ID, path, and t_starts
-      full.msg_.id          = to.msg_.id;
-      full.msg_.holonomic_path  = to.msg_.holonomic_path;
-
-      full.msg_.t_start       = ros::Duration(delta_t);
-      switching.msg_.t_start  = full.msg_.t_start;
-
-      if(full.transitionTraj_.curves.size() > 0)
-      {
-        full.transitionTraj_    = switching.msg_;
-      }
-
-      result.push_back(switching);
-      result.push_back(full);
-    } // end if size > 1
-  } // end if switch possible
- 
-
-  if(log_enter_exit_)
-  {
-    //////ROS_INFO("Exiting Planner::switchTrajectory");
-  }
-} // End switchTrajectory
 
 
 
@@ -2596,7 +2486,8 @@ void Planner::getTransitionTrajectory(const RampTrajectory& trj_movingOn, const 
     requestTrajectory(tr, result);
   }
 
-  
+  // record switching trajectory size 
+  switch_t_size_.push_back(result.msg_.trajectory.points.size());
   
   //////ROS_INFO("trj_transition: %s", result.toString().c_str());
   if(log_enter_exit_)
@@ -2678,7 +2569,7 @@ void Planner::modification()
   ros::Time now = ros::Time::now();
   std::vector<RampTrajectory> mod_trajec;
   modifyTrajec(mod_trajec);
-  ros::Time t_p = ros::Time::now();
+  mod_durs_.push_back(ros::Time::now()-now);
   //////ROS_INFO("t_p: %f", (t_p-now).toSec());
   //ROS_INFO("Modification trajectories obtained: %i", (int)mod_trajec.size());
   
@@ -2859,6 +2750,8 @@ const MotionState Planner::errorCorrection()
 
 void Planner::planningCycleCallback() 
 {
+  pc_freq_.push_back(ros::Time::now()-t_prevPC_);
+
   ros::Time t_start = ros::Time::now();
   //ROS_INFO("*************************************************");
   //ROS_INFO("Planning cycle occurring, generation %i", generation_);
@@ -2893,7 +2786,6 @@ void Planner::planningCycleCallback()
     ////////ROS_INFO("movingOnCC_: %s", movingOnCC_.toString().c_str());
    
     diff = movingOnCC_.getPointAtTime(t_since_cc.toSec());
-    //diff = movingOn_.getPointAtTime(t_since_cc.toSec());
     
     //ROS_INFO("movingOnCC_ at t_since_cc: %s", diff.toString().c_str());
     //ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
@@ -2916,8 +2808,16 @@ void Planner::planningCycleCallback()
     //ROS_INFO("Corrected movingOn_: %s", movingOn_.toString().c_str());
 
     offsetPopulation(temp);
+    
+    // Record data
+    motion_error_amount_.push_back( sqrt( pow(diff.msg_.positions[0],2) + pow(diff.msg_.positions[1],2) ) );
+    error_correct_durs_no_eval_.push_back(ros::Time::now()-t_start_error);
 
     evaluatePopulation();
+    
+    // Record data
+    error_correct_durs_eval_.push_back(ros::Time::now()-t_start_error);
+
 
     //ROS_INFO("Pop after adjustment: %s", population_.toString().c_str());
 
@@ -2960,6 +2860,11 @@ void Planner::planningCycleCallback()
   generation_++;
   c_pc_++;
 
+  // Record duration data
+  ros::Duration d = ros::Time::now() - t_start; 
+  pc_durs_.push_back(d);
+
+  t_prevPC_ = ros::Time::now();
 
   ////////ROS_INFO("Pop: %s", population_.toString().c_str());
   /*////////ROS_INFO("Exiting PC at time: %f", ros::Time::now().toSec());
@@ -2971,11 +2876,11 @@ void Planner::planningCycleCallback()
     copy.trajectories_.push_back(ob_trajectory_[i]);
   }
 
+  
+
   //sendPopulation();
   
-  ros::Duration d = ros::Time::now() - t_start; 
   //////ROS_INFO("d: %f EC: %s mod_worked: %s modded_two: %s", d.toSec(), EC ? "True" : "False", mod_worked ? "True" : "False", modded_two ? "True" : "False");
-  pc_durs_.push_back(d);
   ////////ROS_INFO("********************************************************************");
   //ROS_INFO("Generation %i completed, time elapse: %f", (generation_-1), (ros::Time::now() - t_start).toSec());
   ////////ROS_INFO("********************************************************************");
@@ -3209,32 +3114,6 @@ void Planner::getTransPop(const Population& pop, const RampTrajectory& movingOn,
   //////ROS_INFO("Exiting Planner::getTransPop");
 }
 
-void Planner::getTransPop(const Population& pop, const RampTrajectory& movingOn, Population& result)
-{
-  //////ROS_INFO("In Planner::getTransPop");
-  //////////ROS_INFO("pop: %s", pop.toString().c_str());
-  result = pop;
-
-  if(result.type_ != HOLONOMIC)
-  {
-    // Go through the population and get:
-    // 1) planning cycle to switch at
-    // 2) transition trajectory
-    for(uint8_t i=0;i<pop.size();i++)
-    {
-      ////////ROS_INFO("i: %i", i);
-      RampTrajectory temp;
-      computeFullSwitch(movingOn_, pop.get(i), temp);
-      result.replace(i, temp);
-    }
-  }
-  //////////ROS_INFO("Trans pop full: %s", result.toString().c_str());
-
-  //////ROS_INFO("Exiting Planner::getTransPop");
-} // End getTransPop
-
-
-
 
 
 
@@ -3245,6 +3124,7 @@ void Planner::doControlCycle()
   ////////ROS_WARN("Control Cycle %i occurring at Time: %f", num_cc_, ros::Time::now().toSec());
   ROS_INFO("controlCycle_: %f", controlCycle_.toSec());
   //////ROS_INFO("Time between control cycles: %f", (ros::Time::now() - t_prevCC_).toSec());
+  cc_freq_.push_back(ros::Time::now()-t_prevCC_); 
   t_prevCC_ = ros::Time::now();
   ////////ROS_INFO("Number of planning cycles that occurred between CC's: %i", c_pc_);
 
@@ -3259,6 +3139,9 @@ void Planner::doControlCycle()
 
   // Set the bestT
   RampTrajectory bestT = population_.getBest();
+
+  // Record data
+  full_trajectory_.concatenate(bestT);
 
   ////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
 
@@ -3369,12 +3252,15 @@ void Planner::doControlCycle()
     //////////ROS_INFO("Time spent adapting: %f", d_adapt.toSec());
    
    
-    // Find the transition (non-holonomic) population and set new control cycle time
-    ros::Time t_startTrans = ros::Time::now();
 
     /*
      * Plan switching trajectories
      */
+    
+    // Find the transition (non-holonomic) population and set new control cycle time
+    ros::Time t_startTrans = ros::Time::now();
+
+    // Get future time to start switching trajectories at 
     double t_start = getEarliestStartTime(movingOn_);
     //ROS_INFO("t_start: %f", t_start);
 
@@ -3382,19 +3268,10 @@ void Planner::doControlCycle()
     if(t_start < t_fixed_cc_-0.0001)
     {
       getTransPop(population_, movingOn_, t_start, population_);
-      evaluatePopulation();
-      ros::Duration d_trans = ros::Time::now() - t_startTrans;
-      trans_durs_.push_back(d_trans);
+      d_compute_switch_all_ts_.push_back(ros::Time::now() - t_startTrans);
       
-      ////////ROS_INFO("After finding transition population, controlCycle period: %f", controlCycle_.toSec());
-      //ROS_INFO("New transPop:"); 
-      //ROS_INFO("Pop earliest time: %f", population_.getEarliestStartTime().toSec());
-      for(int i=0;i<population_.size();i++)
-      {
-        //ROS_INFO("%s", population_.get(i).toString().c_str());
-      }
-   
-      ////////ROS_INFO("Time spent getting trans pop: %f", d_trans.toSec());
+      // Re-evaluate after computing switches
+      evaluatePopulation();
     }
     else
     {
@@ -3462,6 +3339,7 @@ void Planner::controlCycleCallback(const ros::TimerEvent& e)
     h_parameters_.setCCStarted(true); 
   }
     
+  num_ccs_++;
   ////////ROS_INFO("Leaving Control Cycle, period: %f", controlCycle_.toSec());
 } // End controlCycleCallback
 
@@ -3743,123 +3621,222 @@ const MotionState Planner::findAverageDiff() {
 }
 
 
-void Planner::reportData() 
+void Planner::printGeneralData() const
 {
-  double sum = 0.;
-  for(uint16_t i=0;i<adapt_durs_.size();i++)
+  ROS_INFO("*************************************************************");
+  ROS_INFO("                        General data                         ");
+  ROS_INFO("*************************************************************");
+
+  ROS_INFO("Runtime: %f", d_runtime_.toSec());
+  ROS_INFO("# of planning cycles: %i", num_pcs_);
+  ROS_INFO("# of sensing cycles:  %i", num_scs_);
+  ROS_INFO("# of control cycles:  %i", num_ccs_);
+  ROS_INFO("Population size: %i", pop_size_);
+
+  // Time to compute switching trajectories
+  ROS_INFO("Time to compute switching trajectories:");
+  double compute_switch_t_avg = 0;
+  for(int i=0;i<d_compute_switch_all_ts_.size();i++)
   {
-    //ROS_INFO("Adaptation duration[i]: %f", adapt_durs_.at(i).toSec());
-    sum += adapt_durs_.at(i).toSec();
+    ROS_INFO("d_compute_switch_all_ts_[%i]: %f", i, d_compute_switch_all_ts_[i].toSec());
+    compute_switch_t_avg += d_compute_switch_all_ts_[i].toSec();
   }
-  avg_adapt_dur_ = sum / adapt_durs_.size();
-  //ROS_INFO("Average adaptation duration: %f", avg_adapt_dur_);
+  compute_switch_t_avg /= d_compute_switch_all_ts_.size();
+  ROS_INFO("Average: %f", compute_switch_t_avg);
 
-
-  sum = 0.;
-  for(uint16_t i=0;i<trans_durs_.size();i++)
+  // Size of switching trajectories
+  ROS_INFO("Switching trajectory sizes:");
+  int switch_t_size_avg = 0;
+  for(int i=0;i<switch_t_size_.size();i++)
   {
-    //ROS_INFO("transition duration[i]: %f", trans_durs_.at(i).toSec());
-    sum += trans_durs_.at(i).toSec();
+    ROS_INFO("switch_t_size_[%i]: %i", i, switch_t_size_[i]);
+    switch_t_size_avg += switch_t_size_[i];
   }
-  avg_trans_dur_ = sum / trans_durs_.size();
-  //ROS_INFO("Average transition duration: %f", avg_trans_dur_);
+  switch_t_size_avg /= switch_t_size_.size();
+  ROS_INFO("Average: %i", switch_t_size_avg);
 
-  sum = 0.;
-  for(uint16_t i=0;i<cc_durs_.size();i++)
+  // Duration moving on feasible trajectory
+  ROS_INFO("Time spent moving on feasible trajectory: %f", d_moving_feas_t_.toSec()); 
+
+  // Duration spent in imminent collision
+  ROS_INFO("Time spent in imminent collision: %f", d_time_in_ic_.toSec());
+
+  // Minimum distance from obstacles
+  ROS_INFO("Minimum distance from obstacles");
+  double min_dist_obs_avg = 0;
+  for(int i=0;i<min_dist_obs_.size();i++)
   {
-    //ROS_INFO("cc duration[i]: %f", cc_durs_.at(i).toSec());
-    sum += cc_durs_.at(i).toSec();
+    ROS_INFO("min_dist_obs_[%i]: %f", i, min_dist_obs_[i]);
+    min_dist_obs_avg += min_dist_obs_[i];
   }
-  avg_cc_dur_ = sum / cc_durs_.size();
-  //ROS_INFO("Average cc duration: %f", avg_cc_dur_);
+  min_dist_obs_avg /= min_dist_obs_.size();
+  ROS_INFO("Average: %f", min_dist_obs_avg);
 
-  sum = 0.;
-  for(uint16_t i=0;i<mutate_durs_.size();i++)
+  // Motion error amount
+  ROS_INFO("Amount of motion error compensation");
+  double motion_error_amount_avg = 0;
+  for(int i=0;i<motion_error_amount_.size();i++)
   {
-    //ROS_INFO("mutate duration[i]: %f", mutate_durs_.at(i).toSec());
-    sum += mutate_durs_.at(i).toSec();
+    ROS_INFO("motion_error_amount_[%i]: %f", i, motion_error_amount_[i]);
+    motion_error_amount_avg += motion_error_amount_[i];
   }
-  avg_mutate_dur_ = sum / mutate_durs_.size();
-  //ROS_INFO("Average mutate duration: %f", avg_mutate_dur_);
+  motion_error_amount_avg /= motion_error_amount_.size();
+  ROS_INFO("Average: %f", motion_error_amount_avg);
+  
+}
 
-  sum = 0.;
-  for(uint16_t i=0;i<error_correct_durs_.size();i++)
-  {
-    //ROS_INFO("error correct duration[i]: %f", error_correct_durs_.at(i).toSec());
-    sum += error_correct_durs_.at(i).toSec();
-  }
-  avg_error_correct_dur_ = sum / error_correct_durs_.size();
-  //ROS_INFO("Average error_correct duration: %f", avg_error_correct_dur_);
 
-  sum = 0.;
+void Planner::printDurationData() const
+{
+  // Planning cycle durations
+  ROS_INFO("Planning cycle durations");
+  double pc_durs_avg = 0; 
   for(uint16_t i=0;i<pc_durs_.size();i++)
   {
-    //ROS_INFO("pc duration[i]: %f", pc_durs_.at(i).toSec());
-    sum += pc_durs_.at(i).toSec();
+    ROS_INFO("pc_durs_[%i]: %f", i, pc_durs_.at(i).toSec());
+    pc_durs_avg += pc_durs_.at(i).toSec();
   }
-  avg_pc_dur_ = sum / pc_durs_.size();
-  //ROS_INFO("Average pc duration: %f", avg_pc_dur_);
+  pc_durs_avg /= pc_durs_.size();
+  ROS_INFO("Average: %f", pc_durs_avg);
 
 
-  sum = 0.;
+  // Planning cycle frequency
+  ROS_INFO("Planning cycle frequencies");
+  double pc_freq_avg = 0;
+  for(int i=0;i<pc_freq_.size();i++)
+  {
+    ROS_INFO("pc_freq_[%i]: %f", i, pc_freq_[i].toSec());
+    pc_freq_avg += i > 0 ? pc_freq_[i].toSec() : 0;
+  }
+  pc_freq_avg /= pc_freq_.size()-1; //-1 because first value is not an elapsed time
+  ROS_INFO("Average: %f", pc_freq_avg);
+
+
+  // Sensing cycle durations
+  ROS_INFO("Sensing cycle durations");
+  double sc_durs_avg = 0; 
   for(uint16_t i=0;i<sc_durs_.size();i++)
   {
-    //ROS_INFO("sc duration[i]: %f", sc_durs_.at(i).toSec());
-    sum += sc_durs_.at(i).toSec();
+    ROS_INFO("sc_durs_[%i]: %f", i, sc_durs_.at(i).toSec());
+    sc_durs_avg += sc_durs_.at(i).toSec();
   }
-  avg_sc_dur_ = sum / sc_durs_.size();
-  //ROS_INFO("Average sc duration: %f", avg_sc_dur_);
+  sc_durs_avg /= sc_durs_.size();
+  ROS_INFO("Average: %f", sc_durs_avg);
+
+  // Sensing cycle frequency
+  ROS_INFO("Sensing cycle frequency: %i", sc_freq_);
 
 
-  sum = 0.;
+  // Control cycle durations
+  ROS_INFO("Control cycle durations");
+  double cc_durs_avg = 0; 
+  for(uint16_t i=0;i<cc_durs_.size();i++)
+  {
+    ROS_INFO("cc_durs_[%i]: %f", i, cc_durs_.at(i).toSec());
+    cc_durs_avg += cc_durs_.at(i).toSec();
+  }
+  cc_durs_avg /= cc_durs_.size();
+  ROS_INFO("Average: %f", cc_durs_avg);
+
+
+  // Control cycle frequency
+  ROS_INFO("Control cycle frequencies");
+  double cc_freq_avg = 0;
+  for(int i=0;i<cc_freq_.size();i++)
+  {
+    ROS_INFO("cc_freq_[%i]: %f", i, cc_freq_[i].toSec());
+    cc_freq_avg += i > 0 ? cc_freq_[i].toSec() : 0;
+  }
+  cc_freq_avg /= cc_freq_.size()-1; //-1 because first value is not an elapsed time
+  ROS_INFO("Average: %f", cc_freq_avg);
+
+
+  // Trajectory request durations
+  ROS_INFO("Trajectory request durations");
+  double trajec_dur_avg = 0;
   for(uint16_t i=0;i<trajec_durs_.size();i++)
   {
-    if(i % 5 == 0)
+    if(i % 10 == 0)
     {
-      //ROS_INFO("trajec duration[%i]: %f", i, trajec_durs_.at(i).toSec());
+      ROS_INFO("trajec duration[%i]: %f", i, trajec_durs_.at(i).toSec());
     }
-    sum += trajec_durs_.at(i).toSec();
+    trajec_dur_avg += trajec_durs_[i].toSec();
   }
-  avg_trajec_dur_ = sum / trajec_durs_.size();
-  //ROS_INFO("Average trajec duration: %f", avg_trajec_dur_);
+  trajec_dur_avg /= trajec_durs_.size();
+  ROS_INFO("Average: %f", trajec_dur_avg);
 
-
-  sum = 0.;
+  
+  // Evaluation request durations
+  ROS_INFO("Evaluation request durations");
+  double eval_durs_avg = 0;
   for(uint16_t i=0;i<eval_durs_.size();i++)
   {
     if(i % 20 == 0)
     {
-      //ROS_INFO("eval duration[i]: %f", eval_durs_.at(i).toSec());
+      ROS_INFO("eval duration[i]: %f", eval_durs_.at(i).toSec());
     }
-    sum += eval_durs_.at(i).toSec();
+    eval_durs_avg += eval_durs_[i].toSec();
   }
-  avg_eval_dur_ = sum / eval_durs_.size();
-  //ROS_INFO("Average eval duration: %f", avg_eval_dur_);
+  eval_durs_avg /= eval_durs_.size();
+  ROS_INFO("Average: %f", eval_durs_avg);
 
-
-  sum = 0.;
-  for(uint16_t i=0;i<error_correct_val_pos_.size();i++)
+  // Modification request durations
+  ROS_INFO("Modification request durations");
+  double mod_durs_avg = 0;
+  for(int i=0;i<mod_durs_.size();i++)
   {
-    //ROS_INFO("error_correct_pos[i]: %f", error_correct_val_pos_.at(i));
-    sum += error_correct_val_pos_.at(i);
+    if(i % 10 == 0)
+    {
+      ROS_INFO("mod_durs_[%i]: %f", i, mod_durs_[i].toSec());
+    }
+    mod_durs_avg += mod_durs_[i].toSec();
   }
-  avg_error_correct_val_pos_ = sum / error_correct_val_pos_.size();
-  //ROS_INFO("Average position error: %f", avg_error_correct_val_pos_);
-
-
-  sum = 0.;
-  for(uint16_t i=0;i<error_correct_val_or_.size();i++)
+  mod_durs_avg /= mod_durs_.size();
+  ROS_INFO("Average: %f", mod_durs_avg);
+  
+  // Mutation durations
+  double mutate_durs_avg = 0;
+  for(uint16_t i=0;i<mutate_durs_.size();i++)
   {
-    //ROS_INFO("error_correct_or[i]: %f", error_correct_val_or_.at(i));
-    sum += error_correct_val_or_.at(i);
+    ROS_INFO("mutate_durs_[%i]: %f", i, mutate_durs_[i].toSec());
+    mutate_durs_avg += mutate_durs_[i].toSec();
   }
-  avg_error_correct_val_or_ = sum / error_correct_val_or_.size();
-  //ROS_INFO("Average orientation error: %f", avg_error_correct_val_or_);
+  mutate_durs_avg /= mutate_durs_.size();
+  ROS_INFO("Average: %f", mutate_durs_avg);
 
 
-  //ROS_INFO("num_mods_: %i", num_mods_);
-  //ROS_INFO("num_succ_mods_: %i", num_succ_mods_);
-  //ROS_INFO("num_cc_: %i", num_cc_);
+  // Error correction durations (including evaluation)
+  ROS_INFO("Error correction durations (including evaluation)");
+  double error_correct_durs_eval_avg = 0;
+  for(uint16_t i=0;i<error_correct_durs_eval_.size();i++)
+  {
+    ROS_INFO("error correct duration[%i]: %f", i, error_correct_durs_eval_[i].toSec());
+    error_correct_durs_eval_avg += error_correct_durs_eval_[i].toSec();
+  }
+  error_correct_durs_eval_avg /= error_correct_durs_eval_.size();
+  ROS_INFO("Average: %f", error_correct_durs_eval_avg);
+
+
+  // Error correction durations (NOT including evaluation)
+  ROS_INFO("Error correction durations (NOT including evaluation)");
+  double error_correct_durs_no_eval_avg = 0;
+  for(uint16_t i=0;i<error_correct_durs_no_eval_.size();i++)
+  {
+    ROS_INFO("error correct duration[%i]: %f", i, error_correct_durs_no_eval_[i].toSec());
+    error_correct_durs_no_eval_avg += error_correct_durs_no_eval_[i].toSec();
+  }
+  error_correct_durs_no_eval_avg /= error_correct_durs_no_eval_.size();
+  ROS_INFO("Average: %f", error_correct_durs_no_eval_avg);
+
+}
+
+
+
+
+void Planner::printData() 
+{
+  printGeneralData();
+  printDurationData();
 }
 
 
@@ -4062,7 +4039,9 @@ void Planner::go()
 
  
   /*
-   * Main loop begins here
+   *********************************************************************************************
+                                  Main loop begins here
+   *********************************************************************************************
    */
 
   // Do planning until robot has reached goal
@@ -4085,9 +4064,12 @@ void Planner::go()
 
 
 
-  ros::Duration t_execution = ros::Time::now() - t_start;
-  reportData();
-  //////ROS_INFO("Total execution time: %f", t_execution.toSec());
+  d_runtime_  = ros::Time::now() - t_start;
+  num_pcs_    = generation_;
+
+
+
+  printData();
 
   ROS_INFO("Planning done!");
   ////////ROS_INFO("latestUpdate_: %s\ngoal: %s", latestUpdate_.toString().c_str(), goal_.toString().c_str());
