@@ -221,7 +221,7 @@ const ramp_msgs::Path Planner::getObstaclePath(const ramp_msgs::Obstacle ob, con
 
 void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
 {
-  //ROS_INFO("In sensingCycleCallback");
+  ROS_INFO("In sensingCycleCallback");
   //ROS_INFO("msg.obstacles.size(): %i", (int) msg.obstacles.size());
   //ROS_INFO("msg: %s", utility_.toString(msg).c_str());
 
@@ -359,7 +359,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   d.sleep();
   std::cin.get();*/
 
-  //ROS_INFO("Exiting sensingCycleCallback");
+  ROS_INFO("Exiting sensingCycleCallback");
 }
 
 
@@ -3147,7 +3147,7 @@ void Planner::doControlCycle()
 
   // Send the best trajectory and set movingOn
   //////////ROS_INFO("Sending best");
-  //ROS_INFO("bestT: %s", bestT.toString().c_str());
+  ROS_INFO("bestT: %s", bestT.toString().c_str());
   sendBest();
   //////////ROS_INFO("After sendBest");
 
