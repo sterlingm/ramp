@@ -23,7 +23,7 @@ bool                only_sensing;
 bool                moving_robot;
 bool                shrink_ranges;
 double              t_cc_rate;
-double              t_pc_rate;
+double              t_sc_rate;
 int                 pop_type;
 TrajectoryType      pt;
 std::vector<std::string> ob_topics;
@@ -285,6 +285,12 @@ void loadParameters(const ros::NodeHandle handle)
     //ROS_INFO("t_cc_rate: %f", t_cc_rate);
   }
   
+  if(handle.hasParam("ramp/sensing_cycle_rate")) 
+  {
+    handle.getParam("ramp/sensing_cycle_rate", t_sc_rate);
+    //ROS_INFO("t_sc_rate: %f", t_sc_rate);
+  }
+  
   if(handle.hasParam("ramp/pop_traj_type")) 
   {
     handle.getParam("ramp/pop_traj_type", pop_type);
@@ -486,7 +492,7 @@ int main(int argc, char** argv)
    */
  
   // Initialize the planner
-  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, global_frame, update_topic, pt, gensBeforeCC, t_pc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
+  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, global_frame, update_topic, pt, gensBeforeCC, t_sc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
   my_planner.modifications_   = modifications;
   my_planner.evaluations_     = evaluations;
   my_planner.seedPopulation_  = seedPopulation;

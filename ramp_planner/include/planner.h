@@ -127,7 +127,7 @@ class Planner {
               const std::string         update_topic,
               const TrajectoryType      pop_type=HYBRID,
               const int                 gens_before_cc=0,
-              const double              t_pc_rate=2.,
+              const double              t_sc_rate=10.,
               const double              t_fixed_cc=2.,
               const bool                only_sensing=0,
               const bool                moving_robot=1,
@@ -309,10 +309,7 @@ class Planner {
     void    computeFullSwitch(const RampTrajectory& from, const RampTrajectory& to, const double& t_start, RampTrajectory& result);
 
 
-    void getTransPop(const Population& pop, const RampTrajectory& movingOn, Population& result);
     void getTransitionTrajectory(const RampTrajectory& movingOn, const RampTrajectory& trgt_traj, const double& t, RampTrajectory& result);
-    void switchTrajectory(const RampTrajectory& from, const RampTrajectory& to, std::vector<RampTrajectory>& result);
-    void computeFullSwitch(const RampTrajectory& from, const RampTrajectory& to, RampTrajectory& result);
     
     
     const bool checkIfSwitchCurveNecessary(const RampTrajectory from, const RampTrajectory to)
@@ -371,7 +368,7 @@ class Planner {
     bool predictTransition(const RampTrajectory& from, const RampTrajectory& to, const double& t);
 
 
-    void reportData() ;
+    void printData() ;
 
 
     ros::Duration d_IC_;
@@ -475,6 +472,7 @@ class Planner {
 
 
     ros::Time t_prevCC_;
+    ros::Time t_prevPC_;
     uint8_t pc_switch_;
 
 
@@ -486,18 +484,6 @@ class Planner {
     std::vector<double> error_correct_val_pos_, error_correct_val_or_;
     double avg_error_correct_val_pos_, avg_error_correct_val_or_;
     
-
-    std::vector<ros::Duration> adapt_durs_;
-    std::vector<ros::Duration> trans_durs_;
-    std::vector<ros::Duration> cc_durs_;
-    std::vector<ros::Duration> mutate_durs_;
-    std::vector<ros::Duration> pc_durs_;
-    std::vector<ros::Duration> sc_durs_;
-    std::vector<ros::Duration> trajec_durs_;
-    std::vector<ros::Duration> eval_durs_;
-    std::vector<ros::Duration> error_correct_durs_;
-    double avg_adapt_dur_, avg_trans_dur_, avg_cc_dur_, avg_mutate_dur_, avg_pc_dur_, avg_trajec_dur_, 
-           avg_eval_dur_, avg_error_correct_dur_, avg_sc_dur_;
 
 
     bool reset_;
@@ -522,6 +508,67 @@ class Planner {
     tf::StampedTransform tf_global_costmap_;
     tf::StampedTransform tf_global_odom_;
     tf::StampedTransform tf_global_odom_rot_;
+    
+    
+    
+    
+    
+    /*
+     * Vectors to hold recorded data
+     * in-line comments will specify what method records the data
+     * All data is written to disk in reportData() method
+     */
+    std::vector<ros::Duration> adapt_durs_;
+    std::vector<ros::Duration> trans_durs_;
+    double avg_adapt_dur_, avg_trans_dur_, avg_cc_dur_, avg_mutate_dur_, avg_pc_dur_, avg_trajec_dur_, 
+           avg_eval_dur_, avg_error_correct_dur_, avg_sc_dur_;
+
+    // General data
+    ros::Duration d_runtime_;                             // go()
+    int num_pcs_;                                         // go()
+    int num_scs_;                                         // sensingCycleCallback
+    int num_ccs_;                                         // controlCycleCallback
+    int pop_size_;                                        // init
+    std::vector<ros::Duration> d_compute_switch_all_ts_;  // doControlCycle
+    std::vector<int> switch_t_size_;                      // getTransitionTrajectory
+    ros::Duration d_moving_feas_t_;                       // sensingCycleCallback
+    ros::Duration d_time_in_ic_;                          // imminentCollisionCallback
+    RampTrajectory full_trajectory_;                      // doControlCycle (does not include motion error)
+    std::vector<double> min_dist_obs_;                    // sensingCycleCallback
+    std::vector<double> motion_error_amount_;             // planningCycleCallback
+
+    void printGeneralData() const;
+
+    // helper vars
+    ros::Time t_lastFeasible_;
+    
+    // Duration data
+    std::vector<ros::Duration> pc_durs_;  // planningCycleCallback
+    std::vector<ros::Duration> pc_freq_;  // planningCycleCallback
+    std::vector<ros::Duration> sc_durs_;  // sensingCycleCallback
+    int sc_freq_;                         // init
+    std::vector<ros::Duration> cc_durs_;                    // doControlCycle
+    std::vector<ros::Duration> cc_freq_;                    // doControlCycle
+    std::vector<ros::Duration> trajec_durs_;                // requestTrajectory
+    std::vector<ros::Duration> eval_durs_;                  // requestEvaluation
+    std::vector<ros::Duration> mod_durs_;                   // modification
+    std::vector<ros::Duration> mutate_durs_;                // planningCycleCallback
+    std::vector<ros::Duration> error_correct_durs_eval_;    // planningCycleCallback
+    std::vector<ros::Duration> error_correct_durs_no_eval_; // planningCycleCallback
+
+    void printDurationData() const;
+
+    
+    /*
+     * Environment data
+     *  This can be recorded by hand
+     *  double width_; 
+     *  double height_;
+     *  std::vector<double> ob_size_;
+     *  std::vector<double> ob_speed_;
+     *  std::vector<int> num_obs_;
+     */   
+
 };
 
 #endif
