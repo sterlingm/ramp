@@ -1,4 +1,4 @@
-population_size: 10
+population_size: 4
 
 sub_populations: false 
 
@@ -28,7 +28,7 @@ eval_weight_T: 1.75
 
 # As D weight increases, overall contribution of D to the cost decreases
 # This is because high values of D are good so we add 1/D to the fitness cost
-eval_weight_D: 10
+eval_weight_D: 33
 
 eval_weight_A: 0.01
 
