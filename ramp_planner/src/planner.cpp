@@ -3410,11 +3410,11 @@ void Planner::sendPopulation()
   /*
    * Send to trajectory_visualization node
    */
-  ramp_msgs::Population msg = population_.populationMsg();
+  /*ramp_msgs::Population msg = population_.populationMsg();
   msg.robot_id = id_;
 
   msg.population.push_back(movingOn_.msg_);
-  h_control_->sendPopulation(msg);
+  h_control_->sendPopulation(msg);*/
     
     
   /*
@@ -3424,7 +3424,8 @@ void Planner::sendPopulation()
   for(int i=0;i<population_.trajectories_.size();i++)
   {
     visualization_msgs::Marker pop_trj;
-    buildLineList(population_.trajectories_[i], ++id_line_list_, pop_trj);
+    //buildLineList(population_.trajectories_[i], ++id_line_list_, pop_trj);
+    buildLineList(population_.trajectories_[i], i, pop_trj);
     ma.markers.push_back(pop_trj);
   }
   for(int i=0;i<ob_trajectory_.size();i++)
