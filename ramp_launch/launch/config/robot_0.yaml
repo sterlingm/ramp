@@ -2,7 +2,7 @@ id: 0
 
 # Turtlebot radius ~ 0.2
 # Cooky radius ~ 0.6
-radius: 0.2
+radius: 0.18
 
 # Setting the Ranges in the planner code will consider the radius 
 # DOF must consider robot base dimensions if the environment is surrounded by walls

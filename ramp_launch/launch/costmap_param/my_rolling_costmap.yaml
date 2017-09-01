@@ -19,7 +19,7 @@ costmap:
 
     inflation_layer:
       enabled: true
-      inflation_radius: 0.15
+      inflation_radius: 0.05
     
     obstacle_layer:
       enabled: true

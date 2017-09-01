@@ -290,17 +290,9 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     evaluateTrajectory(movingOn_, false);
     moving_on_coll_ = !movingOn_.msg_.feasible;
 
-    // if movingOn changed to feasible
-    if(!feasBeforeEval && movingOn_.msg_.feasible)
+    if(population_.getBest().msg_.feasible)
     {
-      // set lastFeasible change
-      t_lastFeasible_ = ros::Time::now();
-    }
-    // else if movingOn changed to infeasible
-    else if(feasBeforeEval && !movingOn_.msg_.feasible)
-    {
-      // Add elapsed time onto d_moving_feas_t
-      d_moving_feas_t_ = d_moving_feas_t_ + ros::Duration(ros::Time::now() - t_lastFeasible_);
+      d_best_is_feas_ = d_best_is_feas_ + ros::Duration(1.f/sc_freq_);
     }
   } // end if evaluating movingOn
 
@@ -686,9 +678,9 @@ void Planner::adaptPaths(const MotionState& ms, const ros::Duration& d, std::vec
 // 1 if before curve, 2 if on curve, 3 if past curve 
 // TODO: Check for the 2nd segment as well?
 const int Planner::estimateIfOnCurve(const MotionState ms, const ramp_msgs::BezierCurve curve) const {
-  //ROS_INFO("In estimateIfOnCurve");
+  ROS_INFO("In estimateIfOnCurve");
   //ROS_INFO("ms: %s", ms.toString().c_str());
-  //ROS_INFO("curve: %s", utility_.toString(curve).c_str());
+  ROS_INFO("curve: %s", utility_.toString(curve).c_str());
 
   double x = ms.msg_.positions.at(0);
   double y = ms.msg_.positions.at(1);
@@ -708,7 +700,7 @@ const int Planner::estimateIfOnCurve(const MotionState ms, const ramp_msgs::Bezi
                                 (x <= curve.controlPoints.at(1).positions.at(0)) &&
                                 (x >= curve.controlPoints.at(2).positions.at(0));
 
-  
+ 
   bool ySegOne =  ySlope ?  (y >= curve.controlPoints.at(0).positions.at(1)) &&
                             (y <= curve.controlPoints.at(1).positions.at(1)) :
                             (y <= curve.controlPoints.at(0).positions.at(1)) &&
@@ -720,15 +712,15 @@ const int Planner::estimateIfOnCurve(const MotionState ms, const ramp_msgs::Bezi
                                 (y >= curve.controlPoints.at(2).positions.at(1));
 
 
-  //ROS_INFO("xSlope: %s xSlopeTwo: %s ySlope: %s ySlopeTwo: %s", xSlope ? "True" : "False", xSlopeTwo ? "True" : "False", ySlope ? "True" : "False", ySlopeTwo ? "True" : "False"); 
+  ROS_INFO("xSlope: %s xSlopeTwo: %s ySlope: %s ySlopeTwo: %s", xSlope ? "True" : "False", xSlopeTwo ? "True" : "False", ySlope ? "True" : "False", ySlopeTwo ? "True" : "False"); 
   
-  //ROS_INFO("xSegOne: %s xSegTwo: %s ySegOne: %s ySegTwo: %s", xSegOne ? "True" : "False", xSegTwo ? "True" : "False", ySegOne ? "True" : "False", ySegTwo ?  "True" : "False");
+  ROS_INFO("xSegOne: %s xSegTwo: %s ySegOne: %s ySegTwo: %s", xSegOne ? "True" : "False", xSegTwo ? "True" : "False", ySegOne ? "True" : "False", ySegTwo ?  "True" : "False");
 
   bool xGood = (xSegOne || xSegTwo);
   bool yGood = (ySegOne || ySegTwo);
 
   if(xGood && yGood) {
-    //ROS_INFO("Returning 2 (on curve)");
+    ROS_INFO("Returning 2 (on curve)");
     return 2;
   }
   
@@ -739,7 +731,7 @@ const int Planner::estimateIfOnCurve(const MotionState ms, const ramp_msgs::Bezi
   bool yPastOne = ySlope ?  y > curve.controlPoints.at(1).positions.at(1) :
                             y < curve.controlPoints.at(1).positions.at(1) ; 
 
-  //ROS_INFO("xPastOne: %s yPastOne: %s", xPastOne ? "True" : "False", yPastOne ? "True" : "False");
+  ROS_INFO("xPastOne: %s yPastOne: %s", xPastOne ? "True" : "False", yPastOne ? "True" : "False");
   // If past segment 1, check if past segment 2
   if(xPastOne && yPastOne)
   { 
@@ -749,16 +741,16 @@ const int Planner::estimateIfOnCurve(const MotionState ms, const ramp_msgs::Bezi
     bool yPastTwo = ySlopeTwo ?   y > curve.controlPoints.at(2).positions.at(1) :
                                   y < curve.controlPoints.at(2).positions.at(1) ; 
 
-    //ROS_INFO("xPastTwo: %s yPastTwo: %s", xPastTwo ? "True" : "False", yPastTwo ? "True" : "False");
+    ROS_INFO("xPastTwo: %s yPastTwo: %s", xPastTwo ? "True" : "False", yPastTwo ? "True" : "False");
     if(xPastTwo || yPastTwo)
     {
-      //ROS_INFO("Returning 3 (after curve)");
+      ROS_INFO("Returning 3 (after curve)");
       return 3;
     }
   } // end if past segment 1
 
   // Else, robot has not reached curve, return 1
-  //ROS_INFO("Returning 1 (robot has not reached the curve)");
+  ROS_INFO("Returning 1 (robot has not reached the curve)");
   return 1;
 }
 
@@ -888,8 +880,9 @@ void Planner::adaptCurves(const MotionState& ms, const ros::Duration& d, std::ve
 {
   if(log_enter_exit_)
   {
-    //ROS_INFO("In Planner::adaptCurves");
-    //ROS_INFO("d: %f", d.toSec());
+    ROS_INFO("In Planner::adaptCurves");
+    ROS_INFO("d: %f", d.toSec());
+    ROS_INFO("ms: %s", ms.toString().c_str());
   }
 
   ramp_msgs::BezierCurve blank;
@@ -897,14 +890,14 @@ void Planner::adaptCurves(const MotionState& ms, const ros::Duration& d, std::ve
   // Go through each trajectory 
   for(uint16_t i=0;i<population_.size();i++) 
   {
-    //ROS_INFO("Trajectory %i", (int)i);
+    ROS_INFO("Trajectory %i", (int)i);
     
     // If the trajectory has a curve
     // Don't check for best trajec here b/c we want to push on the same curve if we haven't moved on it, not a blank 
     // curve
     if(population_.get(i).msg_.curves.size() > 0) 
     {
-      //ROS_INFO("In if trajectory has curve");
+      ROS_INFO("In if trajectory has curve");
 
       // Set curve
       // If a trajectory has two curves, go straight to the second curve because the first is just a transition
@@ -918,7 +911,7 @@ void Planner::adaptCurves(const MotionState& ms, const ros::Duration& d, std::ve
             (curve.u_0 > 0. ||
              estimateIfOnCurve(ms, curve) == 2))
       {
-        //ROS_INFO("Moving on this curve");
+        ROS_INFO("Moving on this curve");
 
         // Get the new u_0 value
         curve.u_0 = updateCurvePos(population_.get(i), d);
@@ -928,7 +921,7 @@ void Planner::adaptCurves(const MotionState& ms, const ros::Duration& d, std::ve
       }  //end if moving on curve
       else if(i != population_.calcBestIndex())
       {
-        //ROS_INFO("Not moving on curve, erase it and start with new segment points");
+        ROS_INFO("Not moving on curve, erase it and start with new segment points");
         curve = blank;
       }
       else
@@ -942,12 +935,12 @@ void Planner::adaptCurves(const MotionState& ms, const ros::Duration& d, std::ve
       // Check if done with current curve
       if( i == population_.calcBestIndex() && (curve.u_0 > curve.u_target || estimateIfOnCurve(ms, curve) == 3) )
       {
-        //ROS_INFO("Done with curve, u_0: %f", curve.u_0);
+        ROS_INFO("Done with curve, u_0: %f", curve.u_0);
         curve = handleCurveEnd(population_.get(i));
       } // end if done with 1st curve
       else
       {
-        //ROS_INFO("Not done with curve");
+        ROS_INFO("Not done with curve");
       }
 
       //ROS_INFO("Curve after adapting: %s", utility_.toString(curve).c_str());
@@ -3139,6 +3132,7 @@ void Planner::doControlCycle()
 
   // Set the bestT
   RampTrajectory bestT = population_.getBest();
+  i_best = population_.calcBestIndex();
 
   // Record data
   full_trajectory_.concatenate(bestT);
@@ -3149,6 +3143,12 @@ void Planner::doControlCycle()
   //////////ROS_INFO("Sending best");
   ROS_INFO("bestT: %s", bestT.toString().c_str());
   sendBest();
+ 
+  // Set t_lastFeasible on first CC because we haven't done a sensing cycle yet
+  if(num_cc_ == 0)
+  {
+    t_lastFeasible_ = ros::Time::now();
+  }
   //////////ROS_INFO("After sendBest");
 
 
@@ -3657,7 +3657,7 @@ void Planner::printGeneralData() const
   ROS_INFO("Average: %i", switch_t_size_avg);
 
   // Duration moving on feasible trajectory
-  ROS_INFO("Time spent moving on feasible trajectory: %f", d_moving_feas_t_.toSec()); 
+  ROS_INFO("Time that the best trajectory is feasible: %f", d_best_is_feas_.toSec()); 
 
   // Duration spent in imminent collision
   ROS_INFO("Time spent in imminent collision: %f", d_time_in_ic_.toSec());
@@ -4047,7 +4047,7 @@ void Planner::go()
 
   // Do planning until robot has reached goal
   // D = 0.4 if considering mobile base, 0.2 otherwise
-  ros::Time t_start = ros::Time::now();
+  ros::Time t_startLoop = ros::Time::now();
   goalThreshold_ = 0.25;
   while( (latestUpdate_.comparePosition(goal_, false) > goalThreshold_) && ros::ok()) 
   {
@@ -4065,7 +4065,7 @@ void Planner::go()
 
 
 
-  d_runtime_  = ros::Time::now() - t_start;
+  d_runtime_  = ros::Time::now() - t_startLoop;
   num_pcs_    = generation_;
 
 
