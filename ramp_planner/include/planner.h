@@ -531,7 +531,7 @@ class Planner {
     int pop_size_;                                        // init
     std::vector<ros::Duration> d_compute_switch_all_ts_;  // doControlCycle
     std::vector<int> switch_t_size_;                      // getTransitionTrajectory
-    ros::Duration d_moving_feas_t_;                       // sensingCycleCallback
+    ros::Duration d_best_is_feas_;                       // sensingCycleCallback
     ros::Duration d_time_in_ic_;                          // imminentCollisionCallback
     RampTrajectory full_trajectory_;                      // doControlCycle (does not include motion error)
     std::vector<double> min_dist_obs_;                    // sensingCycleCallback
@@ -568,6 +568,8 @@ class Planner {
      *  std::vector<double> ob_speed_;
      *  std::vector<int> num_obs_;
      */   
+
+    int i_best;
 
 };
 

@@ -109,7 +109,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
 
   if(trj.feasible)
   {
-    ////ROS_INFO("In if(feasible)");
+    ROS_INFO("In if(feasible)");
     
     // Get total time to execute trajectory
     double T = trj.trajectory.points.at(trj.trajectory.points.size()-1).time_from_start.toSec();
@@ -183,7 +183,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     // Minimum distance to any obstacle
     double D = cd_.min_dist_;
     
-    //ROS_INFO("T: %f A: %f D: %f", T, A, D);
+    ROS_INFO("T: %f A: %f D: %f", T, A, D);
 
     // Update normalization for Time if necessary
     if(T > T_norm_)
@@ -196,14 +196,14 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     A /= A_norm_;
     D /= D_norm_;
     
-    //ROS_INFO("Normalized terms T: %f A: %f D: %f", T, A, D);
+    ROS_INFO("Normalized terms T: %f A: %f D: %f", T, A, D);
 
     // Weight terms
     T *= T_weight_;
     A *= A_weight_;
     D *= D_weight_;
     
-    //ROS_INFO("Weighted terms T: %f A: %f D: %f", T, A, D);
+    ROS_INFO("Weighted terms T: %f A: %f D: %f", T, A, D);
     
     // Compute overall cost
     cost = T + A + (1.f/D);
