@@ -88,6 +88,8 @@ tf::StampedTransform tf_base_to_global;
   
 std::vector<Attachment> attachs;
 
+int populationSize;
+
 
 /*********************************
  * Variables for BFL
@@ -226,6 +228,16 @@ void loadParameters(const ros::NodeHandle& handle)
   else
   {
     ROS_ERROR("Did not find rosparam /costmap_node/costmap/robot_base_frame");
+  }
+
+  if(handle.hasParam("/ramp/population_size"))
+  {
+    handle.getParam("/ramp/population_size", populationSize);
+    ROS_INFO("populationSize: %i", populationSize);
+  }
+  else
+  {
+    ROS_ERROR("Did not find rosparam /ramp/population_size");
   }
 
 }
@@ -435,7 +447,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       marker.header.frame_id = global_frame;
       //marker.header.frame_id = "/costmap";
       marker.ns = "basic_shapes";
-      marker.id = i;
+      marker.id = populationSize + i;
       
       marker.type = visualization_msgs::Marker::SPHERE;
       marker.action = visualization_msgs::Marker::ADD;
@@ -528,8 +540,8 @@ void publishMarkers(const ros::TimerEvent& e)
     text.header.stamp   = ros::Time::now();
     arrow.header.stamp  = ros::Time::now();
 
-    text.id   = markers.size()+i;
-    arrow.id  = markers.size()*(i+markers.size()+1);
+    text.id   = populationSize + markers.size()+i;
+    arrow.id  = populationSize + markers.size()*(i+markers.size()+1);
 
     //text.header.frame_id  = "/map";
     //arrow.header.frame_id = "/map";
@@ -599,7 +611,7 @@ void publishMarkers(const ros::TimerEvent& e)
     //ROS_INFO("i: %i attachs.size(): %i", i, (int)attachs.size());
     visualization_msgs::Marker lineList;
     lineList.header.stamp = ros::Time::now();
-    lineList.id = (markers.size()*2)+i;
+    lineList.id = populationSize + (markers.size()*2)+i;
     lineList.header.frame_id = global_frame;
     lineList.ns = "basic_shapes";
     lineList.type = visualization_msgs::Marker::LINE_LIST;
@@ -644,7 +656,7 @@ void publishMarkers(const ros::TimerEvent& e)
   // Create a text marker to show the size of cir_obs
   visualization_msgs::Marker text;
   text.header.stamp   = ros::Time::now();
-  text.id   = result.markers.size()+1;
+  text.id   = populationSize + result.markers.size()+1;
   //text.header.frame_id  = "/map";
   //text.header.frame_id  = "/costmap";
   text.header.frame_id  = global_frame;
