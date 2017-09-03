@@ -24,13 +24,14 @@ class RampTrajectory
     const Path           getNonHolonomicPath()                  const;
     const double         getDirection()                         const;
     const std::string    fitnessFeasibleToString()              const;
-    const std::string    toString()                             const;
+    const std::string    toString(bool printKnotPoints=true)    const;
     const RampTrajectory getSubTrajectory(const float t)        const;
     const RampTrajectory getSubTrajectoryPost(const double t)   const;
     
     bool stopRotateInFirstSec() const;
 
     const RampTrajectory concatenate(const RampTrajectory traj, const uint8_t kp=0) const;
+    void concatenateForce(const RampTrajectory traj);
 
     const trajectory_msgs::JointTrajectoryPoint getPointAtTime(const float t) const;
 

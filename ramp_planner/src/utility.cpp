@@ -305,7 +305,7 @@ const std::string Utility::toString(const ramp_msgs::BezierCurve bi) const {
 }
 
 
-const std::string Utility::toString(const ramp_msgs::RampTrajectory traj) const {
+const std::string Utility::toString(const ramp_msgs::RampTrajectory traj, bool printKnotPoints) const {
   std::ostringstream result;
 
   result<<"\n Knot Points:";
@@ -315,22 +315,24 @@ const std::string Utility::toString(const ramp_msgs::RampTrajectory traj) const 
     ROS_WARN("Traj i_knotPoints size(): %i, not printing", (int)traj.i_knotPoints.size());
   }
 
-  for(unsigned int i=0;i<traj.i_knotPoints.size();i++) {
-    
-    result<<"\n   "<<i<<":";
-    
-    unsigned int index = traj.i_knotPoints.at(i);
-    if(index > traj.trajectory.points.size()-1) 
-    {
-      ROS_ERROR("Utility::toString(const ramp_msgs::RampTrajectory): index: %i, traj.points.size(): %i", 
-          (int)index, 
-          (int)traj.trajectory.points.size());
+  if(printKnotPoints)
+  {
+    for(unsigned int i=0;i<traj.i_knotPoints.size();i++) {
+      
+      result<<"\n   "<<i<<":";
+      
+      unsigned int index = traj.i_knotPoints.at(i);
+      if(index > traj.trajectory.points.size()-1) 
+      {
+        ROS_ERROR("Utility::toString(const ramp_msgs::RampTrajectory): index: %i, traj.points.size(): %i", 
+            (int)index, 
+            (int)traj.trajectory.points.size());
+      }
+      trajectory_msgs::JointTrajectoryPoint p = traj.trajectory.points.at(index);
+      
+      result<<"\n       "<<toString(p);
     }
-    trajectory_msgs::JointTrajectoryPoint p = traj.trajectory.points.at(index);
-    
-    result<<"\n       "<<toString(p);
   }
-
 
   result<<"\n Points:";
   //for(unsigned int i=15;i<27;i++) {
