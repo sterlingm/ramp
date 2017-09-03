@@ -257,6 +257,13 @@ bool RampTrajectory::stopRotateInFirstSec() const
 }
 
 
+void RampTrajectory::concatenateForce(const RampTrajectory traj)
+{
+  for(int i=0;i<traj.msg_.trajectory.points.size();i++)
+  {
+    msg_.trajectory.points.push_back( traj.msg_.trajectory.points[i] );
+  }
+}
 
 
 /*
@@ -476,11 +483,11 @@ const std::string RampTrajectory::fitnessFeasibleToString() const
   return result.str();
 }
 
-const std::string RampTrajectory::toString() const 
+const std::string RampTrajectory::toString(bool printKnotPoints) const 
 {
   std::ostringstream result;
   
-  result<<"\nTrajectory ID: "<<msg_.id<<"\nTrajec: "<<utility_.toString(msg_);
+  result<<"\nTrajectory ID: "<<msg_.id<<"\nTrajec: "<<utility_.toString(msg_, printKnotPoints);
   result<<"\n Fitness: "<<msg_.fitness<<" Collision Time: "<<msg_.t_firstCollision<<" Feasible: "<<(int)msg_.feasible;
   result<<"\n   Transition traj size: "<<transitionTraj_.trajectory.points.size();
   

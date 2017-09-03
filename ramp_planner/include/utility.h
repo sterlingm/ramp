@@ -19,6 +19,7 @@
 #include <tf/transform_datatypes.h>
 #include <tf/transform_listener.h>
 #include <ros/console.h>
+#include <ros/package.h>
 
 /*
  * Change this class to a singleton pattern
@@ -63,7 +64,7 @@ class Utility {
     const std::string toString(const ramp_msgs::KnotPoint kp) const;
     const std::string toString(const ramp_msgs::Path path) const;
     const std::string toString(const ramp_msgs::BezierCurve bi) const;
-    const std::string toString(const ramp_msgs::RampTrajectory traj) const;
+    const std::string toString(const ramp_msgs::RampTrajectory traj, bool printKnotPoints=true) const;
     const std::string toString(const trajectory_msgs::JointTrajectoryPoint p) const;
 };
 

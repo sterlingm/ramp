@@ -1708,11 +1708,76 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   num_ccs_  = 0;
   pop_size_ = populationSize_;
   sc_freq_  = t_sc_rate;
-  //width_  = ranges_[0].msg_.max - ranges_[0].msg_.min; 
-  //height_ = ranges_[1].msg_.max - ranges_[1].msg_.min; 
 
   //ROS_INFO("Exiting Planner::init");
 } // End init
+
+
+void Planner::openFiles()
+{
+  /*
+   * Initialize file outstreams for the data to collect
+   */
+  // General data files
+  std::string directory = ros::package::getPath("ramp_planner");
+  
+  f_runtime_.open(directory+"/data/runtime.txt");
+  f_num_pcs_.open(directory+"/data/num_pcs.txt");
+  f_num_scs_.open(directory+"/data/num_scs.txt");
+  f_num_ccs_.open(directory+"/data/num_ccs.txt");
+  f_pop_size_.open(directory+"/data/pop_size.txt");
+  f_compute_switch_all_ts_.open(directory+"/data/compute_switch_ts.txt");
+  f_switch_t_size_.open(directory+"/data/switch_t_size.txt");
+  f_best_is_feas_.open(directory+"/data/best_is_feas.txt");
+  f_time_in_ic_.open(directory+"/data/time_in_ic.txt");
+  f_full_trajectory_.open(directory+"/data/full_trajectory.txt");
+  f_min_dist_obs_.open(directory+"/data/min_dist_obs.txt");
+  f_motion_error_amount_.open(directory+"/data/motion_error_amount.txt");
+
+
+  // Duration data files
+  f_pc_durs_.open(directory+"/data/pc_durs.txt");
+  f_pc_freqs_.open(directory+"/data/pc_freqs.txt");
+  f_sc_durs_.open(directory+"/data/sc_durs.txt");
+  f_sc_freqs_.open(directory+"/data/sc_freqs.txt");
+  f_cc_durs_.open(directory+"/data/cc_durs.txt");
+  f_cc_freqs_.open(directory+"/data/cc_freqs.txt");
+  f_trajec_durs_.open(directory+"/data/trajec_durs.txt");
+  f_eval_durs_.open(directory+"/data/eval_durs.txt");
+  f_mod_durs_.open(directory+"/data/mod_durs.txt");
+  f_mutate_durs_.open(directory+"/data/mutate_durs.txt");
+  f_error_correct_durs_eval_.open(directory+"/data/error_correct_durs_eval.txt");
+  f_error_correct_durs_no_eval_.open(directory+"/data/error_correct_durs_no_eval.txt");
+}
+
+void Planner::closeFiles()
+{
+  f_runtime_.close();
+  f_num_pcs_.close();
+  f_num_scs_.close();
+  f_num_ccs_.close();
+  f_pop_size_.close();
+  f_compute_switch_all_ts_.close();
+  f_switch_t_size_.close();
+  f_best_is_feas_.close();
+  f_time_in_ic_.close();
+  f_full_trajectory_.close();
+  f_min_dist_obs_.close();
+  f_motion_error_amount_.close();
+
+  f_pc_durs_.close();
+  f_pc_freqs_.close();
+  f_sc_durs_.close();
+  f_sc_freqs_.close();
+  f_cc_durs_.close();
+  f_cc_freqs_.close();
+  f_trajec_durs_.close();
+  f_eval_durs_.close();
+  f_mod_durs_.close();
+  f_mutate_durs_.close();
+  f_error_correct_durs_eval_.close();
+  f_error_correct_durs_no_eval_.close();
+}
 
 
 
@@ -3135,7 +3200,7 @@ void Planner::doControlCycle()
   i_best = population_.calcBestIndex();
 
   // Record data
-  full_trajectory_.concatenate(bestT);
+  full_trajectory_.concatenateForce(bestT);
 
   ////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
 
@@ -3683,7 +3748,50 @@ void Planner::printGeneralData() const
   }
   motion_error_amount_avg /= motion_error_amount_.size();
   ROS_INFO("Average: %f", motion_error_amount_avg);
+
+  ROS_INFO("Full trajectory: %s", full_trajectory_.toString().c_str());
+}
+
+void Planner::writeGeneralData()
+{
+  f_runtime_<<d_runtime_.toSec();
+  f_num_pcs_<<num_pcs_;
+  f_num_scs_<<num_scs_;
+  f_num_ccs_<<num_ccs_;
+  f_pop_size_<<pop_size_;
+
+  // Time to compute switching trajectories
+  for(int i=0;i<d_compute_switch_all_ts_.size();i++)
+  {
+    f_compute_switch_all_ts_<<"\n"<<d_compute_switch_all_ts_[i].toSec();
+  }
   
+  // Size of switching trajectories
+  for(int i=0;i<switch_t_size_.size();i++)
+  {
+    f_switch_t_size_<<"\n"<<switch_t_size_[i];
+  }
+  
+  f_best_is_feas_<<d_best_is_feas_.toSec();
+  f_time_in_ic_<<d_time_in_ic_.toSec();
+
+  // Minimum distance from obstacles
+  for(int i=0;i<min_dist_obs_.size();i++)
+  {
+    f_min_dist_obs_<<"\n"<<min_dist_obs_[i];
+  }
+
+  // Motion error amount
+  for(int i=0;i<motion_error_amount_.size();i++)
+  {
+    f_motion_error_amount_<<"\n"<<motion_error_amount_[i];
+  }
+  
+  for(int i=0;i<full_trajectory_.msg_.trajectory.points.size();i++)
+  {
+    std::vector<double> p = full_trajectory_.msg_.trajectory.points[i].positions;
+    f_full_trajectory_<<"\n"<<p[0]<<","<<p[1];
+  } 
 }
 
 
@@ -3831,6 +3939,80 @@ void Planner::printDurationData() const
 
 }
 
+void Planner::writeDurationData()
+{
+  // Planning cycle durations
+  for(uint16_t i=0;i<pc_durs_.size();i++)
+  {
+    f_pc_durs_<<"\n"<<pc_durs_[i].nsec;
+  }
+
+  // Planning cycle frequency
+  for(int i=0;i<pc_freq_.size();i++)
+  {
+    f_pc_freqs_<<"\n"<<pc_freq_[i].toSec();
+  }
+  
+  // Sensing cycle durations
+  for(uint16_t i=0;i<sc_durs_.size();i++)
+  {
+    f_sc_durs_<<"\n"<<sc_durs_[i].toSec();
+  }
+
+  f_sc_freqs_<<sc_freq_;
+
+
+  // Control cycle durations
+  for(uint16_t i=0;i<cc_durs_.size();i++)
+  {
+    f_cc_durs_<<"\n"<<cc_durs_[i].toSec();
+  }
+
+
+  // Control cycle frequency
+  for(int i=0;i<cc_freq_.size();i++)
+  {
+    f_cc_freqs_<<"\n"<<cc_freq_[i].toSec();
+  }
+
+
+  // Trajectory request durations
+  for(uint16_t i=0;i<trajec_durs_.size();i++)
+  {
+    f_trajec_durs_<<"\n"<<trajec_durs_[i].toSec();
+  }
+
+  
+  // Evaluation request durations
+  for(uint16_t i=0;i<eval_durs_.size();i++)
+  {
+    f_eval_durs_<<"\n"<<eval_durs_[i].toSec();
+  }
+
+  // Modification request durations
+  for(int i=0;i<mod_durs_.size();i++)
+  {
+    f_mod_durs_<<"\n"<<mod_durs_[i].toSec();
+  }
+  
+  // Mutation durations
+  for(uint16_t i=0;i<mutate_durs_.size();i++)
+  {
+    f_mutate_durs_<<"\n"<<mutate_durs_[i].toSec();
+  }
+
+  // Error correction durations (including evaluation)
+  for(uint16_t i=0;i<error_correct_durs_eval_.size();i++)
+  {
+    f_error_correct_durs_eval_<<"\n"<<error_correct_durs_eval_[i].toSec();
+  }
+
+  // Error correction durations (NOT including evaluation)
+  for(uint16_t i=0;i<error_correct_durs_no_eval_.size();i++)
+  {
+    f_error_correct_durs_no_eval_<<"\n"<<error_correct_durs_no_eval_[i].toSec();
+  }
+}
 
 
 
@@ -3838,6 +4020,14 @@ void Planner::printData()
 {
   printGeneralData();
   printDurationData();
+}
+
+
+void Planner::writeData()
+{
+  openFiles();
+  writeGeneralData();
+  writeDurationData();
 }
 
 
@@ -4071,6 +4261,10 @@ void Planner::go()
 
 
   printData();
+  writeData();
+
+  // Close files opened for data writing
+  closeFiles();
 
   ROS_INFO("Planning done!");
   ////////ROS_INFO("latestUpdate_: %s\ngoal: %s", latestUpdate_.toString().c_str(), goal_.toString().c_str());

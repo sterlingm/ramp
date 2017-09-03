@@ -523,7 +523,10 @@ class Planner {
     double avg_adapt_dur_, avg_trans_dur_, avg_cc_dur_, avg_mutate_dur_, avg_pc_dur_, avg_trajec_dur_, 
            avg_eval_dur_, avg_error_correct_dur_, avg_sc_dur_;
 
-    // General data
+    /*
+     * General data
+     */
+    // Variables to hold data
     ros::Duration d_runtime_;                             // go()
     int num_pcs_;                                         // go()
     int num_scs_;                                         // sensingCycleCallback
@@ -537,12 +540,30 @@ class Planner {
     std::vector<double> min_dist_obs_;                    // sensingCycleCallback
     std::vector<double> motion_error_amount_;             // planningCycleCallback
 
+    // Files
+    std::ofstream f_runtime_;
+    std::ofstream f_num_pcs_;
+    std::ofstream f_num_scs_;
+    std::ofstream f_num_ccs_;
+    std::ofstream f_pop_size_;
+    std::ofstream f_compute_switch_all_ts_;
+    std::ofstream f_switch_t_size_;
+    std::ofstream f_best_is_feas_;
+    std::ofstream f_time_in_ic_;
+    std::ofstream f_full_trajectory_;
+    std::ofstream f_min_dist_obs_;
+    std::ofstream f_motion_error_amount_;
+    
+
     void printGeneralData() const;
 
     // helper vars
     ros::Time t_lastFeasible_;
     
-    // Duration data
+    /*
+     * Duration data
+     */
+    // Variables to hold data
     std::vector<ros::Duration> pc_durs_;  // planningCycleCallback
     std::vector<ros::Duration> pc_freq_;  // planningCycleCallback
     std::vector<ros::Duration> sc_durs_;  // sensingCycleCallback
@@ -555,6 +576,20 @@ class Planner {
     std::vector<ros::Duration> mutate_durs_;                // planningCycleCallback
     std::vector<ros::Duration> error_correct_durs_eval_;    // planningCycleCallback
     std::vector<ros::Duration> error_correct_durs_no_eval_; // planningCycleCallback
+
+    // Files
+    std::ofstream f_pc_durs_;
+    std::ofstream f_pc_freqs_;
+    std::ofstream f_sc_durs_;
+    std::ofstream f_sc_freqs_;
+    std::ofstream f_cc_durs_;
+    std::ofstream f_cc_freqs_;
+    std::ofstream f_trajec_durs_;
+    std::ofstream f_eval_durs_;
+    std::ofstream f_mod_durs_;
+    std::ofstream f_mutate_durs_;
+    std::ofstream f_error_correct_durs_eval_;
+    std::ofstream f_error_correct_durs_no_eval_;
 
     void printDurationData() const;
 
@@ -571,6 +606,13 @@ class Planner {
 
     int i_best;
 
+
+    void openFiles();
+    void closeFiles();
+
+    void writeGeneralData();
+    void writeDurationData();
+    void writeData();
 };
 
 #endif
