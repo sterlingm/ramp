@@ -275,7 +275,19 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   //ROS_INFO("d.toSec(): %f controlCycle_.toSec(): %f", d.toSec(), controlCycle_.toSec());
   if(d.toSec() < (controlCycle_.toSec()-0.1) || !moving_robot_)
   {
+    bool feasBeforeEval = population_.getBest().msg_.feasible;
+
     evaluatePopulation();
+    
+    /*if(!population_.getBest().msg_.feasible && feasBeforeEval)
+    {
+      //d_best_is_feas_ = d_best_is_feas_ + ros::Duration(1.f/sc_freq_);
+      d_best_is_feas_ = d_best_is_feas_ + (ros::Time::now() - t_startedFeas_);
+    }
+    else if(population_.getBest().msg_.feasible && !feasBeforeEval)
+    {
+      t_startedFeas_ = ros::Time::now();
+    }*/
   } // end if below threshold since last CC
   
   
@@ -289,11 +301,6 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     ////////ROS_INFO("Evaluating movingOn_ in SC");
     evaluateTrajectory(movingOn_, false);
     moving_on_coll_ = !movingOn_.msg_.feasible;
-
-    if(population_.getBest().msg_.feasible)
-    {
-      d_best_is_feas_ = d_best_is_feas_ + ros::Duration(1.f/sc_freq_);
-    }
   } // end if evaluating movingOn
 
   /*
@@ -1728,6 +1735,7 @@ void Planner::openFiles()
   f_pop_size_.open(directory+"/data/pop_size.txt");
   f_compute_switch_all_ts_.open(directory+"/data/compute_switch_ts.txt");
   f_switch_t_size_.open(directory+"/data/switch_t_size.txt");
+  f_trajec_size_.open(directory+"/data/trajec_size.txt");
   f_best_is_feas_.open(directory+"/data/best_is_feas.txt");
   f_time_in_ic_.open(directory+"/data/time_in_ic.txt");
   f_full_trajectory_.open(directory+"/data/full_trajectory.txt");
@@ -1759,6 +1767,7 @@ void Planner::closeFiles()
   f_pop_size_.close();
   f_compute_switch_all_ts_.close();
   f_switch_t_size_.close();
+  f_trajec_size_.close();
   f_best_is_feas_.close();
   f_time_in_ic_.close();
   f_full_trajectory_.close();
@@ -2542,10 +2551,15 @@ void Planner::getTransitionTrajectory(const RampTrajectory& trj_movingOn, const 
     tr.type = TRANSITION;
 
     requestTrajectory(tr, result);
-  }
 
-  // record switching trajectory size 
-  switch_t_size_.push_back(result.msg_.trajectory.points.size());
+    // record switching trajectory size 
+    switch_t_size_.push_back(result.msg_.trajectory.points.size());
+  }
+  else
+  {
+    // record switching trajectory size 
+    switch_t_size_.push_back(trj_target.msg_.trajectory.points.size());
+  }
   
   //////ROS_INFO("trj_transition: %s", result.toString().c_str());
   if(log_enter_exit_)
@@ -3343,6 +3357,11 @@ void Planner::doControlCycle()
       //ROS_INFO("Could not switch to any trajectories, not computing transition trajectories!");
     }
 
+    // Get data for trajec size
+    for(int i=0;i<population_.trajectories_.size();i++)
+    {
+      trajec_size_.push_back(population_.trajectories_[i].msg_.trajectory.points.size());
+    }
 
 
     // If error reduction
@@ -3721,6 +3740,17 @@ void Planner::printGeneralData() const
   switch_t_size_avg /= switch_t_size_.size();
   ROS_INFO("Average: %i", switch_t_size_avg);
 
+  // Size of normal trajectories
+  ROS_INFO("Normal trajectory sizes:");
+  int trajec_size_avg = 0;
+  for(int i=0;i<trajec_size_.size();i++)
+  {
+    ROS_INFO("trajec_size_[%i]: %i", i, trajec_size_[i]);
+    trajec_size_avg += trajec_size_[i];
+  }
+  trajec_size_avg /= trajec_size_.size();
+  ROS_INFO("Average: %i", trajec_size_avg);
+
   // Duration moving on feasible trajectory
   ROS_INFO("Time that the best trajectory is feasible: %f", d_best_is_feas_.toSec()); 
 
@@ -3771,8 +3801,18 @@ void Planner::writeGeneralData()
   {
     f_switch_t_size_<<"\n"<<switch_t_size_[i];
   }
+
+  // Size of full trajectories
+  for(int i=0;i<trajec_size_.size();i++)
+  {
+    f_trajec_size_<<"\n"<<trajec_size_[i];
+  }
   
-  f_best_is_feas_<<d_best_is_feas_.toSec();
+  // Time robot is moving on feasible trajectory
+  // Removed because it's not clear how to track this
+  //f_best_is_feas_<<d_best_is_feas_.toSec();
+  
+  // Time in imminent collision
   f_time_in_ic_<<d_time_in_ic_.toSec();
 
   // Minimum distance from obstacles
@@ -3979,7 +4019,8 @@ void Planner::writeDurationData()
   // Trajectory request durations
   for(uint16_t i=0;i<trajec_durs_.size();i++)
   {
-    f_trajec_durs_<<"\n"<<trajec_durs_[i].toSec();
+    //f_trajec_durs_<<"\n"<<trajec_durs_[i].toSec();
+    f_trajec_durs_<<"\n"<<trajec_durs_[i].nsec;
   }
 
   
@@ -4234,6 +4275,7 @@ void Planner::go()
                                   Main loop begins here
    *********************************************************************************************
    */
+  ROS_INFO("Starting at time %f", ros::Time::now().toSec());
 
   // Do planning until robot has reached goal
   // D = 0.4 if considering mobile base, 0.2 otherwise
@@ -4256,6 +4298,7 @@ void Planner::go()
 
 
   d_runtime_  = ros::Time::now() - t_startLoop;
+  ROS_INFO("Done at time %f", ros::Time::now().toSec());
   num_pcs_    = generation_;
 
 
