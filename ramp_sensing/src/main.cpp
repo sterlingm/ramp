@@ -90,6 +90,8 @@ std::vector<Attachment> attachs;
 
 int populationSize;
 
+std::vector<double> durs;
+
 
 /*********************************
  * Variables for BFL
@@ -1478,6 +1480,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   //ROS_INFO("**************************************************");
   ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;
   t_last_costmap = ros::Time::now();
+  high_resolution_clock::time_point tStart = high_resolution_clock::now();
 
   /*
    * Only use half of the costmap since the kinect can only see in front of the robot
@@ -1837,11 +1840,57 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     //ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
   }
 
+  // Record duration data
+  duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tStart);
+  durs.push_back( time_span.count() );
+
   //ROS_INFO("Duration: %f", (ros::Time::now()-t_last_costmap).toSec());
   num_costmaps++;
   //ROS_INFO("**************************************************");
   //ROS_INFO("Exiting costmapCb");
   //ROS_INFO("**************************************************");
+}
+
+void writeData()
+{
+  // General data files
+  std::string directory = ros::package::getPath("ramp_sensing");
+  
+  std::ofstream f_durs;
+  f_durs.open(directory+"/durations.txt");
+
+  for(int i=0;i<durs.size();i++)
+  {
+    f_durs<<"\n"<<durs[i];
+  }
+
+  f_durs.close();
+}
+
+void deallocate()
+{
+
+  // Also, free up some memory
+  if(meas_pdf)
+  {
+    delete meas_pdf;
+    meas_pdf = 0;
+  }
+  printf("\nFreed meas_pdf\n");
+  if(sys_pdf)
+  {
+    delete sys_pdf;
+    sys_pdf = 0;
+  }
+  printf("\nFreed meas_model\n");
+
+  for(int i=0;i<cir_obs.size();i++)
+  {
+    delete cir_obs[i];
+    cir_obs[i] = 0;
+  }
+
+  printf("\nDone freeing memory\n");
 }
 
 
@@ -1917,28 +1966,9 @@ void reportPredictedVelocity(int sig)
     //ROS_INFO("cir_pos[%i]: (%f, %f)", i, cirs_pos[i].center.x, cirs_pos[i].center.y);
   }*/
 
+  deallocate();
+  writeData();
 
-  // Also, free up some memory
-  if(meas_pdf)
-  {
-    delete meas_pdf;
-    meas_pdf = 0;
-  }
-  printf("\nFreed meas_pdf\n");
-  if(sys_pdf)
-  {
-    delete sys_pdf;
-    sys_pdf = 0;
-  }
-  printf("\nFreed meas_model\n");
-
-  for(int i=0;i<cir_obs.size();i++)
-  {
-    delete cir_obs[i];
-    cir_obs[i] = 0;
-  }
-
-  printf("\nDone freeing memory\n");
 
   // Add this line to keep the node from hanging
   // Not sure why it hangs without this line
