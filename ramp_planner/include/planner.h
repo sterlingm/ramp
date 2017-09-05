@@ -471,8 +471,9 @@ class Planner {
     bool moving_on_coll_;
 
 
-    ros::Time t_prevCC_;
-    ros::Time t_prevPC_;
+    ros::Time t_prevCC_ros_;
+    std::chrono::high_resolution_clock::time_point t_prevCC_;
+    std::chrono::high_resolution_clock::time_point t_prevPC_;
     uint8_t pc_switch_;
 
 
@@ -568,18 +569,18 @@ class Planner {
      * Duration data
      */
     // Variables to hold data
-    std::vector<ros::Duration> pc_durs_;  // planningCycleCallback
-    std::vector<ros::Duration> pc_freq_;  // planningCycleCallback
-    std::vector<ros::Duration> sc_durs_;  // sensingCycleCallback
+    std::vector<double> pc_durs_;  // planningCycleCallback
+    std::vector<double> pc_freq_;  // planningCycleCallback
+    std::vector<double> sc_durs_;  // sensingCycleCallback
     int sc_freq_;                         // init
-    std::vector<ros::Duration> cc_durs_;                    // doControlCycle
-    std::vector<ros::Duration> cc_freq_;                    // doControlCycle
-    std::vector<ros::Duration> trajec_durs_;                // requestTrajectory
-    std::vector<ros::Duration> eval_durs_;                  // requestEvaluation
-    std::vector<ros::Duration> mod_durs_;                   // modification
-    std::vector<ros::Duration> mutate_durs_;                // planningCycleCallback
-    std::vector<ros::Duration> error_correct_durs_eval_;    // planningCycleCallback
-    std::vector<ros::Duration> error_correct_durs_no_eval_; // planningCycleCallback
+    std::vector<double> cc_durs_;                    // doControlCycle
+    std::vector<double> cc_freq_;                    // doControlCycle
+    std::vector<double> trajec_durs_;                // requestTrajectory
+    std::vector<double> eval_durs_;                  // requestEvaluation
+    std::vector<double> mod_durs_;                   // modification
+    std::vector<double> mutate_durs_;                // planningCycleCallback
+    std::vector<double> error_correct_durs_eval_;    // planningCycleCallback
+    std::vector<double> error_correct_durs_no_eval_; // planningCycleCallback
 
     // Files
     std::ofstream f_pc_durs_;
