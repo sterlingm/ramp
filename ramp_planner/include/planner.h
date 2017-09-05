@@ -146,7 +146,7 @@ class Planner {
     void buildLineList(const RampTrajectory& trajec, int id, visualization_msgs::Marker& result) const;
 
     // Evaluate the population 
-    void evaluateTrajectory(RampTrajectory& t, bool full=true) const;
+    void evaluateTrajectory(RampTrajectory& t, bool full=true);
     void evaluatePopulation();
     
     // Modify trajectory or path
@@ -197,8 +197,8 @@ class Planner {
     void requestEvaluation(std::vector<RampTrajectory>& trajecs);
 
     // One trajectory
-    void requestEvaluation(ramp_msgs::EvaluationRequest& request) const;
-    void requestEvaluation(RampTrajectory& t, bool full=true) const;
+    void requestEvaluation(ramp_msgs::EvaluationRequest& request);
+    void requestEvaluation(RampTrajectory& t, bool full=true);
 
 
 
@@ -541,6 +541,8 @@ class Planner {
     RampTrajectory full_trajectory_;                      // doControlCycle (does not include motion error)
     std::vector<double> min_dist_obs_;                    // sensingCycleCallback
     std::vector<double> motion_error_amount_;             // planningCycleCallback
+    std::vector<int> num_trajecs_gen_;
+    std::vector<int> num_trajecs_eval_;
 
     ros::Time t_startedFeas_;
 
@@ -558,6 +560,8 @@ class Planner {
     std::ofstream f_full_trajectory_;
     std::ofstream f_min_dist_obs_;
     std::ofstream f_motion_error_amount_;
+    std::ofstream f_num_trajecs_gen_;
+    std::ofstream f_num_trajecs_eval_;
     
 
     void printGeneralData() const;

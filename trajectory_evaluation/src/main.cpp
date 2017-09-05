@@ -1,13 +1,18 @@
 #include <iostream>
 #include <signal.h>
+#include <chrono>
+#include <fstream>
 #include "evaluate.h"
 #include "tf/transform_datatypes.h"
 #include "ramp_msgs/Obstacle.h"
+#include <ros/package.h>
+using namespace std::chrono;
 
 Evaluate ev;
 Utility u;
 bool received_ob = false;
-std::vector<ros::Duration> t_data;
+std::vector<double> durs;
+
 int count_multiple = 0;
 int count_single = 0;
 
@@ -30,7 +35,7 @@ bool handleRequest(ramp_msgs::EvaluationSrv::Request& reqs,
   }
   
 
-  ros::Time t_start = ros::Time::now();
+  high_resolution_clock::time_point tStart = high_resolution_clock::now();
   ros::Duration t_elapsed;
   for(uint8_t i=0;i<s;i++)
   {
@@ -62,12 +67,10 @@ bool handleRequest(ramp_msgs::EvaluationSrv::Request& reqs,
     resps.resps.push_back(res);
     
   }
-  t_elapsed = ros::Time::now() - t_start;
-  t_data.push_back(t_elapsed);
-  if(t_elapsed.toSec() > 0.01)
-  {
-    //////ROS_INFO("Long Eval Trajec (total: %i)", (int)reqs.reqs.size());
-  }
+
+  duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now() - tStart);
+  durs.push_back( time_span.count() );
+  
   //////ROS_INFO("t_elapsed: %f", t_elapsed.toSec());
   return true;
 } //End handleRequest
@@ -198,20 +201,38 @@ void reportData(int sig)
   }
 
 
-  avg = t_data.at(0).toSec();
-  for(int i=1;i<t_data.size();i++)
-  {
-    avg += t_data.at(i).toSec();
-    //ROS_INFO("traj_eval: %f", t_data.at(i).toSec());
-  }
-  avg /= t_data.size();
-  //ROS_INFO("Average traj_eval duration: %f", avg);
 
   //////ROS_INFO("# of single evaluations: %i", count_single);
   //////ROS_INFO("# of multiple evaluations: %i", count_multiple);
 
   ////////ROS_INFO("Done reporting");
 }
+
+
+void writeData()
+{
+  // General data files
+  std::string directory = ros::package::getPath("trajectory_evaluation");
+  
+  std::ofstream f_durs;
+  f_durs.open(directory+"/durations.txt");
+
+  for(int i=0;i<durs.size();i++)
+  {
+    f_durs<<"\n"<<durs[i];
+  }
+
+  f_durs.close();
+}
+
+
+void shutdown(int sigint)
+{
+  writeData();
+  ros::shutdown();
+}
+
+
 
 int main(int argc, char** argv) {
 
@@ -222,7 +243,7 @@ int main(int argc, char** argv) {
   setvbuf(stdout, NULL, _IOLBF, 4096);
   
   // Set reportData to run on shutdown
-  signal(SIGINT, reportData);
+  signal(SIGINT, shutdown);
 
   /*
    * Get rosparams for weights and environment size

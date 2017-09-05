@@ -2,6 +2,11 @@
 #include "ramp_msgs/Range.h"
 #include "utility.h"
 #include "modifier.h"
+#include <chrono>
+#include <fstream>
+#include <signal.h>
+#include <ros/package.h>
+using namespace std::chrono;
 
 Utility u;
 
@@ -11,7 +16,7 @@ std::vector<ramp_msgs::Range> ranges;
 std::vector<double> dof_min;
 std::vector<double> dof_max;
 
-
+std::vector<double> durs;
 
 
 bool handleRequest(ramp_msgs::ModificationRequest::Request& req,
@@ -25,6 +30,8 @@ bool handleRequest(ramp_msgs::ModificationRequest::Request& req,
     std::cout<<"\n"<<u.toString(req.paths.at(i));
   }
   ROS_INFO("Operator: %s", req.op.c_str());*/
+
+  high_resolution_clock::time_point tStart = high_resolution_clock::now();
 
   Modifier mod(req);
 
@@ -61,6 +68,9 @@ bool handleRequest(ramp_msgs::ModificationRequest::Request& req,
   for(unsigned int i=0;i<res.mod_paths.size();i++) {
     std::cout<<"\n"<<u.toString(res.mod_paths.at(i));
   }*/
+
+  duration<double> time_span = duration_cast<nanoseconds>(high_resolution_clock::now()-tStart);
+  durs.push_back( time_span.count() );
 
   return true;
 }
@@ -123,6 +133,31 @@ void loadParameters(const ros::NodeHandle& handle)
 
 
 
+void writeData()
+{
+  // General data files
+  std::string directory = ros::package::getPath("path_modification");
+  
+  std::ofstream f_durs;
+  f_durs.open(directory+"/durations.txt");
+
+  for(int i=0;i<durs.size();i++)
+  {
+    f_durs<<"\n"<<durs[i];
+  }
+
+  f_durs.close();
+}
+
+
+void shutdown(int sigint)
+{
+  writeData();
+  ros::shutdown();
+}
+
+
+
 
 
 int main(int argc, char** argv) 
@@ -135,6 +170,8 @@ int main(int argc, char** argv)
   ros::ServiceServer service = handle.advertiseService("path_modification", handleRequest); 
 
   loadParameters(handle);
+
+  signal(SIGINT, shutdown);
 
   u.standardRanges_ = ranges;
   ROS_INFO("Path modification ranges: ");

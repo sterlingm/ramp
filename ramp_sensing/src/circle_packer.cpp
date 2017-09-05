@@ -446,7 +446,7 @@ void CirclePacker::detectAttachedCircles(const std::vector<CircleOb*>& cir_obs, 
 // This gets called before converting to global coordinates 1 = 5cm = 0.05m
 void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector<Circle>& result) const
 {
-  ROS_INFO("In combineOverlappingCircles");
+  //ROS_INFO("In combineOverlappingCircles");
   int pairs, i=0, j=0;
 
   // Initialize variables
@@ -477,7 +477,7 @@ void CirclePacker::combineOverlappingCircles(std::vector<Circle> cs, std::vector
 
       if(d < threshold)
       {
-        ROS_INFO("Combining circles d: %f threshold: %f", d, threshold);
+        //ROS_INFO("Combining circles d: %f threshold: %f", d, threshold);
 
         // Combine them
         Circle temp;

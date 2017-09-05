@@ -478,11 +478,11 @@ const double BezierCurve::getUDotInitial() const
   
   double u_dot_0_x = fabs(x_dot_0 / (A_*u_0_+C_));
   double u_dot_0_y = fabs(y_dot_0 / (B_*u_0_+D_));
-  if(isnan(u_dot_0_x)) 
+  if(std::isnan(u_dot_0_x)) 
   {
     u_dot_0_x = -9999;
   }
-  if(isnan(u_dot_0_y)) 
+  if(std::isnan(u_dot_0_y)) 
   {
     u_dot_0_y = -9999;
   }
