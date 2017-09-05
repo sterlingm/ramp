@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(trajectory_generator)
 
-find_package(catkin REQUIRED COMPONENTS geometry_msgs message_generation ramp_msgs roscpp)
+find_package(catkin REQUIRED COMPONENTS geometry_msgs message_generation ramp_msgs roscpp roslib)
 
 
 #########################################
@@ -31,6 +31,10 @@ set (CMAKE_CXX_FLAGS "-g")
 
 #### Declare a cpp executable
 add_executable(${PROJECT_NAME} src/bezier_curve.cpp src/circle.cpp src/line.cpp src/main.cpp src/mobile_base.cpp src/prediction.cpp src/utility.cpp)
+
+# Add the -std argument to compile enum
+set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS -std=c++0x)
+
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ReflexxesTypeII)
 add_dependencies(${PROJECT_NAME} ramp_msgs_generate_messages_cpp)
 

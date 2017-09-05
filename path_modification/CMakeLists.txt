@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(path_modification)
 #
-find_package(catkin REQUIRED COMPONENTS message_generation ramp_msgs roscpp)
+find_package(catkin REQUIRED COMPONENTS message_generation ramp_msgs roscpp roslib)
 #
 #
 ########################################
@@ -26,6 +26,8 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 
 ### Debugging flag for using gdb
 set (CMAKE_CXX_FLAGS "-g")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+
 
 ### Declare a cpp executable
 add_executable(${PROJECT_NAME} src/main.cpp src/change.cpp src/constraints.cpp src/crossover.cpp src/delete.cpp src/insert.cpp src/modifier.cpp src/move.cpp src/range.cpp src/swap.cpp src/utility.cpp)
