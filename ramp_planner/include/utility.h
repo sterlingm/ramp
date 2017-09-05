@@ -9,6 +9,7 @@
 #include <limits>
 #include <stdlib.h>
 #include <stdio.h>
+#include <chrono>
 #include <time.h>
 #include "range.h"
 #include "ramp_msgs/RampTrajectory.h"
@@ -20,6 +21,7 @@
 #include <tf/transform_listener.h>
 #include <ros/console.h>
 #include <ros/package.h>
+using namespace std::chrono;
 
 /*
  * Change this class to a singleton pattern
