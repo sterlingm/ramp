@@ -8,8 +8,14 @@
 #include "ros/ros.h"
 #include "bezier_curve.h"
 #include "ramp_msgs/Population.h"
+#include <chrono>
+#include <signal.h>
+#include <fstream>
+#include <ros/package.h>
+using namespace std::chrono;
 
 Utility utility;
+std::vector<double> durs;
 
 
 void fixDuplicates(ramp_msgs::TrajectoryRequest& req)
@@ -54,8 +60,7 @@ bool checkGoal(ramp_msgs::TrajectoryRequest req)
 bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
                       ramp_msgs::TrajectorySrv::Response& res) 
 {
-
-  ros::Time t_start = ros::Time::now();
+  high_resolution_clock::time_point tStart = high_resolution_clock::now();
   for(uint8_t i=0;i<req.reqs.size();i++)
   {
     ramp_msgs::TrajectoryRequest treq = req.reqs.at(i); 
@@ -111,9 +116,33 @@ bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
     res.resps.push_back(tres);
   }
 
-  ros::Time t_end = ros::Time::now();
+  duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tStart);
+  durs.push_back( time_span.count() );
   ////ROS_INFO("t_end: %f", (t_end-t_start).toSec());
   return true;
+}
+
+void writeData()
+{
+  // General data files
+  std::string directory = ros::package::getPath("trajectory_generator");
+  
+  std::ofstream f_durs;
+  f_durs.open(directory+"/durations.txt");
+
+  for(int i=0;i<durs.size();i++)
+  {
+    f_durs<<"\n"<<durs[i];
+  }
+
+  f_durs.close();
+}
+
+
+void shutdown(int sigint)
+{
+  writeData();
+  ros::shutdown();
 }
 
 
@@ -130,6 +159,10 @@ int main(int argc, char** argv) {
   // Declare the service that gives a path and returns a trajectory
   ros::ServiceServer service = n.advertiseService("trajectory_generator", requestCallback);
 
+  
+ // Set function to run at shutdown
+ signal(SIGINT, shutdown);
+  
 
   ros::AsyncSpinner spinner(8);
   spinner.start();

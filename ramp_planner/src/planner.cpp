@@ -1226,6 +1226,9 @@ void Planner::requestTrajectory(ramp_msgs::TrajectorySrv& tr, std::vector<RampTr
   ////////ROS_INFO("In Planner::requestTrajectory(ramp_msgs::TrajectorySrv)");
   //std::cout<<"\nid: "<<id;
   
+  // Record number of trajectories to generate
+  num_trajecs_gen_.push_back(tr.request.reqs.size());
+  
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
   if(h_traj_req_->request(tr)) 
   {
@@ -1745,6 +1748,8 @@ void Planner::openFiles()
   f_full_trajectory_.open(directory+"/data/full_trajectory.txt");
   f_min_dist_obs_.open(directory+"/data/min_dist_obs.txt");
   f_motion_error_amount_.open(directory+"/data/motion_error_amount.txt");
+  f_num_trajecs_gen_.open(directory+"/data/num_trajecs_gen.txt");
+  f_num_trajecs_eval_.open(directory+"/data/num_trajecs_eval.txt");
 
 
   // Duration data files
@@ -1777,6 +1782,8 @@ void Planner::closeFiles()
   f_full_trajectory_.close();
   f_min_dist_obs_.close();
   f_motion_error_amount_.close();
+  f_num_trajecs_gen_.close();
+  f_num_trajecs_eval_.close();
 
   f_pc_durs_.close();
   f_pc_freqs_.close();
@@ -3616,6 +3623,9 @@ void Planner::requestEvaluation(std::vector<RampTrajectory>& trajecs)
   ramp_msgs::EvaluationSrv srv;
   buildEvaluationSrv(trajecs, srv);
 
+  // Record number of trajectories to evaluate
+  num_trajecs_eval_.push_back(trajecs.size());
+
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
   if(h_eval_req_->request(srv))
   {
@@ -3635,14 +3645,19 @@ void Planner::requestEvaluation(std::vector<RampTrajectory>& trajecs)
 }
 
 
-void Planner::requestEvaluation(ramp_msgs::EvaluationRequest& request) const
+void Planner::requestEvaluation(ramp_msgs::EvaluationRequest& request) 
 {
   //////ROS_INFO("In Planner::requestEvaluation(EvaluationRequest&)");
   ramp_msgs::EvaluationSrv srv;
   srv.request.reqs.push_back(request);
 
+  num_trajecs_eval_.push_back(1);
+
+  high_resolution_clock::time_point tStart = high_resolution_clock::now();
   if(h_eval_req_->request(srv))
   {
+    duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now() - tStart);
+    eval_durs_.push_back( time_span.count() );
     //////ROS_INFO("Setting fitness: %f", srv.response.resps[0].fitness);
     request.trajectory.fitness          = srv.response.resps[0].fitness;
     request.trajectory.feasible         = srv.response.resps[0].feasible;
@@ -3657,7 +3672,7 @@ void Planner::requestEvaluation(ramp_msgs::EvaluationRequest& request) const
 
 
 
-void Planner::requestEvaluation(RampTrajectory& trajec, bool full) const
+void Planner::requestEvaluation(RampTrajectory& trajec, bool full)
 {
   //////ROS_INFO("In Planner::requestEvaluation(RampTrajectory&, bool)");
   //////ROS_INFO("full: %s", full ? "True" : "False");
@@ -3677,7 +3692,7 @@ void Planner::requestEvaluation(RampTrajectory& trajec, bool full) const
 
 
 
-void Planner::evaluateTrajectory(RampTrajectory& t, bool full) const
+void Planner::evaluateTrajectory(RampTrajectory& t, bool full)
 {
   requestEvaluation(t, full);
 }
@@ -3852,7 +3867,19 @@ void Planner::writeGeneralData()
   {
     std::vector<double> p = full_trajectory_.msg_.trajectory.points[i].positions;
     f_full_trajectory_<<"\n"<<p[0]<<","<<p[1];
-  } 
+  }
+
+  // Number of trajectories to generate
+  for(int i=0;i<num_trajecs_gen_.size();i++)
+  {
+    f_num_trajecs_gen_<<"\n"<<num_trajecs_gen_[i];
+  }
+  
+  // Number of trajectories to evaluate
+  for(int i=0;i<num_trajecs_eval_.size();i++)
+  {
+    f_num_trajecs_eval_<<"\n"<<num_trajecs_eval_[i];
+  }
 }
 
 
