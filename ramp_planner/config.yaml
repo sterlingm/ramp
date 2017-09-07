@@ -16,9 +16,9 @@ fixed_control_cycle_rate: 1.6
 
 sensing_cycle_rate: 20
 
-error_reduction: false
+error_reduction: true 
 
-num_of_obstacles: 3
+num_of_obstacles: 1
 
 # Turtlebot obstacle topics
 #obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom', '/obstacle_3/odom']
@@ -28,4 +28,4 @@ num_of_obstacles: 3
 obstacle_odoms: ['/robot_1/odom', '/robot_2/odom', '/robot_3/odom']
 obstacle_vels: ['/robot_1/cmd_vel', '/robot_2/cmd_vel', '/robot_3/cmd_vel']
 
-obstacle_delays: [0, 0, 0]
+obstacle_delays: [0, 0, 1.5]

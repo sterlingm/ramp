@@ -23,10 +23,10 @@ int main(int argc, char** argv) {
   ramp_msgs::KnotPoint zero;
   zero.motionState.positions.push_back(0.);
   zero.motionState.positions.push_back(0.);
-  zero.motionState.positions.push_back(0.785f);
+  zero.motionState.positions.push_back(0.f);
   zero.motionState.velocities.push_back(0.);
   zero.motionState.velocities.push_back(0.);
-  zero.motionState.velocities.push_back(0.);
+  zero.motionState.velocities.push_back(0.45);
   zero.motionState.accelerations.push_back(0);
   zero.motionState.accelerations.push_back(0);
   zero.motionState.accelerations.push_back(0);
@@ -34,32 +34,32 @@ int main(int argc, char** argv) {
 
   // Build a Path
   ramp_msgs::KnotPoint c1;
-  c1.motionState.positions.push_back(0.0172186); // 0.70455
-  c1.motionState.positions.push_back(0.0426772); // 0.4026
-  c1.motionState.positions.push_back(1.18731); // 0.519146
+  c1.motionState.positions.push_back(1.5); // 0.70455
+  c1.motionState.positions.push_back(0.75); // 0.4026
+  c1.motionState.positions.push_back(0.925287); // 0.519146
   
   ramp_msgs::KnotPoint c2;
-  c2.motionState.positions.push_back(0.0359264); // 0.70455
-  c2.motionState.positions.push_back(0.0890456); // 0.4026
-  c2.motionState.positions.push_back(1.18731); // 0.519146
+  c2.motionState.positions.push_back(0.565405); // 0.70455
+  c2.motionState.positions.push_back(0.545848); // 0.4026
+  c2.motionState.positions.push_back(0.925287); // 0.519146
 
 
   ramp_msgs::KnotPoint c3;
-  c3.motionState.positions.push_back(1.75577); // 0.857146
-  c3.motionState.positions.push_back(0.232696); // 0.71115
-  c3.motionState.positions.push_back(2.62755);  // 1.11151
+  c3.motionState.positions.push_back(3.311); // 0.857146
+  c3.motionState.positions.push_back(2.52064); // 0.71115
+  c3.motionState.positions.push_back(0.625932);  // 1.11151
 
 
   ramp_msgs::KnotPoint c4;
-  c4.motionState.positions.push_back(0.100138);
-  c4.motionState.positions.push_back(1.53497);
-  c4.motionState.positions.push_back(0.0987241);
+  c4.motionState.positions.push_back(2.11916f);
+  c4.motionState.positions.push_back(0.399425f);
+  c4.motionState.positions.push_back(PI/4);
 
 
   ramp_msgs::KnotPoint c5;
-  c5.motionState.positions.push_back(0.111143);
-  c5.motionState.positions.push_back(1.52631);
-  c5.motionState.positions.push_back(2.47506);
+  c5.motionState.positions.push_back(2.37364);
+  c5.motionState.positions.push_back(1.03114);
+  c5.motionState.positions.push_back(0.684925);
 
   ramp_msgs::KnotPoint c6;
   c6.motionState.positions.push_back(2.11916);
@@ -82,25 +82,25 @@ int main(int argc, char** argv) {
   c9.motionState.positions.push_back(PI/4);
   
   // Velocities
-  c1.motionState.velocities.push_back(0.093539);  //.151426
-  c1.motionState.velocities.push_back(0.231842); //-.297903
+  c1.motionState.velocities.push_back(0.216555);  //.151426
+  c1.motionState.velocities.push_back(0.249016); //-.297903
   c1.motionState.velocities.push_back(0.); //-.118126*/
  
-  c2.motionState.velocities.push_back(0.);  //.151426
-  c2.motionState.velocities.push_back(0.); //-.297903
+  c2.motionState.velocities.push_back(0.216555);  //.151426
+  c2.motionState.velocities.push_back(0.156548); //-.297903
   c2.motionState.velocities.push_back(0.); //-.118126
 
-  /*c3.motionState.velocities.push_back(0.267438);
+  c3.motionState.velocities.push_back(0.267438);
   c3.motionState.velocities.push_back(0.193331);
-  c3.motionState.velocities.push_back(0.);*/
+  c3.motionState.velocities.push_back(0.);
 
   /*c4.motionState.velocities.push_back(0.23);
   c4.motionState.velocities.push_back(0);
   c4.motionState.velocities.push_back(0);*/
  
 
-  c5.motionState.velocities.push_back(0.196492);
-  c5.motionState.velocities.push_back(-0.154567);
+  c5.motionState.velocities.push_back(0);
+  c5.motionState.velocities.push_back(0);
   c5.motionState.velocities.push_back(0);
 
   c6.motionState.velocities.push_back(0);
@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
   c6.motionState.velocities.push_back(0);
 
   // Accelerations
-  /*c1.motionState.accelerations.push_back(0.);
+  c1.motionState.accelerations.push_back(0.);
   c1.motionState.accelerations.push_back(0.06665);
   c1.motionState.accelerations.push_back(0.0105176);
   
@@ -129,16 +129,16 @@ int main(int argc, char** argv) {
   c5.motionState.accelerations.push_back(0.); //.0746295
   
   ramp_msgs::Path p;
-  //p.points.push_back(zero);
+  p.points.push_back(zero);
   p.points.push_back(c1);
-  p.points.push_back(c2);
-  p.points.push_back(c3);
-  p.points.push_back(c4);
-  p.points.push_back(c5);
+  //p.points.push_back(c2);
+  //p.points.push_back(c3);
+  //p.points.push_back(c4);
+  //p.points.push_back(c5);
   //p.points.push_back(c6);
   //p.points.push_back(c7);
   //p.points.push_back(c8);
-  //p.points.push_back(c9);
+  p.points.push_back(c9);
   
 
   /***************************************************/
@@ -166,7 +166,7 @@ int main(int argc, char** argv) {
 
   
   ramp_msgs::MotionState sp1;
-  sp1 = p.points.at(2).motionState;
+  sp1 = p.points.at(1).motionState;
   //sp1 = p.points.at(0).motionState;
   //sp1 = c2.motionState;
 
@@ -184,7 +184,7 @@ int main(int argc, char** argv) {
 
   ramp_msgs::MotionState sp2;
   if(p.points.size() > 2)
-    sp2 = p.points.at(3).motionState;
+    sp2 = p.points.at(2).motionState;
   //sp2 = p.points.at(1).motionState;
   //sp2 = c3.motionState;
 
@@ -391,7 +391,7 @@ int main(int argc, char** argv) {
   
   ramp_msgs::TrajectoryRequest tr;
   tr.path = p;
-  tr.type = HYBRID;
+  tr.type = PARTIAL_BEZIER;
   tr.print = true;
   tr.bezierCurves = curves;
   tr.segments = 0;
@@ -402,11 +402,9 @@ int main(int argc, char** argv) {
   std::cout<<"\nPress Enter to request and send the trajectory\n";
   std::cin.get();
 
-  ros::Time t_end, t_start = ros::Time::now();
   // Get and publish trajectory
   if(client_.call(tr_srv)) 
   {
-    t_end = ros::Time::now();
     ROS_INFO("Resps size: %i", (int)tr_srv.response.resps.size());
     //std::cout<<"\nSending Trajectory "<<u.toString(tr_srv.response.resps.at(0).trajectory)<<"\n";
     handle.setParam("/ramp/cc_started", true); 
@@ -416,8 +414,6 @@ int main(int argc, char** argv) {
   {
     std::cout<<"\nSome error getting trajectory\n";
   }
-
-  tr_srv.response.resps[0].trajectory.t_start = ros::Duration(1.4);
    
   ROS_INFO("Press Enter to evaluate the trajectory");
   std::cin.get();
@@ -433,10 +429,7 @@ int main(int argc, char** argv) {
   er.trajectory.curves.clear();*/
 
   er.currentTheta = er.trajectory.trajectory.points.at(0).positions.at(2);
-  er.imminent_collision = false;
-  er.full_eval = true;
-  er.consider_trans = true;
-  er.trans_possible = false;
+  //er.theta_cc = 1.04839;
   
     
   //std::cout<<"\nEval: Sending Trajectory "<<u.toString(er.trajectory)<<"\n";
@@ -494,13 +487,8 @@ int main(int argc, char** argv) {
   //er.obstacle_trjs.push_back(obt);
   //er.obstacle_trjs.push_back(obt);
   //er.obstacle_trjs.push_back(obt2);
-    
-  er_srv.request.reqs.push_back(er);
 
-  /*for(int i=0;i<12;i++)
-  {
-    er_srv.request.reqs.push_back(er);
-  }*/
+  er_srv.request.reqs.push_back(er);
 
 
   // Evaluate trajectory
@@ -525,8 +513,6 @@ int main(int argc, char** argv) {
   pub_pop.publish(pop);
   
 
-
-  ROS_INFO("Time to get trajec: %f", (t_end-t_start).toSec());
 
 
   std::cout<<"\nExiting Normally\n";

@@ -231,58 +231,6 @@ void TrajectoryView::drawPopulation() {
 
         } //end for each point in the trajectory
       } //end if many points
-
-
-      ramp_msgs::RampTrajectory trj           = populations_[p].population[t];
-      
-      //ROS_INFO("trajectory: %s", u.toString(trj).c_str());
-      //ROS_INFO("trj.size(): %i", (int)populations_[p].population[t].trajectory.points.size());
-
-      if(trj.trajectory.points.size() > 0)
-      {
-
-        trajectory_msgs::JointTrajectoryPoint p = trj.trajectory.points.at(trj.trajectory.points.size()-1);
-        
-        //ROS_INFO("p: %s", u.toString(p).c_str());
-
-        int i_end=0;
-
-        // Find knot point index where non-holonomic segment ends
-        for(int i=0;i<trj.holonomic_path.points.size();i++)
-        {
-          //ROS_INFO("i: %i trj.holonomic_path.points.size(): %i", (int)i, (int)trj.holonomic_path.points.size());
-          //ROS_INFO("trj.holonomic_path[%i]: %s", (int)i, u.toString(trj.holonomic_path.points[i].motionState).c_str());
-          double dist = u.positionDistance(trj.holonomic_path.points[i].motionState.positions, p.positions);
-          //ROS_INFO("dist: %f", dist);
-
-          if( dist*dist < 0.01 )
-          {
-            i_end = i; 
-            break;
-          }
-        } // end for
-
-        //ROS_INFO("i_end: %i", (int)i_end);
-        //ROS_INFO("trj.holonomic_path.points.size(): %i", (int)trj.holonomic_path.points.size());
-
-        penTraj = QPen( QColor(100,100,100,100) );
-        
-        for(int i=i_end;i<(int)trj.holonomic_path.points.size()-1;i++)
-        {
-          /*ROS_INFO("i: %i", i);
-          ROS_INFO("trj.holonomic_path.points.size(): %i", (int)trj.holonomic_path.points.size());
-          ROS_INFO("i<trj.holonomic_path.points.size()-1: %s", i<trj.holonomic_path.points.size()-1 ? "True" : "False");*/
-
-          
-          // Draw a line to the next point
-          this->scene()->addLine(metersToPixels(trj.holonomic_path.points[i].motionState.positions.at(0), true),
-                         metersToPixels(trj.holonomic_path.points[i].motionState.positions.at(1), false),
-                         metersToPixels(trj.holonomic_path.points[i+1].motionState.positions.at(0), true),
-                         metersToPixels(trj.holonomic_path.points[i+1].motionState.positions.at(1), false),
-                         penTraj);
-
-        } // end for each knot point in holonomic_path
-      } // end if size>0
     } //end for each trajectory
   } //end for each population 
 } //End drawPopulation

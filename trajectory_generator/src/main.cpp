@@ -55,7 +55,6 @@ bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
                       ramp_msgs::TrajectorySrv::Response& res) 
 {
 
-  ros::Time t_start = ros::Time::now();
   for(uint8_t i=0;i<req.reqs.size();i++)
   {
     ramp_msgs::TrajectoryRequest treq = req.reqs.at(i); 
@@ -70,13 +69,13 @@ bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
       tres.trajectory.trajectory.points.push_back(utility.getTrajectoryPoint(treq.path.points.at(0).motionState));
       tres.trajectory.i_knotPoints.push_back(0);
       res.resps.push_back(tres);
-      continue;
+      return true;
     }
 
     // Why treq.segments == 1?
     if(treq.type != PREDICTION && treq.type != TRANSITION && (treq.path.points.size() < 3 || treq.segments == 1))
     {
-      //ROS_WARN("Changing type to HOLONOMIC");
+      ROS_WARN("Changing type to HOLONOMIC");
       treq.type = HOLONOMIC;
       treq.segments++;
     }
@@ -90,27 +89,22 @@ bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
       {
         res.error = true;
       }
-
-      tres.trajectory.holonomic_path = treq.path;
     }
     else if(treq.path.points.size() > 0) 
     {
-      //ROS_INFO("In prediction");
+      ROS_INFO("In prediction");
       Prediction prediction;
       prediction.trajectoryRequest(treq, tres);
     }
 
     if( tres.trajectory.i_knotPoints[0] == tres.trajectory.i_knotPoints[1] )
     {
-      //ROS_WARN("First two knot points are equal!");
+      ROS_WARN("First two knot points are equal!");
     }
     ROS_INFO("Response: %s", utility.toString(tres).c_str());
   
     res.resps.push_back(tres);
   }
-
-  ros::Time t_end = ros::Time::now();
-  //ROS_INFO("t_end: %f", (t_end-t_start).toSec());
   return true;
 }
 

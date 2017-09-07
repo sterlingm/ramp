@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
  
   ramp_msgs::TrajectoryRequest tr;
   tr.path = p;
-  tr.type = HYBRID;
+  tr.type = PARTIAL_BEZIER;
   tr.print = true;
 
   ramp_msgs::TrajectorySrv tr_srv;

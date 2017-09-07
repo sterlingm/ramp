@@ -16,7 +16,6 @@ public:
  
 
   const std::vector<ramp_msgs::MotionState> generateCurve();
-  void generateCurveOOP();
 
   const bool verify() const;
  
@@ -89,7 +88,6 @@ private:
 
   // TODO: Make const
   const ramp_msgs::MotionState buildMotionState(const ReflexxesData data);
-  void buildMotionStateOOP(const ReflexxesData& data, ramp_msgs::MotionState& result);
 
   const ReflexxesData adjustTargets(const ReflexxesData data) const;
 };

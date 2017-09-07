@@ -121,19 +121,10 @@ void MobileRobot::updateCallback(const ros::TimerEvent& e) {
 
 /** This method updates the MobileRobot's trajectory
  *   It calls calculateSpeedsAndTimes to update the robot's vectors needed to move */
-void MobileRobot::updateTrajectory(const ramp_msgs::RampTrajectory& msg) 
+void MobileRobot::updateTrajectory(const ramp_msgs::RampTrajectory msg) 
 {
-  ROS_INFO("Time since last trajectory: %f", (ros::Time::now() - t_prev_traj_).toSec());
-  t_prev_traj_ = ros::Time::now();
   //ROS_INFO("Received RampTrajectory");
   //ROS_INFO("Trajectory: %s", utility_.toString(msg).c_str());
-  
-  /*double sum = 0;
-  for(int i=0;i<t_points_.size();i++)
-  {
-    sum += t_points_[i].toSec();
-  }
-  ROS_INFO("Average point time: %f", (sum / t_points_.size()));*/
   
   // Update data members
   restart_        = true;
@@ -395,7 +386,6 @@ void MobileRobot::moveOnTrajectory()
     // Spin once to check for updates in the trajectory
     ros::spinOnce();
 
-    t_points_.push_back(ros::Time::now() - s);
     //ROS_INFO("Point took %f", (ros::Time::now() - s).toSec());
   } // end while
 

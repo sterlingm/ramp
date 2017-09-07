@@ -40,14 +40,11 @@ int main(int argc, char** argv)
   g.msg_.velocities.push_back(0.f);
   g.msg_.velocities.push_back(0.f);
 
-  KnotPoint kp_s(s);
-  KnotPoint kp_g(g);
-
   Path p(s,g);
   p.addBeforeGoal(kp);
 
   Path pred;
-  pred.msg_.points.push_back(kp_s.buildKnotPointMsg());
+  pred.all_.push_back(s);
 
   ramp_msgs::TrajectoryRequest tr;
   tr.path = pred.buildPathMsg();

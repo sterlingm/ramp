@@ -66,13 +66,11 @@ const std::string Modifier::getOperator() const
 
 
 /** This method generates the random paths to use for the modification operator passed in as op argument */
-const std::vector<int> Modifier::getTargets(const std::string& op, const Population& pop) 
+const std::vector<int> Modifier::getTargets(const std::string op, const Population pop) 
 {
-  ROS_INFO("In Modifier::getTargets");
-  ROS_INFO("pop.paths_.size(): %i", (int)pop.paths_.size());
-  ROS_INFO("pop.trajec.size(): %i", (int)pop.trajectories_.size());
+  //ROS_INFO("In Modifier::getTargets");
   //ROS_INFO("Pop: %s", pop.toString().c_str());
-  ROS_INFO("op: %s", op.c_str());
+  //ROS_INFO("op: %s", op.c_str());
   std::vector<int> result;
 
   // Get random path(s) to modify
@@ -85,9 +83,8 @@ const std::vector<int> Modifier::getTargets(const std::string& op, const Populat
   // If crossover, get a second path
   if(op == "crossover") 
   {
-    ROS_INFO("i_p1: %i", i_p1);
     unsigned int i_p2;
-    do { i_p2 = rand() % pop.paths_.size(); ROS_INFO("i_p2: %i", i_p2); } 
+    do { i_p2 = rand() % pop.paths_.size(); } 
     while (i_p1 == i_p2);
   
     // Push on i_p1
@@ -95,7 +92,7 @@ const std::vector<int> Modifier::getTargets(const std::string& op, const Populat
   } // end if crossover 
 
 
-  ROS_INFO("Exiting Modifier::getTargets");
+  //ROS_INFO("Exiting Modifier::getTargets");
   return result;
 } // End getTargets
 
@@ -105,14 +102,15 @@ const std::vector<int> Modifier::getTargets(const std::string& op, const Populat
  * This method builds a ModificationRequest srv 
  * For stop operator, the path can be retreived from srv
  * */
-void Modifier::buildModificationRequest(const Population& pop, ramp_msgs::ModificationRequest& result)
+const ramp_msgs::ModificationRequest Modifier::buildModificationRequest(const Population pop) 
 {
+  ramp_msgs::ModificationRequest result;
 
   result.request.op = getOperator();
 
   // Push the target paths onto the modification request
   std::vector<int> targets = getTargets(result.request.op, pop);
-  ROS_INFO("targets.size(): %i", (int)targets.size());
+  //ROS_INFO("targets.size(): %i", (int)targets.size());
   for(unsigned int i=0;i<targets.size();i++) 
   {
     //std::cout<<"\nTarget index: "<<targets.at(i);
@@ -121,26 +119,26 @@ void Modifier::buildModificationRequest(const Population& pop, ramp_msgs::Modifi
         pop.paths_.at(targets.at(i)).buildPathMsg());
   }
 
-  //result.request.orientation = PI/2;
+  result.request.orientation = PI/2;
 
+  return result;
 } // End buildModificationRequest
 
 
 
 
 /** This method performs all the tasks for path modification */
-const std::vector<Path> Modifier::perform(const Population& pop) 
+const std::vector<Path> Modifier::perform(const Population pop) 
 {
-  ROS_INFO("In Modifier::perform");
+  //ROS_INFO("In Modifier::perform");
   std::vector<Path> result;
  
   // Build a modification request srv 
   ros::Time t_b = ros::Time::now();
-  ramp_msgs::ModificationRequest mr;
-  buildModificationRequest(pop, mr); 
-  ROS_INFO("ModificationResult built, pop size: %i # of paths: %i", (int)pop.size(), (int)mr.response.mod_paths.size()); 
+  ramp_msgs::ModificationRequest mr = buildModificationRequest(pop); 
+  //ROS_INFO("ModificationResult built, pop size: %i # of paths: %i", (int)pop.size(), (int)mr.response.mod_paths.size()); 
 
-  ROS_INFO("Requesting modification");
+  //ROS_INFO("Requesting modification");
   // If the request was successful
   if(h_mod_req_->request(mr)) 
   {
@@ -155,6 +153,6 @@ const std::vector<Path> Modifier::perform(const Population& pop)
     }
   } // end inner if 
 
-  ROS_INFO("Exiting Modifier::perform");
+  //ROS_INFO("Exiting Modifier::perform");
   return result;
 }

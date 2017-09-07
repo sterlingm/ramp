@@ -38,7 +38,6 @@ class MotionState {
     const bool equals(const MotionState& ms) const;
 
     const MotionState zero(const uint8_t size) const;
-    void zero();
 
     void setEqual(const MotionState ms);
 

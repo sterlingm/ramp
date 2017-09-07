@@ -19,7 +19,7 @@
 
 enum TrajectoryType {
   ALL_STRAIGHT_SEGMENTS = 0,
-  HYBRID                = 1,
+  PARTIAL_BEZIER        = 1,
   TRANSITION            = 2,
   PREDICTION            = 3
 };

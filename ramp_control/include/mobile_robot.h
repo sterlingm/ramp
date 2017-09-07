@@ -22,7 +22,7 @@ class MobileRobot
   void moveOnTrajectory();
   void moveOnTrajectoryRot(const ramp_msgs::RampTrajectory traj, bool simulation);
   void odomCb(const nav_msgs::Odometry& msg);
-  void updateTrajectory(const ramp_msgs::RampTrajectory& msg); 
+  void updateTrajectory(const ramp_msgs::RampTrajectory msg); 
   void imminentCollisionCb(const std_msgs::Bool msg); 
   void updateCallback(const ros::TimerEvent&);
   void sendTwist(const geometry_msgs::Twist twist) const;
@@ -54,9 +54,6 @@ class MobileRobot
   static const std::string  TOPIC_STR_TWIST;
   static const std::string  TOPIC_STR_IC;
   static const int          ACCELERATION_CONSTANT = 50;
-  
-  std::vector<ros::Duration> t_points_;
-  ros::Time t_prev_traj_;
 
   private:
 
@@ -88,7 +85,6 @@ class MobileRobot
   ramp_msgs::MotionState    prev_motion_state_; 
   ros::Time                 prev_t_;
   ros::Duration             t_immiColl_;
-
 
 };
 

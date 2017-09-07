@@ -79,7 +79,7 @@
 
 
 <!-- Simulation -->
-<node name="stageros" pkg="stage_ros" type="stageros" args="/home/sterlingm/ros_workspace/src/ramp/ramp_launch/launch/world/test2.world" >
+<node name="stageros" pkg="stage_ros" type="stageros" args="/home/mahmoud/NetBeansProjects/ROSProject/ros_ws/src/ramp_launch/launch/world/test2.world" >
   <remap from="/robot_0/odom" to="/robot_0/odometry" />
   <remap from="/robot_1/odom" to="/robot_1/odometry" />
 </node>

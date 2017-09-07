@@ -101,7 +101,7 @@ const ramp_msgs::MotionState Circle::buildMotionState(const ReflexxesData data) 
   ramp_msgs::MotionState result;
 
   
-  //std::cout<<"\ndata.outputParameters->NewPositionVector->VecData[0]: "<<data.outputParameters->NewPositionVector->VecData[0];
+  std::cout<<"\ndata.outputParameters->NewPositionVector->VecData[0]: "<<data.outputParameters->NewPositionVector->VecData[0];
 
   double circleTheta, orientation;
   // Find the orientation around the circle

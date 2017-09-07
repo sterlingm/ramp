@@ -12,7 +12,7 @@
 <node name="obstacle" pkg="ramp_planner" type="obstacle" output="screen" />
 
 <!-- Simulation -->
-<node name="stageros" pkg="stage_ros" type="stageros" args="/home/sterlingm/ros_workspace/src/ramp/ramp_launch/launch/world/single_robot.world" />
+<node name="stageros" pkg="stage_ros" type="stageros" args="/home/annex01lt/NetBeansProjects/ROSProject/ros_ws/src/ramp_launch/launch/world/single_robot.world" />
 <node name="ramp_control" pkg="ramp_control" type="ramp_control" output="screen">
   <remap from="odometry" to="odom" />
   <param name="simulation" value="true" />

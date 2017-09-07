@@ -14,7 +14,7 @@ class RampTrajectory
     ~RampTrajectory() {}
     
     ramp_msgs::RampTrajectory msg_;
-    //Path                      holonomic_path_;
+    Path                      holonomic_path_;
     ramp_msgs::MotionState    ms_prevSP_;
     ramp_msgs::RampTrajectory transitionTraj_;
 
@@ -33,7 +33,7 @@ class RampTrajectory
 
     const trajectory_msgs::JointTrajectoryPoint getPointAtTime(const float t) const;
 
-    void offsetPositions(const MotionState& diff);
+    void offsetPositions(const MotionState diff);
 
   private:
     Utility utility_;

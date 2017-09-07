@@ -21,7 +21,6 @@ public:
 
   // Get Bezier curves over the path
   const std::vector<BezierCurve> bezier(ramp_msgs::Path& p, const bool only_curve);
-  void bezierOOP(ramp_msgs::Path& p, bool only_curve, std::vector<BezierCurve>& result);
 
 
   TrajectoryType type_;
@@ -78,7 +77,7 @@ private:
   void init(const ramp_msgs::TrajectoryRequest req);
 
   // Set the target of the Reflexxes library
-  void setTarget(const ramp_msgs::MotionState& ms);
+  void setTarget(const ramp_msgs::MotionState ms);
   void setMaxV(const double x_dot, const double theta_dot=3.f*PI/4.f);
   //void setMaxV(const double x_dot, const double y_dot, const double theta_dot=3.f*PI/4.f);
 
@@ -91,8 +90,8 @@ private:
 
   // Insert a point to the back of the trajectory
   // and set Reflexxes to reflect the new state
-  void insertPoint(const ramp_msgs::MotionState& ms, ramp_msgs::TrajectoryResponse& res);
-  void insertPoint(const trajectory_msgs::JointTrajectoryPoint& jp, ramp_msgs::TrajectoryResponse& res);
+  void insertPoint(const ramp_msgs::MotionState ms, ramp_msgs::TrajectoryResponse& res);
+  void insertPoint(const trajectory_msgs::JointTrajectoryPoint jp, ramp_msgs::TrajectoryResponse& res);
 
   
 
@@ -105,7 +104,6 @@ private:
 
   // Use Reflexxes to generate a rotation trajectory
   const std::vector<trajectory_msgs::JointTrajectoryPoint> rotate(const double start, const double goal, const double start_v, const double start_a);
-  void rotateOOP(const double start, const double goal, const double start_v, const double start_a, std::vector<trajectory_msgs::JointTrajectoryPoint>& result);
 
   const std::vector<trajectory_msgs::JointTrajectoryPoint> verticalLine(ramp_msgs::MotionState start, ramp_msgs::MotionState goal);
 
@@ -128,7 +126,7 @@ private:
 
   const std::vector<uint8_t> getCurveKPs(const std::vector<BezierCurve> curves) const;
 
-  const bool lastPointClosest(const ramp_msgs::RampTrajectory& traj) const;
+  const bool lastPointClosest(const ramp_msgs::RampTrajectory traj) const;
 
   bool checkSpeed(const ramp_msgs::Path p, const std::vector<uint8_t> i_cs);
 };

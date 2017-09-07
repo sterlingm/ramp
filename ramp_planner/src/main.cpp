@@ -60,7 +60,7 @@ void initStartGoal(const std::vector<float> s, const std::vector<float> g)
 
 void loadObstacleTF()
 {
-  std::ifstream ifile("/home/sterlingm/ros_workspace/src/ramp/ramp_planner/obstacle_tf.txt", std::ios::in);
+  std::ifstream ifile("/home/annex01lt/NetBeansProjects/ROSProject/ros_ws/src/ramp_planner/obstacle_tf.txt", std::ios::in);
 
   if(!ifile.is_open())
   {

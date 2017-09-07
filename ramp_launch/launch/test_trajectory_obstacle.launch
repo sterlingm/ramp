@@ -29,7 +29,7 @@ Change twist messages published to obstacle in main_obstacle_twist (ramp_planner
 
 
 <!-- Simulation -->
-<node name="stageros" pkg="stage_ros" type="stageros" args="/home/sterlingm/ros_workspace/src/ramp/ramp_launch/launch/world/test_trajectory_obstacle.world" /> 
+<node name="stageros" pkg="stage_ros" type="stageros" args="/home/annex01lt/NetBeansProjects/ROSProject/ros_ws/src/ramp_launch/launch/world/test_trajectory_obstacle.world" /> 
 <node name="ramp_control" pkg="ramp_control" type="ramp_control" >
   <remap from="odometry" to="robot_0/odom" />
   <remap from="/cmd_vel" to="/robot_0/cmd_vel" />
