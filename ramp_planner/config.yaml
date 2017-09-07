@@ -1,4 +1,4 @@
-population_size: 4
+population_size: 10
 
 sub_populations: false 
 
@@ -44,8 +44,8 @@ use_start_param: true
 #obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom', '/obstacle_3/odom']
 #obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity', '/obstacle_2/mobile_base/commands/velocity', '/obstacle_3/mobile_base/commands/velocity']
 #obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom']
-obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity']
-obstacle_delays: [0]
+#obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity']
+#obstacle_delays: [0]
 
 # Stage simulator obstacle topics
 # No obstacles

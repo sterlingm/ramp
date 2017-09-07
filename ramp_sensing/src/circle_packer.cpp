@@ -417,7 +417,7 @@ void CirclePacker::detectAttachedCircles(const std::vector<CircleOb*>& cir_obs, 
       // Get R, distance threshold, and distance between circle centers
       R = ci.radius + cj.radius;
       threshold = ci.radius < cj.radius ? R-(scale*ci.radius) : R-(scale*cj.radius);
-      threshold = R + 0.2;
+      threshold = R - 0.1;
 
       d = utility_.positionDistance(ci.center.x, ci.center.y, cj.center.x, cj.center.y);
 
