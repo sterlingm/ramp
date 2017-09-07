@@ -230,6 +230,7 @@ void loadParameters(const ros::NodeHandle& handle)
   else
   {
     ROS_ERROR("Did not find rosparam /costmap_node/costmap/robot_base_frame");
+    robot_base_frame = "map";
   }
 
   if(handle.hasParam("/ramp/population_size"))
@@ -608,7 +609,7 @@ void publishMarkers(const ros::TimerEvent& e)
 
 
   // Create lines for the attachments
-  for(int i=0;i<attachs.size();i++)
+  /*for(int i=0;i<attachs.size();i++)
   {
     //ROS_INFO("i: %i attachs.size(): %i", i, (int)attachs.size());
     visualization_msgs::Marker lineList;
@@ -639,7 +640,7 @@ void publishMarkers(const ros::TimerEvent& e)
       ROS_INFO("lineList.points[%i]: (%f,%f)", j, lineList.points[j].x, lineList.points[j].y);
     }*/
 
-    lineList.color.r = 0.0;
+    /*lineList.color.r = 0.0;
     lineList.color.g = 0.0;
     lineList.color.b = 1.0;
     lineList.color.a = 1.0;
@@ -647,7 +648,7 @@ void publishMarkers(const ros::TimerEvent& e)
     lineList.scale.x = 0.05;
 
     result.markers.push_back(lineList);
-  }
+  }*/
 
 
   //ROS_INFO("texts.size(): %i", (int)texts.size());
