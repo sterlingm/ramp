@@ -1,0 +1,83 @@
+
+\documentclass[12pt]{article}
+\begin{document}
+
+\author{SM}
+\title {RAMP data}
+\date {Sept. 2017}
+
+\maketitle
+
+
+\section {Introduction}
+
+
+\begin{table}[]
+\centering
+\caption{General data}
+\label{my-label}
+\begin{tabular}{|l|l|l|l|}
+\hline
+Population Size & S.C. Rate & C.C. Rate (max) & Runtime \\ \hline
+10              & 15Hz      & 1.2s            & 19.4s   \\ \hline
+\end{tabular}
+\end{table}
+
+
+\begin{table}[]
+\centering
+\caption{Environment data}
+\label{my-label}
+\begin{tabular}{|l|l|l|}
+\hline
+Size        & Number of Obstacles & Obstacle speed \\ \hline
+3.5m x 3.5m & 1                   & $\sim$1.2m/s   \\ \hline
+\end{tabular}
+\end{table}
+
+
+\begin{table}[]
+\centering
+\caption{Execution data}
+\label{my-label}
+\begin{tabular}{|l|l|l|}
+\hline
+Parameter                  & Mean  & Variance \\ \hline
+Switching Trajec Size      & 84    & 9.84     \\ \hline
+Full Trajec Size           & 164   & 12.81    \\ \hline
+Motion Error Displacement  & 0.04m & 0.09     \\ \hline
+Min Distance from Obstacle & 3.04m & 1.06     \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[]
+\centering
+\caption{Cycle data}
+\label{my-label}
+\begin{tabular}{|l|l|l|l|l|l|}
+\hline
+   & Num & Computation Time (ms) & Std. Dev. (ms) & Duration (ms) & Std. Dev. (ms) \\ \hline
+PC & 305 & 29.67                 & 25.93         & 65.1          & 56.59         \\ \hline
+SC & 155 & 20.4                  & 18.5          & 15            & 0             \\ \hline
+CC & 29  & 118.82                & 21.81         & 629.62        & 287.38        \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[]
+\centering
+\caption{Procedure time data}
+\label{my-label}
+\begin{tabular}{|l|l|l|}
+\hline
+                        & Mean (ms) & Std. Dev. (ms) \\ \hline
+Trajectory Generation   & 3.5       & 3.2            \\ \hline
+Trajectory Evaluation   & 4.7       & 10.4           \\ \hline
+Modification            & 7.0       & 4.2            \\ \hline
+Mutation                & 19.41     & 22.75          \\ \hline
+Motion Error Correction & 33.47     & 20.53          \\ \hline
+\end{tabular}
+\end{table}
+
+
+\end{document}
+
