@@ -3248,9 +3248,6 @@ void Planner::doControlCycle()
   RampTrajectory bestT = population_.getBest();
   i_best = population_.calcBestIndex();
 
-  // Record data
-  full_trajectory_.concatenateForce(bestT);
-
   //////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
 
   // Send the best trajectory and set movingOn
@@ -3270,6 +3267,9 @@ void Planner::doControlCycle()
   movingOnCC_             = bestT.getSubTrajectory(t_fixed_cc_);
   movingOnCC_.msg_.curves = bestT.msg_.curves;
   movingOnCC_.msg_.t_start  = ros::Duration(0);
+
+  // Record data
+  full_trajectory_.concatenateForce(movingOn_);
 
   // Evaluate movingOnCC
   evaluateTrajectory(movingOnCC_, false);
