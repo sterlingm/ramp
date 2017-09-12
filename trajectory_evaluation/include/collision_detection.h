@@ -25,6 +25,13 @@ class CollisionDetection
       int   i_obstacle_;
     };  // End QueryResult
 
+    struct QueryResultPacked
+    {
+      bool inner_;
+      bool outer_;
+      double p_max_;
+    };
+
 
     /***** Constructor and Destructor *****/
     CollisionDetection(); 

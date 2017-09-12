@@ -50,12 +50,26 @@ void CollisionDetection::queryPacked(const std::vector<trajectory_msgs::JointTra
     const trajectory_msgs::JointTrajectoryPoint* p_i = &segment[i];
 
     // Compare point to each circle
-    for(int j=0;j<ob.circles.size();j++)
+    // Do inner and outer together 
+    int N = ob.circles.size()/2;
+    for(int j=0;j<ob.circles.size()/2;j++)
     {
-      double dist_threshold = ob.circles[i].radius + robot_r;
-      double dist = sqrt( pow(p_i->positions[0] - ob.circles[j].center.x,2) + pow(p_i->positions[1] - ob.circles[j].center.y,2) );
+      ramp_msgs::Circle inner = ob.circles[j]; 
+      ramp_msgs::Circle outer = ob.circles[j+N];
 
-      if(dist <= dist_threshold)
+      double dist_threshold_inner = inner.radius + robot_r;
+      double dist_inner = sqrt( pow(p_i->positions[0] - inner.center.x,2) + pow(p_i->positions[1] - inner.center.y,2) );
+      
+      double dist_threshold_outer = outer.radius + robot_r;
+      double dist_outer = sqrt( pow(p_i->positions[0] - outer.center.x,2) + pow(p_i->positions[1] - outer.center.y,2) );
+
+      // Check inner circle collision
+      if(dist_inner <= dist_threshold_inner)
+      {
+      }
+      
+      // Check outer circle collision 
+      if(dist_outer <= dist_threshold_outer)
       {
       }
     }
