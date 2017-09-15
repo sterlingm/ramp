@@ -161,12 +161,12 @@ bool CirclePacker::cellInPoly(const Polygon& poly, const cv::Point& cell) const
 {
   for(int i=0;i<poly.normals.size();i++)
   {
-    std::cout<<"\nnormal a: "<<poly.normals[i].a<<" b: "<<poly.normals[i].b<<" c: "<<poly.normals[i].c;
+    //std::cout<<"\nnormal a: "<<poly.normals[i].a<<" b: "<<poly.normals[i].b<<" c: "<<poly.normals[i].c;
     double d = poly.normals[i].a*cell.x + poly.normals[i].b*cell.y + poly.normals[i].c;
-    std::cout<<"\ncell center: "<<cell.x<<", "<<cell.y<<" d: "<<d;
+    //std::cout<<"\ncell center: "<<cell.x<<", "<<cell.y<<" d: "<<d;
     if(d > -0.000001)
     {
-      std::cout<<"\nNot in polygon";
+      //std::cout<<"\nNot in polygon";
       return false;
     }
   }
@@ -294,7 +294,7 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly, double min_r)
       reduced_cells.clear();
       deleteCellsInCir(cells, result[result.size()-1], reduced_cells);
     }
-    ROS_INFO("reduced_cells.size(): %i", (int)reduced_cells.size());
+    //ROS_INFO("reduced_cells.size(): %i", (int)reduced_cells.size());
 
     /*
      *  Recalculate the distance, include existing circles!
@@ -303,13 +303,13 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly, double min_r)
     {
       Cell& cell = reduced_cells[i];
 
-      ROS_INFO("Cell %i: (%i,%i)", i, cell.p.x, cell.p.y);
+      //ROS_INFO("Cell %i: (%i,%i)", i, cell.p.x, cell.p.y);
 
       // Get min distance to polygon edges and set of circles already created
       double min_d=getMinDistToPoly(poly, cell);
       double min_cir=getMinDistToCirs(result, cell);
 
-      ROS_INFO("min_d: %f min_cir: %f", min_d, min_cir);
+      //ROS_INFO("min_d: %f min_cir: %f", min_d, min_cir);
 
       // Set new distance value
       if(min_d < min_cir || min_cir < 0)

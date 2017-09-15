@@ -25,6 +25,7 @@ class CollisionDetection
       int   i_obstacle_;
     };  // End QueryResult
 
+    /* Struct to hold information when querying against a packed obstacle */
     struct QueryResultPacked
     {
       bool inner_;
@@ -46,8 +47,8 @@ class CollisionDetection
     void                        performNum(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const double& robot_radius, const std::vector<double> obstacle_radii, QueryResult& result); 
 
 
-    void performPackedObs(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::PackedObstacle>& packed_obs, const double& robot_radius, QueryResult& result);
-    void queryPacked(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const ramp_msgs::PackedObstacle& ob, const double& traj_start, const double& robot_r, QueryResult& result) const;
+    void performPackedObs(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::PackedObstacle>& packed_obs, const double& robot_radius, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result);
+    void queryPacked(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const ramp_msgs::PackedObstacle& ob, const double& traj_start, const double& robot_r, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result) const;
     
 
     /**

@@ -26,6 +26,7 @@ class Evaluate {
 
     CollisionDetection cd_;
     CollisionDetection::QueryResult qr_;
+    CollisionDetection::QueryResultPacked qrPacked_;
 
     //Information sent by the request
     ramp_msgs::RampTrajectory trajectory_;
@@ -45,6 +46,8 @@ class Evaluate {
 
     std::vector< ros::Duration > t_analy_;
     std::vector< ros::Duration > t_numeric_;
+
+    ramp_msgs::HilbertMap hmap_;
   private:
     Utility utility_;
     bool orientation_infeasible_;

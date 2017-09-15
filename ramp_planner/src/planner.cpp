@@ -112,6 +112,13 @@ const MotionType Planner::findMotionType(const ramp_msgs::Obstacle ob) const
 } // End findMotionType
 
 
+const ramp_msgs::RampTrajectory Planner::getPredictedTrajectory(const ramp_msgs::PackedObstacle ob) const 
+{
+  ramp_msgs::RampTrajectory result;
+
+
+  return result;
+}
 
 
 /** This method returns the predicted trajectory for an obstacle for the future duration d 
@@ -3993,20 +4000,21 @@ void Planner::hilbertMapObsCb(const ramp_msgs::ObstacleList& hmapObs)
    * Build an evaluation request
    */
   // Create trajectories for hmap obstacles
-  for(int i=0;i<hmapObs.packed_obs.size();i++)
+  /*for(int i=0;i<hmapObs.packed_obs.size();i++)
   {
-    RampTrajectory ob_trj = getPredictedTrajectory(hmapObs.obstacles[i]);
+    ROS_INFO("i: %i ob_trajectory_.size(): %i hmapObs.obstacles: %i", i, (int)ob_trajectory_.size(), (int)hmapObs.obstacles.size());
+    RampTrajectory ob_trj = getPredictedTrajectory(hmapObs.packed_obs[i]);
     if(ob_trajectory_.size() < i+1)
     {
       ob_trajectory_.push_back(ob_trj);
-      ob_radii_.push_back(hmapObs.obstacles[i].radius);
+      ob_radii_.push_back(hmapObs.packed_obs[i].radius);
     }
     else
     {
       ob_trajectory_.at(i) = ob_trj;
-      ob_radii_.at(i) = hmapObs.obstacles[i].radius;
+      ob_radii_.at(i) = hmapObs.packed_obs[i].radius;
     }
-  }
+  }*/
  
 
   obs_packed_ = hmapObs.packed_obs;
@@ -4034,6 +4042,8 @@ void Planner::go()
   obs_packed_.clear();
   //sendPopulation();
   //std::cin.get();
+  
+  ROS_INFO("Exiting planner!");
   exit(1);
  
 

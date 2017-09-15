@@ -75,6 +75,18 @@ bool handleRequest(ramp_msgs::EvaluationSrv::Request& reqs,
 } //End handleRequest
 
 
+
+
+void hMapCb(const ramp_msgs::HilbertMap& hmap)
+{
+  ev.hmap_ = hmap;
+}
+
+
+
+
+
+
 void reportData(int sig)
 {
 
@@ -247,6 +259,9 @@ int main(int argc, char** argv) {
  
   // Advertise Service
   ros::ServiceServer service = handle.advertiseService("trajectory_evaluation", handleRequest);
+  
+  // Subscribe to hilbert map
+  ros::Subscriber sub_hmap = handle.subscribe("hilbert_map", 1, &hMapCb);
 
 
   /*

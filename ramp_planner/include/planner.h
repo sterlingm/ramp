@@ -231,6 +231,7 @@ class Planner {
 
     const MotionType findMotionType(const ramp_msgs::Obstacle ob) const;
     const ramp_msgs::RampTrajectory getPredictedTrajectory(const ramp_msgs::Obstacle ob) const;
+    const ramp_msgs::RampTrajectory getPredictedTrajectory(const ramp_msgs::PackedObstacle ob) const;
     const ramp_msgs::Path getObstaclePath(const ramp_msgs::Obstacle ob, const MotionType mt) const;
     
     void sensingCycleCallback     (const ramp_msgs::ObstacleList& msg);

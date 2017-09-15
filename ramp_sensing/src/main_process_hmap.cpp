@@ -274,6 +274,7 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
       ob_cirs[i][j].center.y = (ob_cirs[i][j].center.y * hmap.map.info.resolution) + hmap.map.info.origin.position.y;
       ob_cirs[i][j].radius *= hmap.map.info.resolution;
     }
+
     // Create PackedObstacle object
     PackedObstacle pOb(ob_cirs[i]);
     hmap_obs.packed_obs.push_back(pOb.msg_);

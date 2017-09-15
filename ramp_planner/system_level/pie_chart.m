@@ -1,7 +1,7 @@
-fe_mean = mean(fe);
-re_mean = mean(re);
+fe_mean = mean(data_all_fe);
+re_mean = mean(data_all_re);
 tl_mean = mean(tl);
-ic_st_mean = mean(ic_st);
+ic_st_mean = mean(data_all_ic_st);
 ic_oc_mean = mean(ic_oc);
 
 fe_pie_mean = fe_mean - re_mean;

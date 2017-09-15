@@ -28,21 +28,24 @@ void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory,
 }
 
 
-void CollisionDetection::performPackedObs(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::PackedObstacle>& obs, const double& robot_r, QueryResult& result)
+void CollisionDetection::performPackedObs(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::PackedObstacle>& obs, const double& robot_r, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result)
 {
-  result.collision_ = false;
   for(uint8_t i=0;i<obs.size();i++)
   {
-    queryPacked(trajectory.trajectory.points, obs[i], trajectory.t_start.toSec(), robot_r, result);   
+    queryPacked(trajectory.trajectory.points, obs[i], trajectory.t_start.toSec(), robot_r, hmap, result);
   }
 }
 
 
 
-void CollisionDetection::queryPacked(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const ramp_msgs::PackedObstacle& ob, const double& traj_start, const double& robot_r, QueryResult& result) const
+void CollisionDetection::queryPacked(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const ramp_msgs::PackedObstacle& ob, const double& traj_start, const double& robot_r, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result) const
 {
 
   double t_start = segment[0].time_from_start.toSec();
+
+  result.p_max_ = 0;
+
+  std::vector<int> p_values;
 
   int i=0;
   for(int i=0;i<segment.size();i++)
@@ -51,31 +54,41 @@ void CollisionDetection::queryPacked(const std::vector<trajectory_msgs::JointTra
 
     // Compare point to each circle
     // Do inner and outer together 
-    int N = ob.circles.size()/2;
-    for(int j=0;j<ob.circles.size()/2;j++)
+    int N = 1;
+    for(int j=0;j<ob.circles.size()-1;j+=2)
     {
       ramp_msgs::Circle inner = ob.circles[j]; 
       ramp_msgs::Circle outer = ob.circles[j+N];
+      ROS_INFO("Inner center: (%f,%f) outer center: (%f,%f)", inner.center.x, inner.center.y, outer.center.x, outer.center.y);
+      ROS_INFO("Inner radius: %f outer radius: %f", inner.radius, outer.radius);
 
       double dist_threshold_inner = inner.radius + robot_r;
       double dist_inner = sqrt( pow(p_i->positions[0] - inner.center.x,2) + pow(p_i->positions[1] - inner.center.y,2) );
-      
+
       double dist_threshold_outer = outer.radius + robot_r;
       double dist_outer = sqrt( pow(p_i->positions[0] - outer.center.x,2) + pow(p_i->positions[1] - outer.center.y,2) );
 
-      // Check inner circle collision
-      if(dist_inner <= dist_threshold_inner)
-      {
-      }
-      
-      // Check outer circle collision 
-      if(dist_outer <= dist_threshold_outer)
-      {
-      }
-    }
+      ROS_INFO("dist_threshold_inner: %f dist_inner: %f dist_threshold_outer: %f dist_outer: %f", dist_threshold_inner, dist_inner, dist_threshold_outer, dist_outer);
 
-    i++;
-  }
+      // Check inner circle collision
+      bool inner_coll = dist_inner <= dist_threshold_inner;
+      bool outer_coll = dist_outer <= dist_threshold_outer;
+      if(inner_coll || outer_coll)
+      {
+        ROS_INFO("inner_coll: %s outer_coll: %s", inner_coll ? "True" : "False", outer_coll ? "True" : "False");
+        // Get the p(x) value on the hmap
+        int i_r = (p_i->positions[1]-hmap.map.info.origin.position.y) / hmap.map.info.resolution;
+        int i_c = (p_i->positions[0]-hmap.map.info.origin.position.x) / hmap.map.info.resolution;
+        ROS_INFO("p: (%f,%f) i_r: %i i_c: %i", p_i->positions[0], p_i->positions[1], i_r, i_c);
+        ROS_INFO("origin: %f %f", hmap.map.info.origin.position.x, hmap.map.info.origin.position.y);
+
+        int i = (i_r * hmap.map.info.width) + i_c;
+        ROS_INFO("i: %i hmap[%i]: %i", i, i, hmap.map.data[i]);
+
+        p_values.push_back(hmap.map.data[i]);
+      }
+    } // end for
+  } // end outer for
 }
 
 

@@ -108,7 +108,7 @@ void Evaluate::performFeasibilityHmap(ramp_msgs::EvaluationRequest& er)
    ****************************************************************************************************
    */
   std::vector<ramp_msgs::PackedObstacle> obs = er.packed_obs;
-  cd_.performPackedObs(er.trajectory, obs, er.robot_radius, qr_);
+  cd_.performPackedObs(er.trajectory, obs, er.robot_radius, hmap_, qrPacked_);
 
   // Do collision against inner radii
   for(int i=0;i<er.obstacle_trjs.size();i++)
@@ -116,7 +116,7 @@ void Evaluate::performFeasibilityHmap(ramp_msgs::EvaluationRequest& er)
     ROS_INFO("er.obstacle_radii[%i]: %f", i, er.obstacle_radii[i]);
     ROS_INFO("er.obstacle_trjs[%i]: %s", i, utility_.toString(er.obstacle_trjs[i]).c_str());
   }
-  
+ 
 
   // Do collision against outer radii
   
