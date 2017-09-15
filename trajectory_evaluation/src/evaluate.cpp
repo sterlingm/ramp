@@ -60,6 +60,12 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
     //ROS_INFO("Requesting fitness!");
     performFitness(req.trajectory, req.offset, res.fitness);
   }
+  
+
+  if(req.init_eval)
+  {
+    performFitnessHmap(req.trajectory, qrPacked_.p_max_, res.fitness);
+  }
   ////ROS_INFO("performFitness: %f", (ros::Time::now()-t_start).toSec());
 }
 
@@ -126,6 +132,15 @@ void Evaluate::performFeasibilityHmap(ramp_msgs::EvaluationRequest& er)
 }
 
 
+
+void Evaluate::performFitnessHmap(ramp_msgs::RampTrajectory& trj, const int& p_max, double& result)
+{
+  double perc = p_max / 100.0;
+
+  double cost = Q_coll_ * perc;  
+
+  result = cost > 0 ? 1.0 / cost : 0;
+}
 
 /** This method computes the fitness of the trajectory_ member */
 void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offset, double& result) 

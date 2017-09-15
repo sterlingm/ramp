@@ -295,13 +295,20 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
   // For each PackedObstacle, make markers for each circle
   for(int i=0;i<hmap_obs.packed_obs.size();i++)
   {
-    for(int j=0;j<hmap_obs.packed_obs[i].circles.size();j++)
+    // Size of circle vector will change so we need to store old size
+    int N = hmap_obs.packed_obs[i].circles.size();
+    for(int j=0;j<N;j++)
     {
       inner_radii.markers.push_back(getMarker(hmap_obs.packed_obs[i].circles[j], i*j));
       
       // Increase radius for outer circle
-      hmap_obs.packed_obs[i].circles[j].radius += sigma;
-      outer_radii.markers.push_back(getMarker(hmap_obs.packed_obs[i].circles[j], pow(i*j+5,2)));
+      ramp_msgs::Circle inflated = hmap_obs.packed_obs[i].circles[j];
+      inflated.radius += sigma;
+      
+      // Push that circle onto PackedOb vector
+      hmap_obs.packed_obs[i].circles.push_back(inflated);
+      
+      outer_radii.markers.push_back(getMarker(inflated, pow(i*j+5,2)));
     }
   }
   ROS_INFO("Done creating Obstacle objects");

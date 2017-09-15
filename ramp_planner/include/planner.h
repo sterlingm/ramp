@@ -141,7 +141,7 @@ class Planner {
     ros::Timer sendPopTimer_;
     ros::Time t_prevSendPop_;
     void sendPopulationCb(const ros::TimerEvent& t);
-    void sendPopulation();
+    void sendPopulation(const double t=-1.0);
     void displayTrajectory(const ramp_msgs::RampTrajectory traj) const;
     void buildLineList(const RampTrajectory& trajec, int id, visualization_msgs::Marker& result) const;
 

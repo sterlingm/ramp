@@ -1723,6 +1723,9 @@ void Planner::seedPopulation()
   /**** Create the Paths ****/
   ramp_msgs::KnotPoint kp;
   
+  /*
+   * Straight line to goal
+   */
   double theta = start_.msg_.positions[2];
   double x = start_.msg_.positions[0] + cos(theta);
   double y = start_.msg_.positions[1] + sin(theta);
@@ -1735,26 +1738,14 @@ void Planner::seedPopulation()
   kp.motionState.velocities.push_back(start_.msg_.velocities[1]);
   kp.motionState.velocities.push_back(0);
   
-  ramp_msgs::KnotPoint kp1;
-  
-  kp1.motionState.positions.push_back(3.);
-  kp1.motionState.positions.push_back(0.);
-  kp1.motionState.positions.push_back(PI/4);
-  
-  kp1.motionState.velocities.push_back(0);
-  kp1.motionState.velocities.push_back(0);
-  kp1.motionState.velocities.push_back(0);
-
   std::vector<KnotPoint> all;
   all.push_back(start_);
-  all.push_back(kp);
-  //all.push_back(kp1);
   all.push_back(goal_);
 
   Path p1(all);
 
 
-  /*ramp_msgs::KnotPoint kp2;
+  ramp_msgs::KnotPoint kp2;
   
   kp2.motionState.positions.push_back(0.);
   kp2.motionState.positions.push_back(3.);
@@ -1771,7 +1762,7 @@ void Planner::seedPopulation()
 
   Path p2(all2);
 
-  ramp_msgs::KnotPoint kp3;
+  /*ramp_msgs::KnotPoint kp3;
   
   kp3.motionState.positions.push_back(2.f);
   kp3.motionState.positions.push_back(0.f);
@@ -1792,7 +1783,7 @@ void Planner::seedPopulation()
 
   std::vector<Path> paths;
   paths.push_back(p1);
-  //paths.push_back(p2);
+  paths.push_back(p2);
   //paths.push_back(p3);
   /************************************/
 
@@ -1805,7 +1796,7 @@ void Planner::seedPopulation()
     requestTrajectory(paths.at(i), trajec);
     evaluateTrajectory(trajec);
     ////ROS_INFO("Seeded trajec: %s", trajec.toString().c_str());
-    population_.replace(0, trajec);
+    population_.replace(i, trajec);
     //int index = population_.add(trajec); 
     /*if(index > -1)
     {
@@ -3543,7 +3534,7 @@ void Planner::sendBest() {
 
 
 /** Send the whole population of trajectories to the trajectory viewer */
-void Planner::sendPopulation()
+void Planner::sendPopulation(const double t)
 {
   //ROS_INFO("In Planner::sendPopulation");
   //ROS_INFO("Time since last sendPopulation(): %f", (ros::Time::now() - t_prevSendPop_).toSec());
@@ -3566,6 +3557,10 @@ void Planner::sendPopulation()
   {
     visualization_msgs::Marker pop_trj;
     buildLineList(population_.trajectories_[i], ++id_line_list_, pop_trj);
+    if(t > -1)
+    {
+      pop_trj.lifetime = ros::Duration(t);
+    }
     ma.markers.push_back(pop_trj);
   }
   for(int i=0;i<ob_trajectory_.size();i++)
@@ -3995,28 +3990,9 @@ void Planner::goTest(float sec)
 void Planner::hilbertMapObsCb(const ramp_msgs::ObstacleList& hmapObs)
 {
   ROS_INFO("In Planner::hilbertMapObsCb");
-
-  /*
-   * Build an evaluation request
-   */
-  // Create trajectories for hmap obstacles
-  /*for(int i=0;i<hmapObs.packed_obs.size();i++)
-  {
-    ROS_INFO("i: %i ob_trajectory_.size(): %i hmapObs.obstacles: %i", i, (int)ob_trajectory_.size(), (int)hmapObs.obstacles.size());
-    RampTrajectory ob_trj = getPredictedTrajectory(hmapObs.packed_obs[i]);
-    if(ob_trajectory_.size() < i+1)
-    {
-      ob_trajectory_.push_back(ob_trj);
-      ob_radii_.push_back(hmapObs.packed_obs[i].radius);
-    }
-    else
-    {
-      ob_trajectory_.at(i) = ob_trj;
-      ob_radii_.at(i) = hmapObs.packed_obs[i].radius;
-    }
-  }*/
  
 
+  // Set obstacles
   obs_packed_ = hmapObs.packed_obs;
   //evaluatePopulation(true);
   
@@ -4036,11 +4012,13 @@ void Planner::go()
   initPopulation();
   ROS_INFO("Population initialized");
   ROS_INFO("evalHMap: %s", evalHMap ? "True" : "False");
+
+  seedPopulation();
   
   evaluatePopulation(evalHMap);
   ROS_INFO("Initial population evaluated");
   obs_packed_.clear();
-  //sendPopulation();
+  sendPopulation(10.0);
   //std::cin.get();
   
   ROS_INFO("Exiting planner!");

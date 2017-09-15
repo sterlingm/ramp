@@ -30,7 +30,7 @@ class CollisionDetection
     {
       bool inner_;
       bool outer_;
-      double p_max_;
+      int p_max_;
     };
 
 
