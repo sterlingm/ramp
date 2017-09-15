@@ -3552,6 +3552,8 @@ void Planner::sendPopulation(const double t)
   /*
    * Send to rviz
    */
+
+  // Population
   visualization_msgs::MarkerArray ma;
   for(int i=0;i<population_.trajectories_.size();i++)
   {
@@ -3563,6 +3565,32 @@ void Planner::sendPopulation(const double t)
     }
     ma.markers.push_back(pop_trj);
   }
+
+  /*
+   * Go through and set the colors of the trajectories in the population
+   */
+  double max_fit = population_.trajectories_[population_.calcBestIndex()].msg_.fitness;
+  for(int i=0;i<population_.size();i++)
+  {
+    double v = population_.trajectories_[i].msg_.fitness / max_fit;
+    double ratio = (2.0*v);
+    ROS_INFO("Fitness: %f v: %f ratio: %f", population_.trajectories_[i].msg_.fitness, v, ratio);
+
+    double b = 1-ratio > 0 ? 1-ratio : 0;
+    double r = ratio-1 > 0 ? ratio-1 : 0;
+    double g = 1 - b - r;
+
+    ROS_INFO("r: %f g: %f b: %f", r, g, b);
+
+    ma.markers[i].color.r = r;
+    ma.markers[i].color.g = g;
+    ma.markers[i].color.b = b;
+  }
+
+
+
+
+  // Obstacle trajectories
   for(int i=0;i<ob_trajectory_.size();i++)
   {
     visualization_msgs::Marker ob_trj;

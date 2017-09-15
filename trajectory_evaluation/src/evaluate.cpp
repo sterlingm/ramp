@@ -64,7 +64,9 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
 
   if(req.init_eval)
   {
-    performFitnessHmap(req.trajectory, qrPacked_.p_max_, res.fitness);
+    double fit;
+    performFitnessHmap(req.trajectory, qrPacked_.p_max_, fit);
+    res.fitness + fit;
   }
   ////ROS_INFO("performFitness: %f", (ros::Time::now()-t_start).toSec());
 }
