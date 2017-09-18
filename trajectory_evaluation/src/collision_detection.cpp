@@ -44,10 +44,11 @@ void CollisionDetection::queryPacked(const std::vector<trajectory_msgs::JointTra
   double t_start = segment[0].time_from_start.toSec();
 
   result.p_max_ = 0;
+  result.inner_ = false;
 
   std::vector<int> p_values;
 
-  int i=0;
+  ROS_INFO("segment.size(): %i", (int)segment.size());
   for(int i=0;i<segment.size();i++)
   {
     const trajectory_msgs::JointTrajectoryPoint* p_i = &segment[i];
@@ -56,39 +57,45 @@ void CollisionDetection::queryPacked(const std::vector<trajectory_msgs::JointTra
     // Do inner and outer together 
     for(int j=0;j<ob.circles.size();j++)
     {
-      ramp_msgs::Circle inner = ob.circles[j]; 
-      ROS_INFO("Inner center: (%f,%f)", inner.center.x, inner.center.y);
-      ROS_INFO("Inner radius: %f", inner.radius);
+      ramp_msgs::Circle cir = ob.circles[j]; 
 
-      double dist_threshold_inner = inner.radius + robot_r;
-      double dist_inner = sqrt( pow(p_i->positions[0] - inner.center.x,2) + pow(p_i->positions[1] - inner.center.y,2) );
+      double dist_threshold = cir.radius + robot_r;
+      double dist = sqrt( pow(p_i->positions[0] - cir.center.x,2) + pow(p_i->positions[1] - cir.center.y,2) );
 
-      ROS_INFO("dist_threshold_inner: %f dist_inner: %f", dist_threshold_inner, dist_inner);
 
       // Check inner circle collision
-      bool inner_coll = dist_inner <= dist_threshold_inner;
-      if(inner_coll)
+      bool coll = dist <= dist_threshold;
+      if(coll)
       {
-        ROS_INFO("inner_coll: %s", inner_coll ? "True" : "False");
+        ROS_INFO("coll: %s", coll ? "True" : "False");
+        ROS_INFO("Inner center: (%f,%f)", cir.center.x, cir.center.y);
+        ROS_INFO("Inner radius: %f", cir.radius);
+        ROS_INFO("dist_threshold: %f dist: %f", dist_threshold, dist);
         // Get the p(x) value on the hmap
         int i_r = (p_i->positions[1]-hmap.map.info.origin.position.y) / hmap.map.info.resolution;
         int i_c = (p_i->positions[0]-hmap.map.info.origin.position.x) / hmap.map.info.resolution;
-        ROS_INFO("p: (%f,%f) i_r: %i i_c: %i", p_i->positions[0], p_i->positions[1], i_r, i_c);
-        ROS_INFO("origin: %f %f", hmap.map.info.origin.position.x, hmap.map.info.origin.position.y);
+        //ROS_INFO("p: (%f,%f) i_r: %i i_c: %i", p_i->positions[0], p_i->positions[1], i_r, i_c);
+        //ROS_INFO("origin: %f %f", hmap.map.info.origin.position.x, hmap.map.info.origin.position.y);
 
-        int i = (i_r * hmap.map.info.width) + i_c;
-        ROS_INFO("i: %i hmap[%i]: %i", i, i, hmap.map.data[i]);
+        int i_data = (i_r * hmap.map.info.width) + i_c;
+        //ROS_INFO("i_data: %i hmap[%i]: %i", i_data, i_data, hmap.map.data[i_data]);
 
-        p_values.push_back(hmap.map.data[i]);
+        p_values.push_back(hmap.map.data[i_data]);
 
         // If an inner circle
-        if(i < ob.circles.size()/2)
+        if(j < ob.circles.size()/2)
         {
-          //result.collision_ = true;
+          //ROS_INFO("j: %i ob.circles.size()/2: %i", j, (int)ob.circles.size()/2);
         }
+        result.inner_ = true;
       }
     } // end for
   } // end outer for
+  
+  if(!result.inner_)
+  {
+    ROS_INFO("NO INNER COLLISION");
+  }
 
 
   // Grab the high p_value

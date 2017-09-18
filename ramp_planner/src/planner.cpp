@@ -3572,15 +3572,15 @@ void Planner::sendPopulation(const double t)
   double max_fit = population_.trajectories_[population_.calcBestIndex()].msg_.fitness;
   for(int i=0;i<population_.size();i++)
   {
+    // v is the normalized fitness value
     double v = population_.trajectories_[i].msg_.fitness / max_fit;
     double ratio = (2.0*v);
-    ROS_INFO("Fitness: %f v: %f ratio: %f", population_.trajectories_[i].msg_.fitness, v, ratio);
 
-    double b = 1-ratio > 0 ? 1-ratio : 0;
-    double r = ratio-1 > 0 ? ratio-1 : 0;
+    double b = ratio-1 > 0 ? ratio-1 : 0;
+    double r = 1-ratio > 0 ? 1-ratio : 0;
     double g = 1 - b - r;
-
-    ROS_INFO("r: %f g: %f b: %f", r, g, b);
+    
+    ROS_INFO("Feasible: %s Fitness: %f v: %f ratio: %f r: %f g: %f b: %f", population_.trajectories_[i].msg_.feasible ? "True" : "False", population_.trajectories_[i].msg_.fitness, v, ratio, r, g, b);
 
     ma.markers[i].color.r = r;
     ma.markers[i].color.g = g;
@@ -4046,7 +4046,7 @@ void Planner::go()
   evaluatePopulation(evalHMap);
   ROS_INFO("Initial population evaluated");
   obs_packed_.clear();
-  sendPopulation(10.0);
+  sendPopulation(20.0);
   //std::cin.get();
   
   ROS_INFO("Exiting planner!");
