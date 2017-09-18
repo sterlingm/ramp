@@ -24,7 +24,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   /*
    * Compute feasibility
    */
-  if(req.init_eval)
+  if(req.hmap_eval)
   {
     performFeasibilityHmap(req);
   }
@@ -55,11 +55,25 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   /*
    * Compute fitness
    */
-  if(req.full_eval)
+  // Check what kind of evaluation we are doing
+  if(req.hmap_eval)
+  {
+    double fit;
+    performFitnessHmap(req.trajectory, qrPacked_.p_max_, fit);
+    ROS_INFO("fit: %f", fit);
+    
+    res.fitness = fit;
+    ROS_INFO("qrPacked_.p_max: %i fit: %f", qrPacked_.p_max_, fit);
+  }
+  else if(req.full_eval)
   {
     //ROS_INFO("Requesting fitness!");
-    performFitness(req.trajectory, req.offset, req.init_eval, res.fitness);
+    performFitness(req.trajectory, req.offset, req.hmap_eval, res.fitness);
   }
+
+
+
+
   
   ////ROS_INFO("performFitness: %f", (ros::Time::now()-t_start).toSec());
 }
@@ -296,23 +310,6 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
       penalties += Q_kine_ * (delta_theta / PI);
     }
   }
-
-  /*
-   * Consider Hmap obstacles
-   */
-  if(hmap)
-  {
-    double fit;
-    performFitnessHmap(trj, qrPacked_.p_max_, fit);
-    ROS_INFO("fit: %f", fit);
-
-    double hmap_weight = 10;
-    cost += hmap_weight * fit;
-    ROS_INFO("qrPacked_.p_max: %i fit: %f", qrPacked_.p_max_, fit);
-  }
-
-
-
 
   //////ROS_INFO("cost: %f penalties: %f", cost, penalties);
   result = (1. / (cost + penalties));

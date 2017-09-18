@@ -1105,7 +1105,7 @@ void Planner::buildEvaluationSrv(std::vector<RampTrajectory>& trajecs, ramp_msgs
   {
     ramp_msgs::EvaluationRequest req;
     buildEvaluationRequest(trajecs[i], req);
-    req.init_eval = hmap;
+    req.hmap_eval = hmap;
     srv.request.reqs.push_back(req);
   }
 }
