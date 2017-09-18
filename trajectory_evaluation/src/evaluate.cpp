@@ -58,21 +58,9 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   if(req.full_eval)
   {
     //ROS_INFO("Requesting fitness!");
-    performFitness(req.trajectory, req.offset, res.fitness);
+    performFitness(req.trajectory, req.offset, req.init_eval, res.fitness);
   }
   
-
-  if(req.init_eval)
-  {
-    double fit;
-    performFitnessHmap(req.trajectory, qrPacked_.p_max_, fit);
-    double cost = 1.0 / res.fitness;
-    ROS_INFO("cost: %f", cost);
-    cost += (10.0*fit);
-    res.fitness = 1.0 / cost;
-    res.feasible = !qrPacked_.inner_;
-    ROS_INFO("qrPacked_.p_max: %i fit: %f", qrPacked_.p_max_, fit);
-  }
   ////ROS_INFO("performFitness: %f", (ros::Time::now()-t_start).toSec());
 }
 
@@ -149,8 +137,77 @@ void Evaluate::performFitnessHmap(ramp_msgs::RampTrajectory& trj, const int& p_m
   result = cost > 0 ? 1.0 / cost : 1.00;
 }
 
+
+
+void Evaluate::getEstimatedRemainingTime(ramp_msgs::RampTrajectory& trj, const double& offset, double& result) const
+{
+  // p = last non-holonomic point on trajectory
+  trajectory_msgs::JointTrajectoryPoint p = trj.trajectory.points.at(trj.trajectory.points.size()-1);
+  ////////ROS_INFO("p: %s", utility_.toString(p).c_str());
+
+  // Find knot point index on holonomic path where non-holonomic segment ends
+  uint16_t i_end=0;
+  for(uint16_t i=0;i<trj.holonomic_path.points.size();i++)
+  {
+    ////////ROS_INFO("i: %i trj.holonomic_path.points.size(): %i", (int)i, (int)trj.holonomic_path.points.size());
+    double dist = utility_.positionDistance(trj.holonomic_path.points[i].motionState.positions, p.positions);
+
+    //ROS_INFO("trj.holonomic_path[%i]: %s", (int)i, utility_.toString(trj.holonomic_path.points[i].motionState).c_str());
+    //ROS_INFO("dist: %f", dist);
+    //ROS_INFO("offset: %f", offset);
+
+    // Account for some offset
+    if( dist*dist < (0.2 + offset) )
+    {
+      i_end = i; 
+      break;
+    }
+  } // end for
+  
+  ////ROS_INFO("i_end: %i", (int)i_end);
+  ////ROS_INFO("trj.holonomic_path.points.size(): %i", (int)trj.holonomic_path.points.size());
+
+  /*
+   * Estimate time needed for remaining segments
+   */
+  // For each segment in remaining holonomic path,
+  // accumulate the distance and orientation change needed for remaining segment
+  double dist=0;
+  double delta_theta=0;
+  double last_theta = p.positions[2];
+  for(uint8_t i=i_end;i<trj.holonomic_path.points.size()-1;i++)
+  {
+    ////////ROS_INFO("i: %i", (int)i);
+    dist += utility_.positionDistance(trj.holonomic_path.points[i].motionState.positions, trj.holonomic_path.points[i+1].motionState.positions);
+    
+    double theta = utility_.findAngleFromAToB(trj.holonomic_path.points[i].motionState.positions, trj.holonomic_path.points[i+1].motionState.positions);
+    
+    delta_theta += fabs(utility_.findDistanceBetweenAngles(last_theta, theta));
+    
+    last_theta = theta;
+  }
+  ////ROS_INFO("dist: %f delta_theta: %f", dist, delta_theta);
+
+  // Set velocity values
+  double max_v=0.25/2;
+  double max_w=PI/8.f;
+
+  // Estimate how long to execute positional and angular displacements based on max velocity
+  double estimated_linear   = dist / max_v;
+  double estimated_rotation = delta_theta / max_w;
+
+  ////ROS_INFO("estimated_linear: %f estimated_rotation: %f", estimated_linear, estimated_rotation);
+
+  /*
+   * Set cost variables
+   */
+  result = estimated_linear + estimated_rotation;
+}
+
+
+
 /** This method computes the fitness of the trajectory_ member */
-void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offset, double& result) 
+void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offset, bool hmap, double& result) 
 {
   ////ROS_INFO("In Evaluate::performFitness");
   ros::Time t_start = ros::Time::now();
@@ -162,6 +219,10 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
   {
     ////ROS_INFO("In if(feasible)");
     
+    /*
+     * Set cost variables
+     */
+
     // Get total time to execute trajectory
     double T = trj.trajectory.points.at(trj.trajectory.points.size()-1).time_from_start.toSec();
 
@@ -169,76 +230,17 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
      * Trajectory point generation ends at the end of the non-holonomic segment
      * For the remaining segments, estimate the time and orientation change needed to execute them
      */
-
-    // p = last non-holonomic point on trajectory
-    trajectory_msgs::JointTrajectoryPoint p = trj.trajectory.points.at(trj.trajectory.points.size()-1);
-    ////////ROS_INFO("p: %s", utility_.toString(p).c_str());
-
-    // Find knot point index on holonomic path where non-holonomic segment ends
-    uint16_t i_end=0;
-    for(uint16_t i=0;i<trj.holonomic_path.points.size();i++)
-    {
-      ////////ROS_INFO("i: %i trj.holonomic_path.points.size(): %i", (int)i, (int)trj.holonomic_path.points.size());
-      double dist = utility_.positionDistance(trj.holonomic_path.points[i].motionState.positions, p.positions);
-
-      //ROS_INFO("trj.holonomic_path[%i]: %s", (int)i, utility_.toString(trj.holonomic_path.points[i].motionState).c_str());
-      //ROS_INFO("dist: %f", dist);
-      //ROS_INFO("offset: %f", offset);
-
-      // Account for some offset
-      if( dist*dist < (0.2 + offset) )
-      {
-        i_end = i; 
-        break;
-      }
-    } // end for
-    
-    ////ROS_INFO("i_end: %i", (int)i_end);
-    ////ROS_INFO("trj.holonomic_path.points.size(): %i", (int)trj.holonomic_path.points.size());
-
-    /*
-     * Estimate time needed for remaining segments
-     */
-    // For each segment in remaining holonomic path,
-    // accumulate the distance and orientation change needed for remaining segment
-    double dist=0;
-    double delta_theta=0;
-    double last_theta = p.positions[2];
-    for(uint8_t i=i_end;i<trj.holonomic_path.points.size()-1;i++)
-    {
-      ////////ROS_INFO("i: %i", (int)i);
-      dist += utility_.positionDistance(trj.holonomic_path.points[i].motionState.positions, trj.holonomic_path.points[i+1].motionState.positions);
-      
-      double theta = utility_.findAngleFromAToB(trj.holonomic_path.points[i].motionState.positions, trj.holonomic_path.points[i+1].motionState.positions);
-      
-      delta_theta += fabs(utility_.findDistanceBetweenAngles(last_theta, theta));
-      
-      last_theta = theta;
-    }
-    ////ROS_INFO("dist: %f delta_theta: %f", dist, delta_theta);
-
-    // Set velocity values
-    double max_v=0.25/2;
-    double max_w=PI/8.f;
-
-    // Estimate how long to execute positional and angular displacements based on max velocity
-    double estimated_linear   = dist / max_v;
-    double estimated_rotation = delta_theta / max_w;
-
-    ////ROS_INFO("estimated_linear: %f estimated_rotation: %f", estimated_linear, estimated_rotation);
-
-    /*
-     * Set cost variables
-     */
-    T += (estimated_linear + estimated_rotation);
+    double estimatedRemaining;
+    getEstimatedRemainingTime(trj, offset, estimatedRemaining);
+    T += estimatedRemaining;
 
     // Orientation
     double A = orientation_.perform(trj);
 
     // Minimum distance to any obstacle
     double D = cd_.min_dist_;
-    
-    //ROS_INFO("T: %f A: %f D: %f", T, A, D);
+
+    ROS_INFO("T: %f A: %f D: %f", T, A, D);
 
     // Update normalization for Time if necessary
     if(T > T_norm_)
@@ -250,16 +252,16 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     T /= T_norm_;
     A /= A_norm_;
     D /= D_norm_;
-    
+
     //ROS_INFO("Normalized terms T: %f A: %f D: %f", T, A, D);
 
     // Weight terms
     T *= T_weight_;
     A *= A_weight_;
     D *= D_weight_;
-    
+
     //ROS_INFO("Weighted terms T: %f A: %f D: %f", T, A, D);
-    
+
     // Compute overall cost
     cost = T + A + (1.f/D);
   }
@@ -294,6 +296,23 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
       penalties += Q_kine_ * (delta_theta / PI);
     }
   }
+
+  /*
+   * Consider Hmap obstacles
+   */
+  if(hmap)
+  {
+    double fit;
+    performFitnessHmap(trj, qrPacked_.p_max_, fit);
+    ROS_INFO("fit: %f", fit);
+
+    double hmap_weight = 10;
+    cost += hmap_weight * fit;
+    ROS_INFO("qrPacked_.p_max: %i fit: %f", qrPacked_.p_max_, fit);
+  }
+
+
+
 
   //////ROS_INFO("cost: %f penalties: %f", cost, penalties);
   result = (1. / (cost + penalties));
