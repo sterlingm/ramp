@@ -22,6 +22,9 @@
 <!-- map->odom transform -->
 <node name="pub_map_odom" pkg="ramp_planner" type="pub_map_odom" output="screen" />
 
+<!-- Path modification -->
+<node name="path_modification" pkg="path_modification" type="path_modification" />
+
 <!-- Planner -->
 <node name="ramp_planner" pkg="ramp_planner" type="ramp_planner" output="screen" />
 

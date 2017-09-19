@@ -307,6 +307,12 @@ const bool Population::canReplace(const RampTrajectory& rt, const int& i) const
       return false;
     }
   } // end if sub-pops are being used
+
+  // Leads to infinite loop...
+  if(rt.msg_.fitness < trajectories_[i].msg_.fitness)
+  {
+    return false;
+  }
   
   //ROS_INFO("Returning true");
   //ROS_INFO("Exiting Population::canReplace");
@@ -360,9 +366,9 @@ const int Population::getReplacementID(const RampTrajectory& rt) const
 /** This method adds a trajectory to the population. 
  *  If the population is full, a random trajectory (that isn't the best one) is replaced
  *  Returns the index that the trajectory is added at */
-const int Population::add(const RampTrajectory& rt) 
+const int Population::add(const RampTrajectory& rt, bool forceMin) 
 {
-  ////ROS_INFO("In Population::add");
+  ROS_INFO("In Population::add");
   /*//ROS_INFO("Pop: %s", toString().c_str());
   //ROS_INFO("rt: %s", rt.toString().c_str());
   //ROS_INFO("Pop best id: %i", calcBestIndex());*/
@@ -380,12 +386,21 @@ const int Population::add(const RampTrajectory& rt)
   // If it's not full, simply push back
   if(isSubPopulation_ || trajectories_.size() < maxSize_) 
   {
+    //ROS_INFO("In isSubPopulation_ || trajectories_.size() < maxSize_");
     trajectories_.push_back (rt);  
     paths_.push_back        (rt.msg_.holonomic_path);
     
     ////ROS_INFO("In if isSubPopulation_ || trajectories_.size() < maxSize_");
     //////ROS_INFO("Exiting Population::add");
     return trajectories_.size()-1;
+  }
+
+  // Else if we are forcing it to replace the min traj
+  else if(forceMin)
+  {
+    int i_min = calcWorstIndex();
+    ROS_INFO("Trajectory to replace: %s", trajectories_[i_min].toString().c_str());
+    replace(i_min, rt);
   }
 
   // If full, replace a trajectory
@@ -411,7 +426,7 @@ const int Population::add(const RampTrajectory& rt)
   ////ROS_INFO("%s", rt.toString().c_str());
   ////ROS_INFO("pop: %s", toString().c_str());*/
 
-  //////ROS_INFO("Exiting Population::add");
+  ROS_INFO("Exiting Population::add");
   return -1;
 } //End add
 
@@ -442,6 +457,32 @@ const int Population::calcBestIndex() const
   ////ROS_INFO("Exiting Population::calcBestIndex");
   return i_max; 
 } //End calcBestIndex
+
+
+const int Population::calcWorstIndex() const
+{
+  ////ROS_INFO("In Population::calcBestIndex");
+  if(size() == 0)
+  {
+    //ROS_ERROR("Calling Population::calcBestIndex(), but Population is empty");
+    ////ROS_INFO("Pop: %s", toString().c_str());
+    return -1;
+  }
+ 
+  // Find the index of the trajectory with the highest fitness value
+  int i_min = 0;
+  for(int i=1;i<trajectories_.size();i++) 
+  {
+    if(trajectories_.at(i).msg_.fitness < trajectories_.at(i_min).msg_.fitness) 
+    {
+      i_min = i;
+    }
+  } //end for
+
+
+  ////ROS_INFO("Exiting Population::calcBestIndex");
+  return i_min;
+}
 
 
 

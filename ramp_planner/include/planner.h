@@ -530,6 +530,7 @@ class Planner {
     tf::StampedTransform tf_global_odom_rot_;
 
 
+    bool forceMinMod;
     bool evalHMap;
 };
 

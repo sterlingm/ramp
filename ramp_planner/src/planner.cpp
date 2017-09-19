@@ -1700,6 +1700,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   errorReduction_       = errorReduction;
   generationsPerCC_     = controlCycle_.toSec() / planningCycle_.toSec();
 
+  forceMinMod = false;
   evalHMap = false;
   //ROS_INFO("Exiting Planner::init");
 } // End init
@@ -2724,7 +2725,8 @@ void Planner::modification()
     // If it was successfully added, push its index onto the result
     ros::Time t_start = ros::Time::now();
     //ROS_INFO("Adding to pop");
-    int index = population_.add(traj_final);
+    // Make sure forceMinMod is set properly
+    int index = population_.add(traj_final, forceMinMod);
     //ROS_INFO("Done adding");
     
     // No longer need to reset CC time because trajs should have same t_start
@@ -2981,13 +2983,13 @@ void Planner::planningCycleCallback()
     copy.trajectories_.push_back(ob_trajectory_[i]);
   }
 
-  //sendPopulation();
+  sendPopulation();
   
   ros::Duration d = ros::Time::now() - t_start; 
   //////ROS_INFO("d: %f EC: %s mod_worked: %s modded_two: %s", d.toSec(), EC ? "True" : "False", mod_worked ? "True" : "False", modded_two ? "True" : "False");
   pc_durs_.push_back(d);
   ////////ROS_INFO("********************************************************************");
-  //ROS_INFO("Generation %i completed, time elapse: %f", (generation_-1), (ros::Time::now() - t_start).toSec());
+  ROS_INFO("Generation %i completed, time elapse: %f", (generation_-1), (ros::Time::now() - t_start).toSec());
   ////////ROS_INFO("********************************************************************");
 } // End planningCycleCallback
 
@@ -3722,6 +3724,7 @@ void Planner::requestEvaluation(RampTrajectory& trajec, bool full) const
   ramp_msgs::EvaluationRequest req;
   
   buildEvaluationRequest(trajec, req, full);
+  req.hmap_eval = evalHMap;
   requestEvaluation(req);
   
   trajec.msg_.fitness           = req.trajectory.fitness;
@@ -4045,15 +4048,25 @@ void Planner::go()
   
   evaluatePopulation(evalHMap);
   ROS_INFO("Initial population evaluated");
-  obs_packed_.clear();
-  sendPopulation(20.0);
-  //std::cin.get();
+
+  //obs_packed_.clear();
+  sendPopulation(5);
+  std::cin.get();
   
-  ROS_INFO("Exiting planner!");
-  exit(1);
+  //ROS_INFO("Exiting planner!");
+  //exit(1);
  
 
-  // Seed the population
+
+
+
+
+
+
+
+  /*
+   * Seed the population
+   */
   if(seedPopulation_) 
   {
     std::cout<<"\nSeeding transPopulation\n";
@@ -4077,7 +4090,12 @@ void Planner::go()
   }
 
 
-  // Create sub-populations if enabled
+
+
+
+  /*
+   * Create sub-populations if enabled
+   */
   if(subPopulations_) 
   {
     population_.createSubPopulations();
@@ -4085,8 +4103,10 @@ void Planner::go()
   }
 
 
-  t_start_ = ros::Time::now();
 
+  /*
+   * Pre-Planning Cycles
+   */
   
   h_parameters_.setCCStarted(false); 
 
@@ -4097,15 +4117,20 @@ void Planner::go()
   }
   //ROS_INFO("generationsBeforeCC_: %i generationsPerCC_: %i num_pc: %i", generationsBeforeCC_, generationsPerCC_, num_pc);
 
+
   // Run # of planning cycles before control cycles start
   ROS_INFO("Starting pre planning cycles");
+  forceMinMod = true;
   ros::Rate r(20);
   // Wait for the specified number of generations before starting CC's
   while(generation_ < num_pc) 
   {
     planningCycleCallback(); 
   }
- 
+  //forceMinMod = false;
+
+  //sendPopulation(20.0);
+  //exit(1);
   ROS_INFO("Starting CCs at t: %f", ros::Time::now().toSec());
 
   // Initialze diff_ for adjustment procedures
@@ -4123,10 +4148,19 @@ void Planner::go()
   // Start Timer to send population to rviz
   sendPopTimer_.start();
 
+
+
+
+
+
+
+
+
+
  
-  /*
-   * Main loop begins here
-   */
+  /*******************************************************************************************
+   *                              Main loop begins here
+   *******************************************************************************************/
 
   // Do planning until robot has reached goal
   // D = 0.4 if considering mobile base, 0.2 otherwise

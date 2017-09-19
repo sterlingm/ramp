@@ -147,6 +147,7 @@ void Evaluate::performFitnessHmap(ramp_msgs::RampTrajectory& trj, const int& p_m
   double perc = p_max / 100.0;
 
   double cost = Q_coll_ * perc;  
+  ROS_INFO("cost: %f", cost);
 
   result = cost > 0 ? 1.0 / cost : 1.00;
 }
