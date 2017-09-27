@@ -2964,8 +2964,6 @@ void Planner::planningCycleCallback()
   } // end if modifications
 
 
-  ROS_INFO("Population: %s", population_.toString().c_str());
-
   /* 
    * Finish up
    */

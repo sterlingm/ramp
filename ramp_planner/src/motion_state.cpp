@@ -120,7 +120,7 @@ const bool MotionState::equals(const MotionState& ms) const
     return false;
   }
 
-  double epsilon = 0.01;
+  double epsilon = 0.1;
   for(uint8_t i_p=0;i_p<msg_.positions.size();i_p++) 
   {
     if( fabs(msg_.positions.at(i_p) - ms.msg_.positions.at(i_p)) > epsilon ) 

@@ -396,7 +396,7 @@ const int Population::add(const RampTrajectory& rt, bool forceMin)
   }
 
   // Else if we are forcing it to replace the min traj
-  else if(forceMin)
+  else if(!contains(rt) && forceMin)
   {
     int i_min = calcWorstIndex();
     //ROS_INFO("Trajectory to replace: %s", trajectories_[i_min].toString().c_str());
