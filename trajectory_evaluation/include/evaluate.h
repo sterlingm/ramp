@@ -14,12 +14,15 @@ class Evaluate {
     Evaluate();
 
     void perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res);
+   
     void performFeasibility(ramp_msgs::EvaluationRequest& er);
-    void performFitness(ramp_msgs::RampTrajectory& trj, const double& offset, bool hmap, double& result);
     void performFeasibilityHmap(ramp_msgs::EvaluationRequest& er);
+    
+    void performFitness(ramp_msgs::RampTrajectory& trj, const double& offset, bool hmap, double& result);
     void performFitnessHmap(ramp_msgs::RampTrajectory& trj, const int& p_max, double& result);
 
     void getEstimatedRemainingTime(ramp_msgs::RampTrajectory& trj, const double& offset, double& result) const;
+    void getBoundaryCost(ramp_msgs::RampTrajectory& trj, double& result) const;
 
     /** Different evaluation criteria */
     EuclideanDistance eucDist_;

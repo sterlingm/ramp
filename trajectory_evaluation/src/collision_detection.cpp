@@ -102,13 +102,15 @@ void CollisionDetection::queryPacked(const std::vector<trajectory_msgs::JointTra
   if(p_values.size() > 0)
   {
     result.p_max_ = p_values[0];
-    for(int i=0;i<p_values.size();i++)
+    for(int i=1;i<p_values.size();i++)
     {
-      if(p_values[i] > result.p_max_)
+      result.p_max_ += p_values[i];
+      /*if(p_values[i] > result.p_max_)
       {
         result.p_max_ = p_values[i];
-      }
+      }*/
     }
+    result.p_max_ /= p_values.size();
   }
 
   ROS_INFO("p_values.size(): %i result.p_max_: %i", (int)p_values.size(), result.p_max_);

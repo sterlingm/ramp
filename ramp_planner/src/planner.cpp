@@ -2964,6 +2964,7 @@ void Planner::planningCycleCallback()
   } // end if modifications
 
 
+  ROS_INFO("Population: %s", population_.toString().c_str());
 
   /* 
    * Finish up
@@ -4127,7 +4128,7 @@ void Planner::go()
   {
     planningCycleCallback(); 
   }
-  //forceMinMod = false;
+//  forceMinMod = false;
 
   //sendPopulation(20.0);
   //exit(1);

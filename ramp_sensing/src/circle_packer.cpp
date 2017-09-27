@@ -1013,8 +1013,16 @@ std::vector< std::vector<Circle> > CirclePacker::goCirclePacking(double min_r)
     std::vector<Circle> cs = getCirclesFromPoly(ps[i], min_r);   
     result.push_back(cs);
   }
-  ////////ROS_INFO("contours.size(): %i", (int)contours.size());
  
+  // Print results
+  /*for(int i=0;i<result.size();i++)
+  {
+    ROS_INFO("Polygon %i circles:", i);
+    for(int j=0;j<result[i].size();j++)
+    {
+      ROS_INFO("  Circle %i: (%f,%f) r=%f", j, result[i][j].center.x, result[i][j].center.y, result[i][j].radius);
+    }
+  }*/
 
   /*
    * Draw contours and hulls

@@ -21,6 +21,9 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   // Reset orientation_infeasible for new trajectory
   orientation_infeasible_ = false;
 
+
+
+
   /*
    * Compute feasibility
    */
@@ -52,6 +55,10 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   }
 
 
+
+
+
+
   /*
    * Compute fitness
    */
@@ -72,10 +79,60 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   }
 
 
+  // Do environment bounds fitness test regardless of hmap or not
+  /*double d_bounds;
+  getBoundaryCost(req.trajectory, d_bounds);
+
+  ROS_INFO("Boundary penalty: %f", 1.0 / (1.0 / d_bounds));
+
+  res.fitness += (1.0 / d_bounds);*/
+  
+
+
 
 
   
   ////ROS_INFO("performFitness: %f", (ros::Time::now()-t_start).toSec());
+}
+
+
+void Evaluate::getBoundaryCost(ramp_msgs::RampTrajectory& trj, double& result) const
+{
+  double d_min = 100;
+  // Go through the knot points and check distance to environment bounds
+  for(int i=1;i<trj.holonomic_path.points.size()-1;i++)
+  {
+    std::vector<double> p = trj.holonomic_path.points[i].motionState.positions;
+    double dist_x_min = fabs(p[0] - 0);
+    double dist_x_max = fabs(p[0] - 3.5);
+    double dist_y_min = fabs(p[1] - 0);
+    double dist_y_max = fabs(p[1] - 3.5);
+
+    if(dist_x_min < d_min)
+    {
+      d_min = dist_x_min;
+    }
+    if(dist_x_max < d_min)
+    {
+      d_min = dist_x_max;
+    }
+    if(dist_y_min < d_min)
+    {
+      d_min = dist_y_min;
+    }
+    if(dist_y_max < d_min)
+    {
+      d_min = dist_y_max;
+    }
+  } // end for
+  ROS_INFO("d_min: %f", d_min);
+
+  if(d_min < 0.0001)
+  {
+    d_min = 0.0001;
+  }
+
+  result = d_min;
 }
 
 
@@ -145,9 +202,16 @@ void Evaluate::performFeasibilityHmap(ramp_msgs::EvaluationRequest& er)
 void Evaluate::performFitnessHmap(ramp_msgs::RampTrajectory& trj, const int& p_max, double& result)
 {
   double perc = p_max / 100.0;
+  ROS_INFO("p_max: %i perc: %f", p_max, perc);
 
   double cost = Q_coll_ * perc;  
   ROS_INFO("cost: %f", cost);
+
+  double bcost;
+  getBoundaryCost(trj, bcost);
+  bcost /= 4.94975;
+  ROS_INFO("bcost: %f", bcost);
+  cost += (1.0/bcost);
 
   result = cost > 0 ? 1.0 / cost : 1.00;
 }

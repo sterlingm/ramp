@@ -163,8 +163,9 @@ class BayesianHilbertMap(LinearClassifierMixin, BaseEstimator):
 
 def load_parameters(case, fname):
     cell_resolution = (0.5,0.5)
-    cell_max_min = (0, 5.0, -0.45, 3.0)
-    gamma = 0.05
+    #cell_max_min = (0, 5.0, -0.45, 3.0)
+    cell_max_min = (0, 3.5, 0, 3.5)
+    gamma = 0.2
     parameters = \
         {'sim': \
              (fname,

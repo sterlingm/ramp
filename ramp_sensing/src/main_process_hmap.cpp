@@ -43,8 +43,8 @@ void CannyThreshold(int, void*)
   /// Canny detector
   Canny( hmap_edges, hmap_edges, lowThreshold, lowThreshold*ratio, kernel_size );
 
-  //imshow( "hmap_edges", hmap_edges);
-  //waitKey(0);
+  imshow( "hmap_edges", hmap_edges);
+  waitKey(0);
 }
 
 
@@ -240,6 +240,8 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
   int threshold = 25;
 
   thresholdHilbertMap(hmap_mat, hmap_thresh, threshold);
+  //imshow("hmap_thresh", hmap_thresh);
+  //cv::waitKey(0);
 
   /*
    * Do circle packing on all hmap obstacles
@@ -248,6 +250,10 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
   std::vector< std::vector<Circle> > ob_cirs = cp.goCirclePacking(2.0f);
 
   ROS_INFO("ob_cirs.size(): %i", (int)ob_cirs.size());
+  for(int i=0;i<ob_cirs.size();i++)
+  {
+    ROS_INFO("ob_cirs[%i].size(): %i", i, (int)ob_cirs.size());
+  }
   ROS_INFO("hmap origin: (%f,%f) resolution: %f", hmap.map.info.origin.position.x, hmap.map.info.origin.position.y, hmap.map.info.resolution);
   
   // Get map details
@@ -278,18 +284,6 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
     // Create PackedObstacle object
     PackedObstacle pOb(ob_cirs[i]);
     hmap_obs.packed_obs.push_back(pOb.msg_);
-
-    /*ROS_INFO("Before Obstacle %i: Center - (%f,%f) Radius - %f", i, ob_cirs[i].center.x, ob_cirs[i].center.y, ob_cirs[i].radius);
-
-    inner_radii.markers.push_back(getMarker(ob_cirs[i], i+ob_cirs.size()));
-
-    // Make radius bigger and get new circle
-    ob_cirs[i].radius += sigma;
-    outer_radii.markers.push_back(getMarker(ob_cirs[i], i));
-
-    o.radius_ += sigma;
-    o.msg_.radius += sigma;
-    //hmap_obs.packed_obs.push_back(o.msg_);*/
   }
 
   // For each PackedObstacle, make markers for each circle
@@ -299,7 +293,8 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
     int N = hmap_obs.packed_obs[i].circles.size();
     for(int j=0;j<N;j++)
     {
-      inner_radii.markers.push_back(getMarker(hmap_obs.packed_obs[i].circles[j], i*j));
+      //ROS_INFO("i: %i j: %i (i+1)*j: %i pow((i+1)*j+5,2): %i", i, j, (i+1)*j, pow((i+1)*j+5,2));
+      inner_radii.markers.push_back(getMarker(hmap_obs.packed_obs[i].circles[j], 100+j+i+N));
       
       // Increase radius for outer circle
       ramp_msgs::Circle inflated = hmap_obs.packed_obs[i].circles[j];
@@ -307,8 +302,9 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
       
       // Push that circle onto PackedOb vector
       hmap_obs.packed_obs[i].circles.push_back(inflated);
+      //hmap_obs.packed_obs[i].circles[j] = inflated;
       
-      outer_radii.markers.push_back(getMarker(inflated, pow(i*j+5,2)));
+      outer_radii.markers.push_back(getMarker(inflated, 200+N+i+j));
     }
   }
   ROS_INFO("Done creating Obstacle objects");
