@@ -126,6 +126,8 @@ class Planner {
               const std::string         global_frame,
               const std::string         update_topic,
               const TrajectoryType      pop_type=HYBRID,
+              const int                 num_ppcs=0,
+              bool                      stop_after_ppcs=false,
               const int                 gens_before_cc=0,
               const double              t_pc_rate=2.,
               const double              t_fixed_cc=2.,
@@ -377,6 +379,9 @@ class Planner {
     bool predictTransition(const RampTrajectory& from, const RampTrajectory& to, const double& t);
 
 
+    void getVisualPop(Population& result) const;
+
+
     void reportData() ;
 
 
@@ -529,6 +534,8 @@ class Planner {
     tf::StampedTransform tf_global_odom_;
     tf::StampedTransform tf_global_odom_rot_;
 
+    int num_ppcs_;
+    bool stop_after_ppcs_;
 
     bool forceMinMod;
     bool evalHMap;

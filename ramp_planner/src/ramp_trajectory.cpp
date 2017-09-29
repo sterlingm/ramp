@@ -13,20 +13,22 @@ RampTrajectory::RampTrajectory(unsigned int id)
 RampTrajectory::RampTrajectory(const ramp_msgs::RampTrajectory msg) : msg_(msg) {}
 
 
-const bool RampTrajectory::equals(const RampTrajectory& other) const 
+bool RampTrajectory::equals(const RampTrajectory& other, const double& epsilon) const 
 {
-  ////ROS_INFO("In RampTrajectory::equals");
+  //ROS_INFO("In RampTrajectory::equals");
   if(msg_.id == other.msg_.id) 
   {
     return true;
   }
 
-  Path templ(msg_.holonomic_path);
-  Path tempr(other.msg_.holonomic_path);
+  //Path templ(msg_.holonomic_path);
+  //Path tempr(other.msg_.holonomic_path);
+  Path templ = getNonHolonomicPath();
+  Path tempr = other.getNonHolonomicPath();
 
   ////ROS_INFO("Exiting RampTrajectory::equals");
   //return msg_.holonomic_path.equals(other.msg_.holonomic_path);
-  return templ.equals(tempr);
+  return templ.equals(tempr, epsilon);
 }
 
 
@@ -37,10 +39,12 @@ const double RampTrajectory::getT() const
 
 const Path RampTrajectory::getNonHolonomicPath() const 
 {
+  //ROS_INFO("trajec: %s", toString().c_str());
   Path result;
 
-  for(unsigned int i=0;i<msg_.i_knotPoints.size();i++) 
+  for(unsigned int i=0;i<msg_.i_knotPoints.size();i++)
   {
+    //ROS_INFO("i: %i msg_.i_knotPoints: %i", i, msg_.i_knotPoints[i]);
 
     MotionState ms(msg_.trajectory.points.at( msg_.i_knotPoints.at(i)));
     KnotPoint kp_ms(ms);

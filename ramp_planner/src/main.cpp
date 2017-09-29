@@ -13,6 +13,7 @@ double              radius;
 double              max_speed_linear;
 double              max_speed_angular;
 int                 population_size;
+int                 num_ppcs;
 int                 gensBeforeCC;
 bool                sub_populations;
 bool                modifications;
@@ -22,6 +23,7 @@ bool                errorReduction;
 bool                only_sensing;
 bool                moving_robot;
 bool                shrink_ranges;
+bool                stop_after_ppcs;
 double              t_cc_rate;
 double              t_pc_rate;
 int                 pop_type;
@@ -281,6 +283,18 @@ void loadParameters(const ros::NodeHandle handle)
     std::cout<<"\nmoving_robot: "<<moving_robot;
   }
 
+  if(handle.hasParam("ramp/preplanning_cycles"))
+  {
+    handle.getParam("ramp/preplanning_cycles", num_ppcs);
+    std::cout<<"\npreplanning_cycles: "<<num_ppcs;
+  }
+  
+  if(handle.hasParam("ramp/stop_after_ppcs"))
+  {
+    handle.getParam("ramp/stop_after_ppcs", stop_after_ppcs);
+    std::cout<<"\nstop_after_ppcs: "<<stop_after_ppcs ? "True" : "False";
+  }
+
   if(handle.hasParam("ramp/gens_before_control_cycle")) 
   {
     handle.getParam("ramp/gens_before_control_cycle", gensBeforeCC);
@@ -495,7 +509,7 @@ int main(int argc, char** argv)
    */
  
   // Initialize the planner
-  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, global_frame, update_topic, pt, gensBeforeCC, t_pc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
+  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, global_frame, update_topic, pt, num_ppcs, stop_after_ppcs, gensBeforeCC, t_pc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
   my_planner.modifications_   = modifications;
   my_planner.evaluations_     = evaluations;
   my_planner.seedPopulation_  = seedPopulation;

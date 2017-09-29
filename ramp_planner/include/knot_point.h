@@ -18,7 +18,7 @@ class KnotPoint {
     unsigned int stopTime_;
 
     // Methods
-    const bool equals(const KnotPoint& kp) const;
+    const bool equals(const KnotPoint& kp, const double& epsilon=0.1) const;
     const ramp_msgs::KnotPoint buildKnotPointMsg() const;
     const std::string toString() const;
     

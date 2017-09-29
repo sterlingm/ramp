@@ -48,7 +48,7 @@ void CollisionDetection::queryPacked(const std::vector<trajectory_msgs::JointTra
 
   std::vector<int> p_values;
 
-  ROS_INFO("segment.size(): %i", (int)segment.size());
+  //ROS_INFO("segment.size(): %i", (int)segment.size());
   for(int i=0;i<segment.size();i++)
   {
     const trajectory_msgs::JointTrajectoryPoint* p_i = &segment[i];
@@ -67,10 +67,11 @@ void CollisionDetection::queryPacked(const std::vector<trajectory_msgs::JointTra
       bool coll = dist <= dist_threshold;
       if(coll)
       {
-        ROS_INFO("coll: %s", coll ? "True" : "False");
+        /*ROS_INFO("coll: %s", coll ? "True" : "False");
         ROS_INFO("Inner center: (%f,%f)", cir.center.x, cir.center.y);
         ROS_INFO("Inner radius: %f", cir.radius);
-        ROS_INFO("dist_threshold: %f dist: %f", dist_threshold, dist);
+        ROS_INFO("dist_threshold: %f dist: %f", dist_threshold, dist);*/
+
         // Get the p(x) value on the hmap
         int i_r = (p_i->positions[1]-hmap.map.info.origin.position.y) / hmap.map.info.resolution;
         int i_c = (p_i->positions[0]-hmap.map.info.origin.position.x) / hmap.map.info.resolution;
@@ -94,7 +95,7 @@ void CollisionDetection::queryPacked(const std::vector<trajectory_msgs::JointTra
   
   if(!result.inner_)
   {
-    ROS_INFO("NO INNER COLLISION");
+    //ROS_INFO("NO INNER COLLISION");
   }
 
 
@@ -113,8 +114,8 @@ void CollisionDetection::queryPacked(const std::vector<trajectory_msgs::JointTra
     result.p_max_ /= p_values.size();
   }
 
-  ROS_INFO("p_values.size(): %i result.p_max_: %i", (int)p_values.size(), result.p_max_);
-  ROS_INFO("Exiting CollisionDetection::queryPacked");
+  //ROS_INFO("p_values.size(): %i result.p_max_: %i", (int)p_values.size(), result.p_max_);
+  //ROS_INFO("Exiting CollisionDetection::queryPacked");
 }
 
 

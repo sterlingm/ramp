@@ -18,7 +18,6 @@ class RampTrajectory
     ramp_msgs::RampTrajectory transitionTraj_;
 
     const RampTrajectory clone()                                const;
-    const bool           equals(const RampTrajectory& other)    const;
     const double         getIndexOfMs(const MotionState ms)     const;
     const double         getT()                                 const;
     const Path           getNonHolonomicPath()                  const;
@@ -35,6 +34,8 @@ class RampTrajectory
     const trajectory_msgs::JointTrajectoryPoint getPointAtTime(const float t) const;
 
     void offsetPositions(const MotionState& diff);
+    
+    bool equals(const RampTrajectory& othert, const double& epsilon=0.1)    const;
 
   private:
     Utility utility_;

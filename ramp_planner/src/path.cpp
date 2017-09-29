@@ -67,10 +67,11 @@ Path::Path(const ramp_msgs::Path p)
 Path::~Path() {}
 
 
-const bool Path::equals(const Path& p) const 
+const bool Path::equals(const Path& p, const double& epsilon) const 
 {
-  //ROS_INFO("In Path::equals");
-  //ROS_INFO("this.size(): %i p.size(): %i", size(), p.size());
+  /*ROS_INFO("In Path::equals");
+  ROS_INFO("this.size(): %i p.size(): %i", size(), p.size());
+  ROS_INFO("p: %s", p.toString().c_str());*/
   
   if(size() != p.size()) {
     //ROS_INFO("Exiting Path::equals");
@@ -79,15 +80,16 @@ const bool Path::equals(const Path& p) const
 
   for(uint8_t i=0;i<size();i++) 
   {
+    //ROS_INFO("Checking knot point %i", i);
     KnotPoint temp(msg_.points[i]);
-    if(!temp.equals(p.msg_.points[i])) 
+    if(!temp.equals(p.msg_.points[i], epsilon)) 
     {
-      //ROS_INFO("Exiting Path::equals");
+      //ROS_INFO("Returning false, Exiting Path::equals");
       return false;
     }
   }
 
-  //ROS_INFO("Exiting Path::equals");
+  //ROS_INFO("Returning true, Exiting Path::equals");
   return true;
 }
 
@@ -136,7 +138,6 @@ void Path::changeStart(const MotionState ms)
 }
 
 const unsigned int Path::size() const { return msg_.points.size(); }
-
 
 const ramp_msgs::Path Path::buildPathMsg() const 
 {

@@ -170,7 +170,7 @@ void thresholdHilbertMap(Mat hmap, Mat& result, int thresholdValue)
 }
 
 
-visualization_msgs::Marker getMarker(Circle cir, int id)
+visualization_msgs::Marker getMarker(Circle cir, int id, bool longTime=true)
 {
   visualization_msgs::Marker result;
 
@@ -210,19 +210,19 @@ visualization_msgs::Marker getMarker(Circle cir, int id)
   result.color.g = 1;
   result.color.b = 0;
   result.color.a = 0.5;
-  result.lifetime = ros::Duration(60);
+  result.lifetime = longTime ? ros::Duration(120) : ros::Duration(5);
 
 
   return result;
 }
 
-visualization_msgs::Marker getMarker(ramp_msgs::Circle cir, int id)
+visualization_msgs::Marker getMarker(ramp_msgs::Circle cir, int id, bool longTime=true)
 {
   Circle c;
   c.center.x = cir.center.x;
   c.center.y = cir.center.y;
   c.radius = cir.radius;
-  return getMarker(c, id);
+  return getMarker(c, id, longTime);
 }
 
 void hmapCb(const ramp_msgs::HilbertMap& hmap)
@@ -295,7 +295,7 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
     for(int j=0;j<N;j++)
     {
       ROS_INFO("i: %i j: %i 100+j+i+N: %i 200+N+i+j: %i", i, j, 100+((j*(i+1))+j)+N, 200+N+i+j);
-      inner_radii.markers.push_back(getMarker(hmap_obs.packed_obs[i].circles[j], ++id));
+      inner_radii.markers.push_back(getMarker(hmap_obs.packed_obs[i].circles[j], ++id, false));
       
       // Increase radius for outer circle
       ramp_msgs::Circle inflated = hmap_obs.packed_obs[i].circles[j];

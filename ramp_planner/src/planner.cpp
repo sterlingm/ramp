@@ -1638,7 +1638,7 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int num_ppcs, bool stop_after_ppcs, const int gens_before_cc, const double t_pc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
 {
   //ROS_INFO("In Planner::init");
 
@@ -1699,6 +1699,9 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   moving_robot_         = moving_robot;
   errorReduction_       = errorReduction;
   generationsPerCC_     = controlCycle_.toSec() / planningCycle_.toSec();
+
+  num_ppcs_ = num_ppcs;
+  stop_after_ppcs_ = stop_after_ppcs;
 
   forceMinMod = false;
   evalHMap = false;
@@ -2691,7 +2694,7 @@ void Planner::modification()
   modifyTrajec(mod_trajec);
   ros::Time t_p = ros::Time::now();
   //////ROS_INFO("t_p: %f", (t_p-now).toSec());
-  //ROS_INFO("Modification trajectories obtained: %i", (int)mod_trajec.size());
+  ROS_INFO("Modification trajectories obtained: %i", (int)mod_trajec.size());
   
   // Set boolean to signal more than 1 trajec was modified
   modded_two = mod_trajec.size() > 1;
@@ -2724,7 +2727,7 @@ void Planner::modification()
     // Index is where the trajectory was added in the population (may replace another)
     // If it was successfully added, push its index onto the result
     ros::Time t_start = ros::Time::now();
-    //ROS_INFO("Adding to pop");
+    ROS_INFO("Adding to pop");
     // Make sure forceMinMod is set properly
     int index = population_.add(traj_final, forceMinMod);
     //ROS_INFO("Done adding");
@@ -3531,7 +3534,20 @@ void Planner::sendBest() {
 
 
 
+void Planner::getVisualPop(Population& result) const
+{
+  for(int i=0;i<population_.size();i++)
+  {
+    RampTrajectory temp = population_.trajectories_[i];
 
+    
+    // Add on the remaining points in holonomic path
+    /*for(int j=0;j<temp.msg_.holonomic_path.size();i++)
+    {
+
+    }*/
+  }
+}
 
 
 /** Send the whole population of trajectories to the trajectory viewer */
@@ -3587,6 +3603,35 @@ void Planner::sendPopulation(const double t)
     ma.markers[i].color.g = g;
     ma.markers[i].color.b = b;
   }
+
+  /*
+   * Create a text element to show the generation number
+   */
+  visualization_msgs::Marker text;
+
+  text.header.stamp     = ros::Time::now();
+  text.id               = ma.markers.size()+1;
+  text.header.frame_id  = global_frame_;
+
+  text.ns       = "basic_shapes";
+  text.type     = visualization_msgs::Marker::TEXT_VIEW_FACING;
+  text.action   = visualization_msgs::Marker::ADD;
+
+  std::ostringstream genStr;
+  genStr<<"Generation: "<<generation_<<"/"<<num_ppcs_;
+  text.text = genStr.str();
+
+  text.pose.position.x = -1.05;
+  text.pose.position.y = 2.1;
+  text.pose.position.z = 0.1;
+  text.color.r = 1;
+  text.color.g = 1;
+  text.color.b = 1;
+  text.color.a = 1;
+  text.scale.z = 0.25;
+  text.lifetime = ros::Duration(5);
+
+  ma.markers.push_back(text);
 
 
 
@@ -4037,6 +4082,8 @@ void Planner::go()
 
   // t=0
   generation_ = 0;
+
+  std::cin.get();
   
   // initialize population
   initPopulation();
@@ -4103,35 +4150,56 @@ void Planner::go()
 
 
 
+
   /*
    * Pre-Planning Cycles
    */
-  
-  h_parameters_.setCCStarted(false); 
+  ROS_INFO("Starting pre planning cycles");
+  forceMinMod = true;
 
-  int num_pc = generationsBeforeCC_; 
+  // Run N pre-planning cycles
+  while(generation_ < num_ppcs_) 
+  {
+    planningCycleCallback(); 
+  }
+  forceMinMod = false;
+
+  if(stop_after_ppcs_)
+  {
+    sendPopulation(10.0);
+    ROS_INFO("Final Population: %s", population_.toString().c_str());
+    ROS_INFO("Exiting planner because stop_after_ppcs_ = true");
+    exit(0);
+  }
+
+
+
+  /*
+   * PCs before CCs start
+   */
+  ROS_INFO("Starting planning cycles before control cycles");
+  
+  // Set number
+  int num_pc = generationsBeforeCC_ + num_ppcs_;
   if(num_pc < 0)
   {
     num_pc = 0;
   }
-  //ROS_INFO("generationsBeforeCC_: %i generationsPerCC_: %i num_pc: %i", generationsBeforeCC_, generationsPerCC_, num_pc);
 
-
-  // Run # of planning cycles before control cycles start
-  ROS_INFO("Starting pre planning cycles");
-  forceMinMod = true;
-  ros::Rate r(20);
   // Wait for the specified number of generations before starting CC's
   while(generation_ < num_pc) 
   {
     planningCycleCallback(); 
   }
-//  forceMinMod = false;
 
-  //sendPopulation(20.0);
-  //exit(1);
-  ROS_INFO("Starting CCs at t: %f", ros::Time::now().toSec());
 
+
+
+
+
+  /*
+   *
+   */
   // Initialze diff_ for adjustment procedures
   diff_ = diff_.zero(3);
   
@@ -4163,6 +4231,7 @@ void Planner::go()
 
   // Do planning until robot has reached goal
   // D = 0.4 if considering mobile base, 0.2 otherwise
+  ros::Rate r(100);
   ros::Time t_start = ros::Time::now();
   goalThreshold_ = 0.25;
   while( (latestUpdate_.comparePosition(goal_, false) > goalThreshold_) && ros::ok()) 

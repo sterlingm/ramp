@@ -9,8 +9,8 @@ KnotPoint::KnotPoint(const ramp_msgs::KnotPoint kp) {
   stopTime_ = kp.stopTime;
 }
 
-const bool KnotPoint::equals(const KnotPoint& kp) const {
-  if(!motionState_.equals(kp.motionState_)) {
+const bool KnotPoint::equals(const KnotPoint& kp, const double& epsilon) const {
+  if(!motionState_.equals(kp.motionState_, epsilon)) {
     return false;
   }
   if(stopTime_ != kp.stopTime_) {

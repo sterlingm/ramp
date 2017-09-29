@@ -16,6 +16,10 @@ only_sensing: false
 # If false, control cycles are cut off
 moving_robot: false
 
+preplanning_cycles: 500
+
+stop_after_ppcs: true
+
 gens_before_control_cycle: 200
 
 pop_traj_type: 1 #0=holonomic, 1=hybrid

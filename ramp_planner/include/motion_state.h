@@ -35,7 +35,7 @@ class MotionState {
     
     const   std::string toString() const;
 
-    const bool equals(const MotionState& ms) const;
+    const bool equals(const MotionState& ms, const double epsilon=0.1) const;
 
     const MotionState zero(const uint8_t size) const;
     void zero();

@@ -98,8 +98,11 @@ const trajectory_msgs::JointTrajectoryPoint MotionState::getJTP() const
 }
 
 /** equals comparison */
-const bool MotionState::equals(const MotionState& ms) const 
+const bool MotionState::equals(const MotionState& ms, const double epsilon) const 
 {
+  //ROS_INFO("In MotionState::equals");
+  //ROS_INFO("this: %s\nms: %s\nepsilon: %f", toString().c_str(), ms.toString().c_str(), epsilon);
+  
   if(msg_.positions.size() != ms.msg_.positions.size()) 
   {
     return false;
@@ -120,9 +123,9 @@ const bool MotionState::equals(const MotionState& ms) const
     return false;
   }
 
-  double epsilon = 0.1;
   for(uint8_t i_p=0;i_p<msg_.positions.size();i_p++) 
   {
+    //ROS_INFO("Position %i dist: %f", i_p, fabs(msg_.positions.at(i_p) - ms.msg_.positions.at(i_p)));
     if( fabs(msg_.positions.at(i_p) - ms.msg_.positions.at(i_p)) > epsilon ) 
     {
       return false;
@@ -131,6 +134,7 @@ const bool MotionState::equals(const MotionState& ms) const
 
   for(uint8_t i_p=0;i_p<msg_.velocities.size();i_p++) 
   {
+    //ROS_INFO("Velocity %i dist: %f", i_p, fabs(msg_.velocities.at(i_p) - ms.msg_.velocities.at(i_p)));
     if( fabs(msg_.velocities.at(i_p) - ms.msg_.velocities.at(i_p)) > epsilon ) 
     {
       return false;
@@ -139,6 +143,7 @@ const bool MotionState::equals(const MotionState& ms) const
 
   for(uint8_t i_p=0;i_p<msg_.accelerations.size();i_p++) 
   {
+    //ROS_INFO("Acceleration %i dist: %f", i_p, fabs(msg_.accelerations.at(i_p) - ms.msg_.accelerations.at(i_p)));
     if( fabs(msg_.accelerations.at(i_p) - ms.msg_.accelerations.at(i_p)) > epsilon ) 
     {
       return false;

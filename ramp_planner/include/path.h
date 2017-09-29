@@ -24,7 +24,7 @@ class Path {
     
     
     // Methods
-    const bool equals(const Path& p) const;
+    const bool equals(const Path& p, const double& epsilon=0.1) const;
     const KnotPoint at(const uint8_t i) const;
     void addBeforeGoal(const KnotPoint kp);
     void addBeforeGoal(const MotionState kp);

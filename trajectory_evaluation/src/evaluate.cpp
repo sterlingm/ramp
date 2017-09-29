@@ -67,28 +67,16 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   {
     double fit;
     performFitnessHmap(req.trajectory, qrPacked_.p_max_, fit);
-    ROS_INFO("fit: %f", fit);
+    //ROS_INFO("fit: %f", fit);
     
     res.fitness = fit;
-    ROS_INFO("qrPacked_.p_max: %i fit: %f", qrPacked_.p_max_, fit);
+    //ROS_INFO("qrPacked_.p_max: %i fit: %f", qrPacked_.p_max_, fit);
   }
   else if(req.full_eval)
   {
     //ROS_INFO("Requesting fitness!");
     performFitness(req.trajectory, req.offset, req.hmap_eval, res.fitness);
   }
-
-
-  // Do environment bounds fitness test regardless of hmap or not
-  /*double d_bounds;
-  getBoundaryCost(req.trajectory, d_bounds);
-
-  ROS_INFO("Boundary penalty: %f", 1.0 / (1.0 / d_bounds));
-
-  res.fitness += (1.0 / d_bounds);*/
-  
-
-
 
 
   
@@ -172,47 +160,42 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
 
 void Evaluate::performFeasibilityHmap(ramp_msgs::EvaluationRequest& er)
 {
-  ROS_INFO("In Evaluate::performFeasibilityHmap");
+  //ROS_INFO("In Evaluate::performFeasibilityHmap");
 
   /*
    ****************************************************************************************************
-             PackedObstacle does not include outer radii circles for Hilbert map obstacles 
+             PackedObstacle does not include inner radii circles for Hilbert map obstacles 
    ****************************************************************************************************
    */
   std::vector<ramp_msgs::PackedObstacle> obs = er.packed_obs;
   cd_.performPackedObs(er.trajectory, obs, er.robot_radius, hmap_, qrPacked_);
 
-  // Do collision against inner radii
-  for(int i=0;i<er.obstacle_trjs.size();i++)
-  {
-    ROS_INFO("er.obstacle_radii[%i]: %f", i, er.obstacle_radii[i]);
-    ROS_INFO("er.obstacle_trjs[%i]: %s", i, utility_.toString(er.obstacle_trjs[i]).c_str());
-  }
- 
 
-  // Do collision against outer radii
-  
-
-
-  ROS_INFO("Exiting Evaluate::performFeasibilityHmap");
+  //ROS_INFO("Exiting Evaluate::performFeasibilityHmap");
 }
 
 
 
 void Evaluate::performFitnessHmap(ramp_msgs::RampTrajectory& trj, const int& p_max, double& result)
 {
+  // p_max is an int, convert to double
   double perc = p_max / 100.0;
-  ROS_INFO("p_max: %i perc: %f", p_max, perc);
+  //ROS_INFO("p_max: %i perc: %f", p_max, perc);
 
+  // Set cost. Scale the collision penalty with the max probability of the traj being in collision
   double cost = Q_coll_ * perc;  
-  ROS_INFO("cost: %f", cost);
+  //ROS_INFO("cost: %f", cost);
 
+  // Get boundary cost and normalize it
   double bcost;
   getBoundaryCost(trj, bcost);
   bcost /= 4.94975;
-  ROS_INFO("bcost: %f", bcost);
+  //ROS_INFO("bcost: %f", bcost);
+
+  // Add boundary cost to the full cost. Do the inverse of boundary cost b/c it's a distance
   cost += (1.0/bcost);
 
+  // Set result
   result = cost > 0 ? 1.0 / cost : 1.00;
 }
 
