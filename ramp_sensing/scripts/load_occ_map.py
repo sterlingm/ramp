@@ -12,7 +12,7 @@ def main():
     # Setup paths
     rospack = rospkg.RosPack()
     ros_pkg_path = rospack.get_path('ramp_sensing')
-    fname = 'hilbert_map_multi_1.csv'
+    fname = 'hilbert_map_sq_1.csv'
 
     p = os.path.join(ros_pkg_path, fname)
     print p
