@@ -2,7 +2,7 @@ function [data] = get_values(fstr)
 enter_str = ['In get_values, fstr: ',fstr];
 disp(enter_str);
 
-for num=1:2
+for num=1:4
     numstr = num2str(num);
     fname = strcat(numstr, '/', fstr);
     if num == 1
