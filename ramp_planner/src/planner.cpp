@@ -476,6 +476,8 @@ const Path Planner::getAdjustedPath(const MotionState s, const MotionState g) co
 
 const Population Planner::getPopulation( const MotionState init, const MotionState goal, const bool random)
 {
+  ROS_INFO("In Planner::getPopulation");
+  ROS_INFO("pop_type_: %i", pop_type_);
   Population result;
 
   // Set the size
@@ -1054,6 +1056,7 @@ void Planner::buildTrajectorySrv(const Path path, ramp_msgs::TrajectorySrv& resu
 void Planner::buildTrajectoryRequest(const Path path, const std::vector<ramp_msgs::BezierCurve> curves, ramp_msgs::TrajectoryRequest& result, const int id) const
 {
   result.path           = path.buildPathMsg();
+  ROS_INFO("population_.type: %i", population_.type_);
   result.type           = population_.type_;
 
   result.max_speed_linear   = max_speed_linear_;
@@ -2080,7 +2083,8 @@ const std::vector<RampTrajectory> Planner::getTrajectories(std::vector<ramp_msgs
  **/
 void Planner::initPopulation() 
 { 
-  //ROS_INFO("In Planner::initPopulation");
+  ROS_INFO("In Planner::initPopulation");
+  ROS_INFO("population_.type_: %i", population_.type_);
 
   population_ = getPopulation(latestUpdate_, goal_, false);
 
@@ -2092,6 +2096,10 @@ void Planner::initPopulation()
   //ROS_INFO("Exiting Planner::initPopulation");
 } // End init_population
 
+
+void Planner::initPopulationHolo()
+{
+}
 
 
 
@@ -4077,11 +4085,15 @@ void Planner::hilbertMapObsCb(const ramp_msgs::ObstacleList& hmapObs)
 }
 
 
-void Planner::go() 
+void Planner::go()
 {
+  ROS_INFO("At top of go(), population_.type_: %i", population_.type_);
 
   // t=0
   generation_ = 0;
+
+  pop_type_ = HOLONOMIC;
+  population_.type_ = HOLONOMIC;
 
   std::cin.get();
   
@@ -4090,8 +4102,6 @@ void Planner::go()
   ROS_INFO("Population initialized");
   ROS_INFO("evalHMap: %s", evalHMap ? "True" : "False");
 
-  seedPopulation();
-  
   evaluatePopulation(evalHMap);
   ROS_INFO("Initial population evaluated");
 
@@ -4172,6 +4182,9 @@ void Planner::go()
     exit(0);
   }
 
+
+  pop_type_ = HYBRID;
+  population_.type_ = HYBRID;
 
 
   /*

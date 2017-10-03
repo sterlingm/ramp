@@ -113,6 +113,7 @@ class Planner {
     
     // Initialization 
     void initPopulation();
+    void initPopulationHolo();
     void init(const uint8_t             i,                
               const ros::NodeHandle&    h, 
               const MotionState         s,                

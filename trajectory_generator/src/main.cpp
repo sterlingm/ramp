@@ -60,7 +60,7 @@ bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
   {
     ramp_msgs::TrajectoryRequest treq = req.reqs.at(i); 
     ramp_msgs::TrajectoryResponse tres;
-    //ROS_INFO("Trajectory Request Received: %s", utility.toString(treq).c_str());
+    ROS_INFO("Trajectory Request Received: %s", utility.toString(treq).c_str());
 
     /*
      * Check for start == goal
