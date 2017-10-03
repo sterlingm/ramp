@@ -1388,8 +1388,8 @@ bool MobileBase::checkSpeed(const ramp_msgs::Path p, const std::vector<uint8_t> 
 // Service callback, the input is a path and the output a trajectory
 bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs::TrajectoryResponse& res) 
 {
-  ROS_INFO("In MobileBase::trajectoryRequest");
-  ROS_INFO("type_: %i HOLONOMIC: %i", req.type, HOLONOMIC); 
+  //ROS_INFO("In MobileBase::trajectoryRequest");
+  //ROS_INFO("type_: %i HOLONOMIC: %i", req.type, HOLONOMIC); 
 
   // If there's less than 3 points, make it have straight segments
   // if req_.segments == 1
@@ -1544,8 +1544,6 @@ bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
   }
 
 
-  ROS_INFO("About to start generating segments, type: %i", type_);
- 
   ////ROS_INFO("About to start generating points, segments_: %i", segments_);
   uint8_t c=0;
   // Go through every knotpoint in the path

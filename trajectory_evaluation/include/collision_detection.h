@@ -28,8 +28,8 @@ class CollisionDetection
     /* Struct to hold information when querying against a packed obstacle */
     struct QueryResultPacked
     {
-      bool inner_;
-      bool outer_;
+      bool innerColl_;
+      bool outerColl_;
       int p_max_;
     };
 

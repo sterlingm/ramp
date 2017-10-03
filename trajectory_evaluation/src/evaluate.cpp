@@ -30,6 +30,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   if(req.hmap_eval)
   {
     performFeasibilityHmap(req);
+    ROS_INFO("qr.packed_.innerColl_: %s", qrPacked_.innerColl_ ? "True" : "False");
   }
   else
   {
@@ -37,8 +38,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   }
 
   // Set response members
-  req.trajectory.feasible = !qr_.collision_ && !orientation_infeasible_;
-  res.feasible = !qr_.collision_ && !orientation_infeasible_;
+  res.feasible = (!qr_.collision_ && !orientation_infeasible_) && !qrPacked_.innerColl_;
   req.trajectory.feasible = res.feasible;
   ////ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
   ////ROS_INFO("performFeasibility: %f", (ros::Time::now()-t_start).toSec());
@@ -66,7 +66,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   if(req.hmap_eval)
   {
     double fit;
-    performFitnessHmap(req.trajectory, qrPacked_.p_max_, fit);
+    performFitnessHmap(req.trajectory, qrPacked_, fit);
     //ROS_INFO("fit: %f", fit);
     
     res.fitness = fit;
@@ -176,24 +176,39 @@ void Evaluate::performFeasibilityHmap(ramp_msgs::EvaluationRequest& er)
 
 
 
-void Evaluate::performFitnessHmap(ramp_msgs::RampTrajectory& trj, const int& p_max, double& result)
+void Evaluate::performFitnessHmap(ramp_msgs::RampTrajectory& trj, const CollisionDetection::QueryResultPacked& qr, double& result)
 {
+  double cost=0;
+  
   // p_max is an int, convert to double
-  double perc = p_max / 100.0;
-  //ROS_INFO("p_max: %i perc: %f", p_max, perc);
+  double perc = qr.p_max_ / 100.0;
 
-  // Set cost. Scale the collision penalty with the max probability of the traj being in collision
-  double cost = Q_coll_ * perc;  
-  //ROS_INFO("cost: %f", cost);
+  
+  // Check feasibility
+  if(trj.feasible)
+  {
+    ROS_INFO("In trj.feasible");
+    // Set cost. Scale the collision penalty with the max probability of the traj being in collision
+    cost = 1.0 - perc;
+    ROS_INFO("cost: %f", (1.0-perc));
+  }
+  else
+  {
+    ROS_INFO("In else");
+    cost = (perc * Q_coll_);
+    ROS_INFO("cost: %f", perc*Q_coll_);
+  }
 
   // Get boundary cost and normalize it
   double bcost;
   getBoundaryCost(trj, bcost);
   bcost /= 4.94975;
-  //ROS_INFO("bcost: %f", bcost);
+  double bcost_cost = 1.0/bcost;
+  bcost_cost *= 0.1;
+  ROS_INFO("bcost: %f bcost_cost: %f", bcost, bcost_cost);
 
   // Add boundary cost to the full cost. Do the inverse of boundary cost b/c it's a distance
-  cost += (1.0/bcost);
+  cost += bcost_cost; 
 
   // Set result
   result = cost > 0 ? 1.0 / cost : 1.00;

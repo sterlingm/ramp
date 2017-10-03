@@ -476,8 +476,7 @@ const Path Planner::getAdjustedPath(const MotionState s, const MotionState g) co
 
 const Population Planner::getPopulation( const MotionState init, const MotionState goal, const bool random)
 {
-  ROS_INFO("In Planner::getPopulation");
-  ROS_INFO("pop_type_: %i", pop_type_);
+  //ROS_INFO("In Planner::getPopulation");
   Population result;
 
   // Set the size
@@ -2083,8 +2082,7 @@ const std::vector<RampTrajectory> Planner::getTrajectories(std::vector<ramp_msgs
  **/
 void Planner::initPopulation() 
 { 
-  ROS_INFO("In Planner::initPopulation");
-  ROS_INFO("population_.type_: %i", population_.type_);
+  //ROS_INFO("In Planner::initPopulation");
 
   population_ = getPopulation(latestUpdate_, goal_, false);
 
@@ -4087,8 +4085,6 @@ void Planner::hilbertMapObsCb(const ramp_msgs::ObstacleList& hmapObs)
 
 void Planner::go()
 {
-  ROS_INFO("At top of go(), population_.type_: %i", population_.type_);
-
   // t=0
   generation_ = 0;
 
@@ -4165,14 +4161,14 @@ void Planner::go()
    * Pre-Planning Cycles
    */
   ROS_INFO("Starting pre planning cycles");
-  forceMinMod = true;
+  //forceMinMod = true;
 
   // Run N pre-planning cycles
   while(generation_ < num_ppcs_) 
   {
     planningCycleCallback(); 
   }
-  forceMinMod = false;
+  //forceMinMod = false;
 
   if(stop_after_ppcs_)
   {

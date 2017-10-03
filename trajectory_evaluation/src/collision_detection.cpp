@@ -44,7 +44,7 @@ void CollisionDetection::queryPacked(const std::vector<trajectory_msgs::JointTra
   double t_start = segment[0].time_from_start.toSec();
 
   result.p_max_ = 0;
-  result.inner_ = false;
+  result.innerColl_ = false;
 
   std::vector<int> p_values;
 
@@ -52,26 +52,28 @@ void CollisionDetection::queryPacked(const std::vector<trajectory_msgs::JointTra
   for(int i=0;i<segment.size();i++)
   {
     const trajectory_msgs::JointTrajectoryPoint* p_i = &segment[i];
+    int N = ob.circles.size()/2;
 
     // Compare point to each circle
     // Do inner and outer together 
-    for(int j=0;j<ob.circles.size();j++)
+    for(int j=0;j<ob.circles.size()/2;j++)
     {
-      ramp_msgs::Circle cir = ob.circles[j]; 
+      ramp_msgs::Circle cirInner = ob.circles[j]; 
+      ramp_msgs::Circle cirOuter = ob.circles[j+N];
 
-      double dist_threshold = cir.radius + robot_r;
-      double dist = sqrt( pow(p_i->positions[0] - cir.center.x,2) + pow(p_i->positions[1] - cir.center.y,2) );
+      double dist_threshold_inner = cirInner.radius + robot_r;
+      double dist_threshold_outer = cirOuter.radius + robot_r;
+      double dist_inner = sqrt( pow(p_i->positions[0] - cirInner.center.x,2) + pow(p_i->positions[1] - cirInner.center.y,2) );
+      double dist_outer = sqrt( pow(p_i->positions[0] - cirOuter.center.x,2) + pow(p_i->positions[1] - cirOuter.center.y,2) );
 
 
       // Check inner circle collision
-      bool coll = dist <= dist_threshold;
-      if(coll)
-      {
-        /*ROS_INFO("coll: %s", coll ? "True" : "False");
-        ROS_INFO("Inner center: (%f,%f)", cir.center.x, cir.center.y);
-        ROS_INFO("Inner radius: %f", cir.radius);
-        ROS_INFO("dist_threshold: %f dist: %f", dist_threshold, dist);*/
+      bool innerColl = dist_inner <= dist_threshold_inner;
+      bool outerColl = dist_outer <= dist_threshold_outer;
 
+      // If there was collision, then store the trajectory point
+      if(innerColl || outerColl)
+      {
         // Get the p(x) value on the hmap
         int i_r = (p_i->positions[1]-hmap.map.info.origin.position.y) / hmap.map.info.resolution;
         int i_c = (p_i->positions[0]-hmap.map.info.origin.position.x) / hmap.map.info.resolution;
@@ -82,37 +84,35 @@ void CollisionDetection::queryPacked(const std::vector<trajectory_msgs::JointTra
         //ROS_INFO("i_data: %i hmap[%i]: %i", i_data, i_data, hmap.map.data[i_data]);
 
         p_values.push_back(hmap.map.data[i_data]);
+      }
 
-        // If an inner circle
-        if(j < ob.circles.size()/2)
-        {
-          //ROS_INFO("j: %i ob.circles.size()/2: %i", j, (int)ob.circles.size()/2);
-        }
-        result.inner_ = true;
+      // Set collision query values
+      if(innerColl)
+      {
+        result.innerColl_ = innerColl;
+      }
+      if(outerColl)
+      {
+        result.outerColl_ = outerColl;
       }
     } // end for
   } // end outer for
   
-  if(!result.inner_)
-  {
-    //ROS_INFO("NO INNER COLLISION");
-  }
 
-
-  // Grab the high p_value
+  // Find the highest p_value
   if(p_values.size() > 0)
   {
     result.p_max_ = p_values[0];
     for(int i=1;i<p_values.size();i++)
     {
-      result.p_max_ += p_values[i];
-      /*if(p_values[i] > result.p_max_)
+      //result.p_max_ += p_values[i];
+      if(p_values[i] > result.p_max_)
       {
         result.p_max_ = p_values[i];
-      }*/
+      }
     }
-    result.p_max_ /= p_values.size();
-  }
+    //result.p_max_ /= p_values.size();
+  } // end if p_values.size() > 0
 
   //ROS_INFO("p_values.size(): %i result.p_max_: %i", (int)p_values.size(), result.p_max_);
   //ROS_INFO("Exiting CollisionDetection::queryPacked");
