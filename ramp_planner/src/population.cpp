@@ -280,12 +280,14 @@ const bool Population::canReplace(const RampTrajectory& rt, const int& i) const
   if(subPopulations_.size() > 0) 
   {
     //std::cout<<"\nIn sub-pops are being used!";
-    
+
     //std::cout<<"\ntrajectories.size(): "<<trajectories_.size();
-    RampTrajectory temp = trajectories_.at(i);
+    RampTrajectory temp = trajectories_[i];
 
     //std::cout<<"\nsubPopulations.size(): "<<subPopulations_.size();
     //std::cout<<"\ntemp.i_subPopulation: "<<temp.msg_.i_subPopulation<<"\n";
+    
+    // Get the sub-population that trajectory i belongs to
     Population p = subPopulations_.at(temp.msg_.i_subPopulation);
 
     if(p.trajectories_.size() < 2) 
@@ -297,17 +299,23 @@ const bool Population::canReplace(const RampTrajectory& rt, const int& i) const
     //std::cout<<"\np.trajectories.size(): "<<p.trajectories_.size();
     //std::cout<<"\np.calcBestIndex(): "<<p.calcBestIndex()<<"\n";
 
-    // if i is the best in trajectory i's sub-population
-    if(temp.equals( p.trajectories_.at(p.calcBestIndex()) )) 
+    // Check if i is the best in the parent population
+    if(i == calcBestIndex())
+    {
+      return false;
+    }
+    // Check if i is the best in the sub-pop
+    /*if(temp.equals( p.trajectories_.at(p.calcBestIndex()) )) 
     {
       //std::cout<<"\ntemp == best in sub-population, returning false\n";
       return false;
-    }
+    }*/
 
-    if(rt.msg_.fitness < temp.msg_.fitness)
+    // Don't replace if the new traj has lower fitness
+    /*if(rt.msg_.fitness < temp.msg_.fitness)
     {
       return false;
-    }
+    }*/
   } // end if sub-pops are being used
 
   // Leads to infinite loop...
@@ -383,6 +391,7 @@ const int Population::add(const RampTrajectory& rt, bool forceMin)
       subPopulations_.at(i).calcBestIndex();
     }
   }*/
+
  
   // If it's a sub-population or
   // If it's not full, simply push back
@@ -558,7 +567,8 @@ const std::vector<Population> Population::createSubPopulations(const double delt
 
 
   // Get the number of sub-pops for delta_theta
-  int num = ceil((2*PI) / delta_theta);
+  //int num = ceil((2*PI) / delta_theta);
+  int num = ceil((PI/2.f) / delta_theta);
   //////ROS_INFO("num: %i", num);
  
   // Create the sub-populations

@@ -4150,7 +4150,7 @@ void Planner::go()
    */
   if(subPopulations_) 
   {
-    population_.createSubPopulations();
+    population_.createSubPopulations(PI/12.);
     std::cout<<"\nSub-transPopulations created\n";
   }
 

@@ -1,6 +1,6 @@
 population_size: 15
 
-sub_populations: false 
+sub_populations: true 
 
 modifications: true
 
@@ -16,7 +16,7 @@ only_sensing: false
 # If false, control cycles are cut off
 moving_robot: false
 
-preplanning_cycles: 1500
+preplanning_cycles: 750
 
 stop_after_ppcs: true
 

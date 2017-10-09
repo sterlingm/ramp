@@ -15,6 +15,7 @@ class Population {
     /* Methods */
     const unsigned int    size() const;
     const int             add(const RampTrajectory& rt, bool forceMin=false);
+    const int             addWithSubPop(const RampTrajectory& rt, bool forceMin=false);
     const int             calcBestIndex() const;
     const int             calcWorstIndex() const;
     void                  clear();
