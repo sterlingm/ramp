@@ -46,8 +46,6 @@ for i=1:size(trajs,2)-1
     cc_stops = [cc_stops; i_minDist];
 end
 cc_stops = [cc_stops; size(trajs{1, size(trajs,2)},1)];
-% Fix issue with Bezier curve follwed by error correction
-cc_stops(14) = 10;
 
 % For each trajectory
 % Create cell array of only the parts that the robot moves on
@@ -61,9 +59,6 @@ traj_final = [];
 for i=1:size(trajs_partial,2)
     traj_final = [traj_final; trajs_partial{i}];
 end
-
-% Robot got within goal threshold before completing last part of trajectory
-traj_final(227:end,:) = [];
 
 markerSize = 2000;
 plot(traj_final(:,1), traj_final(:,2));
