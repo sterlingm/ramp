@@ -45,6 +45,7 @@ void CollisionDetection::queryPacked(const std::vector<trajectory_msgs::JointTra
 
   result.p_max_ = 0;
   result.innerColl_ = false;
+  result.outerColl_ = false;
 
   std::vector<int> p_values;
 
