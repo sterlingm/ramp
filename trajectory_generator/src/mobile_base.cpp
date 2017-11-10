@@ -89,8 +89,7 @@ void MobileBase::initReflexxes()
 // TODO: change 3 booleans to 1 enum
 void MobileBase::init(const ramp_msgs::TrajectoryRequest req) 
 {
-  //////////////////////ROS_INFO("Entered MobileBase::init");
-  //std::cout<<"\nRequest received: "<<utility_.toString(req)<<"\n";
+  ROS_INFO("Entered MobileBase::init");
 
   //if(req.bezierInfo.u_0 > 0)
     //std::cout<<"\nBezier Info passed in: "<<utility_.toString(req.bezierInfo);
@@ -101,6 +100,7 @@ void MobileBase::init(const ramp_msgs::TrajectoryRequest req)
   // Set max speeds
   MAX_SPEED_LINEAR  = req.max_speed_linear;
   MAX_SPEED_ANGULAR = req.max_speed_angular;
+  ROS_INFO("MAX_SPEED_LINEAR: %f MAX_SPEED_ANGULAR: %f", MAX_SPEED_LINEAR, MAX_SPEED_ANGULAR);
 
   // Set print
   print_ = req.print;
@@ -224,8 +224,8 @@ void MobileBase::setTarget(const ramp_msgs::MotionState& ms)
 
 void MobileBase::setMaxV(const double x_dot, const double theta_dot)
 {
-  //////////////////ROS_INFO("In MobileBa::setMaxV");
-  //////////////////ROS_INFO("x_dot: %f theta_dot: %f", x_dot, theta_dot);
+  ROS_INFO("In MobileBase::setMaxV");
+  ROS_INFO("x_dot: %f theta_dot: %f", x_dot, theta_dot);
 
 
   /*
@@ -1001,7 +1001,7 @@ const trajectory_msgs::JointTrajectoryPoint MobileBase::spinOnce(bool vertical_l
   /** Build the JointTrajectoryPoint object that will be used to build the trajectory */
   trajectory_msgs::JointTrajectoryPoint point = buildTrajectoryPoint(reflexxesData_, vertical_line);
 
-  //printReflexxesSpinInfo();
+  printReflexxesSpinInfo();
 
 
   // The input of the next iteration is the output of this one
@@ -1602,9 +1602,9 @@ bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
 
     // *** Set the new target ***
     if(x_diff_greater)
-      setMaxV(x_dot);
+      setMaxV(x_dot, MAX_SPEED_ANGULAR);
     else
-      setMaxV(y_dot);
+      setMaxV(y_dot, MAX_SPEED_ANGULAR);
     setTarget(path_.points.at(i_kp_).motionState);
     ////ROS_INFO("After setting new target:");
     ////ROS_INFO("Prev KP: %s", utility_.toString(prevKP_).c_str());
