@@ -42,7 +42,7 @@ time_in_ic          = get_values(fstr_time_in_ic);
 trajec_size         = get_values(fstr_trajec_size);
 
 compute_switch_ts_dist = fitdist(compute_switch_ts, 'Normal');
-full_trajec_dist = fitdist(full_trajec, 'Normal');
+%full_trajec_dist = fitdist(full_trajec, 'Normal');
 min_dist_obs_dist = fitdist(min_dist_obs, 'Normal');
 motion_error_amount_dist = fitdist(motion_error_amount, 'Normal');
 num_ccs_dist = fitdist(num_ccs, 'Normal');
@@ -60,6 +60,7 @@ trajec_size_dist = fitdist(trajec_size, 'Normal');
 %--------------------------------------------------------------------------
 % Duration data
 %--------------------------------------------------------------------------
+disp('Duration data');
 fstr_cc_durs        = 'cc_durs.txt';
 fstr_pc_durs        = 'pc_durs.txt';
 fstr_sc_durs        = 'sc_durs.txt';
