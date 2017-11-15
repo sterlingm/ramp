@@ -511,6 +511,7 @@ class Planner {
     tf::StampedTransform tf_global_odom_rot_;
     
     
+    int i_prevBest_;
     
     
     
@@ -532,6 +533,7 @@ class Planner {
     int num_pcs_;                                         // go()
     int num_scs_;                                         // sensingCycleCallback
     int num_ccs_;                                         // controlCycleCallback
+    int num_switches_;
     int pop_size_;                                        // init
     std::vector<ros::Duration> d_compute_switch_all_ts_;  // doControlCycle
     std::vector<int> switch_t_size_;                      // getTransitionTrajectory
@@ -551,6 +553,7 @@ class Planner {
     std::ofstream f_num_pcs_;
     std::ofstream f_num_scs_;
     std::ofstream f_num_ccs_;
+    std::ofstream f_num_switches_;
     std::ofstream f_pop_size_;
     std::ofstream f_compute_switch_all_ts_;
     std::ofstream f_switch_t_size_;
@@ -582,6 +585,7 @@ class Planner {
     std::vector<double> trajec_durs_;                // requestTrajectory
     std::vector<double> eval_durs_;                  // requestEvaluation
     std::vector<double> mod_durs_;                   // modification
+    std::vector<double> mod_traj_durs_;              // modification including trajec
     std::vector<double> mutate_durs_;                // planningCycleCallback
     std::vector<double> error_correct_durs_eval_;    // planningCycleCallback
     std::vector<double> error_correct_durs_no_eval_; // planningCycleCallback
@@ -596,6 +600,7 @@ class Planner {
     std::ofstream f_trajec_durs_;
     std::ofstream f_eval_durs_;
     std::ofstream f_mod_durs_;
+    std::ofstream f_mod_traj_durs_;
     std::ofstream f_mutate_durs_;
     std::ofstream f_error_correct_durs_eval_;
     std::ofstream f_error_correct_durs_no_eval_;

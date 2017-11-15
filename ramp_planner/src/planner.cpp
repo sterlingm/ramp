@@ -1720,6 +1720,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   num_pcs_  = 0;
   num_scs_  = 0;
   num_ccs_  = 0;
+  num_switches_ = 0;
   pop_size_ = populationSize_;
   sc_freq_  = t_sc_rate;
 
@@ -1739,6 +1740,7 @@ void Planner::openFiles()
   f_num_pcs_.open(directory+"/data/num_pcs.txt");
   f_num_scs_.open(directory+"/data/num_scs.txt");
   f_num_ccs_.open(directory+"/data/num_ccs.txt");
+  f_num_switches_.open(directory+"/data/num_switches.txt");
   f_pop_size_.open(directory+"/data/pop_size.txt");
   f_compute_switch_all_ts_.open(directory+"/data/compute_switch_ts.txt");
   f_switch_t_size_.open(directory+"/data/switch_t_size.txt");
@@ -1762,6 +1764,7 @@ void Planner::openFiles()
   f_trajec_durs_.open(directory+"/data/trajec_durs.txt");
   f_eval_durs_.open(directory+"/data/eval_durs.txt");
   f_mod_durs_.open(directory+"/data/mod_durs.txt");
+  f_mod_traj_durs_.open(directory+"/data/mod_traj_durs_durs.txt");
   f_mutate_durs_.open(directory+"/data/mutate_durs.txt");
   f_error_correct_durs_eval_.open(directory+"/data/error_correct_durs_eval.txt");
   f_error_correct_durs_no_eval_.open(directory+"/data/error_correct_durs_no_eval.txt");
@@ -1773,6 +1776,7 @@ void Planner::closeFiles()
   f_num_pcs_.close();
   f_num_scs_.close();
   f_num_ccs_.close();
+  f_num_switches_.close();
   f_pop_size_.close();
   f_compute_switch_all_ts_.close();
   f_switch_t_size_.close();
@@ -1794,6 +1798,7 @@ void Planner::closeFiles()
   f_trajec_durs_.close();
   f_eval_durs_.close();
   f_mod_durs_.close();
+  f_mod_traj_durs_.close();
   f_mutate_durs_.close();
   f_error_correct_durs_eval_.close();
   f_error_correct_durs_no_eval_.close();
@@ -2609,7 +2614,16 @@ void Planner::modifyTrajec(std::vector<RampTrajectory>& result)
 
   // The process begins by modifying one or more paths
   ros::Time t_p = ros::Time::now();
+  // Record duration data
+  high_resolution_clock::time_point tNow = high_resolution_clock::now();
+
+  // Modify path
   std::vector<Path> modded_paths = modifyPath();
+  
+  // Save duration data
+  duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tNow);
+  mod_durs_.push_back( time_span.count() );
+
   ////ROS_INFO("Number of modified paths: %i", (int)modded_paths.size());
 
 
@@ -2660,7 +2674,7 @@ void Planner::modification()
 
   // Save duration data
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tNow);
-  mod_durs_.push_back( time_span.count() );
+  mod_traj_durs_.push_back( time_span.count() );
 
   ////////ROS_INFO("t_p: %f", (t_p-now).toSec());
   ////ROS_INFO("Modification trajectories obtained: %i", (int)mod_trajec.size());
@@ -3243,10 +3257,16 @@ void Planner::doControlCycle()
     population_.trajectories_[i].msg_.t_start = ros::Duration(0);
   }*/
 
-
   // Set the bestT
   RampTrajectory bestT = population_.getBest();
-  i_best = population_.calcBestIndex();
+  //i_best = population_.calcBestIndex();
+  i_best = bestT.msg_.id;
+
+  if(i_best != i_prevBest_)
+  {
+    num_switches_++;
+  }
+  i_prevBest_ = i_best;
 
   //////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
 
@@ -3269,7 +3289,7 @@ void Planner::doControlCycle()
   movingOnCC_.msg_.t_start  = ros::Duration(0);
 
   // Record data
-  full_trajectory_.concatenateForce(movingOn_);
+  full_trajectory_.concatenateForce(movingOnCC_);
 
   // Evaluate movingOnCC
   evaluateTrajectory(movingOnCC_, false);
@@ -3824,6 +3844,7 @@ void Planner::writeGeneralData()
   f_num_pcs_<<num_pcs_;
   f_num_scs_<<num_scs_;
   f_num_ccs_<<num_ccs_;
+  f_num_switches_<<num_switches_;
   f_pop_size_<<pop_size_;
 
   // Time to compute switching trajectories
@@ -4082,6 +4103,12 @@ void Planner::writeDurationData()
   for(int i=0;i<mod_durs_.size();i++)
   {
     f_mod_durs_<<"\n"<<mod_durs_[i];
+  }
+  
+  // Modification request durations
+  for(int i=0;i<mod_traj_durs_.size();i++)
+  {
+    f_mod_traj_durs_<<"\n"<<mod_traj_durs_[i];
   }
   
   // Mutation durations
@@ -4349,6 +4376,9 @@ void Planner::go()
   //ROS_INFO("Done at time %f", ros::Time::now().toSec());
   num_pcs_    = generation_;
 
+
+  // Subtract 1 because first cc will always register a switch
+  num_switches_--;
 
 
   printData();
