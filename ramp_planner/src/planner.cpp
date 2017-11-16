@@ -1215,6 +1215,30 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
 }
 
 
+bool Planner::envSrvCallback(ramp_msgs::EnvironmentSrv::Request &req, ramp_msgs::EnvironmentSrv::Response &res) {
+	std::cout << req.delta_paras << std::endl;
+
+	if (!is_population_initialized) {
+		res.is_valid = false;
+		return false;
+	}
+	
+	// calculate best trajectory using new parameters
+	double T_weight, D_weight, A_weight;
+	ros::param::get("/ramp/eval_weight_T", T_weight);
+	ros::param::get("/ramp/eval_weight_D", D_weight);
+	ros::param::get("/ramp/eval_weight_A", A_weight);
+	T_weight += req.delta_paras.delta_time_weight;
+	D_weight += req.delta_paras.delta_obs_dis_weight;
+	A_weight += req.delta_paras.delta_ori_chg_weight;
+	ros::param::set("/ramp/eval_weight_T", T_weight);
+	ros::param::set("/ramp/eval_weight_D", D_weight);
+	ros::param::set("/ramp/eval_weight_A", A_weight);
+	evaluatePopulation();
+	res.trajectory = population_.getBest().msg_;
+	res.is_valid = true;
+	return true;
+}
 
 
 /*****************************************************
@@ -1655,7 +1679,9 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 /** Initialize the handlers and allocate them on the heap */
 void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int gens_before_cc, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
 {
-  ////ROS_INFO("In Planner::init");
+  ROS_INFO("In Planner::init");
+  
+  is_population_initialized = false;
 
   // Set ID
   id_ = i;
@@ -1723,7 +1749,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   pop_size_ = populationSize_;
   sc_freq_  = t_sc_rate;
 
-  ////ROS_INFO("Exiting Planner::init");
+  ROS_INFO("Exiting Planner::init");
 } // End init
 
 
@@ -2190,6 +2216,7 @@ void Planner::initPopulation()
     ////ROS_INFO("Path %i: %s", i, population_.paths_.at(i).toString().c_str());
   }
   ////ROS_INFO("Exiting Planner::initPopulation");
+  is_population_initialized = true;
 } // End init_population
 
 
@@ -4231,7 +4258,7 @@ void Planner::goTest(float sec)
 
 
 
-void Planner::go() 
+void Planner::go(const ros::NodeHandle& h) 
 {
 
   // t=0
@@ -4239,13 +4266,12 @@ void Planner::go()
   
   // initialize population
   initPopulation();
-  //ROS_INFO("Population initialized");
+  ROS_INFO("Population initialized");
   evaluatePopulation();
-  //ROS_INFO("Initial population evaluated");
+  ROS_INFO("Initial population evaluated");
   //sendPopulation();
   //std::cin.get();
  
-
   // Seed the population
   if(seedPopulation_) 
   {

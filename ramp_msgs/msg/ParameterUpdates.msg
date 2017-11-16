@@ -1,0 +1,4 @@
+float64 delta_time_weight
+float64 delta_obs_dis_weight
+float64 delta_ori_chg_weight
+float64 delta_rho

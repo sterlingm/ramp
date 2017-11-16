@@ -13,9 +13,11 @@
 #include "rviz_handler.h"
 #include "parameter_handler.h"
 #include "bezier_curve.h"
+#include "ramp_msgs/EnvironmentSrv.h"
 #include <type_traits>
 #include <tf/transform_broadcaster.h>
 
+#define ENV_SRV_NAME "response2para_update"
 
 struct ModificationResult 
 {
@@ -44,6 +46,7 @@ class Planner {
      ************** Data Members ***************
      *******************************************/
     
+    bool is_population_initialized;
 
     // Hold the population of trajectories, 
     // the velocities of each trajectory's segments,
@@ -108,7 +111,7 @@ class Planner {
     // Start planning
     trajectory_msgs::JointTrajectoryPoint prepareForTestCase();
     void planningCycles(int num);
-    void go();
+    void go(const ros::NodeHandle& h);
     void goTest(float sec=-1);
     
     // Initialization 
@@ -178,6 +181,9 @@ class Planner {
     void buildEvaluationSrv(std::vector<RampTrajectory>& trajecs, ramp_msgs::EvaluationSrv& result) const;
     void buildEvaluationSrv(const RampTrajectory& trajec, ramp_msgs::EvaluationSrv& result) const;
     void buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::EvaluationRequest& result, bool full=true) const;
+    
+    
+    bool envSrvCallback(ramp_msgs::EnvironmentSrv::Request &req, ramp_msgs::EnvironmentSrv::Response &res);
 
 
     // Request information from other packages

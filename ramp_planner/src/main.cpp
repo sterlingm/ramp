@@ -329,7 +329,7 @@ void loadParameters(const ros::NodeHandle handle)
 
 void pubStartGoalMarkers()
 {
-  //ROS_INFO("In pubStartGoalMarkers");
+  ROS_INFO("In pubStartGoalMarkers");
   visualization_msgs::MarkerArray result;
 
   // Make Markers for both positions
@@ -406,7 +406,7 @@ void pubStartGoalMarkers()
   pub_rviz.publish(result);
   pub_rviz.publish(result);
   
-  //ROS_INFO("Exiting pubStartGoalMarkers");
+  ROS_INFO("Exiting pubStartGoalMarkers");
 }
 
 
@@ -433,6 +433,8 @@ int main(int argc, char** argv)
   }
   ros::Subscriber sub_updateVel_ = handle.subscribe("update", 1, &Planner::updateCbControlNode, &my_planner);
   ros::Subscriber sub_sc_ = handle.subscribe("obstacles", 1, &Planner::sensingCycleCallback, &my_planner);
+  
+  ros::ServiceServer env_service = handle.advertiseService(ENV_SRV_NAME, &Planner::envSrvCallback, &my_planner);
 
   pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 10);
 
@@ -501,6 +503,7 @@ int main(int argc, char** argv)
   std::cout<<"\nGoal: "<<my_planner.goal_.toString();
 
   pubStartGoalMarkers();
+  ROS_INFO("pubStartGoalMarkers complete");
   ////ROS_INFO("Done with pubStartGoalMarkers");
  
  
@@ -522,7 +525,7 @@ int main(int argc, char** argv)
   }
   ROS_INFO("Starting Planner!");
   
-  my_planner.go();
+  my_planner.go(handle);
 
 
  
