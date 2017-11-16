@@ -199,9 +199,19 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     //ROS_INFO("Normalized terms T: %f A: %f D: %f", T, A, D);
 
     // Weight terms
+    ros::param::get("/ramp/eval_weight_T", T_weight_);
+    ros::param::get("/ramp/eval_weight_D", D_weight_);
+	ros::param::get("/ramp/eval_weight_A", A_weight_);
     T *= T_weight_;
     A *= A_weight_;
     D *= D_weight_;
+    static int div = 0;
+    div++;
+    if (div > 74)
+    {
+    	div = 0;
+	    ROS_INFO("current weights T: %.3f A: %.3f D: %.3f", T_weight_, A_weight_, D_weight_);
+	}
     
     //ROS_INFO("Weighted terms T: %f A: %f D: %f", T, A, D);
     
