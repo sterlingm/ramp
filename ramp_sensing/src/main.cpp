@@ -22,6 +22,9 @@
 #include <bfl/pdf/linearanalyticconditionalgaussian.h>
 #include <bfl/pdf/analyticconditionalgaussian.h>
 
+ramp_msgs::MotionState robotState;
+double viewingAngle;
+std::vector<double> viewMinMax;
 
 std::vector<CircleOb*> cir_obs;
 std::vector<Circle> cirs_pos;
@@ -609,7 +612,7 @@ void publishMarkers(const ros::TimerEvent& e)
 
 
   // Create lines for the attachments
-  /*for(int i=0;i<attachs.size();i++)
+  for(int i=0;i<attachs.size();i++)
   {
     //ROS_INFO("i: %i attachs.size(): %i", i, (int)attachs.size());
     visualization_msgs::Marker lineList;
@@ -640,7 +643,7 @@ void publishMarkers(const ros::TimerEvent& e)
       ROS_INFO("lineList.points[%i]: (%f,%f)", j, lineList.points[j].x, lineList.points[j].y);
     }*/
 
-    /*lineList.color.r = 0.0;
+    lineList.color.r = 0.0;
     lineList.color.g = 0.0;
     lineList.color.b = 1.0;
     lineList.color.a = 1.0;
@@ -648,7 +651,7 @@ void publishMarkers(const ros::TimerEvent& e)
     lineList.scale.x = 0.05;
 
     result.markers.push_back(lineList);
-  }*/
+  }
 
 
   //ROS_INFO("texts.size(): %i", (int)texts.size());
@@ -1474,6 +1477,151 @@ void initGlobalMap()
 }
 
 
+void setRobotPos()
+{
+  robotState.positions.push_back(3.57);
+  robotState.positions.push_back(1.59);
+  robotState.positions.push_back(-2.35);
+
+  viewingAngle = 1.5708;
+
+  viewMinMax.push_back( util.displaceAngle(robotState.positions[2], -viewingAngle/2.0) );
+  viewMinMax.push_back( util.displaceAngle(robotState.positions[2], viewingAngle/2.0) );
+  ROS_INFO("viewMinMax: [%f,%f]", viewMinMax[0], viewMinMax[1]);
+
+  /* 
+   * Create markers in rviz to display this information
+   */
+  visualization_msgs::MarkerArray viewingInfo;
+
+  // Robot position
+  visualization_msgs::Marker robotPos;
+  robotPos.type = visualization_msgs::Marker::SPHERE;
+  robotPos.action = visualization_msgs::Marker::ADD;
+  robotPos.pose.position.x = robotState.positions[0];
+  robotPos.pose.position.y = robotState.positions[1];
+  
+  robotPos.scale.x = 0.4;
+  robotPos.scale.y = 0.4;
+  robotPos.scale.z = 0.1;
+  
+  robotPos.color.r = 0;
+  robotPos.color.g = 0;
+  robotPos.color.b = 0;
+  robotPos.color.a = 1;
+
+  robotPos.lifetime = ros::Duration(20);
+  viewingInfo.markers.push_back(robotPos);
+
+  // Robot orientation
+  visualization_msgs::Marker robotTheta;
+  robotTheta.type = visualization_msgs::Marker::ARROW;
+  robotTheta.action = visualization_msgs::Marker::ADD;
+  robotTheta.pose = robotPos.pose;
+  
+  // Set scale
+  robotTheta.scale.x = 0.5;
+  robotTheta.scale.y = 0.1;
+
+  // Set orientation
+  tf::Quaternion q = tf::createQuaternionFromYaw(robotState.positions[2]);
+  tf::quaternionTFToMsg(q, robotTheta.pose.orientation);
+  
+  robotTheta.color.r = 0;
+  robotTheta.color.g = 0;
+  robotTheta.color.b = 0;
+  robotTheta.color.a = 1;
+
+  robotTheta.lifetime = ros::Duration(20);
+  viewingInfo.markers.push_back(robotTheta);
+
+
+  // Viewing min and max lines (use arrows so we only have to compute direction and not endpoints)
+  visualization_msgs::Marker angleMin, angleMax;
+  
+  angleMin.type = visualization_msgs::Marker::ARROW;
+  angleMax.type = visualization_msgs::Marker::ARROW;
+  angleMin.action = visualization_msgs::Marker::ADD;
+  angleMax.action = visualization_msgs::Marker::ADD;
+  angleMin.pose = robotPos.pose;
+  angleMax.pose = robotPos.pose;
+  
+  
+  // Set scale
+  angleMin.scale.x = 5.0;
+  angleMin.scale.y = 0.1;
+  angleMax.scale.x = 5.0;
+  angleMax.scale.y = 0.1;
+
+  // Set orientation
+  tf::Quaternion qMin = tf::createQuaternionFromYaw(viewMinMax[0]);
+  tf::quaternionTFToMsg(qMin, angleMin.pose.orientation);
+  
+  tf::Quaternion qMax = tf::createQuaternionFromYaw(viewMinMax[1]);
+  tf::quaternionTFToMsg(qMax, angleMax.pose.orientation);
+
+  angleMin.color.r = 0;
+  angleMin.color.g = 1;
+  angleMin.color.b = 0;
+  angleMin.color.a = 1;
+
+  angleMax.color.r = 0;
+  angleMax.color.g = 0;
+  angleMax.color.b = 1;
+  angleMax.color.a = 1;
+
+  angleMin.lifetime = ros::Duration(20);
+  angleMax.lifetime = ros::Duration(20);
+
+  viewingInfo.markers.push_back(angleMin);
+  viewingInfo.markers.push_back(angleMax);
+
+
+  /*
+   * Set common values for all Marker objects
+   */ 
+  for(int i=0;i<viewingInfo.markers.size();i++)
+  {
+    viewingInfo.markers[i].header.stamp = ros::Time::now();
+    viewingInfo.markers[i].header.frame_id = global_frame;
+    viewingInfo.markers[i].ns = "basic_shapes";
+    viewingInfo.markers[i].id = 100000 + i;
+  }
+
+  pub_rviz.publish(viewingInfo);
+}
+
+bool checkViewingObstacle(Obstacle ob)
+{
+  ROS_INFO("In checkViewingObstacle");
+  //ROS_INFO("viewMinMax.size(): %i", (int)viewMinMax.size());
+  //ROS_INFO("robotState.positions.size(): %i ob.msg_.ob_ms.positions: %i", (int)robotState.positions.size(), (int)ob.msg_.ob_ms.positions.size());
+
+  double angleToOb = util.findAngleFromAToB(robotState.positions, ob.msg_.ob_ms.positions);
+
+  // Get difference between angleToOb and robot's orientation
+  double deltaTheta = util.findDistanceBetweenAngles(robotState.positions[2], angleToOb);
+
+  ROS_INFO("[min,max]: [%f,%f] angleToOb: %f", viewMinMax[0], viewMinMax[1], angleToOb);
+  ROS_INFO("robotState.positions[2]: %f deltaTheta: %f viewingAngle: %f", robotState.positions[2], deltaTheta, viewingAngle);
+
+
+  if(fabs(deltaTheta) < viewingAngle/2.0)
+  {
+    ROS_INFO("Returning true for deltaTheta");
+    return true;
+  }
+
+  /*if(angleToOb > viewMinMax[0] && angleToOb < viewMinMax[1])
+  {
+    ROS_INFO("Returning true");
+    return true;
+  }*/
+
+  ROS_INFO("Returning false");
+  return false;
+}
+
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
   //ROS_INFO("**************************************************");
@@ -1646,6 +1794,10 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   /*
    * Circle positions are finalized at this point
    */
+
+   /*
+    * Check if obstacles are in viewing angle
+    */
 
 
 
@@ -1831,14 +1983,17 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   {
     //ROS_INFO("Creating obstacle, prevCirs.size(): %i prevTheta.size(): %i", (int)cir_obs[i]->prevCirs.size(), (int)cir_obs[i]->prevTheta.size());
     Obstacle o(cir_obs[i]->cir.radius, costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res, global_grid.info.origin.position.x, global_grid.info.origin.position.y); 
+
+      // Update values
+      float theta = cir_obs[i]->prevTheta.size() > 0 ? cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] : initial_theta;
+      o.update(cir_obs[i]->cir, velocities[i], theta);
     
-    // Update values
-    float theta = cir_obs[i]->prevTheta.size() > 0 ? cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] : initial_theta;
-    o.update(cir_obs[i]->cir, velocities[i], theta);
-  
-    obs.push_back(o);
-    list.obstacles.push_back(o.msg_);
-    //ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
+    if(checkViewingObstacle(o))
+    {
+      obs.push_back(o);
+      list.obstacles.push_back(o.msg_);
+      //ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
+    }
   }
 
   // Record duration data
@@ -2055,7 +2210,8 @@ int main(int argc, char** argv)
   }*/
 
 
-  ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);
+  //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);
+  ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/consolidated_costmap", 1, &costmapCb);
 
   //Publishers
   pub_obj = handle.advertise<ramp_msgs::ObstacleList>("obstacles", 1);
@@ -2072,6 +2228,9 @@ int main(int argc, char** argv)
   // Set function to run at shutdown
   signal(SIGINT, reportPredictedVelocity);
  
+  ros::Duration dd(0.5);
+  dd.sleep();
+  setRobotPos();
 
   printf("\nSpinning\n");
 
