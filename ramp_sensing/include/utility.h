@@ -118,6 +118,8 @@ class Utility {
 
     std::vector<ramp_msgs::Range> standardRanges_;
 
+    bool checkAngleBetweenAngles(const double angle, const double min, const double max) const;
+
     const double positionDistance(const std::vector<double> a, const std::vector<double> b) const;
     const double positionDistance(const double ax, const double ay, const double bx, const double by) const;
     

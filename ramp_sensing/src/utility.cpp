@@ -78,7 +78,6 @@ const double Utility::findAngleFromAToB(const std::vector<double> a, const std::
   return result;
 } // End findAngleFromAToB
 
-
 /** This method returns distance between orientations a1 and a2. The distance is in the range [-PI, PI]. */
 const double Utility::findDistanceBetweenAngles(const double a1, const double a2) const 
 {
