@@ -23,7 +23,7 @@ pop_traj_type: 1 #0=holonomic, 1=hybrid
 
 # Sensing parameters #
 
-sensing_angle: 1.5708
+sensing_angle: 3.74
 
 # Evaluation weight parameters #
 

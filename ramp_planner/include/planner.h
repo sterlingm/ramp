@@ -236,8 +236,6 @@ class Planner {
     void updateCbPose(const geometry_msgs::PoseWithCovarianceStamped msg);
     void updateCbControlNode(const ramp_msgs::MotionState& msg);
 
-    void publishStateAfterTf(const ros::TimerEvent& t);
-
     /** Data */
 
     // Motion state that should be reached by next control cycle
