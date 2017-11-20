@@ -1,3 +1,4 @@
+# RAMP misc parameters #
 population_size: 10
 
 sub_populations: false 
@@ -20,6 +21,12 @@ gens_before_control_cycle: 50
 
 pop_traj_type: 1 #0=holonomic, 1=hybrid
 
+# Sensing parameters #
+
+sensing_angle: 1.5708
+
+# Evaluation weight parameters #
+
 fixed_control_cycle_rate: 1.2
 
 sensing_cycle_rate: 15
@@ -32,6 +39,8 @@ eval_weight_D: 15
 
 eval_weight_A: 0.01
 
+
+# Robot configuration parameters #
 global_frame: "map"
 
 update_topic: "odom"
@@ -40,6 +49,8 @@ shrink_ranges: false
 
 use_start_param: true
 
+# Experimental setup parameters #
+#
 # Turtlebot obstacle topics
 #obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom', '/obstacle_3/odom']
 #obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity', '/obstacle_2/mobile_base/commands/velocity', '/obstacle_3/mobile_base/commands/velocity']

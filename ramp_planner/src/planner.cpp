@@ -1489,7 +1489,7 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
 void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg) 
 {
   t_prev_update_ = ros::Time::now();
-  ////ROS_INFO("In Planner::updateCbControlNode");
+  //ROS_INFO("In Planner::updateCbControlNode");
   ////////ROS_INFO("Time since last: %f", (ros::Time::now()-t_prev_update_).toSec());
 
  
@@ -1501,10 +1501,11 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
   }
   else 
   {
-    ////ROS_INFO("odom msg: (%f, %f)", msg.velocities[0], msg.velocities[1]);
+    //ROS_INFO("odom msg: (%f, %f)", msg.velocities[0], msg.velocities[1]);
 
     if(update_topic_ == "odom")
     {
+      //ROS_INFO("update_topic_ == \"odom\"");
       latestUpdate_ = msg;
       latestUpdate_.transformBase(T_w_odom_);
     }
@@ -1541,8 +1542,10 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
       latestUpdate_.msg_.accelerations[1] = a_tf.getY();
     }
 
-    ////ROS_INFO("New latestUpdate_: %s", latestUpdate_.toString().c_str());
+    //ROS_INFO("New latestUpdate_: %s", latestUpdate_.toString().c_str());
+    h_control_->sendLatestState(latestUpdate_.msg_);
   } // end else
+
   
   ////////ROS_INFO("Exiting Planner::updateCallback");
 } // End updateCallback

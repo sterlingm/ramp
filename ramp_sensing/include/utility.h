@@ -135,5 +135,6 @@ class Utility {
     static bool compareCircleMatches(const CircleMatch& a, const CircleMatch& b);
 
     const std::string toString(const ramp_msgs::Path p) const;    
+    const std::string toString(const ramp_msgs::MotionState mp) const;    
 };
 #endif

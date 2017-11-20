@@ -23,7 +23,7 @@
 #include <bfl/pdf/analyticconditionalgaussian.h>
 
 ramp_msgs::MotionState robotState;
-double viewingAngle;
+double sensingAngle;
 std::vector<double> viewMinMax;
 
 std::vector<CircleOb*> cir_obs;
@@ -246,6 +246,15 @@ void loadParameters(const ros::NodeHandle& handle)
     ROS_ERROR("Did not find rosparam /ramp/population_size");
   }
 
+  if(handle.hasParam("/ramp/sensing_angle"))
+  {
+    handle.getParam("/ramp/sensing_angle", sensingAngle);
+    ROS_INFO("sensingAngle: %f", sensingAngle);
+  }
+  else
+  {
+    ROS_ERROR("Did not find rosparam /ramp/sensing_angle");
+  }
 }
 
 
@@ -1450,7 +1459,7 @@ void halfCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
 
 void initGlobalMap()
 {
-  ROS_INFO("In initGlobalMap");
+  //ROS_INFO("In initGlobalMap");
   if(ranges.size() > 1)
   {
     global_costmap.info.resolution = 0.05;
@@ -1468,7 +1477,7 @@ void initGlobalMap()
       global_costmap.data.push_back(-1);
     }
     
-    ROS_INFO("Global CM origin: (%f,%f) w: %i h: %i size: %i", global_costmap.info.origin.position.x, global_costmap.info.origin.position.y, global_costmap.info.width, global_costmap.info.height, (int)global_costmap.data.size());
+    //ROS_INFO("Global CM origin: (%f,%f) w: %i h: %i size: %i", global_costmap.info.origin.position.x, global_costmap.info.origin.position.y, global_costmap.info.width, global_costmap.info.height, (int)global_costmap.data.size());
   }
   else
   {
@@ -1476,18 +1485,20 @@ void initGlobalMap()
   }
 }
 
-
-void setRobotPos()
+void setRobotPos(const ramp_msgs::MotionState& ms)
 {
-  robotState.positions.push_back(3.57);
-  robotState.positions.push_back(1.59);
-  robotState.positions.push_back(-2.35);
+  robotState.positions.clear();
+  
+  // Set new position
+  robotState.positions.push_back(ms.positions[0]);
+  robotState.positions.push_back(ms.positions[1]);
+  robotState.positions.push_back(ms.positions[2]);
 
-  viewingAngle = 1.5708;
+  viewMinMax.clear();
 
-  viewMinMax.push_back( util.displaceAngle(robotState.positions[2], -viewingAngle/2.0) );
-  viewMinMax.push_back( util.displaceAngle(robotState.positions[2], viewingAngle/2.0) );
-  ROS_INFO("viewMinMax: [%f,%f]", viewMinMax[0], viewMinMax[1]);
+  viewMinMax.push_back( util.displaceAngle(robotState.positions[2], -sensingAngle/2.0) );
+  viewMinMax.push_back( util.displaceAngle(robotState.positions[2], sensingAngle/2.0) );
+  //ROS_INFO("viewMinMax: [%f,%f]", viewMinMax[0], viewMinMax[1]);
 
   /* 
    * Create markers in rviz to display this information
@@ -1591,34 +1602,45 @@ void setRobotPos()
   pub_rviz.publish(viewingInfo);
 }
 
-bool checkViewingObstacle(Obstacle ob)
+void robotUpdateCb(const ramp_msgs::MotionStateConstPtr ms)
 {
-  ROS_INFO("In checkViewingObstacle");
-  //ROS_INFO("viewMinMax.size(): %i", (int)viewMinMax.size());
-  //ROS_INFO("robotState.positions.size(): %i ob.msg_.ob_ms.positions: %i", (int)robotState.positions.size(), (int)ob.msg_.ob_ms.positions.size());
-
-  double angleToOb = util.findAngleFromAToB(robotState.positions, ob.msg_.ob_ms.positions);
-
-  // Get difference between angleToOb and robot's orientation
-  double deltaTheta = util.findDistanceBetweenAngles(robotState.positions[2], angleToOb);
-
-  ROS_INFO("[min,max]: [%f,%f] angleToOb: %f", viewMinMax[0], viewMinMax[1], angleToOb);
-  ROS_INFO("robotState.positions[2]: %f deltaTheta: %f viewingAngle: %f", robotState.positions[2], deltaTheta, viewingAngle);
+  //ROS_INFO("In robotUpdateCb");
+  //ROS_INFO("ms: %s", util.toString(*ms).c_str());
+  setRobotPos(*ms);
+}
 
 
-  if(fabs(deltaTheta) < viewingAngle/2.0)
+
+bool checkViewingObstacle(Circle cir)
+{
+  //ROS_INFO("In checkViewingObstacle");
+  
+  if(robotState.positions.size() > 0)
   {
-    ROS_INFO("Returning true for deltaTheta");
-    return true;
+    //ROS_INFO("viewMinMax.size(): %i", (int)viewMinMax.size());
+    //ROS_INFO("robotState.positions.size(): %i ob.msg_.ob_ms.positions: %i", (int)robotState.positions.size(), (int)ob.msg_.ob_ms.positions.size());
+    
+    std::vector<double> obMs;
+    obMs.push_back(cir.center.x);
+    obMs.push_back(cir.center.y);
+
+    double angleToOb = util.findAngleFromAToB(robotState.positions, obMs);
+
+    // Get difference between angleToOb and robot's orientation
+    double deltaTheta = util.findDistanceBetweenAngles(robotState.positions[2], angleToOb);
+
+    //ROS_INFO("[min,max]: [%f,%f] angleToOb: %f", viewMinMax[0], viewMinMax[1], angleToOb);
+    //ROS_INFO("robotState.positions[2]: %f deltaTheta: %f sensingAngle: %f", robotState.positions[2], deltaTheta, sensingAngle);
+
+
+    if(fabs(deltaTheta) < sensingAngle/2.0)
+    {
+      //ROS_INFO("Returning true for deltaTheta");
+      return true;
+    }
   }
 
-  /*if(angleToOb > viewMinMax[0] && angleToOb < viewMinMax[1])
-  {
-    ROS_INFO("Returning true");
-    return true;
-  }*/
-
-  ROS_INFO("Returning false");
+  //ROS_INFO("Returning false");
   return false;
 }
 
@@ -1755,6 +1777,21 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     cirs[i].radius *= global_grid.info.resolution;
     //ROS_INFO("New Point: (%f,%f) New Radius: %f ", x, y, cirs[i].radius);
   }
+
+   /*
+    * Check if obstacles are in viewing angle
+    */
+  int i=0;
+  while(i<cirs.size())
+  {
+    if(!checkViewingObstacle(cirs[i]))
+    {
+      cirs.erase(cirs.begin()+i, cirs.begin()+i+1);
+      i--;
+    }
+
+    i++;
+  }
  
 
   /*
@@ -1794,10 +1831,6 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   /*
    * Circle positions are finalized at this point
    */
-
-   /*
-    * Check if obstacles are in viewing angle
-    */
 
 
 
@@ -1988,12 +2021,9 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
       float theta = cir_obs[i]->prevTheta.size() > 0 ? cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] : initial_theta;
       o.update(cir_obs[i]->cir, velocities[i], theta);
     
-    if(checkViewingObstacle(o))
-    {
-      obs.push_back(o);
-      list.obstacles.push_back(o.msg_);
-      //ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
-    }
+    obs.push_back(o);
+    list.obstacles.push_back(o.msg_);
+    //ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
   }
 
   // Record duration data
@@ -2210,8 +2240,9 @@ int main(int argc, char** argv)
   }*/
 
 
-  //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);
-  ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/consolidated_costmap", 1, &costmapCb);
+  ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);
+  ros::Subscriber sub_robot_update = handle.subscribe<ramp_msgs::MotionState>("/updateAfterTf", 1, &robotUpdateCb);
+  //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/consolidated_costmap", 1, &costmapCb);
 
   //Publishers
   pub_obj = handle.advertise<ramp_msgs::ObstacleList>("obstacles", 1);
@@ -2230,7 +2261,9 @@ int main(int argc, char** argv)
  
   ros::Duration dd(0.5);
   dd.sleep();
-  setRobotPos();
+
+  // Set initial robot position
+  //setRobotPos();
 
   printf("\nSpinning\n");
 
