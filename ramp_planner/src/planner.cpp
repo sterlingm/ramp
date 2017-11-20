@@ -1216,12 +1216,12 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
 
 
 bool Planner::envSrvCallback(ramp_msgs::EnvironmentSrv::Request &req, ramp_msgs::EnvironmentSrv::Response &res) {
-	std::cout << req.delta_paras << std::endl;
+	// std::cout << req.delta_paras << std::endl;
 
-	if (!is_population_initialized) {
-		res.is_valid = false;
-		return false;
-	}
+	//if (!is_population_initialized) {
+	//	res.is_valid = false;
+	//	return false;
+	//}
 	
 	// calculate best trajectory using new parameters
 	double T_weight, D_weight, A_weight;
@@ -1236,6 +1236,10 @@ bool Planner::envSrvCallback(ramp_msgs::EnvironmentSrv::Request &req, ramp_msgs:
 	ros::param::set("/ramp/eval_weight_A", A_weight);
 	evaluatePopulation();
 	res.trajectory = population_.getBest().msg_;
+	//if (!res.trajectory.feasible) {
+	//	res.is_valid = false;
+	//	return false;
+	//}
 	res.is_valid = true;
 	return true;
 }
