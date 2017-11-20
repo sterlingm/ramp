@@ -7,6 +7,8 @@ ControlHandler::ControlHandler(const ros::NodeHandle& h) : handle_(h)
   
   pub_imminent_collision_ = handle_.advertise<std_msgs::Bool>("imminent_collision", 1000);
 
+  pub_latestState_ = handle_.advertise<ramp_msgs::MotionState>("/updateAfterTf", 10);
+
   // Set number of obstacles
   std::stringstream str;
   for(uint8_t i=0;i<3;i++)
@@ -43,4 +45,9 @@ void ControlHandler::sendIC(std_msgs::Bool value)
 void ControlHandler::sendObIC(const int i, std_msgs::Bool value)
 {
   pub_ob_imminent_collision_.at(i).publish(value);
+}
+
+void ControlHandler::sendLatestState(ramp_msgs::MotionState ms)
+{
+  pub_latestState_.publish(ms);
 }
