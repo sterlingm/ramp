@@ -23,7 +23,8 @@ pop_traj_type: 1 #0=holonomic, 1=hybrid
 
 # Sensing parameters #
 
-sensing_angle: 3.74
+# Horizontal FOV
+field_of_view_angle: 0.99
 
 # Evaluation weight parameters #
 

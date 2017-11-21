@@ -23,7 +23,7 @@
 #include <bfl/pdf/analyticconditionalgaussian.h>
 
 ramp_msgs::MotionState robotState;
-double sensingAngle;
+double fovAngle;
 std::vector<double> viewMinMax;
 
 std::vector<CircleOb*> cir_obs;
@@ -246,10 +246,10 @@ void loadParameters(const ros::NodeHandle& handle)
     ROS_ERROR("Did not find rosparam /ramp/population_size");
   }
 
-  if(handle.hasParam("/ramp/sensing_angle"))
+  if(handle.hasParam("/ramp/field_of_view_angle"))
   {
-    handle.getParam("/ramp/sensing_angle", sensingAngle);
-    ROS_INFO("sensingAngle: %f", sensingAngle);
+    handle.getParam("/ramp/field_of_view_angle", fovAngle);
+    ROS_INFO("fovAngle: %f", fovAngle);
   }
   else
   {
@@ -1496,8 +1496,8 @@ void setRobotPos(const ramp_msgs::MotionState& ms)
 
   viewMinMax.clear();
 
-  viewMinMax.push_back( util.displaceAngle(robotState.positions[2], -sensingAngle/2.0) );
-  viewMinMax.push_back( util.displaceAngle(robotState.positions[2], sensingAngle/2.0) );
+  viewMinMax.push_back( util.displaceAngle(robotState.positions[2], -fovAngle/2.0) );
+  viewMinMax.push_back( util.displaceAngle(robotState.positions[2], fovAngle/2.0) );
   //ROS_INFO("viewMinMax: [%f,%f]", viewMinMax[0], viewMinMax[1]);
 
   /* 
@@ -1630,10 +1630,10 @@ bool checkViewingObstacle(Circle cir)
     double deltaTheta = util.findDistanceBetweenAngles(robotState.positions[2], angleToOb);
 
     //ROS_INFO("[min,max]: [%f,%f] angleToOb: %f", viewMinMax[0], viewMinMax[1], angleToOb);
-    //ROS_INFO("robotState.positions[2]: %f deltaTheta: %f sensingAngle: %f", robotState.positions[2], deltaTheta, sensingAngle);
+    //ROS_INFO("robotState.positions[2]: %f deltaTheta: %f fovAngle: %f", robotState.positions[2], deltaTheta, fovAngle);
 
 
-    if(fabs(deltaTheta) < sensingAngle/2.0)
+    if(fabs(deltaTheta) < fovAngle/2.0)
     {
       //ROS_INFO("Returning true for deltaTheta");
       return true;
