@@ -3244,11 +3244,11 @@ void Planner::getTransPop(const Population& pop, const RampTrajectory& movingOn,
 /** This methed runs the tasks needed to do a control cycle */
 void Planner::doControlCycle() 
 {
-  //////////ROS_WARN("Control Cycle %i occurring at Time: %f", num_cc_, ros::Time::now().toSec());
-  ROS_INFO("controlCycle_ Time: %f", controlCycle_.toSec());
-  ////////ROS_INFO("Time between control cycles: %f", (ros::Time::now() - t_prevCC_).toSec());
-  duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now() - t_prevCC_); 
-  cc_freq_.push_back( time_span.count() ); 
+  ////////ROS_WARN("Control Cycle %i occurring at Time: %f", num_cc_, ros::Time::now().toSec());
+  ROS_INFO("controlCycle_: %f", controlCycle_.toSec());
+  //////ROS_INFO("Time between control cycles: %f", (ros::Time::now() - t_prevCC_).toSec());
+  t_prevCC_ = ros::Time::now();
+  ////////ROS_INFO("Number of planning cycles that occurred between CC's: %i", c_pc_);
 
   t_prevCC_ = high_resolution_clock::now();
   t_prevCC_ros_ = ros::Time::now();
@@ -3274,8 +3274,8 @@ void Planner::doControlCycle()
   //////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
 
   // Send the best trajectory and set movingOn
-  ////////////ROS_INFO("Sending best");
-  ROS_INFO("bestT: %s", bestT.toString().c_str());
+  //////////ROS_INFO("Sending best");
+  //ROS_INFO("bestT: %s", bestT.toString().c_str());
   sendBest();
  
   // Set t_lastFeasible on first CC because we haven't done a sensing cycle yet
