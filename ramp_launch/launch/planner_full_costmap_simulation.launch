@@ -9,14 +9,11 @@
 
 
 <!-- START NODES -->
-
-<!-- Costmap is started in separate launch file, e.g. gazebo_costmap.launch
-<node name="costmap_node" pkg="costmap_2d" type="costmap_2d_node" output="log" >
-  <rosparam file="/opt/ros/kinetic/share/turtlebot_navigation/param/cleverm_static_costmap.yaml" command="load" />
-</node> -->
+<!-- Simulation and costmap should be started in separate file, e.g., gazebo_costmap.launch -->
 
 
-<!-- <node name="pub_map_equal_odom" pkg="ramp_planner" type="pub_map_odom" /> -->
+<!-- Start publishing the map->odom transform -->
+<node name="pub_map_equal_odom" pkg="ramp_planner" type="pub_map_odom" />
 
 
 <!-- Trajectory Generator -->

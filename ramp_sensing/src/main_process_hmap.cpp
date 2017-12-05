@@ -233,6 +233,7 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
 
   thresholdHilbertMap(hmap_mat, hmap_thresh);
 
+  // Note that circle packing is only on hilbert_map branch for now
   CirclePacker cp(hmap_thresh);
   std::vector<Circle> obs = cp.goMyBlobs(true);
   ROS_INFO("obs.size(): %i", (int)obs.size());

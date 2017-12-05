@@ -28,7 +28,7 @@
 <node name="path_modification" pkg="path_modification" type="path_modification" />
 
 <!-- Evaluation -->
-<node name="trajectory_evaluation" pkg="trajectory_evaluation" type="trajectory_evaluation" output="log" />
+<node name="trajectory_evaluation" pkg="trajectory_evaluation" type="trajectory_evaluation" output="screen" />
 
 <!-- Sensing -->
 <node name="ramp_sensing" pkg="ramp_sensing" type="ramp_sensing" output="screen" />

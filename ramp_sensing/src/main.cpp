@@ -621,7 +621,7 @@ void publishMarkers(const ros::TimerEvent& e)
 
 
   // Create lines for the attachments
-  for(int i=0;i<attachs.size();i++)
+  /*for(int i=0;i<attachs.size();i++)
   {
     //ROS_INFO("i: %i attachs.size(): %i", i, (int)attachs.size());
     visualization_msgs::Marker lineList;
@@ -650,7 +650,7 @@ void publishMarkers(const ros::TimerEvent& e)
     for(int j=0;j<lineList.points.size();j++)
     {
       ROS_INFO("lineList.points[%i]: (%f,%f)", j, lineList.points[j].x, lineList.points[j].y);
-    }*/
+    }
 
     lineList.color.r = 0.0;
     lineList.color.g = 0.0;
@@ -660,7 +660,7 @@ void publishMarkers(const ros::TimerEvent& e)
     lineList.scale.x = 0.05;
 
     result.markers.push_back(lineList);
-  }
+  }*/
 
 
   //ROS_INFO("texts.size(): %i", (int)texts.size());
@@ -1506,7 +1506,7 @@ void setRobotPos(const ramp_msgs::MotionState& ms)
   visualization_msgs::MarkerArray viewingInfo;
 
   // Robot position
-  visualization_msgs::Marker robotPos;
+  /*visualization_msgs::Marker robotPos;
   robotPos.type = visualization_msgs::Marker::SPHERE;
   robotPos.action = visualization_msgs::Marker::ADD;
   robotPos.pose.position.x = robotState.positions[0];
@@ -1522,10 +1522,10 @@ void setRobotPos(const ramp_msgs::MotionState& ms)
   robotPos.color.a = 1;
 
   robotPos.lifetime = ros::Duration(20);
-  viewingInfo.markers.push_back(robotPos);
+  viewingInfo.markers.push_back(robotPos);*/
 
   // Robot orientation
-  visualization_msgs::Marker robotTheta;
+  /*visualization_msgs::Marker robotTheta;
   robotTheta.type = visualization_msgs::Marker::ARROW;
   robotTheta.action = visualization_msgs::Marker::ADD;
   robotTheta.pose = robotPos.pose;
@@ -1544,7 +1544,7 @@ void setRobotPos(const ramp_msgs::MotionState& ms)
   robotTheta.color.a = 1;
 
   robotTheta.lifetime = ros::Duration(20);
-  viewingInfo.markers.push_back(robotTheta);
+  viewingInfo.markers.push_back(robotTheta);*/
 
 
   // Viewing min and max lines (use arrows so we only have to compute direction and not endpoints)
@@ -1554,15 +1554,17 @@ void setRobotPos(const ramp_msgs::MotionState& ms)
   angleMax.type = visualization_msgs::Marker::ARROW;
   angleMin.action = visualization_msgs::Marker::ADD;
   angleMax.action = visualization_msgs::Marker::ADD;
-  angleMin.pose = robotPos.pose;
-  angleMax.pose = robotPos.pose;
+  angleMin.pose.position.x = robotState.positions[0];
+  angleMin.pose.position.y = robotState.positions[1];
+  angleMax.pose.position.x = robotState.positions[0];
+  angleMax.pose.position.y = robotState.positions[1];
   
   
   // Set scale
-  angleMin.scale.x = 5.0;
-  angleMin.scale.y = 0.1;
-  angleMax.scale.x = 5.0;
-  angleMax.scale.y = 0.1;
+  angleMin.scale.x = 4.5;
+  angleMin.scale.y = 0.05;
+  angleMax.scale.x = 4.5;
+  angleMax.scale.y = 0.05;
 
   // Set orientation
   tf::Quaternion qMin = tf::createQuaternionFromYaw(viewMinMax[0]);

@@ -2522,7 +2522,7 @@ void Planner::getTransitionTrajectory(const RampTrajectory& trj_movingOn, const 
     return;
   }*/
 
-  // Check duplicates and speeds of segment points
+  // Check duplicates of segment points
   // Check p rather than segmentPoints because we may have already removed
   // a segment point in previous check for similar segment orientations
   for(int i=0;i<p.size()-1;i++)
@@ -3245,7 +3245,7 @@ void Planner::getTransPop(const Population& pop, const RampTrajectory& movingOn,
 void Planner::doControlCycle() 
 {
   //////////ROS_WARN("Control Cycle %i occurring at Time: %f", num_cc_, ros::Time::now().toSec());
-  //ROS_INFO("controlCycle_: %f", controlCycle_.toSec());
+  ROS_INFO("controlCycle_ Time: %f", controlCycle_.toSec());
   ////////ROS_INFO("Time between control cycles: %f", (ros::Time::now() - t_prevCC_).toSec());
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now() - t_prevCC_); 
   cc_freq_.push_back( time_span.count() ); 
@@ -3275,7 +3275,7 @@ void Planner::doControlCycle()
 
   // Send the best trajectory and set movingOn
   ////////////ROS_INFO("Sending best");
-  //ROS_INFO("bestT: %s", bestT.toString().c_str());
+  ROS_INFO("bestT: %s", bestT.toString().c_str());
   sendBest();
  
   // Set t_lastFeasible on first CC because we haven't done a sensing cycle yet
