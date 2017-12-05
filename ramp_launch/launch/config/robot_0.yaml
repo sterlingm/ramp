@@ -1,12 +1,6 @@
 id: 0
 
-<<<<<<< Temporary merge branch 1
-DOF_min: [0,   0,  -3.14159]
-DOF_max: [2,   2,   3.14159]
 
-start: [0,    0,      0.785]
-goal:  [2,    2,      0.785]
-=======
 # Turtlebot radius ~ 0.2
 # Cooky radius ~ 0.6
 radius: 0.18

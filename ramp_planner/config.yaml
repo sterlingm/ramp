@@ -21,10 +21,15 @@ gens_before_control_cycle: 50
 
 pop_traj_type: 1 #0=holonomic, 1=hybrid
 
+
+
 # Sensing parameters #
 
 # Horizontal FOV
 field_of_view_angle: 0.99
+
+
+
 
 # Evaluation weight parameters #
 
@@ -41,6 +46,8 @@ eval_weight_D: 15
 eval_weight_A: 0.01
 
 
+
+
 # Robot configuration parameters #
 global_frame: "map"
 
@@ -49,6 +56,8 @@ update_topic: "odom"
 shrink_ranges: false
 
 use_start_param: true
+
+
 
 # Experimental setup parameters #
 #
