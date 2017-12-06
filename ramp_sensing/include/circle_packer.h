@@ -57,6 +57,10 @@ class CirclePacker
     std::vector<Circle> goMyBlobs(bool hmap=false);
     std::vector< std::vector<Circle> > goCirclePacking(double min_r=0);
     std::vector<cv::RotatedRect> goEllipse();
+
+    Circle                    fitCirOverContours(const std::vector<cv::Point> contours);
+    std::vector<Circle>       packCirsIntoContours(const std::vector<cv::Point> contours);
+    std::vector<CircleGroup>  getGroups();
   private:
 
     Utility utility_;

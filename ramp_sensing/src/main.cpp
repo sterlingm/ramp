@@ -28,6 +28,7 @@ std::vector<double> viewMinMax;
 
 std::vector<CircleOb*> cir_obs;
 std::vector<Circle> cirs_pos;
+
 std::vector< std::vector<Circle> > cirs;
 
 nav_msgs::OccupancyGrid global_costmap;
@@ -1674,6 +1675,8 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   //ROS_INFO("consolidated_grid.data.size(): %i", (int)consolidated_grid.data.size());
   //ROS_INFO("cg_ptr->data.size(): %i", (int)cg_ptr->data.size());
 
+
+
   /*
    ********************************************
    * Finding circles on latest costmap
@@ -1682,11 +1685,10 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
   CirclePacker c(cg_ptr); // (If using modified costmap)
   //CirclePacker c(grid); // (If not modifying costmap)
-  //std::vector<Circle> cirs_myblobs = c.go();
-  //std::vector<Circle> cirs = c.goHough();
-  //std::vector<Circle> cirs = c.goMinEncCir();
+  
+  // Do they have the same obstacle indices?
   //std::vector<Circle> cirs = c.goMyBlobs();
-  cirs = c.goCirclePacking(2.0f);
+  cirs = c.goCirclePacking();
 
   /*for(int i=0;i<cirs.size();i++)
   {

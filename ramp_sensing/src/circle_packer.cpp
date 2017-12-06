@@ -1108,6 +1108,126 @@ std::vector< std::vector<Circle> > CirclePacker::goCirclePacking(double min_r)
 }
 
 
+Circle CirclePacker::fitCirOverContours(const std::vector<cv::Point> contours)
+{
+  //ROS_INFO("contours[%i].size(): %i", i, (int)contours[i].size());
+  Circle result;
+  std::vector<cv::Point2f> obs_points;
+
+  /// Show in a window
+  //imshow( "Contours", drawing );
+  //cv::waitKey(0);
+
+
+
+  /*
+   *  Get all the points within the contour region that are obstacle pixels
+   */
+
+  // Get min and max values
+  int x_min = contours[0].x, x_max=x_min, y_min = contours[0].y, y_max=y_min;
+  for(int j=0;j<contours.size();j++)
+  {
+    cv::Point2f p = contours[j];
+
+    if(p.x < x_min)
+    {
+      x_min = p.x;
+    }
+    if(p.x > x_max)
+    {
+      x_max = p.x;
+    }
+    if(p.y < y_min)
+    {
+      y_min = p.y;
+    }
+    if(p.y > y_max)
+    {
+      y_max = p.y;
+    }
+
+    //obs_points.push_back(p);
+  } // end for each contour point
+
+  /*
+   * Go through the region and collect all obstacle pixels
+   */
+  int num_ob=0, num_free=0;
+  for(int x=x_min;x<=x_max;x++)
+  {
+    for(int y=y_min;y<=y_max;y++)
+    {
+      int pixel = src.at<uchar>(y, x);
+      //ROS_INFO("Point (%i,%i) pixel value: %i", y, x, pixel);
+
+      // If the value is less than some threshold for obstacle pixels
+      if(pixel < 100)
+      {
+        cv::Point2f p;
+        p.x = x;
+        p.y = y;
+        obs_points.push_back(p);
+        num_ob++;
+      }
+      else num_free++;
+    } // end inner for
+  } // end for each pixel in region
+
+  //ROS_INFO("obs_points.size(): %i", (int)obs_points.size());
+
+  /*
+   * Find obstacle center
+   */
+  float x=0, y=0;
+  for(int j=0;j<obs_points.size();j++)
+  {
+    x+=obs_points[j].x;
+    y+=obs_points[j].y; 
+  }
+  x /= obs_points.size();
+  y /= obs_points.size();
+  //ROS_INFO("Average center: (%f,%f)", x, y);
+
+  // Set the center value
+  // If not operating on hilbert map, flip coordinates
+  result.center.x = y;
+  result.center.y = x;
+  
+  /*
+   * Get the dist of each pixel to the center
+   */
+  std::vector<double> dists;
+  double max_dist = -1;
+  for (size_t pointIdx = 0; pointIdx<obs_points.size(); pointIdx++)
+  {
+    cv::Point2f pt = obs_points[pointIdx];
+    double d = utility_.positionDistance(result.center.x, result.center.y, pt.y, pt.x);
+    //ROS_INFO("Point %i, d: %f", pointIdx, d);
+    dists.push_back(d);
+
+    if(d > max_dist)
+    {
+      max_dist = d;
+    }
+  }
+  
+  result.radius = max_dist;
+
+  obs_points.clear();
+  dists.clear();
+
+  ////////ROS_INFO("c.radius: %f obSizeThreshold: %f", c.radius, obSizeThreshold);
+
+  // Only push on circles that are above a size threshold
+  /*if(result.radius > obSizeThreshold)
+  {
+    result.push_back(c);
+  }*/
+
+
+  return result;
+}
 
 
 
@@ -1286,5 +1406,41 @@ std::vector<Circle> CirclePacker::goMyBlobs(bool hmap)
   } // end for each set of contour points
 
   ////ROS_INFO("Exiting CirclePacker::goMyBlobs()");
+  return result;
+}
+
+
+std::vector<CircleGroup> CirclePacker::getGroups()
+{
+  std::vector<CircleGroup> result;
+
+  // Create a matrix of the same size and type as src
+  dst.create( src.size(), src.type() );
+  
+  cv::Mat srcCopy;
+  src.copyTo(srcCopy);
+
+  // Get the edges
+  /*ros::Time t_start_edge_detect = ros::Time::now();
+  CannyThreshold(0, 0);
+  ros::Duration d_edges_detect(ros::Time::now()-t_start_edge_detect);*/
+  
+  /*
+   * Detect blobs
+   */
+  // Get contours
+  std::vector< std::vector<cv::Point> > contours;
+  std::vector<cv::Vec4i> hierarchy;
+
+  // ***** findContours modifies src! *****
+  findContours( srcCopy, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
+  ////////ROS_INFO("contours.size(): %i", (int)contours.size());
+  
+  // Go through each set of contour points
+  for(int i=0;i<contours.size();i++)
+  {
+  }
+
+
   return result;
 }

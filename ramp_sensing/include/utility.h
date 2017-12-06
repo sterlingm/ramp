@@ -77,6 +77,13 @@ struct CompareDist
   }
 };
 
+
+struct CircleGroup
+{
+  Circle fitCir;
+  std::vector<Circle> packedCirs;
+};
+
 struct CircleOb
 {
   CircleOb() {}
@@ -84,6 +91,7 @@ struct CircleOb
   {
     delete kf;
   }
+  CircleGroup cirs;
   Circle cir;
   CircleFilter* kf;
 
