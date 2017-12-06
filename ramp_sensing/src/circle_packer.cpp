@@ -261,8 +261,7 @@ std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly, double min_r)
    * Create cells inside the polygon
    */
   std::vector<Cell> cells = getCellsInPolygon(poly);
-  
-  ROS_INFO("cells.size(): %i", (int)cells.size());
+  //ROS_INFO("cells.size(): %i", (int)cells.size());
   
 
   std::vector<Cell> reduced_cells = cells;
@@ -1033,7 +1032,10 @@ std::vector< std::vector<Circle> > CirclePacker::goCirclePacking(double min_r)
   dst.create( src.size(), src.type() );
   
   cv::Mat srcCopy;
-  src.copyTo(srcCopy);
+  cv::transpose(src, srcCopy);
+  //src.copyTo(srcCopy);
+  //cv::transpose(hmap_mat, hmap_mat);
+
 
   /*
    * Detect contours
@@ -1065,11 +1067,11 @@ std::vector< std::vector<Circle> > CirclePacker::goCirclePacking(double min_r)
   for(int i=0;i<ps.size();i++)
   {
     // Print polygon information
-    ROS_INFO("Polygon %i", i);
+    /*ROS_INFO("Polygon %i", i);
     for(int j=0;j<ps[i].edges.size();j++)
     {
       ROS_INFO("  Edge %i - Start: (%i,%i) End: (%i,%i)", j, ps[i].edges[j].start.x, ps[i].edges[j].start.y, ps[i].edges[j].end.x, ps[i].edges[j].end.y);
-    }
+    }*/
 
     // Get circles inside polygon
     std::vector<Circle> cs = getCirclesFromPoly(ps[i], min_r);   

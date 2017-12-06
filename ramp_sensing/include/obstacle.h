@@ -2,6 +2,7 @@
 #define OBSTACLE_H
 #include "nav_msgs/Odometry.h"
 #include "ramp_msgs/Obstacle.h"
+#include "ramp_msgs/PackedObstacle.h"
 #include <tf/transform_datatypes.h>
 #include <vector>
 #include "utility.h"
@@ -20,6 +21,7 @@ class Obstacle
     /** Data Members */
     
     ramp_msgs::Obstacle msg_;
+    ramp_msgs::PackedObstacle packedMsg_;
 
     //Hold odometry information for t and t-1
     nav_msgs::Odometry odom_t;

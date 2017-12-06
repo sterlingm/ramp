@@ -74,7 +74,7 @@ def main():
     hmap.map = grid
     hmap.gamma = gamma
 
-    v = raw_input("Press Enter to publish grid")
+    raw_input("Press Enter to publish grid")
 
     pub.publish(hmap)
     pubRviz.publish(hmap.map)
