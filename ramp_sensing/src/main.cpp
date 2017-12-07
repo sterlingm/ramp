@@ -29,6 +29,7 @@ std::vector<double> viewMinMax;
 std::vector<CircleOb*> cir_obs;
 std::vector<Circle> cirs_pos;
 
+std::vector<CircleGroup> groups;
 std::vector< std::vector<Circle> > cirs;
 
 nav_msgs::OccupancyGrid global_costmap;
@@ -459,6 +460,41 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
     //for(int i=0;i<cir_obs.size();i++)
     for(int i=0;i<cirs.size();i++)
     {
+      visualization_msgs::Marker cirMarker;
+      cirMarker.header.stamp = ros::Time::now();
+      cirMarker.header.frame_id = global_frame;
+      cirMarker.ns = "basic_shapes";
+      cirMarker.id = (populationSize * i) - 1;
+        
+      cirMarker.type = visualization_msgs::Marker::SPHERE;
+      cirMarker.action = visualization_msgs::Marker::ADD;
+
+      // Set x and y
+      double x = groups[i].fitCir.center.x;
+      double y = groups[i].fitCir.center.y;
+        
+      cirMarker.pose.position.x = x;
+      cirMarker.pose.position.y = y;
+      cirMarker.pose.position.z = 0;
+      cirMarker.pose.orientation.x = 0.0;
+      cirMarker.pose.orientation.y = 0.0;
+      cirMarker.pose.orientation.z = 0.0;
+      cirMarker.pose.orientation.w = 1.0;
+
+      double radius = groups[i].fitCir.radius;
+        
+      // scale values are the diameter so use the radius*2
+      cirMarker.scale.x = radius*2.00f;
+      cirMarker.scale.y = radius*2.00f;
+      cirMarker.scale.z = 0.1;
+      cirMarker.color.r = 0;
+      cirMarker.color.g = 1;
+      cirMarker.color.b = 0;
+      cirMarker.color.a = 0.5;
+      cirMarker.lifetime = ros::Duration(0.1);
+
+      result.push_back(cirMarker);
+
       for(int j=0;j<cirs[i].size();j++)
       {
         //ROS_INFO("i: %i obs.size(): %i", i, (int)obs.size());
@@ -1615,9 +1651,9 @@ bool checkViewingObstacle(Circle cir)
 
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
-  /*ROS_INFO("**************************************************");
+  ROS_INFO("**************************************************");
   ROS_INFO("In costmapCb");
-  ROS_INFO("**************************************************");*/
+  ROS_INFO("**************************************************");
   ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;
   t_last_costmap = ros::Time::now();
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
@@ -1690,14 +1726,23 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   //std::vector<Circle> cirs = c.goMyBlobs();
   cirs = c.goCirclePacking();
 
-  /*for(int i=0;i<cirs.size();i++)
+  groups = c.getGroups();
+  ROS_INFO("groups.size(): %i", (int)groups.size());
+  cirs.clear();
+  for(int i=0;i<groups.size();i++)
+  {
+    ROS_INFO("groups[%i].packedCirs.size(): %i", i, (int)groups[i].packedCirs.size());
+    cirs.push_back(groups[i].packedCirs);
+  }
+
+  for(int i=0;i<cirs.size();i++)
   {
     ROS_INFO("Obstacle %i", i);
     for(int j=0;j<cirs[i].size();j++)
     {
       ROS_INFO("Circle %i: (%f,%f) radius: %f", j, cirs[i][j].center.x, cirs[i][j].center.y, cirs[i][j].radius);
     }
-  }*/
+  }
 
   //ROS_INFO("Finished getting cirs");
 
@@ -1744,15 +1789,18 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   //ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
   for(int i=0;i<cirs.size();i++)
   {
+    groups[i].fitCir.center.x = (groups[i].fitCir.center.x * global_grid.info.resolution) + x_origin;
+    groups[i].fitCir.center.y = (groups[i].fitCir.center.y * global_grid.info.resolution) + y_origin;
+    groups[i].fitCir.radius *= global_grid.info.resolution;
     for(int j=0;j<cirs[i].size();j++)
     {
-      //ROS_INFO("cir_obs[%i][%i] center: (%f,%f) radius: %f ", i, j, cirs[i][j].center.x, cirs[i][j].center.y, cirs[i][j].radius);
+      ROS_INFO("cir_obs[%i][%i] center: (%f,%f) radius: %f ", i, j, cirs[i][j].center.x, cirs[i][j].center.y, cirs[i][j].radius);
       double x = (cirs[i][j].center.x * global_grid.info.resolution) + x_origin;
       double y = (cirs[i][j].center.y * global_grid.info.resolution) + y_origin;
       cirs[i][j].center.x = x;
       cirs[i][j].center.y = y;
       cirs[i][j].radius *= global_grid.info.resolution;
-      //ROS_INFO("New Point: (%f,%f) New Radius: %f ", x, y, cirs[i][j].radius);
+      ROS_INFO("New Point: (%f,%f) New Radius: %f ", x, y, cirs[i][j].radius);
     }
   }
 

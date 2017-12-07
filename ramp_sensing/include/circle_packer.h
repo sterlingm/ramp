@@ -23,12 +23,8 @@ class CirclePacker
     void convertOGtoMat(nav_msgs::OccupancyGridConstPtr);
 
     void CannyThreshold(int, void*);
-    double getMinDistToPoly(const Polygon&, const Cell&);
-    double getMinDistToCirs(const std::vector<Circle>&, const Cell&);
-    void deleteCellsInCir(const std::vector<Cell>&, const Circle, std::vector<Cell>&);
 
     Normal computeNormal(Edge);
-    bool cellInPoly(Polygon, cv::Point) const;
 
     void detectAttachedCircles(const std::vector<CircleOb*>& cir_obs, std::vector<Attachment>& result) const;
     void combineTwoCircles(const Circle a, const Circle b, Circle& result) const;
@@ -38,11 +34,7 @@ class CirclePacker
     Point findCenterOfPixels(const std::vector<cv::Point> pixels) const;
     std::vector<double> getWeights(const std::vector<cv::Point> pixels, const Point center) const;
     
-    std::vector<Polygon> getPolygonsFromContours(std::vector< std::vector<cv::Point> > contours) const;
-    std::vector<Cell> getCellsInPolygon(const Polygon& p) const; 
-
     
-    std::vector<Circle> getCirclesFromPoly(Polygon, double min_r=0);
     std::vector<Circle> getCirclesFromEdgeSets(const std::vector< std::vector<Edge> > edge_sets);
     std::vector<Circle> getCirclesFromEdges(const std::vector<Edge> edges, const cv::Point robot_cen);
     
@@ -58,10 +50,20 @@ class CirclePacker
     std::vector< std::vector<Circle> > goCirclePacking(double min_r=0);
     std::vector<cv::RotatedRect> goEllipse();
 
+    Polygon getPolygonFromContours(const std::vector<cv::Point> contours) const;
+    std::vector<Polygon> getPolygonsFromContours(std::vector< std::vector<cv::Point> > contours) const;
+    std::vector<Cell> getCellsInPolygon(const Polygon& p) const; 
+    bool cellInPoly(Polygon, cv::Point) const;
+    double getMinDistToPoly(const Polygon&, const Cell&);
+    double getMinDistToCirs(const std::vector<Circle>&, const Cell&);
+    void deleteCellsInCir(const std::vector<Cell>&, const Circle, std::vector<Cell>&);
     Circle                    fitCirOverContours(const std::vector<cv::Point> contours);
-    std::vector<Circle>       packCirsIntoContours(const std::vector<cv::Point> contours);
+    std::vector<Circle>       packCirsIntoPoly(const Polygon p, const double min_r);
+    CircleGroup               getGroupForContours(std::vector<cv::Point> contours);
     std::vector<CircleGroup>  getGroups();
   private:
+
+    void drawContourPoints(std::vector< std::vector< cv::Point> > contours, std::vector<cv::Vec4i> hierarchy);
 
     Utility utility_;
 
