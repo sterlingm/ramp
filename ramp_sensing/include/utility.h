@@ -91,7 +91,7 @@ struct CircleOb
   {
     delete kf;
   }
-  CircleGroup cirs;
+  CircleGroup cirGroup;
   Circle cir;
   CircleFilter* kf;
 

@@ -962,11 +962,11 @@ std::vector<Circle> CirclePacker::packCirsIntoPoly(Polygon poly, double min_r)
   std::vector<Circle> result;
 
   // Print polygon information
-  ROS_INFO("Polygon");
+  /*ROS_INFO("Polygon");
   for(int j=0;j<poly.edges.size();j++)
   {
     ROS_INFO("  Edge %i - Start: (%i,%i) End: (%i,%i)", j, poly.edges[j].start.x, poly.edges[j].start.y, poly.edges[j].end.x, poly.edges[j].end.y);
-  }
+  }*/
 
   /*
    * Create cells inside the polygon
@@ -1069,7 +1069,7 @@ std::vector<Circle> CirclePacker::packCirsIntoPoly(Polygon poly, double min_r)
  */
 std::vector< std::vector<Circle> > CirclePacker::goCirclePacking(double min_r)
 {
-  ROS_INFO("In CirclePacker::goCirclePacking()");
+  //ROS_INFO("In CirclePacker::goCirclePacking()");
   std::vector< std::vector<Circle> > result;
 
   // Create a matrix of the same size and type as src
