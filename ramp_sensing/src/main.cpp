@@ -48,6 +48,7 @@ std::vector<double> dof_min;
 std::vector<double> dof_max;
 std::vector<ramp_msgs::Range> ranges;
 
+double min_arrow_len = 0.25;
 
 std::vector<tf::Transform> ob_tfs;
 
@@ -605,14 +606,15 @@ void publishMarkers(const ros::TimerEvent& e)
     if(prev_velocities[prev_velocities.size()-1].size() > 0)
     {
       text.text = std::to_string(prev_velocities[prev_velocities.size()-1][i].v);
-      arrow.scale.x = prev_velocities[prev_velocities.size()-1][i].v < 0.25 ? 0.25 : prev_velocities[prev_velocities.size()-1][i].v;
     }
     else
     {
       arrow.scale.x = 0.1;
     }
 
-    // Set arrow points
+    // Set arrow points, x is the length, y is the width
+    // The length has a minimum value
+    arrow.scale.x = prev_velocities[prev_velocities.size()-1][i].v < min_arrow_len ? min_arrow_len : prev_velocities[prev_velocities.size()-1][i].v;
     arrow.scale.y = 0.1;
     
     // Set poses
@@ -654,7 +656,7 @@ void publishMarkers(const ros::TimerEvent& e)
   result.markers.insert(std::end(result.markers), std::begin(texts), std::end(texts));  
   result.markers.insert(std::end(result.markers), std::begin(arrows), std::end(arrows));  
 
-  // Create a text marker to show the size of cir_obs
+  // Create a text marker to show the number of obstacles
   visualization_msgs::Marker text;
   text.header.stamp   = ros::Time::now();
   text.header.frame_id  = global_frame;
@@ -751,7 +753,6 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
   //ROS_INFO("In predictVelocities, d_elapsed: %f", d_elapsed.toSec());
 
   std::vector<Velocity> result;
-  double grid_resolution=0.01;
   
   // For each circle obstacle,
   for(int i=0;i<cir_obs.size();i++)
@@ -2033,19 +2034,19 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   }*/
 
   // Populate list
-  /*for(int i=0;i<cir_obs.size();i++)
+  for(int i=0;i<cir_obs.size();i++)
   {
     //ROS_INFO("Creating obstacle, prevCirs.size(): %i prevTheta.size(): %i", (int)cir_obs[i]->prevCirs.size(), (int)cir_obs[i]->prevTheta.size());
     Obstacle o(cir_obs[i]->cir.radius, costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res, global_grid.info.origin.position.x, global_grid.info.origin.position.y); 
 
-      // Update values
-      float theta = cir_obs[i]->prevTheta.size() > 0 ? cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] : initial_theta;
-      o.update(cir_obs[i]->cir, velocities[i], theta);
+    // Update values
+    float theta = cir_obs[i]->prevTheta.size() > 0 ? cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] : initial_theta;
+    o.update(cir_obs[i]->cirGroup, velocities[i], theta);
     
     obs.push_back(o);
     list.obstacles.push_back(o.msg_);
     //ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
-  }*/
+  }
 
   // Record duration data
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tStart);
