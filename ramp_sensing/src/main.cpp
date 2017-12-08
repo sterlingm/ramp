@@ -1285,6 +1285,13 @@ std::vector<CircleGroup> updateKalmanFilters(std::vector<CircleGroup> cirs, std:
     // Push back center data for logging
     cirs_pos.push_back(cir_obs[i]->cirGroup.fitCir);
   }
+  
+  /*ROS_INFO("After kalman filter:");
+  for(int i=0;i<cir_obs.size();i++)
+  {
+    ROS_INFO("cir_obs[%i]->cirGroup.fitCir.center.x: %f cir_obs[%i]->cirGroup.fitCir.center.y: %f cir_obs[%i]->cir.radius: %f", i, cir_obs[i]->cirGroup.fitCir.center.x, i, cir_obs[i]->cirGroup.fitCir.center.y, i, cir_obs[i]->cir.radius);
+  }*/
+
 
   return result;
 }
@@ -1666,11 +1673,136 @@ void convertGroups()
 }
 
 
+void computeOrientations()
+{
+  // Check the costmap frequency
+  if(num_costmaps % num_costmap_freq_theta == 0 || cirGroups.size() > prev_valid_cirs.size())
+  {
+    // Average the theta values
+    std::vector<double> thetas = predictTheta();
+    for(int i=0;i<cir_obs.size();i++)
+    {
+      //ROS_INFO("Obstacle %i", i);
+      //ROS_INFO("theta[%i]: %f", i, thetas[i]);
+      cir_obs[i]->prevTheta.push_back(thetas[i]);
+      if(cir_obs[i]->prevTheta.size() > num_theta_count)
+      {
+        //ROS_INFO("Removing %f", cir_obs[i]->prevTheta[0]);
+        cir_obs[i]->prevTheta.erase( cir_obs[i]->prevTheta.begin(), cir_obs[i]->prevTheta.begin()+1 );
+      }
+
+      double theta = cir_obs[i]->prevTheta[0];
+      for(int j=1;j<cir_obs[i]->prevTheta.size();j++)
+      {
+        theta = util.findAngleBetweenAngles(theta, cir_obs[i]->prevTheta[j]);
+        //ROS_INFO("j: %i theta: %f next theta: %f result: %f", j, theta, cir_obs[i]->prevTheta[j], util.findAngleBetweenAngles(theta, cir_obs[i]->prevTheta[j]));
+      }
+
+      // Set new theta value
+      cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] = theta;
+    }
+  } // end if costmap is considered for predicting theta values
+}
+
+
+/*
+ * Creates an Obstacle object for each element in cirGroups and pushes them onto the ObstacleList
+ */
+void populateObstacleList(const std::vector<Velocity>& velocities)
+{
+  //ROS_INFO("In populateObstacleList");
+  obs.clear();
+  list.obstacles.clear();
+  for(int i=0;i<cir_obs.size();i++)
+  {
+    //ROS_INFO("Creating obstacle, prevCirs.size(): %i prevTheta.size(): %i", (int)cir_obs[i]->prevCirs.size(), (int)cir_obs[i]->prevTheta.size());
+    Obstacle o(cir_obs[i]->cir.radius, costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res, global_grid.info.origin.position.x, global_grid.info.origin.position.y); 
+
+    // Update values
+    float theta = cir_obs[i]->prevTheta.size() > 0 ? cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] : initial_theta;
+    o.update(cir_obs[i]->cirGroup, velocities[i], theta);
+    
+    obs.push_back(o);
+    list.obstacles.push_back(o.msg_);
+    //ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
+  }
+  
+  //ROS_INFO("Exiting populateObstacleList");
+}
+
+
+/*
+ * Calls predictVelocities to get the latest speed values and then averages over the last N times
+ * Sets the list of velocities in result vector
+ */
+void computeVelocities(const std::vector<CircleMatch> cm, const ros::Duration d_elapsed, std::vector<Velocity>& result)
+{
+  //ROS_INFO("In computeVelocities");
+  result = predictVelocities(cm, d_elapsed);
+
+  // Average the velocities
+  for(int i=0;i<cir_obs.size();i++)
+  {
+    //ROS_INFO("i: %i cir_obs.size(): %i result.size(): %i cir_obs[%i]->prevTheta.size(): %i", i, (int)cir_obs.size(), (int)result.size(), i, (int)cir_obs[i]->prevTheta.size());
+    cir_obs[i]->vels.push_back(result[i]);
+    if(cir_obs[i]->vels.size() > num_velocity_count)
+    {
+      cir_obs[i]->vels.erase( cir_obs[i]->vels.begin(), cir_obs[i]->vels.begin()+1 );
+    }
+
+    float v=0;
+    for(int n=0;n<cir_obs[i]->vels.size();n++)
+    {
+      //ROS_INFO("n: %i Adding %f", n, cir_obs[i]->vels[n].v);
+      v += cir_obs[i]->vels[n].v;
+    }
+    v /= cir_obs[i]->vels.size();
+    //ROS_INFO("Averaged v: %f", v);
+
+    float theta = cir_obs[i]->prevTheta.size() > 0 ? cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] : initial_theta;
+    float vx = v*cos(theta);
+    float vy = v*sin(theta);
+
+    // Set values, check for static obstacles
+    if(result[i].v < static_v_threshold || !cir_obs[i]->moving)
+    {
+      result[i].v   = 0;
+      result[i].vx  = 0;
+      result[i].vy  = 0;
+
+      // Increment static count
+      cir_obs[i]->static_count++;
+      if(cir_obs[i]->static_count > ob_not_moving_count)
+      {
+        //ROS_INFO("Setting moving = false, static_count: %i", cir_obs[i]->static_count);
+        cir_obs[i]->moving = false;
+      }
+    }
+    else
+    {
+      result[i].v   = v;
+      result[i].vx  = vx;
+      result[i].vy  = vy;
+
+      // Reset static_count
+      cir_obs[i]->static_count = 0;
+    }
+
+    // Set updated velocity value
+    cir_obs[i]->vels[cir_obs[i]->vels.size()-1] = result[i];
+    cir_obs[i]->vel = result[i];
+    //ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
+  } // end for
+
+  //ROS_INFO("Exiting computeVelocities");
+}
+
+
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
-  /*ROS_INFO("**************************************************");
+  ROS_INFO("**************************************************");
   ROS_INFO("In costmapCb");
-  ROS_INFO("**************************************************");*/
+  ROS_INFO("**************************************************");
   ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;
   t_last_costmap = ros::Time::now();
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
@@ -1818,17 +1950,6 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    */
   std::vector<CircleMatch> cm = dataAssociation(cirGroups);
 
-  //ROS_INFO("After data association:");
-  /*for(int i=0;i<cir_obs.size();i++)
-  {
-    //ROS_INFO("cir_obs[%i]->cir.center.x: %f cir_obs[%i]->cir.center.y: %f cir_obs[%i]->cir.radius: %f", i, cir_obs[i]->cir.center.x, i, cir_obs[i]->cir.center.y, i, cir_obs[i]->cir.radius);
-  }*/
-
-  /*if(cirs.size() > prev_valid_cirs.size())
-  {
-    ROS_INFO("More circles! cirs.size(): %i prev_valid_cirs.size(): %i", (int)cirs.size(), (int)prev_valid_cirs.size());
-  }*/
-
 
   
   /*
@@ -1836,13 +1957,8 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    */
    std::vector<CircleGroup> circles_current = updateKalmanFilters(cirGroups, cm);
 
-  /*ROS_INFO("After kalman filter:");
-  for(int i=0;i<cir_obs.size();i++)
-  {
-    ROS_INFO("cir_obs[%i]->cirGroup.fitCir.center.x: %f cir_obs[%i]->cirGroup.fitCir.center.y: %f cir_obs[%i]->cir.radius: %f", i, cir_obs[i]->cirGroup.fitCir.center.x, i, cir_obs[i]->cirGroup.fitCir.center.y, i, cir_obs[i]->cir.radius);
-  }*/
-
   
+
    
   /*
    * Circle positions are finalized at this point
@@ -1854,98 +1970,18 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    /*
     * Predict orientations
     */
+   computeOrientations();
   
-  // Check the costmap frequency
-  if(num_costmaps % num_costmap_freq_theta == 0 || cirGroups.size() > prev_valid_cirs.size())
-  {
-    // Average the theta values
-    std::vector<double> thetas = predictTheta();
-    for(int i=0;i<cir_obs.size();i++)
-    {
-      //ROS_INFO("Obstacle %i", i);
-      //ROS_INFO("theta[%i]: %f", i, thetas[i]);
-      cir_obs[i]->prevTheta.push_back(thetas[i]);
-      if(cir_obs[i]->prevTheta.size() > num_theta_count)
-      {
-        //ROS_INFO("Removing %f", cir_obs[i]->prevTheta[0]);
-        cir_obs[i]->prevTheta.erase( cir_obs[i]->prevTheta.begin(), cir_obs[i]->prevTheta.begin()+1 );
-      }
-
-      double theta = cir_obs[i]->prevTheta[0];
-      for(int j=1;j<cir_obs[i]->prevTheta.size();j++)
-      {
-        theta = util.findAngleBetweenAngles(theta, cir_obs[i]->prevTheta[j]);
-        //ROS_INFO("j: %i theta: %f next theta: %f result: %f", j, theta, cir_obs[i]->prevTheta[j], util.findAngleBetweenAngles(theta, cir_obs[i]->prevTheta[j]));
-      }
-
-      // Set new theta value
-      cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] = theta;
-    }
-  } // end if costmap is considered for predicting theta values
-
-
-  //ROS_INFO("After predicting orientations");
   
   /*
    * Predict velocities
    */
-  std::vector<Velocity> velocities = predictVelocities(cm, d_elapsed);
+   std::vector<Velocity> velocities;
+   computeVelocities(cm, d_elapsed, velocities);
+   prev_velocities.push_back(velocities);
 
-  // Average the velocities
-  for(int i=0;i<cir_obs.size();i++)
-  {
-    //ROS_INFO("i: %i cir_obs.size(): %i velocities.size(): %i cir_obs[%i]->prevTheta.size(): %i", i, (int)cir_obs.size(), (int)velocities.size(), i, (int)cir_obs[i]->prevTheta.size());
-    cir_obs[i]->vels.push_back(velocities[i]);
-    if(cir_obs[i]->vels.size() > num_velocity_count)
-    {
-      cir_obs[i]->vels.erase( cir_obs[i]->vels.begin(), cir_obs[i]->vels.begin()+1 );
-    }
 
-    float v=0;
-    for(int n=0;n<cir_obs[i]->vels.size();n++)
-    {
-      //ROS_INFO("n: %i Adding %f", n, cir_obs[i]->vels[n].v);
-      v += cir_obs[i]->vels[n].v;
-    }
-    v /= cir_obs[i]->vels.size();
-    //ROS_INFO("Averaged v: %f", v);
 
-    float theta = cir_obs[i]->prevTheta.size() > 0 ? cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] : initial_theta;
-    float vx = v*cos(theta);
-    float vy = v*sin(theta);
-
-    // Set values, check for static obstacles
-    if(velocities[i].v < static_v_threshold || !cir_obs[i]->moving)
-    {
-      velocities[i].v   = 0;
-      velocities[i].vx  = 0;
-      velocities[i].vy  = 0;
-
-      // Increment static count
-      cir_obs[i]->static_count++;
-      if(cir_obs[i]->static_count > ob_not_moving_count)
-      {
-        //ROS_INFO("Setting moving = false, static_count: %i", cir_obs[i]->static_count);
-        cir_obs[i]->moving = false;
-      }
-    }
-    else
-    {
-      velocities[i].v   = v;
-      velocities[i].vx  = vx;
-      velocities[i].vy  = vy;
-
-      // Reset static_count
-      cir_obs[i]->static_count = 0;
-    }
-
-    // Set updated velocity value
-    cir_obs[i]->vels[cir_obs[i]->vels.size()-1] = velocities[i];
-    cir_obs[i]->vel = velocities[i];
-    //ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
-  }
-
-  //ROS_INFO("After predicting velocities");
 
   // Get attachments
   /*attachs.clear();
@@ -2004,9 +2040,6 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     } // end inner for
   } // end outer for*/
 
-
-  // Push on velocities for data
-  prev_velocities.push_back(velocities);
   
   /*
    * Set previous circles
@@ -2022,31 +2055,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   /*
    *  After finding velocities, populate Obstacle list
    */  
-  obs.clear();
-  list.obstacles.clear();
-
-  // Populate list based on Packed Obstacles
-  /*for(int i=0;i<cirs.size();i++)
-  {
-    for(int j=0;j<cirs[i].size();j++)
-    {
-    }
-  }*/
-
-  // Populate list
-  for(int i=0;i<cir_obs.size();i++)
-  {
-    //ROS_INFO("Creating obstacle, prevCirs.size(): %i prevTheta.size(): %i", (int)cir_obs[i]->prevCirs.size(), (int)cir_obs[i]->prevTheta.size());
-    Obstacle o(cir_obs[i]->cir.radius, costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res, global_grid.info.origin.position.x, global_grid.info.origin.position.y); 
-
-    // Update values
-    float theta = cir_obs[i]->prevTheta.size() > 0 ? cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] : initial_theta;
-    o.update(cir_obs[i]->cirGroup, velocities[i], theta);
-    
-    obs.push_back(o);
-    list.obstacles.push_back(o.msg_);
-    //ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
-  }
+  populateObstacleList(velocities);
 
   // Record duration data
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tStart);
