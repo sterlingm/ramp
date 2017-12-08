@@ -50,8 +50,9 @@ void Obstacle::update(const nav_msgs::Odometry o)
 
 void Obstacle::update(const CircleGroup& c, const Velocity& v, const double theta)
 {
-  // Set the new CircleGroup
-  cirGroup_ = c;
+  /*
+   *  Set the new CircleGroup
+   */
   msg_.cirGroup.fitCir.center.x = c.fitCir.center.x;
   msg_.cirGroup.fitCir.center.y = c.fitCir.center.y;
   msg_.cirGroup.fitCir.radius = c.fitCir.radius;
@@ -60,7 +61,7 @@ void Obstacle::update(const CircleGroup& c, const Velocity& v, const double thet
     ramp_msgs::Circle pc;
     pc.center.x = c.packedCirs[i].center.x;
     pc.center.y = c.packedCirs[i].center.y;
-    pc.radius = c.packedCirs[i].radius;
+    pc.radius   = c.packedCirs[i].radius;
 
     msg_.cirGroup.packedCirs.push_back(pc);
   }

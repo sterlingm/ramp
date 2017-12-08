@@ -21,8 +21,6 @@ class Obstacle
     /** Data Members */
     ramp_msgs::Obstacle msg_;
 
-    CircleGroup cirGroup_;
-
     // Hold odometry information for t and t-1
     // Leave this here for system-level experiments
     nav_msgs::Odometry odom_t;

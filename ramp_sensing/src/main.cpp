@@ -1711,6 +1711,7 @@ void computeOrientations()
 void populateObstacleList(const std::vector<Velocity>& velocities)
 {
   //ROS_INFO("In populateObstacleList");
+  
   obs.clear();
   list.obstacles.clear();
   for(int i=0;i<cir_obs.size();i++)
@@ -1800,9 +1801,9 @@ void computeVelocities(const std::vector<CircleMatch> cm, const ros::Duration d_
 
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
-  ROS_INFO("**************************************************");
+  /*ROS_INFO("**************************************************");
   ROS_INFO("In costmapCb");
-  ROS_INFO("**************************************************");
+  ROS_INFO("**************************************************");*/
   ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;
   t_last_costmap = ros::Time::now();
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
@@ -1879,38 +1880,11 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   /*ROS_INFO("cirGroups.size(): %i", (int)cirGroups.size());
   for(int i=0;i<cirGroups.size();i++)
   {
-    ROS_INFO("groups[%i].packedCirs.size(): %i", i, (int)cirGroups[i].packedCirs.size());
+    ROS_INFO("cirGroups[%i].packedCirs.size(): %i", i, (int)cirGroups[i].packedCirs.size());
   }*/
 
-
-  //ROS_INFO("Finished getting cirs");
-
-  /*
-   * Discard any circles too close to boundaries because those are likely walls
-   */
-  //removeWallObs(cirs);
-
-  //ROS_INFO("Finished removing wall obstacles");
   
 
-  /*
-   * Combine overlapping circles
-   
-  // This seg faults if I don't check size > 0
-  // Figure out why...
-  if(cirs.size() > 0)
-  {
-    std::vector<Circle> over;
-    c.combineOverlappingCircles(cirs, over);
-    cirs = over;
-  }*/
-
-  //ROS_INFO("cirs array finalized:");
-  /*for(int i=0;i<cirs.size();i++)
-  {
-    //ROS_INFO("i: %i", i);
-    //ROS_INFO("Circle %i: (%f,%f) radius: %f", i, cirs[i].center.x, cirs[i].center.y, cirs[i].radius);
-  }*/
 
 
   /*
@@ -1929,17 +1903,17 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    /*
     * Check if obstacles are in viewing angle
     */
-  /*int i=0;
-  while(i<groups.size())
+  int i=0;
+  while(i<cirGroups.size())
   {
-    if(!checkViewingObstacle(groups[i].fitCir))
+    if(!checkViewingObstacle(cirGroups[i].fitCir))
     {
-      groups.erase(groups.begin()+i, groups.begin()+i+1);
+      cirGroups.erase(cirGroups.begin()+i, cirGroups.begin()+i+1);
       i--;
     }
 
     i++;
-  }*/
+  }
  
 
   /*
@@ -2049,17 +2023,23 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     cir_obs[i]->prevCirs.push_back(cir_obs[i]->cirGroup.fitCir);
   }
 
-  // Set prev_cirs variable!
+  // Set prev_cirs variable for data association
   prev_valid_cirs = circles_current;
  
+
+
   /*
    *  After finding velocities, populate Obstacle list
    */  
   populateObstacleList(velocities);
 
+
+
   // Record duration data
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tStart);
   durs.push_back( time_span.count() );
+
+
 
   //ROS_INFO("Duration: %f", (ros::Time::now()-t_last_costmap).toSec());
   num_costmaps++;
@@ -2294,7 +2274,11 @@ int main(int argc, char** argv)
   dd.sleep();
 
   // Set initial robot position
-  //setRobotPos();
+  /*ramp_msgs::MotionState ms;
+  ms.positions.push_back(3);
+  ms.positions.push_back(1);
+  ms.positions.push_back(PI);
+  setRobotPos(ms);*/
 
   printf("\nSpinning\n");
 

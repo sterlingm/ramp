@@ -351,7 +351,6 @@ std::vector<Circle> CirclePacker::getCirclesFromEdgeSets(const std::vector< std:
   for(int i=0;i<edge_sets.size();i++)
   {
     ////////ROS_INFO("Edge set %i", i);
-      
     Point temp_center;
   
     // For each set of edges, find the minimum and maximum values for x and y
@@ -1361,7 +1360,7 @@ std::vector<CircleGroup> CirclePacker::getGroups()
 
   // ***** findContours modifies src! *****
   findContours( srcCopy, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
-  ////////ROS_INFO("contours.size(): %i", (int)contours.size());
+  //ROS_INFO("contours.size(): %i", (int)contours.size());
   
   // Go through each set of contour points
   for(int i=0;i<contours.size();i++)
@@ -1374,6 +1373,7 @@ std::vector<CircleGroup> CirclePacker::getGroups()
 
     CircleGroup cg = getGroupForContours(contours[i]);
     result.push_back(cg);
+    //ROS_INFO("cg %i, packedCirs.size(): %i fitCir: (%f,%f)", i, (int)cg.packedCirs.size(), cg.fitCir.center.x, cg.fitCir.center.y);
   }
 
   return result;
