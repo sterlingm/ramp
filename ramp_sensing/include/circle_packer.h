@@ -20,6 +20,9 @@ class CirclePacker
     CirclePacker(cv::Mat grid);
     ~CirclePacker();
 
+    void setNewGrid(nav_msgs::OccupancyGridConstPtr);
+    void setNewGrid(nav_msgs::OccupancyGrid);
+
     void convertOGtoMat(nav_msgs::OccupancyGridConstPtr);
 
     void CannyThreshold(int, void*);
@@ -50,10 +53,10 @@ class CirclePacker
     std::vector< std::vector<Circle> > goCirclePacking(double min_r=0);
     std::vector<cv::RotatedRect> goEllipse();
 
-    Polygon getPolygonFromContours(const std::vector<cv::Point> contours) const;
-    std::vector<Polygon> getPolygonsFromContours(std::vector< std::vector<cv::Point> > contours) const;
-    std::vector<Cell> getCellsInPolygon(const Polygon& p) const; 
-    bool cellInPoly(Polygon, cv::Point) const;
+    Polygon getPolygonFromContours(const std::vector<cv::Point> contours);
+    std::vector<Polygon> getPolygonsFromContours(std::vector< std::vector<cv::Point> > contours);
+    std::vector<Cell> getCellsInPolygon(const Polygon& p); 
+    bool cellInPoly(Polygon, Point);
     double getMinDistToPoly(const Polygon&, const Cell&);
     double getMinDistToCirs(const std::vector<Circle>&, const Cell&);
     void deleteCellsInCir(const std::vector<Cell>&, const Circle, std::vector<Cell>&);
@@ -61,9 +64,14 @@ class CirclePacker
     std::vector<Circle>       packCirsIntoPoly(const Polygon p, const double min_r);
     CircleGroup               getGroupForContours(std::vector<cv::Point> contours);
     std::vector<CircleGroup>  getGroups();
+    
+    visualization_msgs::Marker polygonMarker_;
   private:
 
     void drawContourPoints(std::vector< std::vector< cv::Point> > contours, std::vector<cv::Vec4i> hierarchy);
+    visualization_msgs::Marker drawLines(const std::vector<Point>& points);
+    visualization_msgs::Marker drawPolygon(const Polygon& poly);
+    visualization_msgs::Marker drawPolygon();
 
     Utility utility_;
 

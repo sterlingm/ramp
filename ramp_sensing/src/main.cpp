@@ -31,6 +31,7 @@ std::vector<Circle> cirs_pos;
 
 std::vector<CircleGroup> cirGroups;
 std::vector< std::vector<Circle> > cirs;
+visualization_msgs::Marker polygonLines;
 
 nav_msgs::OccupancyGrid global_costmap;
 
@@ -483,7 +484,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       cirMarker.color.r = 0;
       cirMarker.color.g = 1;
       cirMarker.color.b = 0;
-      cirMarker.color.a = 0.5;
+      cirMarker.color.a = 0.25;
       cirMarker.lifetime = ros::Duration(0.1);
 
       result.push_back(cirMarker);
@@ -495,7 +496,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
         marker.header.stamp = ros::Time::now();
         marker.header.frame_id = global_frame;
         marker.ns = "basic_shapes";
-        marker.id = (populationSize * i) + j;
+        marker.id = 20000 + (populationSize * i) + j;
         
         marker.type = visualization_msgs::Marker::SPHERE;
         marker.action = visualization_msgs::Marker::ADD;
@@ -579,8 +580,8 @@ void publishMarkers(const ros::TimerEvent& e)
     text.header.stamp   = ros::Time::now();
     arrow.header.stamp  = ros::Time::now();
 
-    text.id   = 1000+populationSize + markers.size()+i;
-    arrow.id  = 1000+populationSize + markers.size()*(i+markers.size()+1);
+    text.id   = 1001;
+    arrow.id  = 1002;
 
     //text.header.frame_id  = "/map";
     //arrow.header.frame_id = "/map";
@@ -681,6 +682,9 @@ void publishMarkers(const ros::TimerEvent& e)
 
   result.markers.push_back(text);
   
+  // Draw the polygon lines
+  result.markers.push_back(polygonLines);
+  ROS_INFO("publishMarkers polygonLines.size(): %i", (int)polygonLines.points.size());
 
   //ROS_INFO("result.markers.size(): %i", (int)result.markers.size());
 
@@ -1876,14 +1880,15 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   //std::vector<Circle> cirs = c.goMyBlobs();
   cirGroups.clear();
   cirGroups = c.getGroups();
+  polygonLines = c.polygonMarker_;
   
+
   /*ROS_INFO("cirGroups.size(): %i", (int)cirGroups.size());
   for(int i=0;i<cirGroups.size();i++)
   {
     ROS_INFO("cirGroups[%i].packedCirs.size(): %i", i, (int)cirGroups[i].packedCirs.size());
   }*/
 
-  
 
 
 
@@ -1903,7 +1908,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    /*
     * Check if obstacles are in viewing angle
     */
-  int i=0;
+  /*int i=0;
   while(i<cirGroups.size())
   {
     if(!checkViewingObstacle(cirGroups[i].fitCir))
@@ -1913,7 +1918,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     }
 
     i++;
-  }
+  }*/
  
 
   /*
@@ -2252,6 +2257,7 @@ int main(int argc, char** argv)
 
 
   ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);
+  //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/hilbert_map_grid", 1, &costmapCb);
   ros::Subscriber sub_robot_update = handle.subscribe<ramp_msgs::MotionState>("/updateAfterTf", 1, &robotUpdateCb);
   //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/consolidated_costmap", 1, &costmapCb);
 

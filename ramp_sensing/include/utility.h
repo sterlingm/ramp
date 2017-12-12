@@ -23,10 +23,17 @@ using namespace std::chrono;
 
 #define PI 3.14159f
 
+struct Point
+{
+  double x;
+  double y;
+};
+
+
 struct Edge
 {
-  cv::Point start;
-  cv::Point end;
+  Point start;
+  Point end;
 };
 
 struct Normal
@@ -48,15 +55,10 @@ struct Polygon
 
 struct Cell
 {
-  cv::Point p;
+  Point p;
   double dist;
 };
 
-struct Point
-{
-  double x;
-  double y;
-};
 
 struct Circle
 {
