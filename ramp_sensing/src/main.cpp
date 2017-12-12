@@ -684,7 +684,7 @@ void publishMarkers(const ros::TimerEvent& e)
   
   // Draw the polygon lines
   result.markers.push_back(polygonLines);
-  ROS_INFO("publishMarkers polygonLines.size(): %i", (int)polygonLines.points.size());
+  //ROS_INFO("publishMarkers polygonLines.size(): %i", (int)polygonLines.points.size());
 
   //ROS_INFO("result.markers.size(): %i", (int)result.markers.size());
 
