@@ -71,6 +71,8 @@ class CirclePacker
     std::vector<visualization_msgs::Marker> pMarkers_;
   private:
 
+    Polygon tpplToPoly(TPPLPoly p);
+    TPPLPoly polyToTPPL(Polygon p);
     void drawContourPoints(std::vector< std::vector< cv::Point> > contours, std::vector<cv::Vec4i> hierarchy);
     visualization_msgs::Marker drawLines(const std::vector<Point>& points, const int id=50000);
     visualization_msgs::Marker drawPolygon(const Polygon& poly, const int id=50000);

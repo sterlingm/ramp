@@ -465,8 +465,8 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       cirMarker.action = visualization_msgs::Marker::ADD;
 
       // Set x and y
-      double x = cir_obs[i]->cirGroup.fitCir.center.x+10;
-      double y = cir_obs[i]->cirGroup.fitCir.center.y+10;
+      double x = cir_obs[i]->cirGroup.fitCir.center.x;
+      double y = cir_obs[i]->cirGroup.fitCir.center.y;
         
       cirMarker.pose.position.x = x;
       cirMarker.pose.position.y = y;
@@ -503,8 +503,8 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
         marker.action = visualization_msgs::Marker::ADD;
 
         // Set x and y
-        double x = cir_obs[i]->cirGroup.packedCirs[j].center.x+10;
-        double y = cir_obs[i]->cirGroup.packedCirs[j].center.y+10;
+        double x = cir_obs[i]->cirGroup.packedCirs[j].center.x;
+        double y = cir_obs[i]->cirGroup.packedCirs[j].center.y;
 
         //ROS_INFO("cir_obs[%i]->cir.center.x: %f cir_obs[%i]->cir.center.y: %f cir_obs[%i]->cir.radius: %f", i, cir_obs[i]->cir.center.x, i, cir_obs[i]->cir.center.y, i, cir_obs[i]->cir.radius);
         //ROS_INFO("(x,y): (%f,%f) x_origin: %f y_origin: %f", x, y, x_origin, y_origin);
@@ -553,7 +553,6 @@ void publishMarkers(const ros::TimerEvent& e)
   visualization_msgs::MarkerArray result;
 
   
-  //std::vector<visualization_msgs::Marker> markers;
   std::vector<visualization_msgs::Marker> markers = convertObsToMarkers();
 
   //ROS_INFO("Publishing %i markers", (int)markers.size());
