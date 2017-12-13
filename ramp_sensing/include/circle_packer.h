@@ -5,6 +5,7 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <queue>
 #include <visualization_msgs/Marker.h>
+#include "polypartition.h"
 
 struct Attachment
 {
@@ -43,6 +44,7 @@ class CirclePacker
     
 
     std::vector<Triangle> triangulatePolygon(const Polygon&);
+    std::vector<TPPLPoly> triPolyPart(const Polygon& p);
 
     Circle getCircleFromKeypoint(const cv::KeyPoint k) const;
     std::vector<Circle> go();
@@ -66,12 +68,13 @@ class CirclePacker
     std::vector<CircleGroup>  getGroups();
     
     visualization_msgs::Marker polygonMarker_;
+    std::vector<visualization_msgs::Marker> pMarkers_;
   private:
 
     void drawContourPoints(std::vector< std::vector< cv::Point> > contours, std::vector<cv::Vec4i> hierarchy);
-    visualization_msgs::Marker drawLines(const std::vector<Point>& points);
-    visualization_msgs::Marker drawPolygon(const Polygon& poly);
-    visualization_msgs::Marker drawPolygon();
+    visualization_msgs::Marker drawLines(const std::vector<Point>& points, const int id=50000);
+    visualization_msgs::Marker drawPolygon(const Polygon& poly, const int id=50000);
+    std::vector<visualization_msgs::Marker> drawPolygons(std::vector<TPPLPoly> polys);
 
     Utility utility_;
 

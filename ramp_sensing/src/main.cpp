@@ -32,6 +32,7 @@ std::vector<Circle> cirs_pos;
 std::vector<CircleGroup> cirGroups;
 std::vector< std::vector<Circle> > cirs;
 visualization_msgs::Marker polygonLines;
+std::vector<visualization_msgs::Marker> pLines;
 
 nav_msgs::OccupancyGrid global_costmap;
 
@@ -464,8 +465,8 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       cirMarker.action = visualization_msgs::Marker::ADD;
 
       // Set x and y
-      double x = cir_obs[i]->cirGroup.fitCir.center.x;
-      double y = cir_obs[i]->cirGroup.fitCir.center.y;
+      double x = cir_obs[i]->cirGroup.fitCir.center.x+10;
+      double y = cir_obs[i]->cirGroup.fitCir.center.y+10;
         
       cirMarker.pose.position.x = x;
       cirMarker.pose.position.y = y;
@@ -502,8 +503,8 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
         marker.action = visualization_msgs::Marker::ADD;
 
         // Set x and y
-        double x = cir_obs[i]->cirGroup.packedCirs[j].center.x;
-        double y = cir_obs[i]->cirGroup.packedCirs[j].center.y;
+        double x = cir_obs[i]->cirGroup.packedCirs[j].center.x+10;
+        double y = cir_obs[i]->cirGroup.packedCirs[j].center.y+10;
 
         //ROS_INFO("cir_obs[%i]->cir.center.x: %f cir_obs[%i]->cir.center.y: %f cir_obs[%i]->cir.radius: %f", i, cir_obs[i]->cir.center.x, i, cir_obs[i]->cir.center.y, i, cir_obs[i]->cir.radius);
         //ROS_INFO("(x,y): (%f,%f) x_origin: %f y_origin: %f", x, y, x_origin, y_origin);
@@ -552,6 +553,7 @@ void publishMarkers(const ros::TimerEvent& e)
   visualization_msgs::MarkerArray result;
 
   
+  //std::vector<visualization_msgs::Marker> markers;
   std::vector<visualization_msgs::Marker> markers = convertObsToMarkers();
 
   //ROS_INFO("Publishing %i markers", (int)markers.size());
@@ -654,8 +656,8 @@ void publishMarkers(const ros::TimerEvent& e)
 
   //ROS_INFO("texts.size(): %i", (int)texts.size());
 
-  result.markers.insert(std::end(result.markers), std::begin(texts), std::end(texts));  
-  result.markers.insert(std::end(result.markers), std::begin(arrows), std::end(arrows));  
+  //result.markers.insert(std::end(result.markers), std::begin(texts), std::end(texts));  
+  //result.markers.insert(std::end(result.markers), std::begin(arrows), std::end(arrows));  
 
   // Create a text marker to show the number of obstacles
   visualization_msgs::Marker text;
@@ -684,6 +686,10 @@ void publishMarkers(const ros::TimerEvent& e)
   
   // Draw the polygon lines
   result.markers.push_back(polygonLines);
+  for(int i=0;i<pLines.size();i++)
+  {
+    result.markers.push_back(pLines[i]);
+  }
   //ROS_INFO("publishMarkers polygonLines.size(): %i", (int)polygonLines.points.size());
 
   //ROS_INFO("result.markers.size(): %i", (int)result.markers.size());
@@ -1881,6 +1887,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   cirGroups.clear();
   cirGroups = c.getGroups();
   polygonLines = c.polygonMarker_;
+  pLines = c.pMarkers_;
   
 
   /*ROS_INFO("cirGroups.size(): %i", (int)cirGroups.size());

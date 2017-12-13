@@ -18,7 +18,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/features2d/features2d.hpp>
-#include "circle_filter.h" // Needs to be included AFTER opencv
+#include "circle_filter.h" // needs to be included AFTER OpenCV
 using namespace std::chrono;
 
 #define PI 3.14159f
