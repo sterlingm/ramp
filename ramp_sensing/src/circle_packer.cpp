@@ -890,24 +890,31 @@ std::vector<Polygon> CirclePacker::getPolygonsFromContours(std::vector< std::vec
  */ 
 double CirclePacker::getMinDistToPoly(const Polygon& poly, const Cell& cell)
 {
+  ROS_INFO("In getMinDistToPoly");
+  ROS_INFO("Cell: (%f,%f)", cell.p.x, cell.p.y);
   double result = 100000;
 
   for(int n=0;n<poly.normals.size();n++)
   {
-    //std::cout<<"\npoly.normals[n]: "<<poly.normals[n].a<<", "<<poly.normals[n].b;
+    ROS_INFO("poly.edges[%i].start: (%f,%f) end: (%f,%f)", n, poly.edges[n].start.x, poly.edges[n].start.y, poly.edges[n].end.x, poly.edges[n].end.y);  
+    ROS_INFO("Poly.normals[%i]: <%f,%f> c=%f", n, poly.normals[n].a, poly.normals[n].b, poly.normals[n].c);
+    
     // Get unit normal
     double l = sqrt( pow(poly.normals[n].a,2) + pow(poly.normals[n].b,2) );
-    Normal v_hat;
-    v_hat.a = poly.normals[n].a / l;
-    v_hat.b = poly.normals[n].b / l;
+    Normal e_hat;
+    e_hat.a = poly.normals[n].a / l;
+    e_hat.b = poly.normals[n].b / l;
     
-    std::vector<double> r;
-    r.push_back(poly.edges[n].start.x - cell.p.x);
-    r.push_back(poly.edges[n].start.y - cell.p.y);
+    std::vector<double> sc;
+    sc.push_back(cell.p.x - poly.edges[n].start.x);
+    sc.push_back(cell.p.y - poly.edges[n].start.y);
+    double scLen = sqrt( pow(sc[0],2) + pow(sc[1],2) );
 
-    double d = fabs((v_hat.a*r[0]) + (v_hat.b*r[1]));
-    //std::cout<<"\nl: "<<l<<" v_hat: <"<<v_hat.a<<","<<v_hat.b<<"> r: <"<<r[0]<<","<<r[1]<<">";
-    //std::cout<<"\nd: "<<d;
+    double adLen = sc[0]*e_hat.a + sc[1]*e_hat.b;
+
+    double d = sqrt( pow(scLen,2) + pow(adLen,2) );
+    
+    ROS_INFO("l: %f ehat: <%f,%f> sc: <%f,%f> d: %f", l, e_hat.a, e_hat.b, sc[0], sc[1], d);
     if(d < result)
     {
       result = d;
@@ -972,9 +979,8 @@ bool CirclePacker::cellInPoly(Polygon poly, Point cell)
     
 void CirclePacker::LineLineEndPoints (const Point& l1_p1, Point& l1_p2, const Point& l2_p1, Point& l2_p2, std::vector<Point>& points_of_collision) const
 {
-  ROS_INFO("----------------------------------------------------");
-  ROS_INFO("In CirclePacker::LineLineEndPoints");
-  ROS_INFO("Segment 1: (%f,%f) - (%f,%f) Segment 2: (%f,%f) - (%f,%f)", l1_p1.x, l1_p1.y, l1_p2.x, l1_p2.y, l2_p1.x, l2_p1.y, l2_p2.x, l2_p2.y);
+  //ROS_INFO("In CirclePacker::LineLineEndPoints");
+  //ROS_INFO("Segment 1: (%f,%f) - (%f,%f) Segment 2: (%f,%f) - (%f,%f)", l1_p1.x, l1_p1.y, l1_p2.x, l1_p2.y, l2_p1.x, l2_p1.y, l2_p2.x, l2_p2.y);
 
   // Get line equation coefficients
   double l1_slope = (l1_p2.y - l1_p1.y) / (l1_p2.x - l1_p1.x);
@@ -983,10 +989,9 @@ void CirclePacker::LineLineEndPoints (const Point& l1_p1, Point& l1_p2, const Po
   double l2_slope = (l2_p2.y - l2_p1.y) / (l2_p2.x - l2_p1.x);
   double l2_b = l2_p2.y - (l2_slope*l2_p2.x);
 
-  ROS_INFO("l1_slope: %f l1_b: %f l2_slope: %f l2_b: %f", l1_slope, l1_b, l2_slope, l2_b);
+  //ROS_INFO("l1_slope: %f l1_b: %f l2_slope: %f l2_b: %f", l1_slope, l1_b, l2_slope, l2_b);
 
   // Flag to toggle if are using x or y
-  bool x_y = true;
   double intersectValue;
 
 
@@ -994,12 +999,12 @@ void CirclePacker::LineLineEndPoints (const Point& l1_p1, Point& l1_p2, const Po
   // Check that they are not the same line!
   if( fabs(l2_slope - l1_slope) < 0.01 )
   {
-    ROS_INFO("Lines are parallel");
+    //ROS_INFO("Lines are parallel");
     
     // Same line
     if( fabs(l1_slope - l2_slope) < 0.01 && fabs(l1_b - l2_b) < 0.01 )
     {
-      ROS_INFO("Same Line");
+      //ROS_INFO("Same Line");
       Point temp;
       temp.x = 9999;
       temp.y = 9999;
@@ -1016,13 +1021,14 @@ void CirclePacker::LineLineEndPoints (const Point& l1_p1, Point& l1_p2, const Po
   }
   else
   {
-    ROS_INFO("Lines are not parallel");
     // Find the x-coordinate of intersection
     intersectValue = (-(l1_b - l2_b)) / (l1_slope - l2_slope);
   }
 
+  /*
+   *  Compute the y-value at intersection and set ranges for x and y
+   */
   double yIn = (l1_slope * intersectValue) + l1_b;
-
   double l1_x_min = l1_p1.x;
   double l1_x_max = l1_p2.x;
   double l1_y_min = l1_p1.y;
@@ -1032,6 +1038,7 @@ void CirclePacker::LineLineEndPoints (const Point& l1_p1, Point& l1_p2, const Po
   double l2_y_min = l2_p1.y;
   double l2_y_max = l2_p2.y;
 
+  // Check if we need to swap values
   if(l1_x_min > l1_x_max)
   {
     double temp = l1_x_min;
@@ -1059,14 +1066,16 @@ void CirclePacker::LineLineEndPoints (const Point& l1_p1, Point& l1_p2, const Po
   }
     
 
-  ROS_INFO("intersectValue: %f yIn: %f l1 (xmin,xmax): (%f,%f) (ymin,ymax): (%f,%f) l2 (xmin,xmax): (%f,%f) (ymin,ymax): (%f,%f)", intersectValue, yIn, l1_x_min, l1_x_max, l1_y_min, l1_y_max, l2_x_min, l2_x_max, l2_y_min, l2_y_max);
-
-  if( (x_y && (intersectValue >= l1_x_min && intersectValue <= l1_x_max) && (intersectValue >= l2_x_min && intersectValue <= l2_x_max) &&
-              (yIn >= l1_y_min && yIn <= l1_y_max) && (yIn >= l2_y_min && yIn <= l2_y_max)) )
+  //ROS_INFO("intersectValue: %f yIn: %f l1 (xmin,xmax): (%f,%f) (ymin,ymax): (%f,%f) l2 (xmin,xmax): (%f,%f) (ymin,ymax): (%f,%f)", intersectValue, yIn, l1_x_min, l1_x_max, l1_y_min, l1_y_max, l2_x_min, l2_x_max, l2_y_min, l2_y_max);
+ 
+  // If the x and y values at the intersection are within the line ranges (i.e., on the line segment), then add the point
+  if( (intersectValue >= l1_x_min && intersectValue <= l1_x_max) && 
+      (intersectValue >= l2_x_min && intersectValue <= l2_x_max) && 
+      (yIn >= l1_y_min && yIn <= l1_y_max) && 
+      (yIn >= l2_y_min && yIn <= l2_y_max)) 
 
   {
-    ROS_INFO("In if lines intersect");
-
+    //ROS_INFO("In if lines intersect");
     Point p_intersect;
     double x_at_inter = intersectValue;
     double y_at_inter = l1_slope*x_at_inter + l1_b;
@@ -1074,7 +1083,7 @@ void CirclePacker::LineLineEndPoints (const Point& l1_p1, Point& l1_p2, const Po
     p_intersect.y = y_at_inter;
     
     points_of_collision.push_back(p_intersect);
-    ROS_INFO("x_at_inter: %f y_at_inter: %f", x_at_inter, y_at_inter);
+    //ROS_INFO("x_at_inter: %f y_at_inter: %f", x_at_inter, y_at_inter);
   }
 }
 
@@ -1085,8 +1094,7 @@ bool CirclePacker::cellInPolyConcave(Polygon poly, Point cell)
   endRay.x = 70; // 3.5 (x_max) / 0.05 (resolution)
   endRay.y = cell.y; 
   
-  ROS_INFO("****************************************************");
-  ROS_INFO("In cellInPoly, cell: (%f,%f)", cell.x, cell.y);
+  //ROS_INFO("In cellInPoly, cell: (%f,%f)", cell.x, cell.y);
 
   std::vector<Point> collPoints;
   for(int i=0;i<poly.edges.size();i++)
@@ -1094,12 +1102,7 @@ bool CirclePacker::cellInPolyConcave(Polygon poly, Point cell)
     LineLineEndPoints(cell, endRay, poly.edges[i].start, poly.edges[i].end, collPoints);
   }
 
-
-  ROS_INFO("collPoints.size(): %i", (int)collPoints.size());
-  if(collPoints.size() % 2 == 1)
-  {
-    ROS_INFO("CELL IN POLYGON");
-  }
+  //ROS_INFO("collPoints.size(): %i", (int)collPoints.size());
   return collPoints.size() % 2 == 1;
 
 }
@@ -1151,14 +1154,7 @@ std::vector<Cell> CirclePacker::getCellsInPolygon(const Polygon& poly)
       MIN_WIDTH = vertices[i].x;
     }
   }
-  ROS_INFO("MIN W(x),L(y): %f, %f MAX W(x),L(y): %f, %f", MIN_WIDTH, MIN_LENGTH, MAX_WIDTH, MAX_LENGTH);
-
-  /*MIN_LENGTH+=1;
-  MIN_WIDTH+=1;
-  MAX_LENGTH+=1;
-  MAX_WIDTH+=1;*/
-  
-  //ROS_INFO("After adding 1, MIN W(x),L(y): %f, %f MAX W(x),L(y): %f, %f", MIN_WIDTH, MIN_LENGTH, MAX_WIDTH, MAX_LENGTH);
+  //ROS_INFO("MIN W(x),L(y): %f, %f MAX W(x),L(y): %f, %f", MIN_WIDTH, MIN_LENGTH, MAX_WIDTH, MAX_LENGTH);
 
   double round = 1;
 
@@ -1302,7 +1298,7 @@ std::vector<Circle> CirclePacker::packCirsIntoPoly(Polygon poly, double min_r)
       double min_d=getMinDistToPoly(poly, cell);
       double min_cir=getMinDistToCirs(result, cell);
 
-      //ROS_INFO("min_d: %f min_cir: %f", min_d, min_cir);
+      ROS_INFO("min_d: %f min_cir: %f", min_d, min_cir);
 
       // Set new distance value
       if(min_d < min_cir || min_cir < 0)
@@ -1422,7 +1418,7 @@ void CirclePacker::drawContourPoints(std::vector< std::vector<cv::Point> > conto
 
 visualization_msgs::Marker CirclePacker::drawLines(const std::vector<Point>& points, const int id)
 {
-  ROS_INFO("CirclePacker::drawLines");
+  //ROS_INFO("CirclePacker::drawLines");
   visualization_msgs::Marker result;
 
   result.id = id;
@@ -1456,7 +1452,7 @@ visualization_msgs::Marker CirclePacker::drawLines(const std::vector<Point>& poi
   result.scale.x = 0.01;
 
   
-  ROS_INFO("drawLines polygonMarker_.size(): %i", (int)result.points.size());
+  //ROS_INFO("drawLines polygonMarker_.size(): %i", (int)result.points.size());
 
   return result;
 }
@@ -1551,8 +1547,8 @@ std::vector<visualization_msgs::Marker> CirclePacker::drawPolygons(std::vector<T
  
 visualization_msgs::Marker CirclePacker::drawPolygon(const Polygon& poly, const int id)
 {
-  ROS_INFO("In CirclePacker::drawPolygon");
-  ROS_INFO("poly.edges.size(): %i", (int)poly.edges.size());
+  //ROS_INFO("In CirclePacker::drawPolygon");
+  //ROS_INFO("poly.edges.size(): %i", (int)poly.edges.size());
   std::vector<Point> points;
   for(int i=0;i<poly.edges.size();i++)
   {
@@ -1770,7 +1766,7 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours)
   std::vector<Circle> cs;
   for(int i=0;i<ps.size();i++)
   {
-    std::vector<Circle> temp = packCirsIntoPoly(ps[i], -0.1);
+    std::vector<Circle> temp = packCirsIntoPoly(ps[i], 0);
     cs.insert(std::end(cs), std::begin(temp), std::end(temp)); 
   }
   ROS_INFO("cs.size(): %i", (int)cs.size());
