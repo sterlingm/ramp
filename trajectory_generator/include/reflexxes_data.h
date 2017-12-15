@@ -1,10 +1,10 @@
 #ifndef REFLEXXES_DATA
 #define REFLEXXES_DATA
 
-#include <Reflexxes/TypeII/ReflexxesAPI.h>
-#include <Reflexxes/TypeII/RMLPositionFlags.h>
-#include <Reflexxes/TypeII/RMLPositionInputParameters.h>
-#include <Reflexxes/TypeII/RMLPositionOutputParameters.h>
+#include <ReflexxesAPI.h>
+#include <RMLPositionFlags.h>
+#include <RMLPositionInputParameters.h>
+#include <RMLPositionOutputParameters.h>
 
 struct ReflexxesData {
   ReflexxesAPI *rml;

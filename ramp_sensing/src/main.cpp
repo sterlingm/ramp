@@ -33,6 +33,7 @@ std::vector<CircleGroup> cirGroups;
 std::vector< std::vector<Circle> > cirs;
 visualization_msgs::Marker polygonLines;
 std::vector<visualization_msgs::Marker> pLines;
+std::vector<visualization_msgs::Marker> cLines;
 
 nav_msgs::OccupancyGrid global_costmap;
 
@@ -688,6 +689,11 @@ void publishMarkers(const ros::TimerEvent& e)
   for(int i=0;i<pLines.size();i++)
   {
     result.markers.push_back(pLines[i]);
+  }
+  ROS_INFO("cLines.size(): %i", (int)cLines.size());
+  for(int i=0;i<cLines.size();i++)
+  {
+    result.markers.push_back(cLines[i]);
   }
   //ROS_INFO("publishMarkers polygonLines.size(): %i", (int)polygonLines.points.size());
 
@@ -1887,6 +1893,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   cirGroups = c.getGroups();
   polygonLines = c.polygonMarker_;
   pLines = c.pMarkers_;
+  cLines = c.cMarkers_;
   
 
   /*ROS_INFO("cirGroups.size(): %i", (int)cirGroups.size());

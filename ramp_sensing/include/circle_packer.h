@@ -59,6 +59,7 @@ class CirclePacker
     std::vector<Polygon> getPolygonsFromContours(std::vector< std::vector<cv::Point> > contours);
     std::vector<Cell> getCellsInPolygon(const Polygon& p); 
     bool cellInPoly(Polygon, Point);
+    bool cellInPolyConcave(Polygon, Point);
     double getMinDistToPoly(const Polygon&, const Cell&);
     double getMinDistToCirs(const std::vector<Circle>&, const Cell&);
     void deleteCellsInCir(const std::vector<Cell>&, const Circle, std::vector<Cell>&);
@@ -69,6 +70,10 @@ class CirclePacker
     
     visualization_msgs::Marker polygonMarker_;
     std::vector<visualization_msgs::Marker> pMarkers_;
+
+    std::vector<visualization_msgs::Marker> cMarkers_; 
+
+
   private:
 
     Polygon tpplToPoly(TPPLPoly p);
@@ -77,6 +82,12 @@ class CirclePacker
     visualization_msgs::Marker drawLines(const std::vector<Point>& points, const int id=50000);
     visualization_msgs::Marker drawPolygon(const Polygon& poly, const int id=50000);
     std::vector<visualization_msgs::Marker> drawPolygons(std::vector<TPPLPoly> polys);
+
+    std::vector<visualization_msgs::Marker> drawCells(std::vector<Cell> cells);
+
+
+    void LineLineEndPoints (const Point& l1_p1, Point& l1_p2, const Point& l2_p1, Point& l2_p2, std::vector<Point>& points_of_collision) const;
+
 
     Utility utility_;
 
