@@ -817,27 +817,36 @@ Polygon CirclePacker::getPolygonFromContours(const std::vector<cv::Point> contou
 {
   Polygon result;
 
+  double translate = 0.5;
+
+  Point midpoint;
+  for(int i=0;i<contours.size();i++)
+  {
+    midpoint.x += contours[i].x;
+    midpoint.y += contours[i].y;
+  }
+  midpoint.x /= contours.size();
+  midpoint.y /= contours.size();
+  ROS_INFO("Midpoint: (%f,%f)", midpoint.x, midpoint.y);
+
   // Get edges
   for(int j=0;j<contours.size();j++)
   {
     Edge e;
     
-    e.start.x = contours[j].x;
-    e.start.y = contours[j].y;
-    e.start.x += 0.5;
-    e.start.y += 0.5;
+    e.start.x = contours[j].x + translate;
+    e.start.y = contours[j].y + translate;
     if(j == contours.size()-1)
     {
-      e.end.x = contours[0].x;
-      e.end.y = contours[0].y;
+      e.end.x = contours[0].x + translate;
+      e.end.y = contours[0].y + translate;
     }
     else
     {
-      e.end.x   = contours[j+1].x;
-      e.end.y   = contours[j+1].y;
+      e.end.x   = contours[j+1].x + translate;
+      e.end.y   = contours[j+1].y + translate;
     }
-    e.end.x += 0.5;
-    e.end.y += 0.5;
+    ROS_INFO("e.start: (%f,%f) e.end: (%f,%f)", e.start.x, e.start.y, e.end.x, e.end.y);
     result.edges.push_back(e);
   }
 
