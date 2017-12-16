@@ -2,7 +2,7 @@
 
 <!-- LOAD PARAMETERS -->
 
-<!-- <param name="use_sim_time" value="False"/> -->
+<param name="use_sim_time" value="False"/>
 
 <!-- Load the planner's config.yaml file and robot_0.yaml file -->
 <include file="$(find ramp_launch)/launch/planner_parameters.launch" />

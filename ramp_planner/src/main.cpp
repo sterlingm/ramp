@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include "planner.h"
 #include <visualization_msgs/MarkerArray.h>
+#include <stdlib.h>
  
 
 Utility utility;
@@ -82,6 +83,8 @@ void initStartGoal(const std::vector<float> s, const std::vector<float> g)
  *  Calls initDOF, initStartGoal */
 void loadParameters(const ros::NodeHandle handle)
 {
+  ros::NodeHandle _h;
+
   std::cout<<"\nLoading parameters\n";
   std::cout<<"\nHandle NS: "<<handle.getNamespace();
 
@@ -312,7 +315,6 @@ void loadParameters(const ros::NodeHandle handle)
     //ROS_INFO("errorReduction: %s", errorReduction ? "True" : "False");
   }
 
-
   std::cout<<"\n------- Done loading parameters -------\n";
     std::cout<<"\n  ID: "<<id;
     std::cout<<"\n  Start: "<<start.toString();
@@ -409,7 +411,19 @@ void pubStartGoalMarkers()
   ROS_INFO("Exiting pubStartGoalMarkers");
 }
 
+void deltaParasCallback(const ramp_msgs::ParameterUpdates::ConstPtr &delta_paras_ptr) {
+	return;
+}
 
+void killNodes() {
+  system("rosnode kill /move_obstacles");
+  system("rosnode kill /ramp_control");
+  system("rosnode kill /ramp_sensing");
+  system("rosnode kill /trajectory_evaluation");
+  system("rosnode kill /path_modification");
+  system("rosnode kill /trajectory_generator");
+  system("rosnode kill /pub_map_equal_odom");
+}
 
 int main(int argc, char** argv) 
 {
@@ -424,7 +438,11 @@ int main(int argc, char** argv)
   // Load ros parameters
   loadParameters(handle);
 
-  Planner my_planner; 
+  Planner my_planner;
+
+  ros::Publisher pub_exe_time_ = handle.advertise<std_msgs::Float64>("execution_time", 10);
+  ros::Publisher pub_ramp_collection_exe_time_ = handle.advertise<std_msgs::Float64>("ramp_collection_exe_time", 1, true);
+  ros::Publisher pub_ramp_collection_ramp_ob_one_run_ = handle.advertise<ramp_msgs::RampObservationOneRunning>("ramp_collection_ramp_ob_one_run", 1, true);
   
   // Use updateCallbackPose if the msg type is PoseWithCovarianceStamped
   if(update_topic != "odom")
@@ -433,9 +451,9 @@ int main(int argc, char** argv)
   }
   ros::Subscriber sub_updateVel_ = handle.subscribe("update", 1, &Planner::updateCbControlNode, &my_planner);
   ros::Subscriber sub_sc_ = handle.subscribe("obstacles", 1, &Planner::sensingCycleCallback, &my_planner);
+  ros::Subscriber sub_delta_paras_ = handle.subscribe("delta_paras", 10, &deltaParasCallback);
   
   ros::ServiceServer env_service = handle.advertiseService(ENV_SRV_NAME, &Planner::envSrvCallback, &my_planner);
-
   pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 10);
 
   /*
@@ -506,28 +524,96 @@ int main(int argc, char** argv)
   ROS_INFO("pubStartGoalMarkers complete");
   ////ROS_INFO("Done with pubStartGoalMarkers");
  
- 
+  //// msg published anywhere in this file must be between start rosbag and kill rosbag
+  //   robot_radius, latch = true
+  ros::Publisher pub_robot_radius_ = handle.advertise<std_msgs::Float64>("ramp_collection_robot_radius", 1, true);
+  std_msgs::Float64 msg_1; msg_1.data = radius; pub_robot_radius_.publish(msg_1);
+  //   population_size
+  ros::Publisher pub_population_size_ = handle.advertise<std_msgs::Int64>("ramp_collection_population_size", 1, true);
+  std_msgs::Int64 msg_2; msg_2.data = population_size; pub_population_size_.publish(msg_2);
+  //   sub_populations
+  ros::Publisher pub_sub_populations_ = handle.advertise<std_msgs::Bool>("ramp_collection_sub_populations", 1, true);
+  std_msgs::Bool msg_3; msg_3.data = sub_populations; pub_sub_populations_.publish(msg_3);
+  //   gens_before_control_cycle
+  ros::Publisher pub_gens_before_control_cycle_ = handle.advertise<std_msgs::Int64>("ramp_collection_gens_before_control_cycle", 1, true);
+  std_msgs::Int64 msg_4; msg_4.data = gensBeforeCC; pub_gens_before_control_cycle_.publish(msg_4);
+  //   pop_traj_type
+  ros::Publisher pub_pop_traj_type_ = handle.advertise<std_msgs::Int64>("ramp_collection_pop_traj_type", 1, true);
+  std_msgs::Int64 msg_5; msg_5.data = pop_type; pub_pop_traj_type_.publish(msg_5);
+  //   fixed_control_cycle_rate
+  ros::Publisher pub_fixed_control_cycle_rate_ = handle.advertise<std_msgs::Float64>("ramp_collection_fixed_control_cycle_rate", 1, true);
+  std_msgs::Float64 msg_6; msg_6.data = t_cc_rate; pub_fixed_control_cycle_rate_.publish(msg_6);
+  //   sensing_cycle_rate
+  ros::Publisher pub_sensing_cycle_rate_ = handle.advertise<std_msgs::Float64>("ramp_collection_sensing_cycle_rate", 1, true);
+  std_msgs::Float64 msg_7; msg_7.data = t_sc_rate; pub_sensing_cycle_rate_.publish(msg_7);
+  //   x_range (x_min and x_max)
+  ros::Publisher pub_x_range_ = handle.advertise<ramp_msgs::Range>("ramp_collection_x_range", 1, true);
+  ramp_msgs::Range msg_8; msg_8 = ranges[0].msg_; pub_x_range_.publish(msg_8);
+  //   y_range
+  ros::Publisher pub_y_range_ = handle.advertise<ramp_msgs::Range>("ramp_collection_y_range", 1, true);
+  ramp_msgs::Range msg_9; msg_9 = ranges[1].msg_; pub_y_range_.publish(msg_9);
+  //   theta_range
+  ros::Publisher pub_theta_range_ = handle.advertise<ramp_msgs::Range>("ramp_collection_theta_range", 1, true);
+  ramp_msgs::Range msg_10; msg_10 = ranges[2].msg_; pub_theta_range_.publish(msg_10);
+  //   max_speed_linear
+  ros::Publisher pub_max_speed_linear_ = handle.advertise<std_msgs::Float64>("ramp_collection_max_speed_linear", 1, true);
+  std_msgs::Float64 msg_11; msg_11.data = max_speed_linear; pub_max_speed_linear_.publish(msg_11);
+  //   max_speed_angular
+  ros::Publisher pub_max_speed_angular_ = handle.advertise<std_msgs::Float64>("ramp_collection_max_speed_angular", 1, true);
+  std_msgs::Float64 msg_12; msg_12.data = max_speed_angular; pub_max_speed_angular_.publish(msg_12);
+  //   start
+  ros::Publisher pub_start_motion_state_ = handle.advertise<ramp_msgs::MotionState>("ramp_collection_start_motion_state", 1, true);
+  ramp_msgs::MotionState msg_13; msg_13 = start.msg_; pub_start_motion_state_.publish(msg_13);
+  //   goal
+  ros::Publisher pub_goal_motion_state_ = handle.advertise<ramp_msgs::MotionState>("ramp_collection_goal_motion_state", 1, true);
+  ramp_msgs::MotionState msg_14; msg_14 = goal.msg_; pub_goal_motion_state_.publish(msg_14);
+  
+  //// prepare to tell others that I am ready
+  ros::Publisher pub_set_env_rdy_true_ = handle.advertise<std_msgs::Empty>("set_env_ready_true", 1, true);// latch = true
+  std_msgs::Empty empty_msg;
+
   /******* Start the planner *******/
   if(use_start_param)
   {
+    ros::Rate r_wait_start(10); // 10Hz
     start_planner = false;
     handle.setParam("ramp/start_planner", false);
     ROS_INFO("Waiting for param ramp/start_planner to be true");
+    pub_set_env_rdy_true_.publish(empty_msg); // tell others that I am ready
     while(!start_planner)
     {
       handle.param("ramp/start_planner", start_planner, false);
+      r_wait_start.sleep();
     }
   }
   else
   {
     std::cout<<"\nPress Enter to start the planner\n";
+    pub_set_env_rdy_true_.publish(empty_msg);
     std::cin.get(); 
   }
   ROS_INFO("Starting Planner!");
   
   my_planner.go(handle);
 
+  //// Publish ramp observation after one running.
+  //   Note that ramp observation after one step is calculated in environment interface, not here.
+  pub_ramp_collection_ramp_ob_one_run_.publish(my_planner.obser_one_run);
 
+  //// publish execution time
+  std_msgs::Float64 et_msg;
+  et_msg.data = my_planner.d_runtime_.toSec(); // seconds
+  pub_exe_time_.publish(et_msg);
+  pub_ramp_collection_exe_time_.publish(et_msg);
+
+  //// publish the number of best trajectory switches during the execution
+  ros::Publisher pub_nb_best_traj_switches_ = handle.advertise<std_msgs::Int64>("ramp_collection_nb_best_traj_switches", 1, true);
+  std_msgs::Int64 msg_nb_best_t_switch;
+  msg_nb_best_t_switch.data = my_planner.h_control_->nb_best_traj_switches;
+  pub_nb_best_traj_switches_.publish(msg_nb_best_t_switch);
+
+  //// kill all other nodes in the ros launch file
+  killNodes();
  
   //****MotionState exp_results = my_planner.findAverageDiff();
   //****std::cout<<"\n\nAverage Difference: "<<exp_results.toString();

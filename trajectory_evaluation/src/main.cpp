@@ -16,7 +16,6 @@ std::vector<double> durs;
 int count_multiple = 0;
 int count_single = 0;
 
-double T_weight, D_weight, A_weight;
 std::vector<double> dof_min, dof_max;
 
 /** Srv callback to evaluate a trajectory */
@@ -248,16 +247,8 @@ int main(int argc, char** argv) {
   /*
    * Get rosparams for weights and environment size
    */
-  handle.getParam("/ramp/eval_weight_T", T_weight);
-  handle.getParam("/ramp/eval_weight_D", D_weight);
-  handle.getParam("/ramp/eval_weight_A", A_weight);
   handle.getParam("/robot_info/DOF_min", dof_min);
   handle.getParam("/robot_info/DOF_max", dof_max);
-
-  // Set weights
-  ev.T_weight_ = T_weight;
-  ev.D_weight_ = D_weight;
-  ev.A_weight_ = A_weight;
 
   // Set normalization for minimum distance to the area of the environment
   ev.D_norm_ = (dof_max[0] - dof_min[0]) * (dof_max[1] - dof_min[1]);

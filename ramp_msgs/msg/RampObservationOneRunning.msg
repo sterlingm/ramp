@@ -1,0 +1,8 @@
+Header header
+
+float64 execution_time
+int64 nb_best_trajectory_switches
+ramp_msgs/MotionState[] robot_state_vector
+ramp_msgs/RampTrajectory[] best_trajectory_vector
+std_msgs/Float64MultiArray coefficient_tensor
+bool done

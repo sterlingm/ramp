@@ -2059,7 +2059,7 @@ int main(int argc, char** argv)
 
   //Publishers
   pub_obj = handle.advertise<ramp_msgs::ObstacleList>("obstacles", 1);
-  pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1);
+  pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array1", 1);
   pub_cons_costmap = handle.advertise<nav_msgs::OccupancyGrid>("accumulated_costmap", 1);
   pub_half_costmap = handle.advertise<nav_msgs::OccupancyGrid>("half_costmap", 1);
   pub_global_costmap = handle.advertise<nav_msgs::OccupancyGrid>("global_costmap", 1);

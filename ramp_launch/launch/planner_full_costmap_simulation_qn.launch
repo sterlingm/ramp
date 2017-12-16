@@ -1,0 +1,51 @@
+<launch>
+
+<!-- LOAD PARAMETERS -->
+
+<param name="use_sim_time" value="True"/>
+
+<!-- Load the planner's config.yaml file and robot_0.yaml file -->
+<include file="$(find ramp_launch)/launch/planner_parameters.launch" />
+
+
+<!-- START NODES -->
+<!-- Simulation and costmap should be started in separate file, e.g., gazebo_costmap.launch -->
+
+
+<!-- Start publishing the map->odom transform -->
+<node name="pub_map_equal_odom" pkg="ramp_planner" type="pub_map_odom" />
+
+
+<!-- Trajectory Generator -->
+<node name="trajectory_generator" pkg="trajectory_generator" type="trajectory_generator" output="log" />
+
+<!-- Path Modification -->
+<node name="path_modification" pkg="path_modification" type="path_modification" output="screen" />
+
+<!-- Evaluation -->
+<node name="trajectory_evaluation" pkg="trajectory_evaluation" type="trajectory_evaluation" output="screen" />
+
+<!-- Sensing -->
+<node name="ramp_sensing" pkg="ramp_sensing" type="ramp_sensing" output="screen" />
+
+<!-- Reset odometry -->
+<node name="reset_odom" pkg="ramp_control" type="reset_odom.py" output="log" />
+
+<!-- Control node -->
+<node name="ramp_control" pkg="ramp_control" type="ramp_control" output="screen" >
+  <remap from="odometry" to="odom" />
+  <remap from="cmd_vel" to="mobile_base/commands/velocity" />
+  <param name="simulation" value="true" />
+</node>
+
+<!-- Planner -->
+<node name="ramp_planner" pkg="ramp_planner" type="ramp_planner" output="screen" />
+
+
+<!-- Move obstacles -->
+<node name="move_obstacles" pkg="ramp_planner" type="move_gazebo_obs" output="log" />
+
+<!-- rl_agent -->
+<!-- <node name="agent_q_net" pkg="ramp_rlpara" type="agent_q_net.py" output="screen" /> -->
+
+</launch>

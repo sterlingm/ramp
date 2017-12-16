@@ -1,0 +1,9 @@
+<launch>
+
+<!-- LOAD CONFIG FILES -->
+<rosparam file="$(find ramp_rlpara)/config/config_si.yaml" command="load"/>
+
+<!-- LOAD NODES -->
+<node name="ddpg_ramp_si" pkg="ramp_rlpara" type="ddpg_ramp_si.py" output="screen" />
+
+</launch>
