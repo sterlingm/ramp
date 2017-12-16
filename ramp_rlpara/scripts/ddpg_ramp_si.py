@@ -44,6 +44,7 @@ from ramp_env_interface_si import RampEnv
 from f_utility import Utility
 
 ## -------------------- init --------------------
+ENV_NAME = 'ramp-env-interface-si'
 rospy.init_node('ddpg_ramp_si', anonymous=True)
 gym.undo_logger_setup()
 
@@ -165,7 +166,7 @@ plt.ylabel("Qk")
 plt.show()
 '''
 
-## build the agent
+## build the agent, in our case memory_interval must be set to 1
 #  after this building, use agent.actor, agent.memory, agent.random_process if needed,
 #  don't use actor, replay_buffer and random_process (see arguments of function in Python)
 agent = DDPGAgent(nb_actions = action_size, actor = actor, critic = critic, critic_action_input = action_input,
@@ -180,9 +181,55 @@ agent = DDPGAgent(nb_actions = action_size, actor = actor, critic = critic, crit
 #  lr is leaning rate of critic Q-net.
 agent.compile(Adam(lr = utility.lr_q_net, clipnorm = 1.0), metrics=['mae'])
 
+## maintain some variables that are maintained in fit()
+agent.training = True
+
 ## -------------------- do one learning in one execution --------------------
 for k in range(utility.max_nb_exe):
     action_normed = agent.forward(s_init_normed) # the noise is added in the "forward" function
     action = utility.antiNormalizeCoes(action_normed)
 
+    ## apply new coefficients and start a new execution
     observations, reward, done, info = env.step(action)
+
+    ## Store all observations (normalized) in the new execution into agent.memory
+    nb_observations = 0
+    trajs = observations.best_trajectory_vector
+    for traj in trajs:
+        nb_observations += len(traj)
+
+    ob_id = 0
+    for traj in trajs: # for each best traj.
+        for motion_state in traj.trajectory.points: # for each motion state
+            s = np.array([motion_state.time_from_start]) # time stamp
+            s = np.append(s, motion_state.positions) # position (x, y, theta)
+            s = np.append(s, motion_state.velocities) # velocity
+            s = np.append(s, motion_state.acceleraations) # acceleraation
+            s_normed = utility.normalizeMotionState(s) # normalization
+            agent.recent_observation = s_normed
+            agent.recent_action = action_normed
+
+            if ob_id == nb_observations - 2: # second last ob., whose next ob. is the last ob.
+                agent.memory.append(agent.recent_observation, agent.recent_action,
+                                    reward, done, agent.training) # s0, a0, r0, terminal1, _ (r0 is determined by s1)
+            else if ob_id < nb_observations - 2:
+                agent.memory.append(agent.recent_observation, agent.recent_action,
+                                    0.0, False, agent.training)
+            else: # the last ob. is stored in backward()
+                assert ob_id == nb_observations - 1
+
+            ob_id += 1
+
+    assert ob_id == nb_observations
+
+    ## Updating all neural networks
+    agent.backward(reward = 0.0, terminal = False)
+
+    ## maintain some variables that are maintained in fit()
+    agent.step += 1
+
+## -------------------- After training is done, we save the final weights --------------------
+agent.save_weights('ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite = True)
+
+## TODO: test
+agent.training = False

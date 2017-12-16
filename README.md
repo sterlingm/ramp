@@ -27,4 +27,4 @@ Usage:
     
     You can also use other files including other agents:
     
-    - ~~~~rosrun ramp_rlpara random_ramp.py (take random action, can be used to log data)
+    - rosrun ramp_rlpara random_ramp.py (take random action, can be used to log data)
