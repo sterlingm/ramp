@@ -4371,7 +4371,7 @@ void Planner::go(const ros::NodeHandle& h)
       t_elapse = ros::Time::now() - t_startLoop;
       double seconds_elapse = t_elapse.toSec();
       printf("%lfs have elapsed after starting planning!\n", seconds_elapse);
-      if (seconds_elapse > max_exe_time { // seconds
+      if (seconds_elapse > max_exe_time) { // seconds
         //// planning for too long, force quit
         obser_one_run.done = false;
         break;

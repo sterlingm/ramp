@@ -116,19 +116,20 @@ class Utility(object):
 
         return np.array([A, D, Qk])
 
-    def nparray2Float64MultiArray(np_arr)
-        shape = np_arr.shape
-        multi_arr = Float64MultiArray()
+    ## TODO: implement it
+    # def nparray2Float64MultiArray(np_arr)
+    #     shape = np_arr.shape
+    #     multi_arr = Float64MultiArray()
 
-        axis_id = 0
-        for axis_sz in shape:
-            axis = MultiArrayDimension('axis_' + str(axis_id), axis_sz)
-            multi_arr.layout.dim.append(axis)
-            axis_id += 1
+    #     axis_id = 0
+    #     for axis_sz in shape:
+    #         axis = MultiArrayDimension('axis_' + str(axis_id), axis_sz)
+    #         multi_arr.layout.dim.append(axis)
+    #         axis_id += 1
 
-        bigger_id_stride = 1
-        for axis_id in range(len(multi_arr.layout.dim)-1, -1, -1): # inverse for loop
-            multi_arr.layout.dim[axis_id].stride = multi_arr.layout.dim[axis_id].size * bigger_id_stride
-            bigger_id_stride = multi_arr.layout.dim.stride
+    #     bigger_id_stride = 1
+    #     for axis_id in range(len(multi_arr.layout.dim)-1, -1, -1): # inverse for loop
+    #         multi_arr.layout.dim[axis_id].stride = multi_arr.layout.dim[axis_id].size * bigger_id_stride
+    #         bigger_id_stride = multi_arr.layout.dim.stride
 
-        return multi_arr
+    #     return multi_arr

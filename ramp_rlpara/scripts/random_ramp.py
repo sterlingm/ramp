@@ -46,7 +46,7 @@ assert len(env.action_space.shape) == 1 # assert action is a vector (not a matri
 action_dimensioin = env.action_space.shape[0] # dimension of action_space
 
 ## test code:
-'''
+
 s = env.reset()
 print("init state: " + str(s))
 
@@ -59,25 +59,25 @@ act = np.array([-0.002, 2.0, -1.5])
 print("action: " + str(act))
 s, r, d, info = env.step(act)
 print("s: " + str(s) + ", r: " + str(r) + ", info: " + str(info))
-'''
 
-ramp_transition_pub = rospy.Publisher('ramp_collection_ramp_transition', RampTransition, queue_size = 1)
-i_episode = 0
-while True: # unlimited episodes
-    rAll = 0.0
-    i_episode += 1
-    s = env.reset()
-    for i_step in range(120): # 120 steps per episode
-        hdr = Header(stamp = rospy.Time.now())
-        RampObservation(header = hdr, coefficient_tensor = )
-        act = env.action_space.sample() # select random action
-        s1, r, done, info = env.step(act)
-        hdr = Header(stamp = rospy.Time.now()) # be close to 's1, r, done, info = env.step(act)'
-        ## TODO: s1 (np.array) -> coe_tensor (Float64MultiArray) should be implemented as a function.
-        #        Note that the dim of coe_tensor is actually the shape of s1
-        coe_tensor = Float64MultiArray(MultiArrayLayout(dim = ), data = s1.tolist())
-        RampObservation(header = hdr, execution_time = info['calculated_execution_time'], coefficient_tensor = coe_tensor)
+
+# ramp_transition_pub = rospy.Publisher('ramp_collection_ramp_transition', RampTransition, queue_size = 1)
+# i_episode = 0
+# while True: # unlimited episodes
+#     rAll = 0.0
+#     i_episode += 1
+#     s = env.reset()
+#     for i_step in range(120): # 120 steps per episode
+#         hdr = Header(stamp = rospy.Time.now())
+#         RampObservation(header = hdr, coefficient_tensor = )
+#         act = env.action_space.sample() # select random action
+#         s1, r, done, info = env.step(act)
+#         hdr = Header(stamp = rospy.Time.now()) # be close to 's1, r, done, info = env.step(act)'
+#         ## TODO: s1 (np.array) -> coe_tensor (Float64MultiArray) should be implemented as a function.
+#         #        Note that the dim of coe_tensor is actually the shape of s1
+#         coe_tensor = Float64MultiArray(MultiArrayLayout(dim = ), data = s1.tolist())
+#         RampObservation(header = hdr, execution_time = info['calculated_execution_time'], coefficient_tensor = coe_tensor)
 
         
-        rAll += r
-        s = s1
+#         rAll += r
+#         s = s1

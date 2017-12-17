@@ -38,6 +38,8 @@ class RampEnv(gym.Env):
 		self.this_exe_info = data
 
 	def __init__(self):
+		self._seed()
+		
 		## get various parameters
 		self.utility = Utility()
 
@@ -84,14 +86,13 @@ class RampEnv(gym.Env):
 		                               np.array([a1, d1, qk1]))
 		self.observation_space = spaces.Box(np.array([t0, x0, y0, theta0, x_d0, y_d0, theta_d0, x_dd0, y_dd0, theta_dd0]),
 		                                    np.array([t1, x1, y1, theta1, x_d1, y_d1, theta_d1, x_dd1, y_dd1, theta_dd1]))
-		self.set_env_rdy_true_sub = rospy.Subscriber("set_env_ready_true", Empty, self.setEnvRdyTrueCallback)
-		self.one_exe_info_sub = rospy.Subscriber("ramp_collection_ramp_ob_one_run", RampObservationOneRunning, self.oneExeInfoCallback)
 		self.env_ready = False
 		self.this_exe_info = None
 
-		si_action_pub = rospy.Publisher('ramp_collection_si_action', Float64MultiArray, queue_size = 1)
+		self.set_env_rdy_true_sub = rospy.Subscriber("set_env_ready_true", Empty, self.setEnvRdyTrueCallback)
+		self.one_exe_info_sub = rospy.Subscriber("ramp_collection_ramp_ob_one_run", RampObservationOneRunning, self.oneExeInfoCallback)
 
-		self._seed()
+		self.si_act_pub = rospy.Publisher('ramp_collection_si_act', Float64MultiArray, queue_size = 1)
 
 	def _seed(self, seed=None):
 		self.np_random, seed = seeding.np_random(seed)
@@ -105,9 +106,9 @@ class RampEnv(gym.Env):
 		assert self.action_space.contains(action)
 
 		## set the coefficients of RAMP
-		rospy.set_param("/ramp/eval_weight_A", action[0])
-		rospy.set_param("/ramp/eval_weight_D", action[1])
-		rospy.set_param("/ramp/eval_weight_Qk", action[2])
+		rospy.set_param("/ramp/eval_weight_A", action[0].item())
+		rospy.set_param("/ramp/eval_weight_D", action[1].item())
+		rospy.set_param("/ramp/eval_weight_Qk", action[2].item())
 
 		## wait the actual environment to get ready......
 		print("wait the actual environment to get ready......")
@@ -118,7 +119,7 @@ class RampEnv(gym.Env):
 		self.env_ready = False
 
 		## here you can publish sth. to "/ramp_collection_.*"
-		si_action_pub.publish(???)
+		self.si_act_pub.publish(Float64MultiArray(data = action.tolist()))
 		
 		## wait for this execution completes......
 		print("wait for this execution completes......")
@@ -129,11 +130,11 @@ class RampEnv(gym.Env):
 		self.this_exe_info = None # clear self.this_exe_info after it is used
 
 		## calculate reward
-		reward = self.utility.max_exe_time - self.this_exe_info.execution_time
+		reward = self.utility.max_exe_time - observations.execution_time
 		reward = max(0, reward)
 
 		## done or not
-		done = self.this_exe_info.done
+		done = observations.done
 
 		## reward and done are both for the last observation in this execution
 		return observations, reward, done, {}

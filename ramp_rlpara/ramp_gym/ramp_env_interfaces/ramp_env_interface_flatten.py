@@ -58,10 +58,11 @@ class RampEnv(gym.Env):
 		self.ob_one_run_vector = np.array([])
 		self.len_observation_buffer = 15 # TODO: buffer length can be parameterized
 		self.observation_buffer = deque(maxlen = self.len_observation_buffer)
+		self.env_ready = False
+		
 		self.exe_time_sub = rospy.Subscriber("execution_time", Float64, self.exeTimeCallback)
 		self.ob_one_run_sub = rospy.Subscriber("ramp_collection_ramp_ob_one_run", RampObservationOneRunning, self.obOneRunCallback)
 		self.set_env_rdy_true_sub = rospy.Subscriber("set_env_ready_true", Empty, self.setEnvRdyTrueCallback)
-		self.env_ready = False
 
 		self._seed()
 

@@ -258,7 +258,7 @@ Visualization Manager:
       Marker Topic: visualization_marker_array
       Name: Path
       Namespaces:
-        basic_shapes: true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 0.5
@@ -475,7 +475,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 12.3519
+      Distance: 11.8259
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -510,5 +510,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1631
-  X: 49
-  Y: 67
+  X: 90
+  Y: 16

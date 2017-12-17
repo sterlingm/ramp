@@ -75,6 +75,7 @@ assert observation_size == 10
 
 ## publish sth. to display in rqt
 si_step_pub = rospy.Publisher('ramp_collection_si_step', Int64, queue_size = 1)
+si_act_normed_pub = rospy.Publisher('ramp_collection_si_act_normed', Float64MultiArray, queue_size = 1)
 
 ## test interaction with environment:
 '''
@@ -203,11 +204,12 @@ for k in range(utility.max_nb_exe):
     action = utility.antiNormalizeCoes(action_normed)
 
     ## logging and displaying
-    time.sleep(0.2)
+    time.sleep(0.05)
     si_step_pub.publish(Int64(agent.step))
+    si_act_normed_pub.publish(Float64MultiArray(data = action_normed.tolist()))
 
     ## apply new coefficients and start a new execution
-    ''' observations, reward, done, info = env.step(action) '''
+    observations, reward, done, info = env.step(action)
 
     ## Store all observations (normalized) in the new execution into agent.memory
     ''' nb_observations = 0
