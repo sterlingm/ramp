@@ -16,11 +16,15 @@ which means using ddpg agent (ddpg.py) in RAMP (env).
 import os
 import sys
 import numpy as np
+import datetime
 import gym
 from gym.spaces import prng
 import rospy
 import time
 from std_msgs.msg import Header
+from std_msgs.msg import Float64
+from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import Int64
 import math
 import matplotlib.pyplot as plt
 
@@ -31,6 +35,13 @@ from keras.optimizers import Adam
 from rl.agents import DDPGAgent
 from rl.memory import SequentialMemory
 from rl.random import OrnsteinUhlenbeckProcess
+
+## make directory of logging
+home_dir = os.getenv("HOME")
+cur_date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+file_dir = home_dir + '/data/ramp/ramp_rlpara/ddpg_ramp_si/' + cur_date + '/raw_data/'
+os.system('mkdir -p ' + file_dir)
+f_acts = open(file_dir + "actions.txt", "w")
 
 ## get directory
 rlpara_root = os.path.join(os.path.dirname(__file__), '../')
@@ -62,6 +73,8 @@ observation_size = env.observation_space.shape[0] # number of scalars in one obs
 assert action_size == 3
 assert observation_size == 10
 
+## publish sth. to display in rqt
+si_step_pub = rospy.Publisher('ramp_collection_si_step', Int64, queue_size = 1)
 
 ## test interaction with environment:
 '''
@@ -179,7 +192,7 @@ agent = DDPGAgent(nb_actions = action_size, actor = actor, critic = critic, crit
 #  clipnorm is the max norm of gradients, to avoid too big gradients. Note that the operation is clip, not normalization,
 #  that means if the norm of gradients is already smaller than clipnorm, then there is nothing happening to the gradients.
 #  lr is leaning rate of critic Q-net.
-agent.compile(Adam(lr = utility.lr_q_net, clipnorm = 1.0), metrics=['mae'])
+agent.compile(Adam(lr = utility.critic_lr, clipnorm = 1.0), metrics=['mae'])
 
 ## maintain some variables that are maintained in fit()
 agent.training = True
@@ -189,11 +202,15 @@ for k in range(utility.max_nb_exe):
     action_normed = agent.forward(s_init_normed) # the noise is added in the "forward" function
     action = utility.antiNormalizeCoes(action_normed)
 
+    ## logging and displaying
+    time.sleep(0.2)
+    si_step_pub.publish(Int64(agent.step))
+
     ## apply new coefficients and start a new execution
-    observations, reward, done, info = env.step(action)
+    ''' observations, reward, done, info = env.step(action) '''
 
     ## Store all observations (normalized) in the new execution into agent.memory
-    nb_observations = 0
+    ''' nb_observations = 0
     trajs = observations.best_trajectory_vector
     for traj in trajs:
         nb_observations += len(traj)
@@ -220,16 +237,16 @@ for k in range(utility.max_nb_exe):
 
             ob_id += 1
 
-    assert ob_id == nb_observations
+    assert ob_id == nb_observations '''
 
     ## Updating all neural networks
-    agent.backward(reward = 0.0, terminal = False)
+    ''' agent.backward(reward = 0.0, terminal = False) '''
 
     ## maintain some variables that are maintained in fit()
     agent.step += 1
 
 ## -------------------- After training is done, we save the final weights --------------------
-agent.save_weights('ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite = True)
+agent.save_weights(file_dir + 'ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite = True)
 
 ## TODO: test
 agent.training = False

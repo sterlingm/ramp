@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "/home/kai/anaconda3/envs/test_py3/bin/python",
+    "python.pythonPath": "/home/kai/env/bin/python3.4",
     "files.associations": {
         "array": "cpp",
         "*.ipp": "cpp"

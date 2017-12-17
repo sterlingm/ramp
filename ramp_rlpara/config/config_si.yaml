@@ -12,7 +12,7 @@ nb_steps_warmup_critic: 0 # number of steps needed before updating critic
                           # so we can sample without replacement.
                           # but in our application, after one execution, many transitions will be returned.
 nb_steps_warmup_actor: 0 # number of steps needed before updating actor
-lr_q_net: 0.001 # learning rate of critic
+critic_lr: 0.001 # learning rate of critic
 coe_A_range: [0.0, 0.05] # coefficients of orientation changing of feasible trajectory
 coe_D_range: [0.0, 50.0] # coefficients of obstacle distance of feasible trajectory
 coe_Qk_range: [0.0, 50.0] # coefficietns of orientation changing of infeasible trajectory

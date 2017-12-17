@@ -3,6 +3,8 @@ This is not the environment itself but the interface of environment.
 Observation is a single motion state whose size is 10
 '''
 
+import os
+import sys
 import time
 import gym
 from gym import spaces
@@ -11,6 +13,7 @@ import numpy as np
 import rospy
 import warnings
 from std_msgs.msg import Float64
+from std_msgs.msg import Float64MultiArray
 from std_msgs.msg import Empty
 from ramp_msgs.msg import RampTrajectory
 from ramp_msgs.msg import RampObservationOneRunning
@@ -28,7 +31,7 @@ class RampEnv(gym.Env):
 	def setEnvRdyTrueCallback(self, data):
 		self.env_ready = True
 
-	def oneExeInfoCallback(self, data)
+	def oneExeInfoCallback(self, data):
 		if self.this_exe_info is not None:
 			## TODO: log into file with date in its name
 			warnings.warn("Unused RampEnv.this_exe_info is overlaped!")
@@ -86,6 +89,8 @@ class RampEnv(gym.Env):
 		self.env_ready = False
 		self.this_exe_info = None
 
+		si_action_pub = rospy.Publisher('ramp_collection_si_action', Float64MultiArray, queue_size = 1)
+
 		self._seed()
 
 	def _seed(self, seed=None):
@@ -93,42 +98,8 @@ class RampEnv(gym.Env):
 		return [seed]
 		
 	def _reset(self):
-		## set parameters randomly
-		observation = self.observation_space.sample()
-		rospy.set_param("/ramp/eval_weight_A", observation[0].item())
-		rospy.set_param("/ramp/eval_weight_D", observation[1].item())
-		rospy.set_param("/ramp/eval_weight_Qk", observation[2].item())
-
-		## the robot start go and it will make many runnings (one running one execution time)
-		# rospy.set_param("/start_one_step", True)
-		
-		## wait for the robot to complete all runnings and return a observation_one_running vector
-		print("wait for the robot to complete all runnings......")
-		while len(self.exe_time_vector) != self.nb_runs_one_step:
-			print("wait the actual environment to get ready......")
-			while not self.env_ready:
-				time.sleep(0.5) # 0.5s
-			print("set start_planner True for the ready environment to start one running!")
-			rospy.set_param("/ramp/start_planner", True)
-			self.env_ready = False
-		print("initial running has been completed!")
-		# print("execution times of initial running: " + str(self.exe_time_vector) + " seconds")
-
-		## prevent the robot start go
-		# rospy.set_param("/start_one_step", False)
-
-		## process execution time vector (try to make RAMP success more)
-		#  TODO: maybe need improvement
-		etv = self.exe_time_vector
-		self.exe_time_vector = np.array([]) # clear self.exe_time_vector after it is used
-		assert len(etv) == self.nb_runs_one_step
-		assert len(etv) >= 1
-		if len(etv) >= 3:
-			etv = np.delete(etv, [etv.argmin(), etv.argmax()]) # delete the min and the max in the vector
-		self.last_calcu_exe_time = etv.mean() # the execution time used for calculating reward
-		assert self.last_calcu_exe_time > 0
-
-		return observation
+		## not used in small input version
+		pass
 
 	def _step(self, action):
 		assert self.action_space.contains(action)
@@ -145,6 +116,9 @@ class RampEnv(gym.Env):
 		print("find env. ready and set start_planner True for the ready env. to start one execution!")
 		rospy.set_param("/ramp/start_planner", True)
 		self.env_ready = False
+
+		## here you can publish sth. to "/ramp_collection_.*"
+		si_action_pub.publish(???)
 		
 		## wait for this execution completes......
 		print("wait for this execution completes......")
