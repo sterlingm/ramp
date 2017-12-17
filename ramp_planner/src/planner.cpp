@@ -1218,29 +1218,15 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
 bool Planner::envSrvCallback(ramp_msgs::EnvironmentSrv::Request &req, ramp_msgs::EnvironmentSrv::Response &res) {
 	// std::cout << req.delta_paras << std::endl;
 
-	//if (!is_population_initialized) {
-	//	res.is_valid = false;
-	//	return false;
-	//}
-	
-	// calculate best trajectory using new parameters
-	double T_weight, D_weight, A_weight;
-	ros::param::get("/ramp/eval_weight_T", T_weight);
-	ros::param::get("/ramp/eval_weight_D", D_weight);
-	ros::param::get("/ramp/eval_weight_A", A_weight);
-	T_weight += req.delta_paras.delta_time_weight;
-	D_weight += req.delta_paras.delta_obs_dis_weight;
-	A_weight += req.delta_paras.delta_ori_chg_weight;
-	ros::param::set("/ramp/eval_weight_T", T_weight);
-	ros::param::set("/ramp/eval_weight_D", D_weight);
-	ros::param::set("/ramp/eval_weight_A", A_weight);
-	evaluatePopulation();
-	res.trajectory = population_.getBest().msg_;
-	//if (!res.trajectory.feasible) {
-	//	res.is_valid = false;
-	//	return false;
-	//}
+	/*
+	if (!is_population_initialized) {
+		res.is_valid = false;
+		return false;
+	}
+	*/
 	res.is_valid = true;
+	res.state = latestUpdate_.msg_;
+	res.trajectory = population_.getBest().msg_;
 	return true;
 }
 
@@ -1700,7 +1686,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   modifier_   = new Modifier(h, num_ops_);
 
   // Initialize the timers, but don't start them yet
-  controlCycle_       = ros::Duration(t_fixed_cc);
+  controlCycle_       = ros::Duration(t_fixed_cc); // t_fixed_cc second
   controlCycleTimer_  = h.createTimer(controlCycle_, 
                                      &Planner::controlCycleCallback, this);
   controlCycleTimer_.stop();
@@ -1713,9 +1699,9 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   ob_dists_timer_.stop();
 
 
-  sendPop_ = ros::Duration(0.05);
-  sendPopTimer_ = h.createTimer(sendPop_, &Planner::sendPopulationCb, this);
-  sendPopTimer_.stop();
+  //sendPop_ = ros::Duration(0.05); // 0.05second, 20hz
+  //sendPopTimer_ = h.createTimer(sendPop_, &Planner::sendPopulationCb, this);
+  //sendPopTimer_.stop();
 
   // Set the ranges vector
   ranges_ = r;
@@ -3479,6 +3465,9 @@ void Planner::controlCycleCallback(const ros::TimerEvent& e)
   
   //////////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
   
+  // display the trajectory used by ramp_control in RViz
+  sendPopulation();
+  
   // Do the control cycle
   doControlCycle();
 
@@ -3534,8 +3523,9 @@ void Planner::sendBest() {
     else if(!best.msg_.feasible) {
       //////////ROS_INFO("Best trajectory is not feasible! Time until collision: %f", best.msg_.t_firstCollision.toSec());
     }*/
-    
-    best.msg_.header.stamp = ros::Time::now();
+
+    best.msg_.header.stamp = ros::Time::now(); // TODO: time stamp should be the same as the latestUpdate_ it uses for planning
+    obser_one_run.best_trajectory_vector.push_back(best.msg_);
     h_control_->send(best.msg_);
   //} // end if not stopped
   /*else {
@@ -4323,7 +4313,7 @@ void Planner::go(const ros::NodeHandle& h)
 
   // Run # of planning cycles before control cycles start
   //ROS_INFO("Starting pre planning cycles");
-  ros::Rate r(20);
+  
   // Wait for the specified number of generations before starting CC's
   while(generation_ < num_pc) 
   {
@@ -4345,7 +4335,7 @@ void Planner::go(const ros::NodeHandle& h)
   }
 
   // Start Timer to send population to rviz
-  sendPopTimer_.start();
+  //sendPopTimer_.start();
 
  
   /*
@@ -4355,27 +4345,62 @@ void Planner::go(const ros::NodeHandle& h)
    */
   //ROS_INFO("Starting at time %f", ros::Time::now().toSec());
 
+  double max_exe_time;
+  ros::param::param("/max_exe_time", max_exe_time, 60.0); // seconds
+
   // Do planning until robot has reached goal
   // D = 0.4 if considering mobile base, 0.2 otherwise
-  ros::Time t_startLoop = ros::Time::now();
+  ros::Rate r(20); // 20Hz
   goalThreshold_ = 0.25;
+  int check_time_cnt = 0;
+  ros::Duration t_elapse;
+  ros::Time t_startLoop = ros::Time::now();
+  obser_one_run.done = true;
   while( (latestUpdate_.comparePosition(goal_, false) > goalThreshold_) && ros::ok()) 
   {
     if(!only_sensing_)
     {
       planningCycleCallback();
     }
+    ros::spinOnce();
     r.sleep();
-    ros::spinOnce(); 
+
+    check_time_cnt++;
+    if (check_time_cnt > 10) {
+      check_time_cnt = 0;
+      t_elapse = ros::Time::now() - t_startLoop;
+      double seconds_elapse = t_elapse.toSec();
+      printf("%lfs have elapsed after starting planning!\n", seconds_elapse);
+      if (seconds_elapse > max_exe_time { // seconds
+        //// planning for too long, force quit
+        obser_one_run.done = false;
+        break;
+      }
+    }
   } // end while
+
+  //// here the planner will not send a new best traj. anymore
+  ros::param::set("/ramp/start_planner", false);
 
   /*
    * Main loop over, report data, stop timers, misc clean up
    */
 
-
+  //// set ramp observation after one running
+  obser_one_run.header.stamp = ros::Time::now();
 
   d_runtime_  = ros::Time::now() - t_startLoop;
+  obser_one_run.execution_time = d_runtime_.toSec();
+  obser_one_run.nb_best_trajectory_switches = h_control_->nb_best_traj_switches;
+  std_msgs::MultiArrayDimension coe_axis; coe_axis.label = "coefficient"; coe_axis.size = 3; coe_axis.stride = coe_axis.size;
+  obser_one_run.coefficient_tensor.layout.dim.push_back(coe_axis);
+  double A, D, Qk;
+  assert(ros::param::get("/ramp/eval_weight_A", A));
+  assert(ros::param::get("/ramp/eval_weight_D", D));
+  assert(ros::param::get("/ramp/eval_weight_Qk", Qk));
+  obser_one_run.coefficient_tensor.data.push_back(A);
+  obser_one_run.coefficient_tensor.data.push_back(D);
+  obser_one_run.coefficient_tensor.data.push_back(Qk);
   //ROS_INFO("Done at time %f", ros::Time::now().toSec());
   num_pcs_    = generation_;
 

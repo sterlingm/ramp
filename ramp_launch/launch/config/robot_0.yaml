@@ -8,11 +8,15 @@ radius: 0.18
 # DOF must consider robot base dimensions if the environment is surrounded by walls
 # Cooky demo hallway is [10, 2.5]
 DOF_min: [0,    0,  -3.14159]
-DOF_max: [3.5,   3.5,  3.14159]
+DOF_max: [3.5,    3.5,  3.14159]
 
-# Units are m/s
+# Units are m/s and rad/s
 max_speed_linear: 0.33
 max_speed_angular: 1.5708
+
+# Units are m/s^2 and rad/s^2
+max_acceleration_linear: 2.0
+max_acceleration_angular: 1.0
 
 # relative to map
 start: [0, 0, 0.785]

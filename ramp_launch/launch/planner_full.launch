@@ -25,6 +25,4 @@
 <!-- Planner -->
 <node name="ramp_planner" pkg="ramp_planner" type="ramp_planner" output="screen" /> 
 
-
-
 </launch>

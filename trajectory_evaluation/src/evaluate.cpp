@@ -1,6 +1,6 @@
 #include "evaluate.h"
 
-Evaluate::Evaluate() : Q_coll_(10000.f), Q_kine_(100000.f), orientation_infeasible_(0), T_norm_(50), A_norm_(PI), D_norm_(1.0), T_weight_(1), A_weight_(1), D_weight_(1) {}
+Evaluate::Evaluate() : orientation_infeasible_(0), T_norm_(50), A_norm_(PI), D_norm_(1.0), last_T_weight_(-1.0), last_A_weight_(-1.0), last_D_weight_(-1.0), last_Q_coll_(-1.0), last_Q_kine_(-1.0) {}
 
 void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res)
 {
@@ -199,19 +199,36 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     //ROS_INFO("Normalized terms T: %f A: %f D: %f", T, A, D);
 
     // Weight terms
-    ros::param::get("/ramp/eval_weight_T", T_weight_);
-    ros::param::get("/ramp/eval_weight_D", D_weight_);
-	ros::param::get("/ramp/eval_weight_A", A_weight_);
+    T_weight_ = 1.0;
+    static bool is_set_T = false;
+    if (!is_set_T) {
+      ros::param::set("/ramp/eval_weight_T", T_weight_);
+      is_set_T = true;
+    }
+
+    if (!ros::param::get("/ramp/eval_weight_A", A_weight_)) {
+      // if fail to get the parameter
+      A_weight_ = 0.005; // set it to the default
+    }
+    static bool is_set_A = false;
+    if (!is_set_A) {
+      ros::param::set("/ramp/eval_weight_A", A_weight_);
+      is_set_A = true;
+    }
+
+    if (!ros::param::get("/ramp/eval_weight_D", D_weight_)) {
+      // if fail to get the parameter
+      D_weight_ = 15.0; // set it to the default
+    }
+    static bool is_set_D = false;
+    if (!is_set_D) {
+      ros::param::set("/ramp/eval_weight_D", D_weight_);
+      is_set_D = true;
+    }
+
     T *= T_weight_;
     A *= A_weight_;
     D *= D_weight_;
-    static int div = 0;
-    div++;
-    if (div > 74)
-    {
-    	div = 0;
-	    ROS_INFO("current weights T: %.3f A: %.3f D: %.3f", T_weight_, A_weight_, D_weight_);
-	}
     
     //ROS_INFO("Weighted terms T: %f A: %f D: %f", T, A, D);
     
@@ -219,7 +236,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     cost = T + A + (1.f/D);
   }
 
-  else
+  else // infeasible
   {
     //ROS_INFO("In else(infeasible)"); 
     
@@ -227,12 +244,17 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     
     ////////////ROS_INFO("trj.t_firstColl: %f", trj.t_firstCollision.toSec());
 
+    Q_coll_ = 1.0;
+    static bool is_set_Qc = false;
+    if (!is_set_Qc) {
+      ros::param::set("/ramp/eval_weight_Qc", Q_coll_);
+      is_set_Qc = true;
+    }
     // Add the Penalty for being infeasible due to collision, at some point i was limiting the time to 10s, but i don't know why
     if(trj.t_firstCollision.toSec() > 0 && trj.t_firstCollision.toSec() < 9998)
     {
       ////ROS_INFO("In if t_firstCollision: %f", trj.t_firstCollision.toSec());
       ////ROS_INFO("Collision penalty: %f",(Q_coll_ / trj.t_firstCollision.toSec()));
-         
       penalties += (Q_coll_ / trj.t_firstCollision.toSec());
     }
     else
@@ -246,17 +268,37 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     if(orientation_infeasible_)// && !imminent_collision_)
     {
       //ROS_INFO("In if orientation_infeasible_: %f", orientation_.getDeltaTheta(trj));
-
       double delta_theta = orientation_.getDeltaTheta(trj) < 0.11 ? 0.1 : orientation_.getDeltaTheta(trj);
-      
+      if (!ros::param::get("/ramp/eval_weight_Qk", Q_kine_)) {
+        // if fail to get the parameter
+        Q_kine_ = 10.0; // set it to the default
+      }
+      static bool is_set_Qk = false;
+      if (!is_set_Qk) {
+        ros::param::set("/ramp/eval_weight_Qk", Q_kine_);
+        is_set_Qk = true;
+      }
       //ROS_INFO("delta_theta: %f getDeltaTheta: %f Orientation penalty: %f", delta_theta, orientation_.getDeltaTheta(trj), Q_kine_ * (orientation_.getDeltaTheta(trj) / PI));
-
       penalties += Q_kine_ * (delta_theta / PI);
     }
+    
+    penalties *= 10000.0; // the fitness of infeasible trajextory must be smaller than feasible trajectory
   }
 
   ////////ROS_INFO("cost: %f penalties: %f", cost, penalties);
   result = (1. / (cost + penalties));
+
+  // if weights change, print them
+  if (T_weight_ != last_T_weight_ ||
+      A_weight_ != last_A_weight_ ||
+      D_weight_ != last_D_weight_ ||
+      Q_coll_   != last_Q_coll_   ||
+      Q_kine_   != last_Q_kine_) {
+        printf("weights have changed to: T = %.3lf, A = %.5lf, D = %.3lf, Qc = %.3lf, Qk = %.3lf\n",
+          T_weight_, A_weight_, D_weight_, Q_coll_, Q_kine_);
+        last_T_weight_ = T_weight_; last_A_weight_ = A_weight_; last_D_weight_ = D_weight_;
+        last_Q_coll_   = Q_coll_;   last_Q_kine_   = Q_kine_;
+      }
 
   ////////////ROS_INFO("performFitness time: %f", (ros::Time::now() - t_start).toSec());
   //ROS_INFO("Exiting Evaluate::performFitness");

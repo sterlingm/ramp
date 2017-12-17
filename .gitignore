@@ -1,5 +1,9 @@
 *~
-path_modification/durations.txt
-ramp_sensing/durations.txt
-trajectory_evaluation/durations.txt
+ramp_sensing/bags/inc_then_dec_obs_highres_inflate15.bag
+ramp_sensing/bags/inc_then_dec_obs_highres_inflate15.bag.REMOVED.git-id
+ramp_sensing/bags/one_ob_inflate_15_highres_20ms.bag
+ramp_sensing/bags/one_ob_inflate_15_highres_20ms.bag.REMOVED.git-id
 trajectory_generator/durations.txt
+trajectory_evaluation/durations.txt
+ramp_sensing/durations.txt
+path_modification/durations.txt

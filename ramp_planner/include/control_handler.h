@@ -7,6 +7,8 @@
 
 class ControlHandler {
   public:
+    int nb_best_traj_switches;
+
     ControlHandler(const ros::NodeHandle& h);
 
     void send(ramp_msgs::RampTrajectory bestTrajec);

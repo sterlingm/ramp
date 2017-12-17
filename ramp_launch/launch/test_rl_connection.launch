@@ -39,9 +39,6 @@
 <!-- map->odom transform -->
 <node name="pub_map_odom" pkg="ramp_planner" type="pub_map_odom" output="screen" />
 
-<!-- rviz -->
-<node name="rviz" pkg="rviz" type="rviz" output="screen" />
-
 <!-- rl_agent -->
 <node name="agent_dqn" pkg="ramp_rlpara" type="agent_dqn.py" output="screen" />
 

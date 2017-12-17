@@ -14,6 +14,13 @@
 #include "parameter_handler.h"
 #include "bezier_curve.h"
 #include "ramp_msgs/EnvironmentSrv.h"
+#include "ramp_msgs/ParameterUpdates.h"
+#include "ramp_msgs/RampObservationOneRunning.h"
+#include <std_msgs/Float64.h>
+#include <std_msgs/Empty.h>
+#include <std_msgs/Int64.h>
+#include <std_msgs/Bool.h>
+#include <std_msgs/MultiArrayDimension.h>
 #include <type_traits>
 #include <tf/transform_broadcaster.h>
 
@@ -100,7 +107,9 @@ class Planner {
     std::vector<double> COLL_DISTS;
     int i_COLL_DISTS_;
 
-    
+    // observation after one running
+    ramp_msgs::RampObservationOneRunning obser_one_run;
+
     
     /********************************************
      ***************** Methods ******************

@@ -6,7 +6,7 @@ modifications: true
 
 evaluations: true
 
-seed_population: false 
+seed_population: false
 
 error_reduction: true
 
@@ -20,17 +20,17 @@ gens_before_control_cycle: 50
 
 pop_traj_type: 1 #0=holonomic, 1=hybrid
 
-fixed_control_cycle_rate: 1.2
+fixed_control_cycle_rate: 2.0 # second
 
 sensing_cycle_rate: 15
 
-eval_weight_T: 1.75
+# eval_weight_T: 1.75
 
 # As D weight increases, overall contribution of D to the cost decreases
 # This is because high values of D are good so we add 1/D to the fitness cost
-eval_weight_D: 15
+# eval_weight_D: 15
 
-eval_weight_A: 0.01
+# eval_weight_A: 0.01
 
 global_frame: "map"
 

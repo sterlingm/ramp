@@ -3,4 +3,5 @@ ParameterUpdates delta_paras
 ---
 
 bool is_valid
+MotionState state
 RampTrajectory trajectory

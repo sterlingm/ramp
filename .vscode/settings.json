@@ -1,0 +1,7 @@
+{
+    "python.pythonPath": "/home/kai/anaconda3/envs/test_py3/bin/python",
+    "files.associations": {
+        "array": "cpp",
+        "*.ipp": "cpp"
+    }
+}

@@ -1,0 +1,11 @@
+<launch>
+
+<!-- LOAD PARAMETERS -->
+<param name="/max_nb_best_traj" value="50"/>
+<param name="/max_nb_motion_state" value="10"/>
+<param name="/dof_motion_state" value="10"/>
+
+<!-- START NODES -->
+<node name="ddpg_ramp" pkg="ramp_rlpara" type="ddpg_ramp.py" output="screen" />
+
+</launch>

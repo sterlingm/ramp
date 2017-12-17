@@ -30,6 +30,8 @@ class Evaluate {
     ramp_msgs::RampTrajectory trajectory_;
     std::vector<ramp_msgs::RampTrajectory> ob_trjs_;
 
+    double last_Q_coll_;
+    double last_Q_kine_;
     double Q_coll_;
     double Q_kine_;
 
@@ -38,6 +40,9 @@ class Evaluate {
     double T_norm_;
     double A_norm_;
     double D_norm_;
+    double last_T_weight_;
+    double last_A_weight_;
+    double last_D_weight_;
     double T_weight_;
     double A_weight_;
     double D_weight_;
