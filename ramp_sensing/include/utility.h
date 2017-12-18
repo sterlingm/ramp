@@ -8,6 +8,7 @@
 #include <math.h>
 #include "ramp_msgs/Path.h"
 #include "ramp_msgs/Range.h"
+#include "ramp_msgs/CircleGroup.h"
 #include <ros/console.h>
 #include <vector>
 #include <chrono>
@@ -146,5 +147,7 @@ class Utility {
 
     const std::string toString(const ramp_msgs::Path p) const;    
     const std::string toString(const ramp_msgs::MotionState mp) const;    
+    const std::string toString(const CircleGroup cirGroup) const;
+    const std::string toString(const ramp_msgs::CircleGroup cirGroup) const;
 };
 #endif

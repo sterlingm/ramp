@@ -188,3 +188,30 @@ const std::string Utility::toString(const ramp_msgs::MotionState mp) const {
   return result.str();
 }
 
+const std::string Utility::toString(const CircleGroup cirGroup) const
+{
+  std::ostringstream result;
+
+  result<<"\nBounding Circle - center: ("<<cirGroup.fitCir.center.x<<","<<cirGroup.fitCir.center.y<<") radius: "<<cirGroup.fitCir.radius;
+  
+  for(int i=0;i<cirGroup.packedCirs.size();i++)
+  {
+    result<<"\n\tPacked Circle "<<i<<" - center: ("<<cirGroup.packedCirs[i].center.x<<","<<cirGroup.packedCirs[i].center.y<<") radius: "<<cirGroup.packedCirs[i].radius;
+  }
+
+  return result.str();
+}
+
+const std::string Utility::toString(const ramp_msgs::CircleGroup cirGroup) const
+{
+  std::ostringstream result;
+
+  result<<"\nBounding Circle - center: ("<<cirGroup.fitCir.center.x<<","<<cirGroup.fitCir.center.y<<") radius: "<<cirGroup.fitCir.radius;
+  
+  for(int i=0;i<cirGroup.packedCirs.size();i++)
+  {
+    result<<"\n\tPacked Circle "<<i<<" - center: ("<<cirGroup.packedCirs[i].center.x<<","<<cirGroup.packedCirs[i].center.y<<") radius: "<<cirGroup.packedCirs[i].radius;
+  }
+
+  return result.str();
+}

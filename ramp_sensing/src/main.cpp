@@ -423,7 +423,7 @@ void init_linear_system_model()
 
 
 /** Get the other robot's current odometry information and update the obstacle info */
-void updateOtherRobotCb(const nav_msgs::Odometry::ConstPtr& o, const std::string& topic) 
+/*void updateOtherRobotCb(const nav_msgs::Odometry::ConstPtr& o, const std::string& topic) 
 {
   ////ROS_INFO("In updateOtherRobotCb");
   ////ROS_INFO("topic: %s", topic.c_str());
@@ -443,7 +443,7 @@ void updateOtherRobotCb(const nav_msgs::Odometry::ConstPtr& o, const std::string
     obs.at(index).update(*o);
     list.obstacles.at(index) = obs.at(index).msg_;
   }
-} //End updateOtherRobotCb
+} //End updateOtherRobotCb*/
 
 
 
@@ -1732,7 +1732,8 @@ void populateObstacleList(const std::vector<Velocity>& velocities)
   for(int i=0;i<cir_obs.size();i++)
   {
     //ROS_INFO("Creating obstacle, prevCirs.size(): %i prevTheta.size(): %i", (int)cir_obs[i]->prevCirs.size(), (int)cir_obs[i]->prevTheta.size());
-    Obstacle o(cir_obs[i]->cir.radius, costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res, global_grid.info.origin.position.x, global_grid.info.origin.position.y); 
+    Obstacle o;
+    ROS_INFO("Circle Group %i: %s", i, util.toString(cir_obs[i]->cirGroup).c_str());
 
     // Update values
     float theta = cir_obs[i]->prevTheta.size() > 0 ? cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] : initial_theta;
@@ -2056,7 +2057,6 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   // Record duration data
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tStart);
   durs.push_back( time_span.count() );
-
 
 
   //ROS_INFO("Duration: %f", (ros::Time::now()-t_last_costmap).toSec());

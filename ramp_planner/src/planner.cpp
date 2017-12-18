@@ -242,12 +242,10 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     if(ob_trajectory_.size() < i+1)
     {
       ob_trajectory_.push_back(ob_temp_trj);
-      ob_radii_.push_back(msg.obstacles[i].radius);
     }
     else
     {
       ob_trajectory_.at(i) = ob_temp_trj;
-      ob_radii_.at(i) = msg.obstacles[i].radius;
     }
 
     copy.trajectories_.push_back(ob_temp_trj);
@@ -333,7 +331,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     }
     modifier_->move_dir_  = dir;
     modifier_->move_dist_ = dist;
-    modifier_->move_ob_r_ = msg.obstacles.at(i_closest).radius;
+    //modifier_->move_ob_r_ = msg.obstacles.at(i_closest).radius;
     ////ROS_INFO("dir: %f dist: %f ob_r: %f", dir, dist, msg.obstacles[i_closest].radius);
   }
  
