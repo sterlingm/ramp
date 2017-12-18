@@ -1751,6 +1751,7 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
           result.collision_         = true;
           result.t_firstCollision_  = p_i->time_from_start.toSec();
           i                         = segment.size();
+          break;
         }
       } // end for each packed circle
     } // end if collision with bounding circle
