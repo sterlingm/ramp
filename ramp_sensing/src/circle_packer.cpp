@@ -819,15 +819,15 @@ Polygon CirclePacker::getPolygonFromContours(const std::vector<cv::Point> contou
 
   double translate = 0.5;
 
-  Point midpoint;
+  /*Point midpoint;
   for(int i=0;i<contours.size();i++)
   {
     midpoint.x += contours[i].x;
     midpoint.y += contours[i].y;
   }
   midpoint.x /= contours.size();
-  midpoint.y /= contours.size();
-  ROS_INFO("Midpoint: (%f,%f)", midpoint.x, midpoint.y);
+  midpoint.y /= contours.size();*/
+  //ROS_INFO("Midpoint: (%f,%f)", midpoint.x, midpoint.y);
 
   // Get edges
   for(int j=0;j<contours.size();j++)
@@ -846,7 +846,8 @@ Polygon CirclePacker::getPolygonFromContours(const std::vector<cv::Point> contou
       e.end.x   = contours[j+1].x + translate;
       e.end.y   = contours[j+1].y + translate;
     }
-    ROS_INFO("e.start: (%f,%f) e.end: (%f,%f)", e.start.x, e.start.y, e.end.x, e.end.y);
+
+    //ROS_INFO("e.start: (%f,%f) e.end: (%f,%f)", e.start.x, e.start.y, e.end.x, e.end.y);
     result.edges.push_back(e);
   }
 
@@ -880,7 +881,7 @@ Polygon CirclePacker::getPolygonFromContours(const std::vector<cv::Point> contou
  */ 
 std::vector<Polygon> CirclePacker::getPolygonsFromContours(std::vector< std::vector<cv::Point> > contours)
 {
-  ROS_INFO("In getPolygonFromContours");
+  //ROS_INFO("In getPolygonFromContours");
   std::vector<Polygon> result;
 
   // Set the edges for each polygon
@@ -888,7 +889,7 @@ std::vector<Polygon> CirclePacker::getPolygonsFromContours(std::vector< std::vec
   {
     result.push_back(getPolygonFromContours(contours[i]));
   }
-  ROS_INFO("result.size(): %i", (int)result.size());
+  //ROS_INFO("result.size(): %i", (int)result.size());
 
   return result;
 }
@@ -899,14 +900,15 @@ std::vector<Polygon> CirclePacker::getPolygonsFromContours(std::vector< std::vec
  */ 
 double CirclePacker::getMinDistToPoly(const Polygon& poly, const Cell& cell)
 {
-  ROS_INFO("In getMinDistToPoly");
-  ROS_INFO("Cell: (%f,%f)", cell.p.x, cell.p.y);
+  //ROS_INFO("In getMinDistToPoly");
+  //ROS_INFO("Cell: (%f,%f)", cell.p.x, cell.p.y);
+  
   double result = 100000;
 
   for(int n=0;n<poly.normals.size();n++)
   {
-    ROS_INFO("poly.edges[%i].start: (%f,%f) end: (%f,%f)", n, poly.edges[n].start.x, poly.edges[n].start.y, poly.edges[n].end.x, poly.edges[n].end.y);  
-    ROS_INFO("Poly.normals[%i]: <%f,%f> c=%f", n, poly.normals[n].a, poly.normals[n].b, poly.normals[n].c);
+    //ROS_INFO("poly.edges[%i].start: (%f,%f) end: (%f,%f)", n, poly.edges[n].start.x, poly.edges[n].start.y, poly.edges[n].end.x, poly.edges[n].end.y);  
+    //ROS_INFO("Poly.normals[%i]: <%f,%f> c=%f", n, poly.normals[n].a, poly.normals[n].b, poly.normals[n].c);
     
     // Get unit normal
     double l = sqrt( pow(poly.normals[n].a,2) + pow(poly.normals[n].b,2) );
@@ -914,16 +916,18 @@ double CirclePacker::getMinDistToPoly(const Polygon& poly, const Cell& cell)
     e_hat.a = poly.normals[n].a / l;
     e_hat.b = poly.normals[n].b / l;
     
+    // Vector from cell to start of edge
     std::vector<double> sc;
     sc.push_back(cell.p.x - poly.edges[n].start.x);
     sc.push_back(cell.p.y - poly.edges[n].start.y);
+    
+    // Get length of vectors SC and AD (dot product of SC and normal)
     double scLen = sqrt( pow(sc[0],2) + pow(sc[1],2) );
-
     double adLen = sc[0]*e_hat.a + sc[1]*e_hat.b;
 
     double d = sqrt( pow(scLen,2) + pow(adLen,2) );
     
-    ROS_INFO("l: %f ehat: <%f,%f> sc: <%f,%f> d: %f", l, e_hat.a, e_hat.b, sc[0], sc[1], d);
+    //ROS_INFO("l: %f ehat: <%f,%f> sc: <%f,%f> d: %f", l, e_hat.a, e_hat.b, sc[0], sc[1], d);
     if(d < result)
     {
       result = d;
@@ -1131,7 +1135,7 @@ std::vector<Cell> CirclePacker::getCellsInPolygon(const Polygon& poly)
   std::vector<Point> vertices;
   for(int i=0;i<poly.edges.size();i++)
   {
-    ROS_INFO("Poly edge %i: (%f,%f)", i, poly.edges[i].start.x, poly.edges[i].start.y);
+    //ROS_INFO("Poly edge %i: (%f,%f)", i, poly.edges[i].start.x, poly.edges[i].start.y);
     vertices.push_back(poly.edges[i].start);
   }
   
@@ -1241,8 +1245,7 @@ void CirclePacker::deleteCellsInCir(const std::vector<Cell>& cells, const Circle
  */
 std::vector<Circle> CirclePacker::packCirsIntoPoly(Polygon poly, double min_r)
 {
-  ROS_INFO("In packCirsIntoPoly");
-  min_r = 1;
+  //ROS_INFO("In packCirsIntoPoly");
   std::vector<Circle> result;
 
   // Print polygon information
@@ -1256,7 +1259,7 @@ std::vector<Circle> CirclePacker::packCirsIntoPoly(Polygon poly, double min_r)
    * Create cells inside the polygon
    */
   std::vector<Cell> cells = getCellsInPolygon(poly);
-  cMarkers_ = drawCells(cells);
+  //cMarkers_ = drawCells(cells);
   //ROS_INFO("cells.size(): %i", (int)cells.size());
   
 
@@ -1281,7 +1284,7 @@ std::vector<Circle> CirclePacker::packCirsIntoPoly(Polygon poly, double min_r)
      */
     if(result.size() > 0)
     {
-      ROS_INFO("Last cell was size :%f", result[ result.size()-1 ].radius);
+      //ROS_INFO("Last cell was size :%f", result[ result.size()-1 ].radius);
       // Exit if we are at minimum radius threshold
       if(result[ result.size()-1 ].radius < min_r)
       {
@@ -1307,7 +1310,7 @@ std::vector<Circle> CirclePacker::packCirsIntoPoly(Polygon poly, double min_r)
       double min_d=getMinDistToPoly(poly, cell);
       double min_cir=getMinDistToCirs(result, cell);
 
-      ROS_INFO("min_d: %f min_cir: %f", min_d, min_cir);
+      //ROS_INFO("min_d: %f min_cir: %f", min_d, min_cir);
 
       // Set new distance value
       if(min_d < min_cir || min_cir < 0)
@@ -1340,13 +1343,7 @@ std::vector<Circle> CirclePacker::packCirsIntoPoly(Polygon poly, double min_r)
     }
   } // end while
   
-  /*std::cout<<"\nFinal number of circles: "<<result.size();
-  for(int i=0;i<result.size();i++)
-  {
-    std::cout<<"\nCircle "<<i<<" ("<<result[i].center.x<<", "<<result[i].center.y<<") radius: "<<result[i].radius;
-  }*/
-
-  ROS_INFO("result.size(): %i", (int)result.size());
+  //ROS_INFO("result.size(): %i", (int)result.size());
   return result;
 }
 
@@ -1356,7 +1353,7 @@ std::vector<Circle> CirclePacker::packCirsIntoPoly(Polygon poly, double min_r)
  */
 std::vector< std::vector<Circle> > CirclePacker::goCirclePacking(double min_r)
 {
-  ROS_INFO("In CirclePacker::goCirclePacking()");
+  //ROS_INFO("In CirclePacker::goCirclePacking()");
   std::vector< std::vector<Circle> > result;
 
   // Create a matrix of the same size and type as src
@@ -1778,12 +1775,10 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours)
     std::vector<Circle> temp = packCirsIntoPoly(ps[i], 0);
     cs.insert(std::end(cs), std::begin(temp), std::end(temp)); 
   }
-  ROS_INFO("cs.size(): %i", (int)cs.size());
+  //ROS_INFO("cs.size(): %i", (int)cs.size());
 
-  // Draw polygon
-  polygonMarker_ = drawPolygon(p);
+  // Draw polygons
   //pMarkers_ = drawPolygons(tris);
-  pMarkers_.push_back(polygonMarker_);
 
   CircleGroup result;
   result.fitCir = c;
