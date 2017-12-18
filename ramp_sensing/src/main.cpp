@@ -1732,8 +1732,8 @@ void populateObstacleList(const std::vector<Velocity>& velocities)
   for(int i=0;i<cir_obs.size();i++)
   {
     //ROS_INFO("Creating obstacle, prevCirs.size(): %i prevTheta.size(): %i", (int)cir_obs[i]->prevCirs.size(), (int)cir_obs[i]->prevTheta.size());
+    //ROS_INFO("Circle Group %i: %s", i, util.toString(cir_obs[i]->cirGroup).c_str());
     Obstacle o;
-    ROS_INFO("Circle Group %i: %s", i, util.toString(cir_obs[i]->cirGroup).c_str());
 
     // Update values
     float theta = cir_obs[i]->prevTheta.size() > 0 ? cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] : initial_theta;

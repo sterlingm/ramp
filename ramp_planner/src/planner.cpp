@@ -228,7 +228,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
   
   ob_trajectory_.clear();
-  ob_radii_.clear();
+  obs_.clear();
 
   Population pop_obs;
   Population copy = population_;
@@ -238,6 +238,8 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
    */
   for(uint8_t i=0;i<msg.obstacles.size();i++)
   {
+    obs_.push_back(msg.obstacles[i]);
+
     RampTrajectory ob_temp_trj = getPredictedTrajectory(msg.obstacles.at(i));
     if(ob_trajectory_.size() < i+1)
     {
@@ -1156,7 +1158,7 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
   for(uint8_t i=0;i<ob_trajectory_.size();i++)
   {
     result.obstacle_trjs.push_back(ob_trajectory_[i].msg_);
-    result.obstacle_radii.push_back(ob_radii_[i]);
+    result.obstacle_cir_groups.push_back(obs_[i].cirGroup);
   }
 
   //////////ROS_INFO("imminent_collision: %s", imminent_collision_ ? "True" : "False");

@@ -36,7 +36,7 @@ class CollisionDetection
     /***** Methods *****/ 
     void                        init();
     void                        perform(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, QueryResult& result); 
-    void                        performNum(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const double& robot_radius, const std::vector<double> obstacle_radii, QueryResult& result); 
+    void                        performNum(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const double& robot_radius, const std::vector<ramp_msgs::CircleGroup> ob_cir_groups, QueryResult& result); 
     
 
     /**
@@ -44,7 +44,7 @@ class CollisionDetection
      */
     void           query(const ramp_msgs::RampTrajectory& trajectory, const ramp_msgs::RampTrajectory& ob_trajectory, QueryResult& result) const;
     void           query(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, std::vector< std::vector<double> >& points_of_collision) const;
-    double           query(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, const double& traj_start, const double& robot_r, const double& ob_r, QueryResult& result) const;
+    double           query(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, const double& traj_start, const double& robot_r, const ramp_msgs::CircleGroup& cirGroup, QueryResult& result) const;
 
 
     /**
@@ -133,6 +133,8 @@ class CollisionDetection
   private:
 
     /***** Methods *****/
+    std::vector< std::vector<geometry_msgs::Vector3> > getCirOffsets(const std::vector<ramp_msgs::CircleGroup>& cirGroups) const;
+    std::vector<geometry_msgs::Vector3> getCirOffsets(const ramp_msgs::CircleGroup& cirGroup) const;
 
     /***** Data Members *****/
     Utility                   utility_;

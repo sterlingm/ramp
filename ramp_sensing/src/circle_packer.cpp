@@ -1772,7 +1772,7 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours)
   std::vector<Circle> cs;
   for(int i=0;i<ps.size();i++)
   {
-    std::vector<Circle> temp = packCirsIntoPoly(ps[i], 0);
+    std::vector<Circle> temp = packCirsIntoPoly(ps[i], 1);
     cs.insert(std::end(cs), std::begin(temp), std::end(temp)); 
   }
   //ROS_INFO("cs.size(): %i", (int)cs.size());

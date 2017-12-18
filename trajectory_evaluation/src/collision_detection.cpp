@@ -9,7 +9,7 @@ CollisionDetection::~CollisionDetection()
 void CollisionDetection::init() {}
 
 
-void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const double& robot_radius, const std::vector<double> obstacle_radii, QueryResult& result)
+void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const double& robot_radius, const std::vector<ramp_msgs::CircleGroup> ob_cir_groups, QueryResult& result)
 {
   result.collision_ = false;
   min_dist_ = 100;
@@ -17,7 +17,7 @@ void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory,
   {
     ////ROS_INFO("Ob radius: %f", obstacle_radii[i]);
     ////ROS_INFO("Ob traj: %s", utility_.toString(obstacle_trjs[i]).c_str());
-    double d_min = query(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), robot_radius, obstacle_radii[i], result);
+    double d_min = query(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), robot_radius, ob_cir_groups[i], result);
     ////ROS_INFO("d_min: %f", d_min);
 
     if(d_min < min_dist_)
@@ -1642,9 +1642,27 @@ void CollisionDetection::LineArcFull(const ramp_msgs::RampTrajectory& trajectory
 } // End LineArc
 
 
+std::vector<geometry_msgs::Vector3> CollisionDetection::getCirOffsets(const ramp_msgs::CircleGroup& cirGroup) const
+{
+  std::vector<geometry_msgs::Vector3> result;
+
+  geometry_msgs::Vector3 cen = cirGroup.fitCir.center; 
+  for(int i=0;i<cirGroup.packedCirs.size();i++)
+  {
+    ramp_msgs::Circle temp = cirGroup.packedCirs[i];
+
+    geometry_msgs::Vector3 diff;
+    diff.x = temp.center.x - cen.x;
+    diff.y = temp.center.y - cen.y;
+
+    result.push_back(diff);
+  }
+
+  return result;  
+}
 
 
-double CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, const double& traj_start, const double& robot_r, const double& ob_r, QueryResult& result) const
+double CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, const double& traj_start, const double& robot_r, const ramp_msgs::CircleGroup& ob_r, QueryResult& result) const
 {
   ros::Time time_start = ros::Time::now();
 
@@ -1660,7 +1678,8 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
   
   // For every point, check circle detection on a subset of the obstacle's trajectory
   // obstacle radius + turtlebot radius (0.225)
-  float dist_threshold = ob_r + robot_r;
+  float dist_threshold;// = ob_r + robot_r;
+  std::vector<geometry_msgs::Vector3> offsets = getCirOffsets(ob_r);
   //////ROS_INFO("ob_r: %f robot_r: %f dist_threshold: %f", ob_r, robot_r, dist_threshold);
 
   // Trajectories start in the future, obstacle trajectories start at the present time, 
@@ -1675,10 +1694,11 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
   // Initialize to -1 because all dist values are >= 0
   double d_min=100;
 
+  /*
+   * Start collision checks
+   */
   for(i=0;i<segment.size();i++) 
-  //for(i=0;i<49;i++) 
   {
-
     // Set obstacle index. If i+offset > trajectory size, set j to the last point on the obstacle trajectory
     j = (i+j_offset) >= ob_trajectory.size() ? ob_trajectory.size()-1 : i+j_offset;
 
@@ -1687,37 +1707,54 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
     // Get the points
     const trajectory_msgs::JointTrajectoryPoint* p_i    = &segment[i];
     const trajectory_msgs::JointTrajectoryPoint* p_ob   = &ob_trajectory[j];
-    
-    // Get the distance between the centers
     float dist = sqrt( pow(p_i->positions.at(0) - p_ob->positions.at(0),2) + pow(p_i->positions.at(1) - p_ob->positions.at(1),2) );
-    
+    float dist_threshold = ob_r.fitCir.radius + robot_r;
+
     /*////ROS_INFO("p_i: %s", utility_.toString(*p_i).c_str());
     ////ROS_INFO("p_j: %s", utility_.toString(*p_ob).c_str());
     ////ROS_INFO("dist: %f", dist);*/
-
-    if(dist < d_min)
+    
+    /*
+     * If there is collision with the bounding circle, then
+     * check collision with packed circles
+     */
+    if(dist <= dist_threshold)
     {
-      d_min = dist;
-    }
+      for(int k=0;k<ob_r.packedCirs.size();k++)
+      {
+        geometry_msgs::Vector3 obPoint;   
+        obPoint.x = p_ob->positions[0] + offsets[k].x;
+        obPoint.y = p_ob->positions[1] + offsets[k].y;
 
-    // If the distance between the two centers is less than the sum of the two radii, 
-    // there is collision
-    if( dist <= dist_threshold) 
-    {
-      /*//////ROS_INFO("Points in collision: (%f,%f), and (%f,%f), dist: %f i: %i j: %i",
-          p_i->positions.at(0),
-          p_i->positions.at(1),
-          p_ob->positions.at(0),
-          p_ob->positions.at(1),
-          dist,
-          (int)i,
-          (int)j);*/
-      
-      result.collision_         = true;
-      result.t_firstCollision_  = p_i->time_from_start.toSec();
-      i                         = segment.size();
-    } // end if
-  } // end for
+        // Get distance between trajectory point and packed circle
+        dist = sqrt( pow(p_i->positions.at(0) - obPoint.x,2) + pow(p_i->positions.at(1) - obPoint.y,2) );
+
+        // Record min distance
+        if(dist < d_min)
+        {
+          d_min = dist;
+        }
+       
+        // Check if distance is within collision threshold (based on circle radii)
+        dist_threshold = ob_r.packedCirs[k].radius + robot_r;
+        if(dist <= dist_threshold)
+        {
+          /*//////ROS_INFO("Points in collision: (%f,%f), and (%f,%f), dist: %f i: %i j: %i",
+              p_i->positions.at(0),
+              p_i->positions.at(1),
+              p_ob->positions.at(0),
+              p_ob->positions.at(1),
+              dist,
+              (int)i,
+              (int)j);*/
+          
+          result.collision_         = true;
+          result.t_firstCollision_  = p_i->time_from_start.toSec();
+          i                         = segment.size();
+        }
+      } // end for each packed circle
+    } // end if collision with bounding circle
+  } // end for each trajectory segment point
 
   return d_min;
   ////ROS_INFO("Exiting CollisionDetection::query");

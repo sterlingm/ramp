@@ -2,7 +2,6 @@
 #define OBSTACLE_H
 #include "nav_msgs/Odometry.h"
 #include "ramp_msgs/Obstacle.h"
-#include "ramp_msgs/PackedObstacle.h"
 #include <tf/transform_datatypes.h>
 #include <vector>
 #include "utility.h"
