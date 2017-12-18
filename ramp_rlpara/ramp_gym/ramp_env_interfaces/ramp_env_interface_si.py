@@ -39,6 +39,9 @@ class RampEnv(gym.Env):
 
 	def __init__(self):
 		self._seed()
+
+		self.check_env_ready_rate = rospy.Rate(50) # 0.02s
+		self.check_exe_rate = rospy.Rate(10) # 0.1s
 		
 		## get various parameters
 		self.utility = Utility()
@@ -111,10 +114,10 @@ class RampEnv(gym.Env):
 		## wait the actual environment to get ready......
 		print("wait the actual environment to get ready......")
 		while not rospy.core.is_shutdown() and not self.env_ready:
-			time.sleep(0.02) # 0.02s
+			self.check_env_ready_rate.sleep() # TODO: handle exception
 		if not self.env_ready: # ctrl+c
 			return RampObservationOneRunning(), 0.0, False, {}
-		print("find env. ready and set start_planner True for the ready env. to start one execution!")
+		print("find env. ready and set start_planner to true for the ready env. to start one execution!")
 		rospy.set_param("/ramp/start_planner", True)
 		self.env_ready = False # TODO: change into using service
 
@@ -122,10 +125,27 @@ class RampEnv(gym.Env):
 		pass
 		
 		## wait for this execution completes......
+		has_waited_exe_for = 0 # seconds
 		print("wait for this execution completes......")
+		start_waiting_time = rospy.get_rostime()
 		while not rospy.core.is_shutdown() and self.this_exe_info is None:
-			time.sleep(0.1) # 0.1s
-		if self.this_exe_info is None:
+			self.check_exe_rate.sleep() # TODO: handle exception
+			cur_time = rospy.get_rostime()
+			has_waited_exe_for = cur_time.to_sec() - start_waiting_time.to_sec() # seconds
+			if has_waited_exe_for >= self.utility.max_exe_time + 5.0:
+				print("ramp_planner has been respawned from unexpected interruption, will set start_planner to true again.")
+				print("wait the actual environment to get ready......")
+				while not rospy.core.is_shutdown() and not self.env_ready:
+					self.check_env_ready_rate.sleep() # TODO: handle exception
+				if not self.env_ready: # ctrl+c
+					return RampObservationOneRunning(), 0.0, False, {}
+				print("find env. ready and set start_planner to true for the ready env. to start one execution!")
+				rospy.set_param("/ramp/start_planner", True)
+				self.env_ready = False # TODO: change into using service
+				start_waiting_time = rospy.get_rostime()
+				print("wait for this execution completes......")
+
+		if self.this_exe_info is None: # ctrl+c
 			return RampObservationOneRunning(), 0.0, False, {}
 		print("A execution completes!")
 		observations = self.this_exe_info # build many observations used for returning
