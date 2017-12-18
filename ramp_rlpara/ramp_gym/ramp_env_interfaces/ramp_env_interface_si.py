@@ -92,8 +92,6 @@ class RampEnv(gym.Env):
 		self.set_env_rdy_true_sub = rospy.Subscriber("set_env_ready_true", Empty, self.setEnvRdyTrueCallback)
 		self.one_exe_info_sub = rospy.Subscriber("ramp_collection_ramp_ob_one_run", RampObservationOneRunning, self.oneExeInfoCallback)
 
-		self.si_act_pub = rospy.Publisher('ramp_collection_si_act', Float64MultiArray, queue_size = 1)
-
 	def _seed(self, seed=None):
 		self.np_random, seed = seeding.np_random(seed)
 		return [seed]
@@ -112,19 +110,23 @@ class RampEnv(gym.Env):
 
 		## wait the actual environment to get ready......
 		print("wait the actual environment to get ready......")
-		while not self.env_ready:
+		while not rospy.core.is_shutdown() and not self.env_ready:
 			time.sleep(0.02) # 0.02s
+		if not self.env_ready: # ctrl+c
+			return RampObservationOneRunning(), 0.0, False, {}
 		print("find env. ready and set start_planner True for the ready env. to start one execution!")
 		rospy.set_param("/ramp/start_planner", True)
-		self.env_ready = False
+		self.env_ready = False # TODO: change into using service
 
 		## here you can publish sth. to "/ramp_collection_.*"
-		self.si_act_pub.publish(Float64MultiArray(data = action.tolist()))
+		pass
 		
 		## wait for this execution completes......
 		print("wait for this execution completes......")
-		while self.this_exe_info is None: # TODO: enable key interrupt
+		while not rospy.core.is_shutdown() and self.this_exe_info is None:
 			time.sleep(0.1) # 0.1s
+		if self.this_exe_info is None:
+			return RampObservationOneRunning(), 0.0, False, {}
 		print("A execution completes!")
 		observations = self.this_exe_info # build many observations used for returning
 		self.this_exe_info = None # clear self.this_exe_info after it is used

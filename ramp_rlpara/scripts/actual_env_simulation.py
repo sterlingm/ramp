@@ -38,7 +38,8 @@ while True: # TODO: enable key interrupt or some other
     rosbag_proc = subprocess.Popen(["rosbag", "record", "--bz2", "--output-name=" + file_dir + file_name, "--regex", "/ramp_collection_.*", "/bestTrajec"])
 
     ## reset the robot in Gazebo to the start point
-    os.system('rosservice call /gazebo/reset_world "{}"')
+    # this has been moved into ramp_planner
+    # os.system('rosservice call /gazebo/reset_world "{}"')
 
     ## start ramp_planner and other necessary nodes and waiting for the /ramp/start_planner to be True
     os.system('roslaunch ramp_launch planner_full_costmap_simulation_qn.launch')

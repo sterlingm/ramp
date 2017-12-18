@@ -16,6 +16,7 @@
 #include "ramp_msgs/EnvironmentSrv.h"
 #include "ramp_msgs/ParameterUpdates.h"
 #include "ramp_msgs/RampObservationOneRunning.h"
+#include <std_srvs/Empty.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/Int64.h>

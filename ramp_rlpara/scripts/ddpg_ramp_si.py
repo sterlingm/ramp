@@ -76,6 +76,38 @@ assert observation_size == 10
 ## publish sth. to display in rqt
 si_step_pub = rospy.Publisher('ramp_collection_si_step', Int64, queue_size = 1)
 si_act_normed_pub = rospy.Publisher('ramp_collection_si_act_normed', Float64MultiArray, queue_size = 1)
+si_act_pub = rospy.Publisher('ramp_collection_si_act', Float64MultiArray, queue_size = 1)
+
+## warmup rospy timer
+warmup_cnt = 0
+def warmupTimerCb(event):
+    global warmup_cnt
+    warmup_cnt += 1
+
+warmup_duration = rospy.Rate(0.5) # warmup for 2.0s
+warmup_timer = rospy.Timer(rospy.Duration(0.5), warmupTimerCb) # 0.5s per callback
+is_timer_warmup = False
+print("Rospy timer is warming up......")
+try:
+    warmup_duration.sleep()
+except rospy.exceptions.ROSInterruptException as exc:
+    is_timer_warmup = False
+    if rospy.core.is_shutdown():
+        print("Warming up of rospy timer is interrupted by customer!")
+    else:
+        print("Warming up of rospy timer is interrupted: " + str(exc))
+    print("Warming up of rospy timer failed!")
+else:
+    if warmup_cnt >= 2:
+        is_timer_warmup = True
+        print("Warming up of rospy timer successed!")
+    else:
+        is_timer_warmup = False
+        print("Warming up of rospy timer failed because of some unknown reasons!")
+warmup_timer.shutdown()
+if not is_timer_warmup:
+    print("Program exited because rospy timer did not warmup!")
+    sys.exit(0) # normally exit
 
 ## test interaction with environment:
 '''
@@ -203,27 +235,32 @@ for k in range(utility.max_nb_exe):
     action_normed = agent.forward(s_init_normed) # the noise is added in the "forward" function
     action = utility.antiNormalizeCoes(action_normed)
 
-    ## logging and displaying
-    time.sleep(0.05)
-    si_step_pub.publish(Int64(agent.step))
-    si_act_normed_pub.publish(Float64MultiArray(data = action_normed.tolist()))
-
     ## apply new coefficients and start a new execution
     observations, reward, done, info = env.step(action)
 
+    ## ctrl+c interrupt
+    if rospy.core.is_shutdown():
+        break
+
+    ## logging and displaying
+    #  need rosbag close slowly
+    si_step_pub.publish(Int64(agent.step))
+    si_act_normed_pub.publish(Float64MultiArray(data = action_normed.tolist()))
+    si_act_pub.publish(Float64MultiArray(data = action.tolist()))
+
     ## Store all observations (normalized) in the new execution into agent.memory
-    ''' nb_observations = 0
+    nb_observations = 0
     trajs = observations.best_trajectory_vector
     for traj in trajs:
-        nb_observations += len(traj)
+        nb_observations += len(traj.trajectory.points)
 
     ob_id = 0
     for traj in trajs: # for each best traj.
         for motion_state in traj.trajectory.points: # for each motion state
-            s = np.array([motion_state.time_from_start]) # time stamp
+            s = np.array([motion_state.time_from_start.to_sec()]) # time stamp
             s = np.append(s, motion_state.positions) # position (x, y, theta)
             s = np.append(s, motion_state.velocities) # velocity
-            s = np.append(s, motion_state.acceleraations) # acceleraation
+            s = np.append(s, motion_state.accelerations) # acceleration
             s_normed = utility.normalizeMotionState(s) # normalization
             agent.recent_observation = s_normed
             agent.recent_action = action_normed
@@ -231,7 +268,7 @@ for k in range(utility.max_nb_exe):
             if ob_id == nb_observations - 2: # second last ob., whose next ob. is the last ob.
                 agent.memory.append(agent.recent_observation, agent.recent_action,
                                     reward, done, agent.training) # s0, a0, r0, terminal1, _ (r0 is determined by s1)
-            else if ob_id < nb_observations - 2:
+            elif ob_id < nb_observations - 2:
                 agent.memory.append(agent.recent_observation, agent.recent_action,
                                     0.0, False, agent.training)
             else: # the last ob. is stored in backward()
@@ -239,10 +276,10 @@ for k in range(utility.max_nb_exe):
 
             ob_id += 1
 
-    assert ob_id == nb_observations '''
+    assert ob_id == nb_observations
 
     ## Updating all neural networks
-    ''' agent.backward(reward = 0.0, terminal = False) '''
+    agent.backward(reward = 0.0, terminal = False)
 
     ## maintain some variables that are maintained in fit()
     agent.step += 1

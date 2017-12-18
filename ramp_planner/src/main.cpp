@@ -402,7 +402,7 @@ void pubStartGoalMarkers()
   result.markers.push_back(start_marker);
   result.markers.push_back(goal_marker);
 
-  while(pub_rviz.getNumSubscribers() == 0) {}
+  while(ros::ok() && pub_rviz.getNumSubscribers() == 0) {}
   //ROS_INFO("# of subscribers: %i", (int)pub_rviz.getNumSubscribers());
 
   pub_rviz.publish(result);
@@ -431,6 +431,26 @@ int main(int argc, char** argv)
 
   ros::init(argc, argv, "ramp_planner");
   ros::NodeHandle handle;
+
+  bool use_sim_time;
+  ros::param::param("/use_sim_time", use_sim_time, false);
+  ros::ServiceClient gazebo_srv_client = handle.serviceClient<std_srvs::Empty>("/gazebo/reset_world");
+  if (use_sim_time) {
+    std_srvs::Empty gazebo_srv;
+    //// reset the robot in gazebo
+    if (gazebo_srv_client.call(gazebo_srv)) {
+      printf("The robot in gazebo has been reset!\n");
+    } else {
+      printf("Please launch gazebo if you want simulation.\n");
+    }
+  }
+
+  ///// reset odom.
+  ros::Publisher pub_reset_odom = handle.advertise<std_msgs::Empty>("mobile_base/commands/reset_odometry", 10);
+  std_msgs::Empty reset_odom_msg;
+  ros::Duration one_sec(1.0);
+  one_sec.sleep();
+  pub_reset_odom.publish(reset_odom_msg);
 
   ros::param::set("ramp/cc_started", false);
   std::cout<<"\nHandle namespace: "<<handle.getNamespace();
@@ -580,7 +600,7 @@ int main(int argc, char** argv)
     handle.setParam("ramp/start_planner", false);
     ROS_INFO("Waiting for param ramp/start_planner to be true");
     pub_set_env_rdy_true_.publish(empty_msg); // tell others that I am ready
-    while(!start_planner)
+    while(ros::ok() && !start_planner)
     {
       handle.param("ramp/start_planner", start_planner, false);
       r_wait_start.sleep();
