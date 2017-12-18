@@ -55,6 +55,7 @@ from ramp_env_interface_si import RampEnv
 from f_utility import Utility
 
 ## -------------------- init --------------------
+np.set_printoptions(threshold=np.inf)
 ENV_NAME = 'ramp-env-interface-si'
 rospy.init_node('ddpg_ramp_si', anonymous=True)
 gym.undo_logger_setup()

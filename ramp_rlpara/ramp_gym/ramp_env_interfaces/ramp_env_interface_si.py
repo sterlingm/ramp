@@ -132,7 +132,7 @@ class RampEnv(gym.Env):
 			self.check_exe_rate.sleep() # TODO: handle exception
 			cur_time = rospy.get_rostime()
 			has_waited_exe_for = cur_time.to_sec() - start_waiting_time.to_sec() # seconds
-			if has_waited_exe_for >= self.utility.max_exe_time + 5.0:
+			if has_waited_exe_for >= self.utility.max_exe_time + 20.0:
 				print("ramp_planner has been respawned from unexpected interruption, will set start_planner to true again.")
 				print("wait the actual environment to get ready......")
 				while not rospy.core.is_shutdown() and not self.env_ready:
