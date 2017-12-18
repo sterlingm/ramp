@@ -32,9 +32,19 @@ from keras.models import Sequential, Model
 from keras.layers import Dense, Activation, Flatten, Input, Concatenate
 from keras.optimizers import Adam
 
-from rl.agents import DDPGAgent
-from rl.memory import SequentialMemory
-from rl.random import OrnsteinUhlenbeckProcess
+## use the keras-rl in this repository
+ramp_root = os.path.join(os.path.dirname(__file__), '../../')
+sys.path.append(ramp_root) # directory_name
+# keras_rl_dir = os.path.join(ramp_root, 'keras-rl/')
+# sys.path.append(keras_rl_dir) # directory_name
+# rl_dir = os.path.join(keras_rl_dir, 'rl/')
+# sys.path.append(rl_dir) # directory_name
+# agents_dir = os.path.join(rl_dir, 'agents/')
+# sys.path.append(agents_dir) # directory_name
+
+from keras_rl.rl.memory import SequentialMemory
+from keras_rl.rl.random import OrnsteinUhlenbeckProcess
+from keras_rl.rl.agents.ddpg import DDPGAgent
 
 ## make directory of logging
 home_dir = os.getenv("HOME")

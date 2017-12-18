@@ -125,6 +125,8 @@ class SequentialMemory(Memory):
         self.terminals = RingBuffer(limit)
         self.observations = RingBuffer(limit)
 
+        print("SequentialMemory initiation successed!")
+
     def sample(self, batch_size, batch_idxs=None):
         # It is not possible to tell whether the first state in the memory is terminal, because it
         # would require access to the "terminal" flag associated to the previous state. As a result

@@ -4,6 +4,8 @@
 This file represents the actual environment in simulation. Once this actual environment is run, a whole learning is ready to start
 (Wait the RL agent start the learning). The actual environment can also be the .bag files in the harddisk, which log the
 data when running this file (the true actual environment in simulation).
+TODO: don't use rosnode kill in ramp_planner (prefered) or
+      move the works (open and close rosbag) in this file into ramp_planner
 '''
 
 import os

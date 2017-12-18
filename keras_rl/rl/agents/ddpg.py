@@ -78,6 +78,7 @@ class DDPGAgent(Agent):
 
         ## date_for_file
         self.date_for_file = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        print("Create file to log learning data at " + self.date_for_file + "!")
 
     @property
     def uses_learning_phase(self):
@@ -242,8 +243,8 @@ class DDPGAgent(Agent):
         file_h = open(file_dir + "learning_samples.txt", "a")
         file_h.write("######################################### LEARNING " + str(self.step) +
                      " #########################################\n")
-        # print("######################################### LEARNING " + str(self.step) +
-        #       " #########################################")
+        print("######################################### LEARNING " + str(self.step) +
+              " #########################################")
 
         # Store most recent experience in memory.
         if self.step % self.memory_interval == 0:
