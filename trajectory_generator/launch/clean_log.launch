@@ -1,0 +1,6 @@
+<launch>
+
+<!-- LOAD NODES -->
+<node name="clean_log" pkg="trajectory_generator" type="clean_log.py" output="screen" respawn="true" />
+
+</launch>
