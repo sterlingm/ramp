@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 ## open bag
-bag = rosbag.Bag("/home/kai/data/ramp/simulation_env_data/2017-12-18_13:27:18/raw_data/1.bag")
+bag = rosbag.Bag("/home/kai/data/ramp/simulation_env_data/2017-12-18_20:37:37/raw_data/1.bag")
 
 exe_times = np.array([])
 A = np.array([])

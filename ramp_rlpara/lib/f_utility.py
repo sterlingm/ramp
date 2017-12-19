@@ -7,6 +7,7 @@ from std_msgs.msg import MultiArrayDimension
 class Utility(object):
 
     def __init__(self):
+        ## TODO: if there is parameter not being set, give warning!
         self.replay_buffer_size = rospy.get_param('/replay_buffer_size', 100000) # if get fail, use default value
         self.discount_factor = rospy.get_param('/discount_factor', 0.9)
         self.target_net_update_factor = rospy.get_param('/target_net_update_factor', 0.001) # big inertia

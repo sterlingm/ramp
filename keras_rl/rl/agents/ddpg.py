@@ -291,11 +291,9 @@ class DDPGAgent(Agent):
             if self.step > self.nb_steps_warmup_critic:
                 # origin: target_actions = self.target_actor.predict_on_batch(state1_batch)
                 
-                ## action remains unchanged in one execution
-                unit = np.array([self.recent_action])
-                target_actions = np.array([self.recent_action])
-                for i in range(self.batch_size - 1):
-                    target_actions = np.concatenate((target_actions, unit))
+                ## action remains unchanged in one execution, so the action of state1 should be
+                #  the same as the action of state0
+                target_actions = action_batch
 
                 assert target_actions.shape == (self.batch_size, self.nb_actions)
                 if len(self.critic.inputs) >= 3:
@@ -336,8 +334,8 @@ class DDPGAgent(Agent):
                 metrics = self.critic.train_on_batch(state0_batch_with_action, targets)
                 if self.processor is not None:
                     metrics += self.processor.metrics
-                ## logging, TODO: logging with association (state0_batch_with_action_0, target_0)
-                #                                          (state0_batch_with_action_1, target_1)
+                ## logging, TODO: logging with association (state0_batch_with_action_a, target_a)
+                #                                          (state0_batch_with_action_b, target_b)
                 #                                          ......
                 file_h.write("< state0_batch_with_action >\n")
                 file_h.write(str(state0_batch_with_action) + "\n")
