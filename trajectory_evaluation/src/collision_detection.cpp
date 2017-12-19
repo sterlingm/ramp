@@ -1714,26 +1714,29 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
     ////ROS_INFO("p_j: %s", utility_.toString(*p_ob).c_str());
     ////ROS_INFO("dist: %f", dist);*/
     
+    // Need to set d_min even if no collision
+    // Only use the bounding circle for min distance to obstacle
+    if(dist < d_min)
+    {
+      d_min = dist;
+    }
+    
     /*
      * If there is collision with the bounding circle, then
      * check collision with packed circles
      */
     if(dist <= dist_threshold)
     {
+      // For each packed circle, do collision check
       for(int k=0;k<ob_r.packedCirs.size();k++)
       {
+        // Set point
         geometry_msgs::Vector3 obPoint;   
         obPoint.x = p_ob->positions[0] + offsets[k].x;
         obPoint.y = p_ob->positions[1] + offsets[k].y;
 
         // Get distance between trajectory point and packed circle
         dist = sqrt( pow(p_i->positions.at(0) - obPoint.x,2) + pow(p_i->positions.at(1) - obPoint.y,2) );
-
-        // Record min distance
-        if(dist < d_min)
-        {
-          d_min = dist;
-        }
        
         // Check if distance is within collision threshold (based on circle radii)
         dist_threshold = ob_r.packedCirs[k].radius + robot_r;

@@ -333,12 +333,13 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     }
     modifier_->move_dir_  = dir;
     modifier_->move_dist_ = dist;
-    //modifier_->move_ob_r_ = msg.obstacles.at(i_closest).radius;
+    modifier_->move_ob_r_ = msg.obstacles.at(i_closest).cirGroup.fitCir.radius;
     ////ROS_INFO("dir: %f dist: %f ob_r: %f", dir, dist, msg.obstacles[i_closest].radius);
   }
  
   else
   {
+    // Set direction of robot for the move operator (if no obs, then this doesn't matter much)
     modifier_->move_dir_ = startPlanning_.msg_.positions[2];
   }
 
