@@ -482,7 +482,7 @@ int main(int argc, char** argv)
 
   // Sleep to wait for tf data
   // Using the sleep in waitForTransform never works
-  ros::Duration d(0.5);
+  ros::Duration d(2.0);
   d.sleep();
 
   // Wait for Transform from map to the planner's global_frame

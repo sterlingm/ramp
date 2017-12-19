@@ -114,7 +114,12 @@ class RampEnv(gym.Env):
 		## wait the actual environment to get ready......
 		print("wait the actual environment to get ready......")
 		while not rospy.core.is_shutdown() and not self.env_ready:
-			self.check_env_ready_rate.sleep() # TODO: handle exception
+			try:
+				self.check_env_ready_rate.sleep()
+			except rospy.exceptions.ROSInterruptException:
+				print("Ctrl+C is pressed!")
+			else:
+				pass
 		if not self.env_ready: # ctrl+c
 			return RampObservationOneRunning(), 0.0, False, {}
 		print("find env. ready and set start_planner to true for the ready env. to start one execution!")
@@ -129,14 +134,24 @@ class RampEnv(gym.Env):
 		print("wait for this execution completes......")
 		start_waiting_time = rospy.get_rostime()
 		while not rospy.core.is_shutdown() and self.this_exe_info is None:
-			self.check_exe_rate.sleep() # TODO: handle exception
+			try:
+				self.check_exe_rate.sleep()
+			except rospy.exceptions.ROSInterruptException:
+				print("Ctrl+C is pressed!")
+			else:
+				pass
 			cur_time = rospy.get_rostime()
 			has_waited_exe_for = cur_time.to_sec() - start_waiting_time.to_sec() # seconds
 			if has_waited_exe_for >= self.utility.max_exe_time + 20.0:
 				print("ramp_planner has been respawned from unexpected interruption, will set start_planner to true again.")
 				print("wait the actual environment to get ready......")
 				while not rospy.core.is_shutdown() and not self.env_ready:
-					self.check_env_ready_rate.sleep() # TODO: handle exception
+					try:
+						self.check_env_ready_rate.sleep()
+					except rospy.exceptions.ROSInterruptException:
+						print("Ctrl+C is pressed!")
+					else:
+						pass
 				if not self.env_ready: # ctrl+c
 					return RampObservationOneRunning(), 0.0, False, {}
 				print("find env. ready and set start_planner to true for the ready env. to start one execution!")
