@@ -9,6 +9,8 @@ This is a ROS metapackage that will implement the Real-time Adaptive Motion Plan
 
 3. Install Keras-rl: https://github.com/matthiasplappert/keras-rl
 
+4. Install pandas to process collected raw data: pip3.4 install pandas
+
 Usage:
 
 1. roscore
