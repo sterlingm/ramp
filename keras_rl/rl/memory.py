@@ -140,7 +140,12 @@ class SequentialMemory(Memory):
             # desired window length.
             batch_idxs = sample_batch_indexes(
                 self.window_length, self.nb_entries - 1, size=batch_size)
+        
+        ## 100% sample final transition in a execution
+        batch_idxs[len(batch_idxs) - 1] = self.nb_entries - 2
+
         batch_idxs = np.array(batch_idxs) + 1
+
         assert np.min(batch_idxs) >= self.window_length + 1
         assert np.max(batch_idxs) < self.nb_entries
         assert len(batch_idxs) == batch_size

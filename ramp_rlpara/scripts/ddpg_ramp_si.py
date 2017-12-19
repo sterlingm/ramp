@@ -51,7 +51,7 @@ home_dir = os.getenv("HOME")
 cur_date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 file_dir = home_dir + '/data/ramp/ramp_rlpara/ddpg_ramp_si/' + cur_date + '/raw_data/'
 os.system('mkdir -p ' + file_dir)
-f_acts = open(file_dir + "actions.txt", "w")
+file_h = open(file_dir + "ddpg_ramp_si.txt", "a")
 
 ## get directory
 rlpara_root = os.path.join(os.path.dirname(__file__), '../')
@@ -243,6 +243,11 @@ agent.training = True
 
 ## -------------------- do one learning in one execution --------------------
 for k in range(utility.max_nb_exe):
+    file_h.write("######################################### STEP " + str(agent.step) +
+                 " #########################################\n")
+    print("######################################### STEP " + str(agent.step) +
+          " #########################################")
+    
     action_normed = agent.forward(s_init_normed) # the noise is added in the "forward" function
     action = utility.antiNormalizeCoes(action_normed)
 
@@ -258,8 +263,26 @@ for k in range(utility.max_nb_exe):
     si_step_pub.publish(Int64(agent.step))
     si_act_normed_pub.publish(Float64MultiArray(data = action_normed.tolist()))
     si_act_pub.publish(Float64MultiArray(data = action.tolist()))
+    
+    file_h.write("< action >\n")
+    file_h.write(str(action) + "\n")
+    print("< action >")
+    print(action)
+
+    file_h.write("< reward >\n")
+    file_h.write(str(reward) + "\n")
+    print("< reward >")
+    print(reward)
+
+    file_h.write("< done >\n")
+    file_h.write(str(done) + "\n")
+    print("< done >")
+    print(done)
 
     ## Store all observations (normalized) in the new execution into agent.memory
+    #  TODO: Stora what observations (experiences) (motion states not actually being experienced may be wrong observations,
+    #        because what we really evaluate is the actual execution time, only the actual experienced motion states can
+    #        associated with the actual execution time)
     nb_observations = 0
     trajs = observations.best_trajectory_vector
     for traj in trajs:
@@ -294,6 +317,9 @@ for k in range(utility.max_nb_exe):
 
     ## maintain some variables that are maintained in fit()
     agent.step += 1
+
+## close file
+file_h.close()
 
 ## -------------------- After training is done, we save the final weights --------------------
 agent.save_weights(file_dir + 'ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite = True)

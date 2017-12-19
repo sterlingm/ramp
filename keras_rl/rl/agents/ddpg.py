@@ -78,7 +78,7 @@ class DDPGAgent(Agent):
 
         ## date_for_file
         self.date_for_file = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-        print("Create file to log learning data at " + self.date_for_file + "!")
+        print("Create file to log learning samples at " + self.date_for_file + "!")
 
     @property
     def uses_learning_phase(self):
@@ -260,6 +260,7 @@ class DDPGAgent(Agent):
         # Train the network on a single stochastic batch.
         can_train_either = self.step > self.nb_steps_warmup_critic or self.step > self.nb_steps_warmup_actor
         if can_train_either and self.step % self.train_interval == 0:
+            ## TODO: how to sample (data in buffer is discarded too quickly in our case)
             experiences = self.memory.sample(self.batch_size)
             assert len(experiences) == self.batch_size
 
@@ -288,7 +289,14 @@ class DDPGAgent(Agent):
 
             # Update critic, if warm up is over.
             if self.step > self.nb_steps_warmup_critic:
-                target_actions = self.target_actor.predict_on_batch(state1_batch)
+                # origin: target_actions = self.target_actor.predict_on_batch(state1_batch)
+                
+                ## action remains unchanged in one execution
+                unit = np.array([self.recent_action])
+                target_actions = np.array([self.recent_action])
+                for i in range(self.batch_size - 1):
+                    target_actions = np.concatenate((target_actions, unit))
+
                 assert target_actions.shape == (self.batch_size, self.nb_actions)
                 if len(self.critic.inputs) >= 3:
                     state1_batch_with_action = state1_batch[:]
