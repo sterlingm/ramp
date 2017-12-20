@@ -3246,7 +3246,7 @@ void Planner::getTransPop(const Population& pop, const RampTrajectory& movingOn,
 void Planner::doControlCycle() 
 {
   ////////ROS_WARN("Control Cycle %i occurring at Time: %f", num_cc_, ros::Time::now().toSec());
-  ROS_INFO("controlCycle_: %f", controlCycle_.toSec());
+  //ROS_INFO("controlCycle_: %f", controlCycle_.toSec());
   //////ROS_INFO("Time between control cycles: %f", (ros::Time::now() - t_prevCC_).toSec());
   ////////ROS_INFO("Number of planning cycles that occurred between CC's: %i", c_pc_);
 

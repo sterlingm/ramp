@@ -582,8 +582,8 @@ void publishMarkers(const ros::TimerEvent& e)
     text.header.stamp   = ros::Time::now();
     arrow.header.stamp  = ros::Time::now();
 
-    text.id   = 1001;
-    arrow.id  = 1002;
+    text.id   = populationSize + markers.size()+i;
+    arrow.id  = populationSize + markers.size()*(i+markers.size()+1);
 
     //text.header.frame_id  = "/map";
     //arrow.header.frame_id = "/map";
@@ -621,7 +621,9 @@ void publishMarkers(const ros::TimerEvent& e)
     arrow.scale.y = 0.1;
     
     // Set poses
-    text.pose = markers[i].pose;
+    text.pose.position.x = cir_obs[i]->cirGroup.fitCir.center.x;
+    text.pose.position.y = cir_obs[i]->cirGroup.fitCir.center.y;
+    //text.pose = markers[i].pose;
     
     text.pose.position.z = 0.1;
     text.color.r = 0;
@@ -656,8 +658,8 @@ void publishMarkers(const ros::TimerEvent& e)
 
   //ROS_INFO("texts.size(): %i", (int)texts.size());
 
-  //result.markers.insert(std::end(result.markers), std::begin(texts), std::end(texts));  
-  //result.markers.insert(std::end(result.markers), std::begin(arrows), std::end(arrows));  
+  result.markers.insert(std::end(result.markers), std::begin(texts), std::end(texts));  
+  result.markers.insert(std::end(result.markers), std::begin(arrows), std::end(arrows));  
 
   // Create a text marker to show the number of obstacles
   visualization_msgs::Marker text;
@@ -685,11 +687,11 @@ void publishMarkers(const ros::TimerEvent& e)
   result.markers.push_back(text);
   
   // Draw the polygon lines
-  result.markers.push_back(polygonLines);
+  /*result.markers.push_back(polygonLines);
   for(int i=0;i<pLines.size();i++)
   {
     result.markers.push_back(pLines[i]);
-  }
+  }*/
   /*ROS_INFO("cLines.size(): %i", (int)cLines.size());
   for(int i=0;i<cLines.size();i++)
   {
@@ -1922,17 +1924,20 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    /*
     * Check if obstacles are in viewing angle
     */
-  /*int i=0;
-  while(i<cirGroups.size())
+  if(fovAngle > 1.5708f)
   {
-    if(!checkViewingObstacle(cirGroups[i].fitCir))
+    int i=0;
+    while(i<cirGroups.size())
     {
-      cirGroups.erase(cirGroups.begin()+i, cirGroups.begin()+i+1);
-      i--;
-    }
+      if(!checkViewingObstacle(cirGroups[i].fitCir))
+      {
+        cirGroups.erase(cirGroups.begin()+i, cirGroups.begin()+i+1);
+        i--;
+      }
 
-    i++;
-  }*/
+      i++;
+    }
+  }
  
 
   /*

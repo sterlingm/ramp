@@ -4,7 +4,7 @@ Evaluate::Evaluate() : Q_coll_(10000.f), Q_kine_(100000.f), orientation_infeasib
 
 void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res)
 {
-  ROS_INFO("In Evaluate::perform()");
+  //ROS_INFO("In Evaluate::perform()");
   //ros::Time t_start = ros::Time::now();
   
   /*
@@ -29,7 +29,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   // Set response members
   res.feasible            = !qr_.collision_ && !orientation_infeasible_;
   req.trajectory.feasible = res.feasible;
-  ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
+  //ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
   //////ROS_INFO("performFeasibility: %f", (ros::Time::now()-t_start).toSec());
 
   if(qr_.collision_)
@@ -81,11 +81,11 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
 
   ramp_msgs::RampTrajectory* trj = &er.trajectory;
   
-  ROS_INFO("orientation_.getDeltaTheta(*trj): %f", orientation_.getDeltaTheta(*trj));
+  //ROS_INFO("orientation_.getDeltaTheta(*trj): %f", orientation_.getDeltaTheta(*trj));
   if((!er.imminent_collision && er.consider_trans && !er.trans_possible) ||
       orientation_.getDeltaTheta(*trj) > 1.5708)
   {
-    ROS_INFO("In final if statement");
+    //ROS_INFO("In final if statement");
     orientation_infeasible_ = true;
   }
   else
@@ -101,7 +101,7 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
 /** This method computes the fitness of the trajectory_ member */
 void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offset, double& result) 
 {
-  ROS_INFO("In Evaluate::performFitness");
+  //ROS_INFO("In Evaluate::performFitness");
   ros::Time t_start = ros::Time::now();
   
   double cost=0;
@@ -109,7 +109,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
 
   if(trj.feasible)
   {
-    ROS_INFO("In if(feasible)");
+    //ROS_INFO("In if(feasible)");
     
     // Get total time to execute trajectory
     double T = trj.trajectory.points.at(trj.trajectory.points.size()-1).time_from_start.toSec();
@@ -183,7 +183,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     // Minimum distance to any obstacle
     double D = cd_.min_dist_;
     
-    ROS_INFO("T: %f A: %f D: %f", T, A, D);
+    //ROS_INFO("T: %f A: %f D: %f", T, A, D);
 
     // Update normalization for Time if necessary
     if(T > T_norm_)
@@ -196,14 +196,14 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     A /= A_norm_;
     D /= D_norm_;
     
-    ROS_INFO("Normalized terms T: %f A: %f D: %f", T, A, D);
+    //ROS_INFO("Normalized terms T: %f A: %f D: %f", T, A, D);
 
     // Weight terms
     T *= T_weight_;
     A *= A_weight_;
     D *= D_weight_;
  
-    ROS_INFO("Weighted terms T: %f A: %f D: %f", T, A, D);
+    //ROS_INFO("Weighted terms T: %f A: %f D: %f", T, A, D);
     
     // Compute overall cost
     cost = T + A + (1.f/D);

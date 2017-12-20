@@ -21,22 +21,22 @@ void pubObTrj(const ros::TimerEvent e)
 
   ros::Duration d_elapsed = ros::Time::now() - t_start;
   int index = d_elapsed.toSec()*10;
-  ROS_INFO("t_start: %f ros::Time::now(): %f d_elapsed: %f index: %i", t_start.toSec(), ros::Time::now().toSec(), d_elapsed.toSec(), index);
 
   for(int i=0;i<ob_trjs.size();i++)
   {
     // Get the point
+    ROS_INFO("t_start: %f ros::Time::now(): %f d_elapsed: %f index: %i ob_trjs[%i].trajectory.points.size(): %i", t_start.toSec(), ros::Time::now().toSec(), d_elapsed.toSec(), index, i, (int)ob_trjs[i].trajectory.points.size());
     trajectory_msgs::JointTrajectoryPoint p = index >= ob_trjs[i].trajectory.points.size() ? ob_trjs[i].trajectory.points[ob_trjs[i].trajectory.points.size()-1] : ob_trjs[i].trajectory.points[index]; 
 
     // Build srv to send
-    gazebo_msgs::SetModelState ms; 
+    gazebo_msgs::SetModelState ms;
     ms.request.model_state.model_name = i == 0 ? "cardboard_box" : "cardboard_box_0";
     ms.request.model_state.pose.position.x = p.positions[0];
     ms.request.model_state.pose.position.y = p.positions[1];
 
     if(i == 1)
     {
-      ROS_INFO("p: %s", u.toString(p).c_str());
+      ROS_INFO("Ob p: %s", u.toString(p).c_str());
     }
 
     // Call srv
@@ -137,6 +137,8 @@ int main(int argc, char** argv)
     // Build the request
     tr.path = p;
     tr.type = HOLONOMIC;
+    tr.max_speed_linear = 0.33f;
+    tr.max_speed_angular = PI/2.f;
 
     // Build the srv
     ramp_msgs::TrajectorySrv ts;
