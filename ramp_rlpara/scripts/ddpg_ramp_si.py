@@ -242,7 +242,7 @@ agent.compile(Adam(lr = utility.critic_lr, clipnorm = 1.0), metrics=['mae'])
 agent.training = True
 
 ## -------------------- do one learning in one execution --------------------
-chg_file_inter = 3
+chg_file_inter = 100
 for k in range(utility.max_nb_exe):
     file_h.write("######################################### STEP " + str(agent.step) +
                  " #########################################\n")
