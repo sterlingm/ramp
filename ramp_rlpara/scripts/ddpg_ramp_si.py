@@ -242,11 +242,19 @@ agent.compile(Adam(lr = utility.critic_lr, clipnorm = 1.0), metrics=['mae'])
 agent.training = True
 
 ## -------------------- do one learning in one execution --------------------
+chg_file_inter = 3
 for k in range(utility.max_nb_exe):
     file_h.write("######################################### STEP " + str(agent.step) +
                  " #########################################\n")
     print("######################################### STEP " + str(agent.step) +
           " #########################################")
+
+    ## save the weights
+    if agent.step % chg_file_inter == 0:
+        weights_file_id = int(agent.step / chg_file_inter)
+        weights_dir = file_dir + str(weights_file_id) + "/"
+        os.system('mkdir -p ' + weights_dir)
+    agent.save_weights(weights_dir + 'ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite = True)
     
     action_normed = agent.forward(s_init_normed) # the noise is added in the "forward" function
     action = utility.antiNormalizeCoes(action_normed)

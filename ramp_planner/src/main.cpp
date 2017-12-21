@@ -416,13 +416,19 @@ void deltaParasCallback(const ramp_msgs::ParameterUpdates::ConstPtr &delta_paras
 }
 
 void killNodes() {
-  system("rosnode kill /move_obstacles");
-  system("rosnode kill /ramp_control");
-  system("rosnode kill /ramp_sensing");
-  system("rosnode kill /trajectory_evaluation");
-  system("rosnode kill /path_modification");
-  system("rosnode kill /trajectory_generator");
-  system("rosnode kill /pub_map_equal_odom");
+  int a = 0; // remove warning in compling
+  a = system("rosnode kill /move_obstacles");
+  a = system("rosnode kill /ramp_control");
+  a = system("rosnode kill /ramp_sensing");
+  a = system("rosnode kill /trajectory_evaluation");
+  a = system("rosnode kill /path_modification");
+  a = system("rosnode kill /trajectory_generator");
+  a = system("rosnode kill /pub_map_equal_odom");
+}
+
+bool doNothing(std_srvs::Empty::Request  &req,
+               std_srvs::Empty::Response &res) {
+  return true;
 }
 
 int main(int argc, char** argv) 
@@ -593,25 +599,34 @@ int main(int argc, char** argv)
   std_msgs::Empty empty_msg;
 
   /******* Start the planner *******/
-  if(use_start_param)
+  if(use_start_param) // TODO: use triggered srv
   {
-    ros::Rate r_wait_start(10); // 10Hz
+    ros::Rate r_wait_start(100); // 100Hz
     start_planner = false;
     handle.setParam("ramp/start_planner", false);
     ROS_INFO("Waiting for param ramp/start_planner to be true");
     pub_set_env_rdy_true_.publish(empty_msg); // tell others that I am ready
+    ros::ServiceServer env_ready_srv = handle.advertiseService("env_ready_srv", doNothing); // tell others that I am ready
+                                                                                            // others just need to check whether
+                                                                                            // this srv exists, no need to call
+                                                                                            // this srv actually.
     while(ros::ok() && !start_planner)
     {
       handle.param("ramp/start_planner", start_planner, false);
       r_wait_start.sleep();
+      ros::spinOnce();
     }
+    env_ready_srv.shutdown(); // shutdown the srv once I am asked to run
   }
   else
   {
     std::cout<<"\nPress Enter to start the planner\n";
-    pub_set_env_rdy_true_.publish(empty_msg);
-    std::cin.get(); 
+    pub_set_env_rdy_true_.publish(empty_msg); // tell others that I am ready
+    ros::ServiceServer env_ready_srv = handle.advertiseService("env_ready_srv", doNothing); // tell others that I am ready
+    std::cin.get();
+    env_ready_srv.shutdown(); // shutdown the srv once I am asked to run
   }
+
   ROS_INFO("Starting Planner!");
   
   my_planner.go(handle);

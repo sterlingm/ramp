@@ -3260,7 +3260,6 @@ void Planner::doControlCycle()
     population_.trajectories_[i].msg_.t_start = ros::Duration(0);
   }*/
 
-
   // Set the bestT
   RampTrajectory bestT = population_.getBest();
   i_best = population_.calcBestIndex();
@@ -3465,9 +3464,6 @@ void Planner::controlCycleCallback(const ros::TimerEvent& e)
   
   //////////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
   
-  // display the trajectory used by ramp_control in RViz
-  sendPopulation();
-  
   // Do the control cycle
   doControlCycle();
 
@@ -3523,6 +3519,9 @@ void Planner::sendBest() {
     else if(!best.msg_.feasible) {
       //////////ROS_INFO("Best trajectory is not feasible! Time until collision: %f", best.msg_.t_firstCollision.toSec());
     }*/
+
+    // display the trajectory used by ramp_control in RViz
+    sendPopulation();
 
     best.msg_.header.stamp = ros::Time::now(); // TODO: time stamp should be the same as the latestUpdate_ it uses for planning
     obser_one_run.best_trajectory_vector.push_back(best.msg_);

@@ -170,10 +170,16 @@ class DDPGAgent(Agent):
 
     def save_weights(self, filepath, overwrite=False):
         filename, extension = os.path.splitext(filepath)
+        
         actor_filepath = filename + '_actor' + extension
         critic_filepath = filename + '_critic' + extension
+        tar_actor_filepath = filename + '_target_actor' + extension
+        tar_critic_filepath = filename + '_target_critic' + extension
+
         self.actor.save_weights(actor_filepath, overwrite=overwrite)
         self.critic.save_weights(critic_filepath, overwrite=overwrite)
+        self.target_critic.save_weights(tar_actor_filepath, overwrite=overwrite)
+        self.target_actor.save_weights(tar_critic_filepath, overwrite=overwrite)
 
     def update_target_models_hard(self):
         self.target_critic.set_weights(self.critic.get_weights())
@@ -243,8 +249,8 @@ class DDPGAgent(Agent):
         file_h = open(file_dir + "learning_samples.txt", "a")
         file_h.write("######################################### LEARNING " + str(self.step) +
                      " #########################################\n")
-        print("######################################### LEARNING " + str(self.step) +
-              " #########################################")
+        # print("######################################### LEARNING " + str(self.step) +
+        #       " #########################################")
 
         # Store most recent experience in memory.
         if self.step % self.memory_interval == 0:

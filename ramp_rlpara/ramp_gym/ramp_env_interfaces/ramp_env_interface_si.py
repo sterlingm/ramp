@@ -28,9 +28,6 @@ from f_utility import Utility
 
 class RampEnv(gym.Env):
 
-	def setEnvRdyTrueCallback(self, data):
-		self.env_ready = True
-
 	def oneExeInfoCallback(self, data):
 		if self.this_exe_info is not None:
 			## TODO: log into file with date in its name
@@ -40,7 +37,6 @@ class RampEnv(gym.Env):
 	def __init__(self):
 		self._seed()
 
-		self.check_env_ready_rate = rospy.Rate(50) # 0.02s
 		self.check_exe_rate = rospy.Rate(10) # 0.1s
 		
 		## get various parameters
@@ -89,10 +85,8 @@ class RampEnv(gym.Env):
 		                               np.array([a1, d1, qk1]))
 		self.observation_space = spaces.Box(np.array([t0, x0, y0, theta0, x_d0, y_d0, theta_d0, x_dd0, y_dd0, theta_dd0]),
 		                                    np.array([t1, x1, y1, theta1, x_d1, y_d1, theta_d1, x_dd1, y_dd1, theta_dd1]))
-		self.env_ready = False
 		self.this_exe_info = None
 
-		self.set_env_rdy_true_sub = rospy.Subscriber("set_env_ready_true", Empty, self.setEnvRdyTrueCallback)
 		self.one_exe_info_sub = rospy.Subscriber("ramp_collection_ramp_ob_one_run", RampObservationOneRunning, self.oneExeInfoCallback)
 
 	def _seed(self, seed=None):
@@ -113,18 +107,14 @@ class RampEnv(gym.Env):
 
 		## wait the actual environment to get ready......
 		print("wait the actual environment to get ready......")
-		while not rospy.core.is_shutdown() and not self.env_ready:
-			try:
-				self.check_env_ready_rate.sleep()
-			except rospy.exceptions.ROSInterruptException:
-				print("Ctrl+C is pressed!")
-			else:
-				pass
-		if not self.env_ready: # ctrl+c
+		try:
+			rospy.wait_for_service("env_ready_srv")
+		except rospy.exceptions.ROSInterruptException:
+			print("\nCtrl+C is pressed!")
 			return RampObservationOneRunning(), 0.0, False, {}
+
 		print("find env. ready and set start_planner to true for the ready env. to start one execution!")
 		rospy.set_param("/ramp/start_planner", True)
-		self.env_ready = False # TODO: change into using service
 
 		## here you can publish sth. to "/ramp_collection_.*"
 		pass
@@ -137,31 +127,26 @@ class RampEnv(gym.Env):
 			try:
 				self.check_exe_rate.sleep()
 			except rospy.exceptions.ROSInterruptException:
-				print("Ctrl+C is pressed!")
-			else:
-				pass
+				print("\nCtrl+C is pressed!")
+				return RampObservationOneRunning(), 0.0, False, {}
+
 			cur_time = rospy.get_rostime()
 			has_waited_exe_for = cur_time.to_sec() - start_waiting_time.to_sec() # seconds
-			if has_waited_exe_for >= self.utility.max_exe_time + 20.0:
+			if has_waited_exe_for >= self.utility.max_exe_time + 20.0: # overtime
 				print("ramp_planner has been respawned from unexpected interruption, will set start_planner to true again.")
 				print("wait the actual environment to get ready......")
-				while not rospy.core.is_shutdown() and not self.env_ready:
-					try:
-						self.check_env_ready_rate.sleep()
-					except rospy.exceptions.ROSInterruptException:
-						print("Ctrl+C is pressed!")
-					else:
-						pass
-				if not self.env_ready: # ctrl+c
+
+				try:
+					rospy.wait_for_service("env_ready_srv")
+				except rospy.exceptions.ROSInterruptException:
+					print("\nCtrl+C is pressed!")
 					return RampObservationOneRunning(), 0.0, False, {}
+
 				print("find env. ready and set start_planner to true for the ready env. to start one execution!")
 				rospy.set_param("/ramp/start_planner", True)
-				self.env_ready = False # TODO: change into using service
 				start_waiting_time = rospy.get_rostime()
 				print("wait for this execution completes......")
 
-		if self.this_exe_info is None: # ctrl+c
-			return RampObservationOneRunning(), 0.0, False, {}
 		print("A execution completes!")
 		observations = self.this_exe_info # build many observations used for returning
 		self.this_exe_info = None # clear self.this_exe_info after it is used
