@@ -601,7 +601,7 @@ int main(int argc, char** argv)
   /******* Start the planner *******/
   if(use_start_param) // TODO: use triggered srv
   {
-    ros::Rate r_wait_start(100); // 100Hz
+    ros::Rate r_wait_start(10); // 10Hz
     start_planner = false;
     handle.setParam("ramp/start_planner", false);
     ROS_INFO("Waiting for param ramp/start_planner to be true");
