@@ -3,6 +3,8 @@ This is not the environment itself but the interface of environment.
 Observation is a single motion state whose size is 10
 '''
 
+import os
+import sys
 import time
 import gym
 from gym import spaces
@@ -11,6 +13,7 @@ import numpy as np
 import rospy
 import warnings
 from std_msgs.msg import Float64
+from std_msgs.msg import Float64MultiArray
 from std_msgs.msg import Empty
 from ramp_msgs.msg import RampTrajectory
 from ramp_msgs.msg import RampObservationOneRunning
@@ -25,16 +28,17 @@ from f_utility import Utility
 
 class RampEnv(gym.Env):
 
-	def setEnvRdyTrueCallback(self, data):
-		self.env_ready = True
-
-	def oneExeInfoCallback(self, data)
+	def oneExeInfoCallback(self, data):
 		if self.this_exe_info is not None:
 			## TODO: log into file with date in its name
 			warnings.warn("Unused RampEnv.this_exe_info is overlaped!")
 		self.this_exe_info = data
 
 	def __init__(self):
+		self._seed()
+
+		self.check_exe_rate = rospy.Rate(10) # 0.1s
+		
 		## get various parameters
 		self.utility = Utility()
 
@@ -81,85 +85,78 @@ class RampEnv(gym.Env):
 		                               np.array([a1, d1, qk1]))
 		self.observation_space = spaces.Box(np.array([t0, x0, y0, theta0, x_d0, y_d0, theta_d0, x_dd0, y_dd0, theta_dd0]),
 		                                    np.array([t1, x1, y1, theta1, x_d1, y_d1, theta_d1, x_dd1, y_dd1, theta_dd1]))
-		self.set_env_rdy_true_sub = rospy.Subscriber("set_env_ready_true", Empty, self.setEnvRdyTrueCallback)
-		self.one_exe_info_sub = rospy.Subscriber("ramp_collection_ramp_ob_one_run", RampObservationOneRunning, self.oneExeInfoCallback)
-		self.env_ready = False
 		self.this_exe_info = None
 
-		self._seed()
+		self.one_exe_info_sub = rospy.Subscriber("ramp_collection_ramp_ob_one_run", RampObservationOneRunning, self.oneExeInfoCallback)
 
 	def _seed(self, seed=None):
 		self.np_random, seed = seeding.np_random(seed)
 		return [seed]
 		
 	def _reset(self):
-		## set parameters randomly
-		observation = self.observation_space.sample()
-		rospy.set_param("/ramp/eval_weight_A", observation[0].item())
-		rospy.set_param("/ramp/eval_weight_D", observation[1].item())
-		rospy.set_param("/ramp/eval_weight_Qk", observation[2].item())
-
-		## the robot start go and it will make many runnings (one running one execution time)
-		# rospy.set_param("/start_one_step", True)
-		
-		## wait for the robot to complete all runnings and return a observation_one_running vector
-		print("wait for the robot to complete all runnings......")
-		while len(self.exe_time_vector) != self.nb_runs_one_step:
-			print("wait the actual environment to get ready......")
-			while not self.env_ready:
-				time.sleep(0.5) # 0.5s
-			print("set start_planner True for the ready environment to start one running!")
-			rospy.set_param("/ramp/start_planner", True)
-			self.env_ready = False
-		print("initial running has been completed!")
-		# print("execution times of initial running: " + str(self.exe_time_vector) + " seconds")
-
-		## prevent the robot start go
-		# rospy.set_param("/start_one_step", False)
-
-		## process execution time vector (try to make RAMP success more)
-		#  TODO: maybe need improvement
-		etv = self.exe_time_vector
-		self.exe_time_vector = np.array([]) # clear self.exe_time_vector after it is used
-		assert len(etv) == self.nb_runs_one_step
-		assert len(etv) >= 1
-		if len(etv) >= 3:
-			etv = np.delete(etv, [etv.argmin(), etv.argmax()]) # delete the min and the max in the vector
-		self.last_calcu_exe_time = etv.mean() # the execution time used for calculating reward
-		assert self.last_calcu_exe_time > 0
-
-		return observation
+		## not used in small input version
+		pass
 
 	def _step(self, action):
 		assert self.action_space.contains(action)
 
 		## set the coefficients of RAMP
-		rospy.set_param("/ramp/eval_weight_A", action[0])
-		rospy.set_param("/ramp/eval_weight_D", action[1])
-		rospy.set_param("/ramp/eval_weight_Qk", action[2])
+		rospy.set_param("/ramp/eval_weight_A", action[0].item())
+		rospy.set_param("/ramp/eval_weight_D", action[1].item())
+		rospy.set_param("/ramp/eval_weight_Qk", action[2].item())
 
 		## wait the actual environment to get ready......
 		print("wait the actual environment to get ready......")
-		while not self.env_ready:
-			time.sleep(0.02) # 0.02s
-		print("find env. ready and set start_planner True for the ready env. to start one execution!")
+		try:
+			rospy.wait_for_service("env_ready_srv")
+		except rospy.exceptions.ROSInterruptException:
+			print("\nCtrl+C is pressed!")
+			return RampObservationOneRunning(), 0.0, False, {}
+
+		print("find env. ready and set start_planner to true for the ready env. to start one execution!")
 		rospy.set_param("/ramp/start_planner", True)
-		self.env_ready = False
+
+		## here you can publish sth. to "/ramp_collection_.*"
+		pass
 		
 		## wait for this execution completes......
+		has_waited_exe_for = 0 # seconds
 		print("wait for this execution completes......")
-		while self.this_exe_info is None: # TODO: enable key interrupt
-			time.sleep(0.1) # 0.1s
+		start_waiting_time = rospy.get_rostime()
+		while not rospy.core.is_shutdown() and self.this_exe_info is None:
+			try:
+				self.check_exe_rate.sleep()
+			except rospy.exceptions.ROSInterruptException:
+				print("\nCtrl+C is pressed!")
+				return RampObservationOneRunning(), 0.0, False, {}
+
+			cur_time = rospy.get_rostime()
+			has_waited_exe_for = cur_time.to_sec() - start_waiting_time.to_sec() # seconds
+			if has_waited_exe_for >= self.utility.max_exe_time + 20.0: # overtime
+				print("ramp_planner has been respawned from unexpected interruption, will set start_planner to true again.")
+				print("wait the actual environment to get ready......")
+
+				try:
+					rospy.wait_for_service("env_ready_srv")
+				except rospy.exceptions.ROSInterruptException:
+					print("\nCtrl+C is pressed!")
+					return RampObservationOneRunning(), 0.0, False, {}
+
+				print("find env. ready and set start_planner to true for the ready env. to start one execution!")
+				rospy.set_param("/ramp/start_planner", True)
+				start_waiting_time = rospy.get_rostime()
+				print("wait for this execution completes......")
+
 		print("A execution completes!")
 		observations = self.this_exe_info # build many observations used for returning
 		self.this_exe_info = None # clear self.this_exe_info after it is used
 
 		## calculate reward
-		reward = self.utility.max_exe_time - self.this_exe_info.execution_time
+		reward = self.utility.max_exe_time - observations.execution_time
 		reward = max(0, reward)
 
 		## done or not
-		done = self.this_exe_info.done
+		done = observations.done
 
 		## reward and done are both for the last observation in this execution
 		return observations, reward, done, {}

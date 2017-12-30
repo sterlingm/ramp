@@ -4,6 +4,8 @@
 This file represents the actual environment in simulation. Once this actual environment is run, a whole learning is ready to start
 (Wait the RL agent start the learning). The actual environment can also be the .bag files in the harddisk, which log the
 data when running this file (the true actual environment in simulation).
+TODO: don't use rosnode kill in ramp_planner, use process name to get pid and use ctrl+c to interrupt the node (prefered) or
+      move the works (open and close rosbag) in this file into ramp_planner
 '''
 
 import os
@@ -38,7 +40,8 @@ while True: # TODO: enable key interrupt or some other
     rosbag_proc = subprocess.Popen(["rosbag", "record", "--bz2", "--output-name=" + file_dir + file_name, "--regex", "/ramp_collection_.*", "/bestTrajec"])
 
     ## reset the robot in Gazebo to the start point
-    os.system('rosservice call /gazebo/reset_world "{}"')
+    # this has been moved into ramp_planner
+    # os.system('rosservice call /gazebo/reset_world "{}"')
 
     ## start ramp_planner and other necessary nodes and waiting for the /ramp/start_planner to be True
     os.system('roslaunch ramp_launch planner_full_costmap_simulation_qn.launch')

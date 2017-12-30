@@ -1079,9 +1079,9 @@ void Planner::buildTrajectoryRequest(const Path path, const std::vector<ramp_msg
     //////////ROS_INFO("In if path.size() > 2)");
 
     // If it's the first time getting a curve 
-    if(curves.size() == 0 || curves.at(0).segmentPoints.size() == 0) 
+    if(curves.size() == 0 || curves.at(0).segmentPoints.size() == 0)
     {
-      if(path.size() > 2) 
+      if(path.size() > 2)
       {
         //////////ROS_INFO("In temp curve");
         ramp_msgs::BezierCurve temp;
@@ -1667,7 +1667,11 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int gens_before_cc, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r,
+                   const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius,
+                   const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type,
+                   const int gens_before_cc, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot,
+                   const bool errorReduction) 
 {
   ROS_INFO("In Planner::init");
   
@@ -3260,7 +3264,6 @@ void Planner::doControlCycle()
     population_.trajectories_[i].msg_.t_start = ros::Duration(0);
   }*/
 
-
   // Set the bestT
   RampTrajectory bestT = population_.getBest();
   i_best = population_.calcBestIndex();
@@ -3465,9 +3468,6 @@ void Planner::controlCycleCallback(const ros::TimerEvent& e)
   
   //////////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
   
-  // display the trajectory used by ramp_control in RViz
-  sendPopulation();
-  
   // Do the control cycle
   doControlCycle();
 
@@ -3523,6 +3523,9 @@ void Planner::sendBest() {
     else if(!best.msg_.feasible) {
       //////////ROS_INFO("Best trajectory is not feasible! Time until collision: %f", best.msg_.t_firstCollision.toSec());
     }*/
+
+    // display the trajectory used by ramp_control in RViz
+    sendPopulation();
 
     best.msg_.header.stamp = ros::Time::now(); // TODO: time stamp should be the same as the latestUpdate_ it uses for planning
     obser_one_run.best_trajectory_vector.push_back(best.msg_);
@@ -4371,7 +4374,7 @@ void Planner::go(const ros::NodeHandle& h)
       t_elapse = ros::Time::now() - t_startLoop;
       double seconds_elapse = t_elapse.toSec();
       printf("%lfs have elapsed after starting planning!\n", seconds_elapse);
-      if (seconds_elapse > max_exe_time { // seconds
+      if (seconds_elapse > max_exe_time) { // seconds
         //// planning for too long, force quit
         obser_one_run.done = false;
         break;

@@ -1,10 +1,13 @@
 import numpy as np
 import rospy
 import math
+from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import MultiArrayDimension
 
 class Utility(object):
 
     def __init__(self):
+        ## TODO: if there is parameter not being set, give warning!
         self.replay_buffer_size = rospy.get_param('/replay_buffer_size', 100000) # if get fail, use default value
         self.discount_factor = rospy.get_param('/discount_factor', 0.9)
         self.target_net_update_factor = rospy.get_param('/target_net_update_factor', 0.001) # big inertia
@@ -16,6 +19,7 @@ class Utility(object):
         self.max_nb_exe = rospy.get_param('/max_nb_exe', 600)
         self.nb_steps_warmup_critic = rospy.get_param('/nb_steps_warmup_critic', 0)
         self.nb_steps_warmup_actor = rospy.get_param('/nb_steps_warmup_actor', 0)
+        self.critic_lr = rospy.get_param('/critic_lr', 0.001)
         self.coe_A_range = rospy.get_param('/coe_A_range', [0.0, 0.05])
         self.coe_D_range = rospy.get_param('/coe_D_range', [0.0, 50.0])
         self.coe_Qk_range = rospy.get_param('/coe_Qk_range', [0.0, 50.0])
@@ -101,7 +105,7 @@ class Utility(object):
                                    x_dot_normed, y_dot_normed, theta_dot_normed,
                                    x_dd_normed, y_dd_normed, theta_dd_normed])
 
-    def antiNormalizeCoes(self, coes)
+    def antiNormalizeCoes(self, coes):
         A = self.coe_A_range[0] + coes[0] * (self.coe_A_range[1] - self.coe_A_range[0]) # transfer into non-normalized value
         A = np.clip(A, self.coe_A_range[0], self.coe_A_range[1]) # clip using non-normalized value
 
@@ -112,3 +116,21 @@ class Utility(object):
         Qk = np.clip(Qk, self.coe_Qk_range[0], self.coe_Qk_range[1])
 
         return np.array([A, D, Qk])
+
+    ## TODO: implement it
+    # def nparray2Float64MultiArray(np_arr)
+    #     shape = np_arr.shape
+    #     multi_arr = Float64MultiArray()
+
+    #     axis_id = 0
+    #     for axis_sz in shape:
+    #         axis = MultiArrayDimension('axis_' + str(axis_id), axis_sz)
+    #         multi_arr.layout.dim.append(axis)
+    #         axis_id += 1
+
+    #     bigger_id_stride = 1
+    #     for axis_id in range(len(multi_arr.layout.dim)-1, -1, -1): # inverse for loop
+    #         multi_arr.layout.dim[axis_id].stride = multi_arr.layout.dim[axis_id].size * bigger_id_stride
+    #         bigger_id_stride = multi_arr.layout.dim.stride
+
+    #     return multi_arr
