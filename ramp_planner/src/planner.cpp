@@ -1079,9 +1079,9 @@ void Planner::buildTrajectoryRequest(const Path path, const std::vector<ramp_msg
     //////////ROS_INFO("In if path.size() > 2)");
 
     // If it's the first time getting a curve 
-    if(curves.size() == 0 || curves.at(0).segmentPoints.size() == 0) 
+    if(curves.size() == 0 || curves.at(0).segmentPoints.size() == 0)
     {
-      if(path.size() > 2) 
+      if(path.size() > 2)
       {
         //////////ROS_INFO("In temp curve");
         ramp_msgs::BezierCurve temp;
@@ -1667,7 +1667,11 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int gens_before_cc, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r,
+                   const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius,
+                   const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type,
+                   const int gens_before_cc, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot,
+                   const bool errorReduction) 
 {
   ROS_INFO("In Planner::init");
   
