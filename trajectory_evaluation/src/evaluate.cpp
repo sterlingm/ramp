@@ -1,6 +1,6 @@
 #include "evaluate.h"
 
-Evaluate::Evaluate() : orientation_infeasible_(0), T_norm_(50), A_norm_(PI), D_norm_(1.0), last_T_weight_(-1.0), last_A_weight_(-1.0), last_D_weight_(-1.0), last_Q_coll_(-1.0), last_Q_kine_(-1.0) {}
+Evaluate::Evaluate() : orientation_infeasible_(0), T_norm_(0.0), A_norm_(0.0), _1_D_norm_(0.0), last_T_weight_(-1.0), last_A_weight_(-1.0), last_D_weight_(-1.0), last_Q_coll_(-1.0), last_Q_kine_(-1.0) {}
 
 void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res)
 {
@@ -83,7 +83,7 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
   ramp_msgs::RampTrajectory* trj = &er.trajectory;
   
   if((!er.imminent_collision && er.consider_trans && !er.trans_possible) ||
-      orientation_.getDeltaTheta(*trj) > 1.5708)
+      orientation_.getDeltaTheta(*trj) > 1.5708) // 90 degree
   {
     ////ROS_INFO("In final if statement");
     orientation_infeasible_ = true;
@@ -163,8 +163,8 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     }
     //////ROS_INFO("dist: %f delta_theta: %f", dist, delta_theta);
 
-    double max_v=0.25/2;
-    double max_w=PI/8.f;
+    double max_v = max_speed_linear;
+    double max_w = max_speed_angular;
 
     // Estimate how long to execute positional and angular displacements based on max velocity
     double estimated_linear   = dist / max_v;
@@ -182,6 +182,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
 
     // Minimum distance to any obstacle
     double D = cd_.min_dist_;
+    double _1_D = 1.0 / D; // consider 1/D, not D
     
     //ROS_INFO("T: %f A: %f D: %f", T, A, D);
 
@@ -190,11 +191,20 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     {
       T_norm_ = T;
     }
+    if(A > A_norm_)
+    {
+      A_norm_ = A;
+    }
+    if(_1_D > _1_D_norm_)
+    {
+      _1_D_norm_ = _1_D;
+    }
 
     // Normalize terms
     T /= T_norm_;
     A /= A_norm_;
-    D /= D_norm_;
+    // D /= D_norm_;
+    _1_D /= _1_D_norm_;
     
     //ROS_INFO("Normalized terms T: %f A: %f D: %f", T, A, D);
 
@@ -226,18 +236,19 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
       is_set_D = true;
     }
 
-    T *= T_weight_;
-    A *= A_weight_;
-    D *= D_weight_;
+    // T *= T_weight_;
+    // A *= A_weight_;
+    // D *= D_weight_; // this is wrong! (1.0)/(D * D_weight_)
     
     //ROS_INFO("Weighted terms T: %f A: %f D: %f", T, A, D);
     
     // Compute overall cost
-    cost = T + A + (1.f/D);
+    cost = T_weight_ * T + A_weight_ * A + D_weight_ * _1_D;
   }
 
   else // infeasible
   {
+    penalties = 1.0; // if infeasible, penalties cannot be zero
     //ROS_INFO("In else(infeasible)"); 
     
     // penalties += orientation_.getPenalty();
@@ -260,7 +271,8 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     else
     {
       ////ROS_INFO("Collision penalty (Full): %f",Q_coll_);
-      penalties += Q_coll_;
+      // penalties += Q_coll_; // penalize more on collision later? This is wrong!
+      penalties += (Q_coll_ / trj.t_firstCollision.toSec()); // enlarge factor should be large enough
     }
 
     // If infeasible due to orientation change (i.e. no smooth curve)
@@ -279,10 +291,13 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
         is_set_Qk = true;
       }
       //ROS_INFO("delta_theta: %f getDeltaTheta: %f Orientation penalty: %f", delta_theta, orientation_.getDeltaTheta(trj), Q_kine_ * (orientation_.getDeltaTheta(trj) / PI));
-      penalties += Q_kine_ * (delta_theta / PI);
+      if (delta_theta > A_norm_) {
+        A_norm_ = delta_theta;
+      }
+      penalties += Q_kine_ * (delta_theta / A_norm_);
     }
-    
-    penalties *= 10000.0; // the fitness of infeasible trajextory must be smaller than feasible trajectory
+
+    penalties *= 100000.0; // the fitness of infeasible trajextory must be smaller than feasible trajectory
   }
 
   ////////ROS_INFO("cost: %f penalties: %f", cost, penalties);

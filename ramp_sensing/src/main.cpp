@@ -864,7 +864,7 @@ std::vector<double> predictTheta()
       theta = atan2(y_dist, x_dist);
     }
     
-    result.push_back(theta); 
+    result.push_back(theta);
   } // end for each circle obstacle
 
   //ROS_INFO("Exiting predictTheta");
@@ -1689,10 +1689,13 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    * Predict velocities
    */
   std::vector<Velocity> velocities = predictVelocities(cm, d_elapsed);
-
+  
   // Average the velocities
   for(int i=0;i<cir_obs.size();i++)
   {
+    //// force to be static obstacles
+    velocities[i].v = 0; velocities[i].vx = 0; velocities[i].vy = 0; velocities[i].w = 0;
+    
     //ROS_INFO("i: %i cir_obs.size(): %i velocities.size(): %i cir_obs[%i]->prevTheta.size(): %i", i, (int)cir_obs.size(), (int)velocities.size(), i, (int)cir_obs[i]->prevTheta.size());
     cir_obs[i]->vels.push_back(velocities[i]);
     if(cir_obs[i]->vels.size() > num_velocity_count)

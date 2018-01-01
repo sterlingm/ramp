@@ -16,6 +16,7 @@ class Population {
     const unsigned int    size() const;
     const int             add(const RampTrajectory& rt);
     const int             calcBestIndex() const;
+    const int             calcWorestIndex() const;
     void                  clear();
     void                  replace(const uint8_t i, const RampTrajectory& trajec);
     void                  replaceAll(const std::vector<RampTrajectory>& new_pop);

@@ -9,7 +9,8 @@ CollisionDetection::~CollisionDetection()
 void CollisionDetection::init() {}
 
 
-void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const double& robot_radius, const std::vector<double> obstacle_radii, QueryResult& result)
+void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs,
+                                    const double& robot_radius, const std::vector<double> obstacle_radii, QueryResult& result)
 {
   result.collision_ = false;
   min_dist_ = 100;
@@ -17,7 +18,8 @@ void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory,
   {
     ////ROS_INFO("Ob radius: %f", obstacle_radii[i]);
     ////ROS_INFO("Ob traj: %s", utility_.toString(obstacle_trjs[i]).c_str());
-    double d_min = query(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), robot_radius, obstacle_radii[i], result);
+    double d_min = query(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), robot_radius,
+                         obstacle_radii[i], result);
     ////ROS_INFO("d_min: %f", d_min);
 
     if(d_min < min_dist_)
@@ -88,7 +90,7 @@ void CollisionDetection::perform(const ramp_msgs::RampTrajectory& trajectory, co
       // If there's no angular velocity, then it's a straight-line, otherwise it's a curve
       ros::Time t_getMisc = ros::Time::now();
       uint16_t index_start  = trajectory.i_knotPoints[segment-1];
-      uint16_t index_end    = trajectory.i_knotPoints[segment]; 
+      uint16_t index_end    = trajectory.i_knotPoints[segment];
       ////////////ROS_INFO("trajectory.i_knotPoints[%i]: %i trajectory.i_knotPoints[%i]: %i", segment-1, trajectory.i_knotPoints[segment-1], segment, trajectory.i_knotPoints[segment]);
 
       const trajectory_msgs::JointTrajectoryPoint* a = &trajectory.trajectory.points[index_start];
@@ -363,7 +365,8 @@ void CollisionDetection::NoMotionNoMotion(const trajectory_msgs::JointTrajectory
 
 
 
-void CollisionDetection::BezierArc(const std::vector<ramp_msgs::MotionState>& control_points, const ramp_msgs::RampTrajectory& ob_trajectory, std::vector< std::vector<double> >& points_of_collision) const
+void CollisionDetection::BezierArc(const std::vector<ramp_msgs::MotionState>& control_points, const ramp_msgs::RampTrajectory& ob_trajectory,
+                                   std::vector< std::vector<double> >& points_of_collision) const
 {
   ros::Time t_start = ros::Time::now();
 

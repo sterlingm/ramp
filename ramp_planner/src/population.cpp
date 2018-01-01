@@ -194,6 +194,11 @@ const bool Population::replacementPossible(const RampTrajectory& rt) const
     return false;
   }
 
+  //// worse than exist worest
+  // if (rt.msg_.fitness < getMinFitness()) {
+  //   return false;
+  // }
+
   /** IF subpopulations are being used */
   if(subPopulations_.size() > 0) 
   {
@@ -392,6 +397,7 @@ const int Population::add(const RampTrajectory& rt)
   else if(!contains(rt) && replacementPossible(rt)) 
   {
     int i = getReplacementID(rt);
+    // int i = calcWorestIndex();
 
     if(trajectories_[i].msg_.feasible && !rt.msg_.feasible)
     {
@@ -443,7 +449,23 @@ const int Population::calcBestIndex() const
   return i_max; 
 } //End calcBestIndex
 
+const int Population::calcWorestIndex() const 
+{
+  if(size() == 0) {
+    return -1;
+  }
+ 
+  int i_min = 0;
+  for(int i=1; i<trajectories_.size(); i++) 
+  {
+    if(trajectories_.at(i).msg_.fitness < trajectories_.at(i_min).msg_.fitness) 
+    {
+      i_min = i;
+    }
+  }
 
+  return i_min; 
+}
 
 const RampTrajectory Population::getBest() const 
 {

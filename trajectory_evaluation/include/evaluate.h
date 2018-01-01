@@ -39,13 +39,16 @@ class Evaluate {
 
     double T_norm_;
     double A_norm_;
-    double D_norm_;
+    double _1_D_norm_;
     double last_T_weight_;
     double last_A_weight_;
     double last_D_weight_;
     double T_weight_;
     double A_weight_;
     double D_weight_;
+
+    double max_speed_linear;
+    double max_speed_angular;
 
     std::vector< ros::Duration > t_analy_;
     std::vector< ros::Duration > t_numeric_;

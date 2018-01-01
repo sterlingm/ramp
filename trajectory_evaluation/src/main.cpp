@@ -250,8 +250,11 @@ int main(int argc, char** argv) {
   handle.getParam("/robot_info/DOF_min", dof_min);
   handle.getParam("/robot_info/DOF_max", dof_max);
 
+  ros::param::param("/robot_info/max_speed_linear", ev.max_speed_linear, 0.33);
+  ros::param::param("/robot_info/max_speed_angular", ev.max_speed_angular, 1.5708);
+
   // Set normalization for minimum distance to the area of the environment
-  ev.D_norm_ = (dof_max[0] - dof_min[0]) * (dof_max[1] - dof_min[1]);
+  // ev._1_D_norm_ = 1.0 / ((dof_max[0] - dof_min[0]) * (dof_max[1] - dof_min[1]));
   //ROS_INFO("ev.D_norm_: %f", ev.D_norm_);
 
  

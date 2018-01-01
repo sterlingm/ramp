@@ -1,4 +1,4 @@
-population_size: 5
+population_size: 20
 
 sub_populations: false 
 
@@ -14,11 +14,11 @@ error_reduction: true
 only_sensing: false
 
 # If false, control cycles are cut off
-moving_robot: true
+moving_robot: false
 
-gens_before_control_cycle: 50
+gens_before_control_cycle: 500
 
-pop_traj_type: 1 #0=holonomic, 1=hybrid
+pop_traj_type: 0 #0=holonomic, 1=hybrid
 
 fixed_control_cycle_rate: 2.0 # second
 
@@ -58,6 +58,6 @@ use_start_param: true
 #obstacle_delays: [2, 0]
 
 
-#gazebo_model_names: ['cardboard_box', 'cardboard_box_0']
+# gazebo_model_names: ['cardboard_box', 'cardboard_box_0']
 gazebo_model_names: []
 

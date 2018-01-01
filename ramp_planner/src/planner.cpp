@@ -273,7 +273,8 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
    */
   ros::Duration d = ros::Time::now()-t_prevCC_ros_;
   ////ROS_INFO("d.toSec(): %f controlCycle_.toSec(): %f", d.toSec(), controlCycle_.toSec());
-  if(d.toSec() < (controlCycle_.toSec()-0.1) || !moving_robot_)
+  if((d.toSec() < (controlCycle_.toSec()-0.1) || !moving_robot_) &&
+      is_population_initialized)
   {
     bool feasBeforeEval = population_.getBest().msg_.feasible;
 
@@ -415,10 +416,11 @@ const Path Planner::getRandomPath(const MotionState s, const MotionState g) cons
 
   // Each trajectory will have a random number of knot points
   // Put a max of 3 knot points for practicality...
-  uint8_t n = (rand() % 4)+1;
+  uint8_t n = (rand() % 3)+1; // rand(): 0   1   2   3   4   5   6   7   8...
+                              // n     : 1   2   3   4   1   2   3   4   1...
 
-  // Create n knot points 
-  for(uint8_t i=0;i<n;i++) 
+  // Create n knot points
+  for(uint8_t i=0;i<n;i++)
   {
     // Create a random configuration
     MotionState ms_temp;
@@ -504,7 +506,7 @@ const Population Planner::getPopulation( const MotionState init, const MotionSta
 
   // Add each trajectory to the population
   // Use add over replaceAll in case of sub-populations
-  for(uint8_t i=0;i<trajecs.size();i++) 
+  for(uint8_t i=0;i<trajecs.size();i++)
   {
     result.add(trajecs.at(i));
   }
@@ -1065,7 +1067,8 @@ void Planner::buildTrajectorySrv(const Path path, ramp_msgs::TrajectorySrv& resu
 
 
 // Build a request for 1 trajectory with 1-2 curves
-void Planner::buildTrajectoryRequest(const Path path, const std::vector<ramp_msgs::BezierCurve> curves, ramp_msgs::TrajectoryRequest& result, const int id) const
+void Planner::buildTrajectoryRequest(const Path path, const std::vector<ramp_msgs::BezierCurve> curves,
+                                     ramp_msgs::TrajectoryRequest& result, const int id) const
 {
   result.path           = path.buildPathMsg();
   result.type           = population_.type_;
@@ -1074,7 +1077,7 @@ void Planner::buildTrajectoryRequest(const Path path, const std::vector<ramp_msg
   result.max_speed_angular  = max_speed_angular_;
 
   // If path size > 2, assign a curve
-  if(path.size() > 2) 
+  if(path.size() > 2) // a spline curve needs at least 3 points
   {
     //////////ROS_INFO("In if path.size() > 2)");
 
@@ -1085,12 +1088,28 @@ void Planner::buildTrajectoryRequest(const Path path, const std::vector<ramp_msg
       {
         //////////ROS_INFO("In temp curve");
         ramp_msgs::BezierCurve temp;
-        
+        // only transfer the first three points on a holonomic path to curve
         temp.segmentPoints.push_back( path.msg_.points.at(0).motionState );
         temp.segmentPoints.push_back( path.msg_.points.at(1).motionState );
         temp.segmentPoints.push_back( path.msg_.points.at(2).motionState );
-        
         result.bezierCurves.push_back(temp);
+
+        // //// need path.msg_.points.size() to be odd
+        // if (path.msg_.points.size() % 2 == 0) {
+        //   ramp_msgs::MotionState last_pt = path.msg_.points.at(path.msg_.points.size());
+        //   ramp_msgs::MotionState second_last_pt = path.msg_.points.at(path.msg_.points.size() - 1);
+
+        //   path.msg_.points.push
+        // }
+
+        // //// transfer all points on a holonomic path to curves
+        // for (int i = 0; i < path.msg_.points.size() - 2; i += 2) {
+        //   ramp_msgs::BezierCurve temp;
+        //   temp.segmentPoints.push_back( path.msg_.points.at(i).motionState );
+        //   temp.segmentPoints.push_back( path.msg_.points.at(i+1).motionState );
+        //   temp.segmentPoints.push_back( path.msg_.points.at(i+2).motionState );
+        //   result.bezierCurves.push_back(temp);
+        // }
       }
     }
     else 
@@ -1671,7 +1690,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
                    const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius,
                    const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type,
                    const int gens_before_cc, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot,
-                   const bool errorReduction) 
+                   const bool errorReduction)
 {
   ROS_INFO("In Planner::init");
   
@@ -1703,9 +1722,9 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   ob_dists_timer_.stop();
 
 
-  //sendPop_ = ros::Duration(0.05); // 0.05second, 20hz
-  //sendPopTimer_ = h.createTimer(sendPop_, &Planner::sendPopulationCb, this);
-  //sendPopTimer_.stop();
+  sendPop_ = ros::Duration(1); // 1second, 1hz
+  sendPopTimer_ = h.createTimer(sendPop_, &Planner::sendPopulationCb, this);
+  sendPopTimer_.stop();
 
   // Set the ranges vector
   ranges_ = r;
@@ -3564,6 +3583,7 @@ void Planner::sendPopulation()
    * Send to rviz
    */
   visualization_msgs::MarkerArray ma;
+
   for(int i=0;i<population_.trajectories_.size();i++)
   {
     visualization_msgs::Marker pop_trj;
@@ -3571,12 +3591,14 @@ void Planner::sendPopulation()
     buildLineList(population_.trajectories_[i], i, pop_trj);
     ma.markers.push_back(pop_trj);
   }
-  for(int i=0;i<ob_trajectory_.size();i++)
-  {
-    visualization_msgs::Marker ob_trj;
-    buildLineList(ob_trajectory_[i], ++id_line_list_, ob_trj);
-    ma.markers.push_back(ob_trj);
-  }
+
+  // for(int i=0;i<ob_trajectory_.size();i++)
+  // {
+  //   visualization_msgs::Marker ob_trj;
+  //   buildLineList(ob_trajectory_[i], ++id_line_list_, ob_trj);
+  //   ma.markers.push_back(ob_trj);
+  // }
+
   h_rviz_->sendMarkerArray(ma);
   t_prevSendPop_ = ros::Time::now();
 }
@@ -3605,12 +3627,14 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
     result.color.r = 0;
     result.color.g = 0;
     result.color.b = 1;
+    result.scale.x = 0.01;
   }
   else
   {
     result.color.r = 1;
     result.color.g = 0;
     result.color.b = 0;
+    result.scale.x = 0.01;
   }
   // trajec may be an obstacle trajectory which has no points in the path member
   if(trajec.msg_.holonomic_path.points.size() > 0 && trajec.equals(population_.getBest()))
@@ -3618,6 +3642,8 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
     result.color.r = 0;
     result.color.g = 1;
     result.color.b = 0;
+    // Width of the lines
+    result.scale.x = 0.05;
   }
   result.color.a = 1;
 
@@ -3632,11 +3658,23 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
 
     result.points.push_back(p);
   }
-  // Planning cycles are usually 20Hz, but put a little padding on there so rviz looks smoother and doesn't start blinking if there are any delays
-  result.lifetime = ros::Duration(0.2);
 
-  // Width of the lines
-  result.scale.x = 0.01;
+  //// show holonomic
+  // for(int i = 0; i < trajec.msg_.holonomic_path.points.size(); i++)
+  // {
+  //   //////ROS_INFO("Point %i: (%f,%f,%f)", i, trajec.msg_.trajectory.points[i].positions[0], trajec.msg_.trajectory.points[i].positions[1], trajec.msg_.trajectory.points[i].positions[2]);
+  //   geometry_msgs::Point p;
+  //   p.x = trajec.msg_.holonomic_path.points[i].motionState.positions[0];
+  //   p.y = trajec.msg_.holonomic_path.points[i].motionState.positions[1];
+  //   p.z = 0;
+
+  //   result.points.push_back(p);
+  // }
+
+  // Planning cycles are usually 20Hz, but put a little padding on there so rviz looks smoother and doesn't start blinking if there are any delays
+  result.lifetime = ros::Duration(10.0);
+
+  
 }
 
 
@@ -4338,7 +4376,7 @@ void Planner::go(const ros::NodeHandle& h)
   }
 
   // Start Timer to send population to rviz
-  //sendPopTimer_.start();
+  sendPopTimer_.start();
 
  
   /*
@@ -4368,18 +4406,19 @@ void Planner::go(const ros::NodeHandle& h)
     ros::spinOnce();
     r.sleep();
 
-    check_time_cnt++;
-    if (check_time_cnt > 10) {
-      check_time_cnt = 0;
-      t_elapse = ros::Time::now() - t_startLoop;
-      double seconds_elapse = t_elapse.toSec();
-      printf("%lfs have elapsed after starting planning!\n", seconds_elapse);
-      if (seconds_elapse > max_exe_time) { // seconds
-        //// planning for too long, force quit
-        obser_one_run.done = false;
-        break;
-      }
-    }
+    // //// exit if plan too long
+    // check_time_cnt++;
+    // if (check_time_cnt > 10) {
+    //   check_time_cnt = 0;
+    //   t_elapse = ros::Time::now() - t_startLoop;
+    //   double seconds_elapse = t_elapse.toSec();
+    //   printf("%lfs have elapsed after starting planning!\n", seconds_elapse);
+    //   if (seconds_elapse > max_exe_time) { // seconds
+    //     //// planning for too long, force quit
+    //     obser_one_run.done = false;
+    //     break;
+    //   }
+    // }
   } // end while
 
   //// here the planner will not send a new best traj. anymore
