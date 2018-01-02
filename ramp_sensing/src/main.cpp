@@ -654,7 +654,7 @@ void publishMarkers(const ros::TimerEvent& e)
   //ROS_INFO("texts.size(): %i", (int)texts.size());
 
   result.markers.insert(std::end(result.markers), std::begin(texts), std::end(texts));  
-  result.markers.insert(std::end(result.markers), std::begin(arrows), std::end(arrows));  
+  result.markers.insert(std::end(result.markers), std::begin(arrows), std::end(arrows));
 
   // Create a text marker to show the size of cir_obs
   visualization_msgs::Marker text;

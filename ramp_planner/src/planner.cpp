@@ -1035,6 +1035,7 @@ void Planner::adaptPopulation(const MotionState& ms, const ros::Duration& d)
   ////////////ROS_INFO("updatedTrajecs size: %i", (int)updatedTrajecs.size());
   // Replace the population's trajectories_ with the updated trajectories
   population_.replaceAll(updatedTrajecs);
+  evaluatePopulation();
   
   ////////////ROS_INFO("Done adapting, pop now: %s", population_.toString().c_str());
   
@@ -1576,7 +1577,32 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
 
     ////ROS_INFO("New latestUpdate_: %s", latestUpdate_.toString().c_str());
   } // end else
+
+  visualization_msgs::Marker arrow;
+  arrow.header.stamp  = ros::Time::now();
+  arrow.header.frame_id = global_frame_;
+  arrow.ns  = "basic_shapes";
+  arrow.type  = visualization_msgs::Marker::ARROW;
+  arrow.action  = visualization_msgs::Marker::ADD;
+  arrow.scale.x = 0.5; // length
+  arrow.scale.y = 0.1; // width
   
+  arrow.pose.position.x = latestUpdate_.msg_.positions[0];
+  arrow.pose.position.y = latestUpdate_.msg_.positions[1];
+  arrow.pose.position.z = 0;
+  double theta = latestUpdate_.msg_.positions[2];
+  tf::Quaternion q = tf::createQuaternionFromYaw(theta);
+  tf::quaternionTFToMsg(q, arrow.pose.orientation);
+  
+  arrow.color.r = 1;
+  arrow.color.g = 1;
+  arrow.color.b = 0;
+  arrow.color.a = 1;
+  arrow.lifetime = ros::Duration();
+
+  visualization_msgs::MarkerArray ma;
+  ma.markers.push_back(arrow);
+  h_rviz_->sendRobotPose(ma);
   ////////ROS_INFO("Exiting Planner::updateCallback");
 } // End updateCallback
 
@@ -2438,7 +2464,8 @@ bool Planner::predictTransition(const RampTrajectory& from, const RampTrajectory
 
 
 
-void Planner::getTransitionTrajectory(const RampTrajectory& trj_movingOn, const RampTrajectory& trj_target, const double& t, RampTrajectory& result)
+void Planner::getTransitionTrajectory(const RampTrajectory& trj_movingOn, const RampTrajectory& trj_target,
+                                      const double& t, RampTrajectory& result)
 {
   if(log_enter_exit_)
   {
@@ -2941,7 +2968,7 @@ void Planner::planningCycleCallback()
     startPlanning_ = m_cc_.add(temp);
 
     ////ROS_INFO("Adjusting movingOn");
-    movingOn_.offsetPositions(temp);
+    movingOn_.offsetPositions(temp); // adjust path to robot pose? this is wrong! we need feedback control!
 
     ////ROS_INFO("Corrected startPlanning_: %s", startPlanning_.toString().c_str());
     ////ROS_INFO("Corrected movingOn_: %s", movingOn_.toString().c_str());
@@ -3088,7 +3115,8 @@ double Planner::getEarliestStartTime(const RampTrajectory& from)
 
 
 
-void Planner::computeFullSwitch(const RampTrajectory& from, const RampTrajectory& to, const double& t_start, RampTrajectory& result)
+void Planner::computeFullSwitch(const RampTrajectory& from, const RampTrajectory& to,
+                                const double& t_start, RampTrajectory& result)
 {
   if(log_enter_exit_)
   {
@@ -3150,7 +3178,8 @@ void Planner::computeFullSwitch(const RampTrajectory& from, const RampTrajectory
 /*
  * Separate result into transition and full trajectory
  */
-void Planner::switchTrajectory(const RampTrajectory& from, const RampTrajectory& to, const double& t_start, RampTrajectory& result)
+void Planner::switchTrajectory(const RampTrajectory& from, const RampTrajectory& to,
+                               const double& t_start, RampTrajectory& result)
 {
   if(log_enter_exit_)
   {
@@ -3236,7 +3265,8 @@ void Planner::switchTrajectory(const RampTrajectory& from, const RampTrajectory&
 
 
 
-void Planner::getTransPop(const Population& pop, const RampTrajectory& movingOn, const double& t_start, Population& result)
+void Planner::getTransPop(const Population& pop, const RampTrajectory& movingOn,
+                          const double& t_start, Population& result)
 {
   ////////ROS_INFO("In Planner::getTransPop");
   ////////////ROS_INFO("pop: %s", pop.toString().c_str());
@@ -3282,6 +3312,9 @@ void Planner::doControlCycle()
   {
     population_.trajectories_[i].msg_.t_start = ros::Duration(0);
   }*/
+
+  //// control only once
+  // controlCycleTimer_.stop();
 
   // Set the bestT
   RampTrajectory bestT = population_.getBest();
@@ -3672,8 +3705,11 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
   // }
 
   // Planning cycles are usually 20Hz, but put a little padding on there so rviz looks smoother and doesn't start blinking if there are any delays
-  result.lifetime = ros::Duration(10.0);
-
+  if (moving_robot_) {
+    result.lifetime = ros::Duration(30.0);
+  } else {
+    result.lifetime = ros::Duration(10.0);
+  }
   
 }
 
