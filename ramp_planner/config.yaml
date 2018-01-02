@@ -1,6 +1,6 @@
-population_size: 20
+population_size: 50
 
-sub_populations: false 
+sub_populations: true 
 
 modifications: true
 
@@ -16,13 +16,15 @@ only_sensing: false
 # If false, control cycles are cut off
 moving_robot: false
 
-gens_before_control_cycle: 500
+gens_before_control_cycle: 1
 
 pop_traj_type: 0 #0=holonomic, 1=hybrid
 
 fixed_control_cycle_rate: 2.0 # second
 
 sensing_cycle_rate: 15
+
+is_same_thre: 0.3
 
 # eval_weight_T: 1.75
 

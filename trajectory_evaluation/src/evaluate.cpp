@@ -1,6 +1,7 @@
 #include "evaluate.h"
 
-Evaluate::Evaluate() : orientation_infeasible_(0), T_norm_(0.0), A_norm_(0.0), _1_D_norm_(0.0), last_T_weight_(-1.0), last_A_weight_(-1.0), last_D_weight_(-1.0), last_Q_coll_(-1.0), last_Q_kine_(-1.0) {}
+Evaluate::Evaluate() : orientation_infeasible_(0), _1_T_norm_(0.0), _1_A_norm_(0.0), D_norm_(0.0), coll_time_norm_(0.00001),
+                       last_T_weight_(-1.0), last_A_weight_(-1.0), last_D_weight_(-1.0), last_Q_coll_(-1.0), last_Q_kine_(-1.0) {}
 
 void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res)
 {
@@ -163,8 +164,8 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     }
     //////ROS_INFO("dist: %f delta_theta: %f", dist, delta_theta);
 
-    double max_v = max_speed_linear;
-    double max_w = max_speed_angular;
+    double max_v = max_speed_linear / 100.0;
+    double max_w = max_speed_angular / 100.0;
 
     // Estimate how long to execute positional and angular displacements based on max velocity
     double estimated_linear   = dist / max_v;
@@ -173,43 +174,52 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     //////ROS_INFO("estimated_linear: %f estimated_rotation: %f", estimated_linear, estimated_rotation);
 
     T += (estimated_linear + estimated_rotation);
+    if (T < 0.00001) T = 0.00001;
+    double _1_T = 1.0 / T;
 
     // Orientation
     double A = orientation_.perform(trj);
+    if (A < 0.00001) A = 0.00001;
+    double _1_A = 1.0 / A;
 
     /*double v = sqrt( pow(trj.trajectory.points[0].velocities[0],2) + pow(trj.trajectory.points[1].velocities[1],2) );
     A_weight_ = v;*/
 
     // Minimum distance to any obstacle
     double D = cd_.min_dist_;
+    if (D < 0.00001) D = 0.00001;
     double _1_D = 1.0 / D; // consider 1/D, not D
     
     //ROS_INFO("T: %f A: %f D: %f", T, A, D);
 
     // Update normalization for Time if necessary
-    if(T > T_norm_)
+    if(_1_T > _1_T_norm_)
     {
-      T_norm_ = T;
+      _1_T_norm_ = _1_T;
     }
-    if(A > A_norm_)
+    if(_1_A > _1_A_norm_)
     {
-      A_norm_ = A;
+      _1_A_norm_ = _1_A;
     }
-    if(_1_D > _1_D_norm_)
+    if(D > D_norm_)
     {
-      _1_D_norm_ = _1_D;
+      D_norm_ = D;
     }
 
     // Normalize terms
-    T /= T_norm_;
-    A /= A_norm_;
+    _1_T /= _1_T_norm_;
+    _1_A /= _1_A_norm_;
     // D /= D_norm_;
-    _1_D /= _1_D_norm_;
+    D /= D_norm_;
     
     //ROS_INFO("Normalized terms T: %f A: %f D: %f", T, A, D);
 
     // Weight terms
-    T_weight_ = 1.0;
+    // T_weight_ = 1.0;
+    if (!ros::param::get("/ramp/eval_weight_T", T_weight_)) {
+      // if fail to get the parameter
+      T_weight_ = 1.0; // set it to the default
+    }
     static bool is_set_T = false;
     if (!is_set_T) {
       ros::param::set("/ramp/eval_weight_T", T_weight_);
@@ -243,7 +253,11 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     //ROS_INFO("Weighted terms T: %f A: %f D: %f", T, A, D);
     
     // Compute overall cost
-    cost = T_weight_ * T + A_weight_ * A + D_weight_ * _1_D;
+    // cost = T_weight_ * T + A_weight_ * A + D_weight_ * _1_D;
+    // cost += 0.00001; // cost cannot be zero, otherwise divided by zero
+
+    result = 100000; // must be larger than infeasible
+    result += T_weight_ * _1_T + A_weight_ * _1_A + D_weight_ * D;
   }
 
   else // infeasible
@@ -255,7 +269,11 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     
     ////////////ROS_INFO("trj.t_firstColl: %f", trj.t_firstCollision.toSec());
 
-    Q_coll_ = 1.0;
+    // Q_coll_ = 1.0;
+    if (!ros::param::get("/ramp/eval_weight_Qc", Q_coll_)) {
+      // if fail to get the parameter
+      Q_coll_ = 1.0; // set it to the default
+    }
     static bool is_set_Qc = false;
     if (!is_set_Qc) {
       ros::param::set("/ramp/eval_weight_Qc", Q_coll_);
@@ -274,13 +292,21 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
       // penalties += Q_coll_; // penalize more on collision later? This is wrong!
       penalties += (Q_coll_ / trj.t_firstCollision.toSec()); // enlarge factor should be large enough
     }
+    double coll_time = trj.t_firstCollision.toSec(); // larger, better
+    if (coll_time > coll_time_norm_) {
+      coll_time_norm_ = coll_time;
+    }
+    coll_time /= coll_time_norm_;
 
     // If infeasible due to orientation change (i.e. no smooth curve)
     // If there is imminent collision, do not add this penalty (it's okay to stop and rotate)
-    if(orientation_infeasible_)// && !imminent_collision_)
+    double _1_delta_theta;
+    if(1 || orientation_infeasible_)// && !imminent_collision_)
     {
       //ROS_INFO("In if orientation_infeasible_: %f", orientation_.getDeltaTheta(trj));
       double delta_theta = orientation_.getDeltaTheta(trj) < 0.11 ? 0.1 : orientation_.getDeltaTheta(trj);
+      if (delta_theta < 0.00001) delta_theta = 0.00001;
+      _1_delta_theta = 1.0 / delta_theta;
       if (!ros::param::get("/ramp/eval_weight_Qk", Q_kine_)) {
         // if fail to get the parameter
         Q_kine_ = 10.0; // set it to the default
@@ -291,17 +317,19 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
         is_set_Qk = true;
       }
       //ROS_INFO("delta_theta: %f getDeltaTheta: %f Orientation penalty: %f", delta_theta, orientation_.getDeltaTheta(trj), Q_kine_ * (orientation_.getDeltaTheta(trj) / PI));
-      if (delta_theta > A_norm_) {
-        A_norm_ = delta_theta;
+      if (_1_delta_theta > _1_A_norm_) {
+        _1_A_norm_ = _1_delta_theta;
       }
       penalties += Q_kine_ * (delta_theta / A_norm_);
+      _1_delta_theta /= _1_A_norm_;
     }
 
     penalties *= 100000.0; // the fitness of infeasible trajextory must be smaller than feasible trajectory
+    result = Q_coll_* coll_time + Q_kine_ * _1_delta_theta;
   }
 
   ////////ROS_INFO("cost: %f penalties: %f", cost, penalties);
-  result = (1. / (cost + penalties));
+  // result = (1. / (cost + penalties));
 
   // if weights change, print them
   if (T_weight_ != last_T_weight_ ||

@@ -38,11 +38,17 @@ class Evaluate {
     bool imminent_collision_;
 
     double T_norm_;
+    double _1_T_norm_;
     double A_norm_;
+    double _1_A_norm_;
+    double D_norm_;
     double _1_D_norm_;
+    double coll_time_norm_;
+
     double last_T_weight_;
     double last_A_weight_;
     double last_D_weight_;
+
     double T_weight_;
     double A_weight_;
     double D_weight_;

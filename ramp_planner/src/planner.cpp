@@ -415,8 +415,8 @@ const Path Planner::getRandomPath(const MotionState s, const MotionState g) cons
   
 
   // Each trajectory will have a random number of knot points
-  // Put a max of 3 knot points for practicality...
-  uint8_t n = (rand() % 3)+1; // rand(): 0   1   2   3   4   5   6   7   8...
+  // Put a max of 4 knot points for practicality...
+  uint8_t n = (rand() % 4)+1; // rand(): 0   1   2   3   4   5   6   7   8...
                               // n     : 1   2   3   4   1   2   3   4   1...
 
   // Create n knot points
@@ -1722,7 +1722,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   ob_dists_timer_.stop();
 
 
-  sendPop_ = ros::Duration(1); // 1second, 1hz
+  sendPop_ = ros::Duration(0.5); // 0.5second, 2hz
   sendPopTimer_ = h.createTimer(sendPop_, &Planner::sendPopulationCb, this);
   sendPopTimer_.stop();
 
@@ -2751,7 +2751,7 @@ void Planner::modification()
     // If sub-populations are being used and
     // the trajectory was added to the population, update the sub-populations 
     // (can result in infinite loop if not updated but re-evaluated)
-    if(subPopulations_ && index >= 0) 
+    if(subPopulations_ && index >= 0)
     {
       population_.createSubPopulations();
       //trans_popCopy.createSubPopulations();
@@ -3763,6 +3763,9 @@ void Planner::evaluateTrajectory(RampTrajectory& t, bool full)
 void Planner::evaluatePopulation()
 {
   requestEvaluation(population_.trajectories_);
+  if(subPopulations_) {
+    population_.createSubPopulations();
+  }
 }
 
 
@@ -4376,7 +4379,11 @@ void Planner::go(const ros::NodeHandle& h)
   }
 
   // Start Timer to send population to rviz
-  sendPopTimer_.start();
+  if (!moving_robot_) {
+    sendPopTimer_.start();
+  } else {
+    sendPopTimer_.stop();
+  }
 
  
   /*

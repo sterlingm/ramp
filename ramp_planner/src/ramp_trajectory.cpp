@@ -12,6 +12,36 @@ RampTrajectory::RampTrajectory(unsigned int id)
 
 RampTrajectory::RampTrajectory(const ramp_msgs::RampTrajectory msg) : msg_(msg) {}
 
+const bool RampTrajectory::isSame(const RampTrajectory& other) const 
+{
+  if(msg_.id == other.msg_.id) 
+  {
+    return true;
+  }
+
+  double is_same_thre;
+  ros::param::param("/ramp/is_same_thre", is_same_thre, 0.3);
+  
+  int size = msg_.trajectory.points.size() < other.msg_.trajectory.points.size() ?
+             msg_.trajectory.points.size() : other.msg_.trajectory.points.size();
+  for (int i = 0; i < size; i++) {
+    double x1 = msg_.trajectory.points[i].positions[0];
+    double y1 = msg_.trajectory.points[i].positions[1];
+
+    double x2 = other.msg_.trajectory.points[i].positions[0];
+    double y2 = other.msg_.trajectory.points[i].positions[1];
+
+    double dx = x1 - x2;
+    double dy = y1 - y2;
+
+    double dis = sqrt(dx*dx + dy*dy);
+    if (dis > is_same_thre) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 const bool RampTrajectory::equals(const RampTrajectory& other) const 
 {

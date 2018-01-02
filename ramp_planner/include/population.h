@@ -14,12 +14,12 @@ class Population {
 
     /* Methods */
     const unsigned int    size() const;
-    const int             add(const RampTrajectory& rt);
+    const int             add(const RampTrajectory& rt); // w
     const int             calcBestIndex() const;
-    const int             calcWorestIndex() const;
-    void                  clear();
-    void                  replace(const uint8_t i, const RampTrajectory& trajec);
-    void                  replaceAll(const std::vector<RampTrajectory>& new_pop);
+    const int             calcWorstIndex() const;
+    void                  clear(); // w
+    void                  replace(const uint8_t i, const RampTrajectory& trajec); // w
+    void                  replaceAll(const std::vector<RampTrajectory>& new_pop); // w
     const RampTrajectory  get(const unsigned int i) const;
     const int             getIndexFromId(const uint16_t id) const;
     const std::vector<RampTrajectory> getTrajectories() const;
@@ -57,6 +57,7 @@ class Population {
     std::vector<Population>     subPopulations_;
     bool                        isSubPopulation_;
     Utility                     utility_;
+    int                         min_size_subpop;
 };
 
 #endif
