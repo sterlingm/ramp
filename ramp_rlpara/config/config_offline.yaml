@@ -1,0 +1,34 @@
+replay_buffer_size: 100000 # size(R)
+
+discount_factor: 0.9 # gamma
+
+target_net_update_factor: 0.001 # tao
+
+mini_batch_size: 32 # N
+
+max_exe_time: 60.0 # seconds
+
+max_nb_exe: 10000 # max number of execution
+
+ornstein_uhlenbeck_paras: {'theta': 100.0, 'percent': 0.0001} # theta and percent of max_nb_exe to make random disappear,
+                                                              # but bias need some time to be clear
+                                                              
+nb_steps_warmup_critic: 32 # number of steps needed before updating critic
+                          # warmup is needed to fill the replay buffer with mini_batch_size data,
+                          # so we can sample without replacement.
+                          
+nb_steps_warmup_actor: 32 # number of steps needed before updating actor
+
+critic_lr: 0.001 # learning rate of critic
+
+coe_dT_range: [0.0, 0.01]
+coe_dA_range: [0.0, 0.01] # coefficients of orientation changing of feasible trajectory
+coe_dD_range: [0.0, 0.01] # coefficients of obstacle distance of feasible trajectory
+coe_dQk_range: [0.0, 0.01]
+coe_dQk_range: [0.0, 0.01] # coefficietns of orientation changing of infeasible trajectory
+
+coe_T_range: [0.0, 1.0]
+coe_A_range: [0.0, 1.0] # coefficients of orientation changing of feasible trajectory
+coe_D_range: [0.0, 1.0] # coefficients of obstacle distance of feasible trajectory
+coe_Qk_range: [0.0, 1.0]
+coe_Qk_range: [0.0, 1.0] # coefficietns of orientation changing of infeasible trajectory

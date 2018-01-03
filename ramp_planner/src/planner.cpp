@@ -1264,7 +1264,7 @@ void Planner::requestTrajectory(ramp_msgs::TrajectorySrv& tr, std::vector<RampTr
   num_trajecs_gen_.push_back(tr.request.reqs.size());
   
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
-  if(h_traj_req_->request(tr)) 
+  if(h_traj_req_->request(tr))
   {
     high_resolution_clock::time_point tEnd = high_resolution_clock::now();
     duration<double> time_span = duration_cast<microseconds>(tEnd - tStart);
@@ -1603,6 +1603,13 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
   visualization_msgs::MarkerArray ma;
   ma.markers.push_back(arrow);
   h_rviz_->sendRobotPose(ma);
+
+  // static int theta_cnt = 0;
+  // theta_cnt++;
+  // if (theta_cnt > 5) {
+  //   theta_cnt = 0;
+  //   printf("robot_theta: %lf\n", theta * 180.0 / PI);
+  // }
   ////////ROS_INFO("Exiting Planner::updateCallback");
 } // End updateCallback
 
@@ -1710,7 +1717,6 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
   latestUpdate_ = start_;
 }
 
-
 /** Initialize the handlers and allocate them on the heap */
 void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r,
                    const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius,
@@ -1721,6 +1727,8 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   ROS_INFO("In Planner::init");
   
   is_population_initialized = false;
+  biggest_fitness = -1.0;
+  no_better_cnt = 0;
 
   // Set ID
   id_ = i;
@@ -3049,7 +3057,14 @@ void Planner::planningCycleCallback()
     copy.trajectories_.push_back(ob_trajectory_[i]);
   }
 
-  
+  if (!moving_robot_) {
+    //// only in offline mode enter here
+    if (genBetter()) { // become better
+      no_better_cnt = 0;
+    } else { // best traj. doesn't become better than the best in history
+      no_better_cnt++;
+    }
+  }
 
   //sendPopulation();
   
@@ -3804,7 +3819,22 @@ void Planner::evaluatePopulation()
   }
 }
 
+bool Planner::genBetter() {
+  bool result;
 
+  double cur_fitness = population_.getBest().msg_.fitness;
+  if (cur_fitness > biggest_fitness + ZERO) {
+    result = true;
+  } else {
+    result = false;
+  }
+
+  if (cur_fitness > biggest_fitness) {
+    biggest_fitness = cur_fitness;
+  }
+
+  return result;
+}
 
 
 
@@ -4329,14 +4359,43 @@ void Planner::goTest(float sec)
   //////ROS_INFO("Exiting Planner::goTest");
 } // End goTest
 
+void Planner::drawTrajectory() {
+  sendPopTimer_.stop();
+  controlCycleTimer_.stop();
+  
+  Path path(latestUpdate_, goal_);
+  path.addBeforeGoal(MotionState(0.5, 0.5, 0.0));
+  path.addBeforeGoal(MotionState(1.5, 0.0, 2222));
+  path.addBeforeGoal(MotionState(2.5, 2.5, -1111));
+  path.addBeforeGoal(MotionState(3.0, 3.0, 12));
 
+  std::vector<Path> paths;
+  paths.push_back(path);
+  std::vector<RampTrajectory> trajs = getTrajectories(paths);
 
+  visualization_msgs::MarkerArray ma;
+  visualization_msgs::Marker m;
+  printf("%d\n", int(trajs.size()));
+  buildLineList(trajs[0], 0, m);
+  m.lifetime = ros::Duration();
+  ma.markers.push_back(m);
+  h_rviz_->sendMarkerArray(ma);
+
+  trajs[0].print();
+
+  ros::Rate r(10);
+  while(ros::ok()) {
+    r.sleep();
+  }
+}
 
 void Planner::go(const ros::NodeHandle& h) 
 {
-
   // t=0
   generation_ = 0;
+
+  //// draw trajectory
+  // drawTrajectory();
   
   // initialize population
   initPopulation();
@@ -4395,7 +4454,7 @@ void Planner::go(const ros::NodeHandle& h)
   //ROS_INFO("Starting pre planning cycles");
   
   // Wait for the specified number of generations before starting CC's
-  while(generation_ < num_pc) 
+  while (generation_ < num_pc && no_better_cnt < MAX_NO_BETTER_CNT)
   {
     planningCycleCallback(); 
   }
@@ -4440,7 +4499,9 @@ void Planner::go(const ros::NodeHandle& h)
   ros::Duration t_elapse;
   ros::Time t_startLoop = ros::Time::now();
   obser_one_run.done = true;
-  while( (latestUpdate_.comparePosition(goal_, false) > goalThreshold_) && ros::ok()) 
+  while(latestUpdate_.comparePosition(goal_, false) > goalThreshold_ &&
+        ros::ok() &&
+        no_better_cnt < MAX_NO_BETTER_CNT)
   {
     if(!only_sensing_)
     {
@@ -4449,19 +4510,20 @@ void Planner::go(const ros::NodeHandle& h)
     ros::spinOnce();
     r.sleep();
 
-    // //// exit if plan too long
-    // check_time_cnt++;
-    // if (check_time_cnt > 10) {
-    //   check_time_cnt = 0;
-    //   t_elapse = ros::Time::now() - t_startLoop;
-    //   double seconds_elapse = t_elapse.toSec();
-    //   printf("%lfs have elapsed after starting planning!\n", seconds_elapse);
-    //   if (seconds_elapse > max_exe_time) { // seconds
-    //     //// planning for too long, force quit
-    //     obser_one_run.done = false;
-    //     break;
-    //   }
-    // }
+    //// exit if plan too long
+    check_time_cnt++;
+    if (check_time_cnt > 50) {
+      check_time_cnt = 0;
+      t_elapse = ros::Time::now() - t_startLoop;
+      double seconds_elapse = t_elapse.toSec();
+      printf("%lfs have elapsed after starting planning!\n", seconds_elapse);
+      printf("biggest fitness:\t%.10lf\n", biggest_fitness);
+      if (seconds_elapse > max_exe_time) { // seconds
+        //// planning for too long, force quit
+        obser_one_run.done = false;
+        break;
+      }
+    }
   } // end while
 
   //// here the planner will not send a new best traj. anymore
@@ -4488,8 +4550,6 @@ void Planner::go(const ros::NodeHandle& h)
   obser_one_run.coefficient_tensor.data.push_back(Qk);
   //ROS_INFO("Done at time %f", ros::Time::now().toSec());
   num_pcs_    = generation_;
-
-
 
   printData();
   writeData();

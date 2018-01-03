@@ -55,6 +55,10 @@ class Planner {
      *******************************************/
     
     bool is_population_initialized;
+    double biggest_fitness;
+    int no_better_cnt;
+    const int MAX_NO_BETTER_CNT = 200;
+    const double ZERO = 0.001;
 
     // Hold the population of trajectories, 
     // the velocities of each trajectory's segments,
@@ -124,7 +128,8 @@ class Planner {
     void go(const ros::NodeHandle& h);
     void goTest(float sec=-1);
     
-    // Initialization 
+    void drawTrajectory();
+    // Initialization
     void initPopulation();
     void init(const uint8_t             i,                
               const ros::NodeHandle&    h, 
@@ -161,6 +166,8 @@ class Planner {
     // Evaluate the population 
     void evaluateTrajectory(RampTrajectory& t, bool full=true);
     void evaluatePopulation();
+    bool genBetter(); // whether the current generation result becomes better
+                      // than the best in history
     
     // Modify trajectory or path
     const std::vector<Path> modifyPath();

@@ -490,7 +490,8 @@ const RampTrajectory Population::getBest() const
 {
   if(size() == 0)
   {
-    //ROS_ERROR("Calling Population::getBest(), but Population is empty");
+    ROS_WARN("Calling Population::getBest(), but Population is empty");
+    return RampTrajectory(ramp_msgs::RampTrajectory());
   }
   return trajectories_.at(calcBestIndex());
 }

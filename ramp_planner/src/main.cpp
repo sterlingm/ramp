@@ -643,10 +643,17 @@ int main(int argc, char** argv)
   pub_ramp_collection_exe_time_.publish(et_msg);
 
   //// publish the number of best trajectory switches during the execution
-  ros::Publisher pub_nb_best_traj_switches_ = handle.advertise<std_msgs::Int64>("ramp_collection_nb_best_traj_switches", 1, true);
+  ros::Publisher pub_nb_best_traj_switches_ = handle.advertise<std_msgs::Int64>("ramp_collection_nb_best_traj_switches",
+                                                                                1, true);
   std_msgs::Int64 msg_nb_best_t_switch;
   msg_nb_best_t_switch.data = my_planner.h_control_->nb_best_traj_switches;
   pub_nb_best_traj_switches_.publish(msg_nb_best_t_switch);
+
+  //// publish offline reward
+  std_msgs::Float64 reward;
+  reward.data = my_planner.population_.getBest().reward();
+  ros::Publisher r_pub = handle.advertise<std_msgs::Float64>("ramp_collection_reward_offline", 1, true);
+  r_pub.publish(reward);
 
   //// kill all other nodes in the ros launch file
   killNodes();

@@ -26,6 +26,7 @@ class RampTrajectory
     const double         getDirection()                         const;
     const std::string    fitnessFeasibleToString()              const;
     const std::string    toString(bool printKnotPoints=true)    const;
+    void print();
     const RampTrajectory getSubTrajectory(const float t)        const;
     const RampTrajectory getSubTrajectoryPost(const double t)   const;
     
@@ -37,6 +38,7 @@ class RampTrajectory
     const trajectory_msgs::JointTrajectoryPoint getPointAtTime(const float t) const;
 
     void offsetPositions(const MotionState& diff);
+    const double reward() const;
 
   private:
     Utility utility_;

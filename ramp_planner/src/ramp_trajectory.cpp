@@ -525,5 +525,45 @@ const std::string RampTrajectory::toString(bool printKnotPoints) const
 }
 
 
+void RampTrajectory::print() {
+  for (int i = 0; i < msg_.trajectory.points.size(); i++) {
 
+    printf("(%.2lf;\t%.2lf\t%.2lf\t%.2lf;\t%.2lf\t%.2lf\t%.2lf;\t%.2lf\t%.2lf\t%.2lf)\n",
+          msg_.trajectory.points[i].time_from_start.toSec(),
 
+          msg_.trajectory.points[i].positions[0],
+          msg_.trajectory.points[i].positions[1],
+          msg_.trajectory.points[i].positions[2],
+
+          msg_.trajectory.points[i].velocities[0],
+          msg_.trajectory.points[i].velocities[1],
+          msg_.trajectory.points[i].velocities[2],
+
+          msg_.trajectory.points[i].accelerations[0],
+          msg_.trajectory.points[i].accelerations[1],
+          msg_.trajectory.points[i].accelerations[2]);
+
+  }
+}
+
+const double RampTrajectory::reward() const {
+  const double big_positive = 10000.0;
+  
+  if (!msg_.feasible) {
+    return -big_positive;
+  }
+
+  //// p = last non-holonomic point on trajectory
+  trajectory_msgs::JointTrajectoryPoint p = msg_.trajectory.points.at(msg_.trajectory.points.size()-1);
+
+  int holo_sz = msg_.holonomic_path.points.size();
+  double dist = utility_.positionDistance(msg_.holonomic_path.points[holo_sz-1].motionState.positions,
+                                          p.positions);
+  if (dist * dist > 0.2) { // the traj. doesn't reach the goal
+    return -big_positive;
+  }
+
+  //// Get total time to execute trajectory
+  double T = msg_.trajectory.points.at(msg_.trajectory.points.size()-1).time_from_start.toSec();
+  return -T;
+}

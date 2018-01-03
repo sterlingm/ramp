@@ -44,6 +44,7 @@ class Evaluate {
     double D_norm_;
     double _1_D_norm_;
     double coll_time_norm_;
+    double _1_coll_time_norm_;
 
     double last_T_weight_;
     double last_A_weight_;
@@ -61,6 +62,7 @@ class Evaluate {
   private:
     Utility utility_;
     bool orientation_infeasible_;
+    const double zero = 0.00001;
 };
 
 #endif

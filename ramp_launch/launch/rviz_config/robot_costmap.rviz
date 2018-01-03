@@ -9,7 +9,7 @@ Panels:
         - /Obstacles1
         - /RobotPose1
       Splitter Ratio: 0.5
-    Tree Height: 346
+    Tree Height: 348
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -259,7 +259,7 @@ Visualization Manager:
       Marker Topic: visualization_marker_array
       Name: Path
       Namespaces:
-        basic_shapes: true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 0.5
@@ -484,22 +484,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 5.1078
+      Distance: 3.48082
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.74644
-        Y: 1.56302
-        Z: 1.49187
+        X: 1.79529
+        Y: 1.6561
+        Z: 1.49196
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 1.5648
+      Pitch: 1.5698
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.20356
+      Yaw: 4.71356
     Saved: ~
 Window Geometry:
   Displays:
@@ -519,5 +519,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 772
-  X: 91
-  Y: 290
+  X: 71
+  Y: 270
