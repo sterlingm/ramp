@@ -433,7 +433,7 @@ bool doNothing(std_srvs::Empty::Request  &req,
 
 int main(int argc, char** argv) 
 {
-  srand( time(0));
+  srand(time(0));
 
   ros::init(argc, argv, "ramp_planner");
   ros::NodeHandle handle;
@@ -599,8 +599,11 @@ int main(int argc, char** argv)
   ros::Publisher pub_set_env_rdy_true_ = handle.advertise<std_msgs::Empty>("set_env_ready_true", 1, true);// latch = true
   std_msgs::Empty empty_msg;
 
+  bool is_offline_learning;
+  ros::param::param("/ramp/is_offline_learning", is_offline_learning, true);
+
   /******* Start the planner *******/
-  if(use_start_param) // TODO: use triggered srv
+  if(use_start_param && !is_offline_learning) // TODO: use triggered srv
   {
     ros::Rate r_wait_start(10); // 10Hz
     start_planner = false;
@@ -622,15 +625,19 @@ int main(int argc, char** argv)
   else
   {
     std::cout<<"\nPress Enter to start the planner\n";
-    pub_set_env_rdy_true_.publish(empty_msg); // tell others that I am ready
-    ros::ServiceServer env_ready_srv = handle.advertiseService("env_ready_srv", doNothing); // tell others that I am ready
+    // pub_set_env_rdy_true_.publish(empty_msg); // tell others that I am ready
+    // ros::ServiceServer env_ready_srv = handle.advertiseService("env_ready_srv", doNothing); // tell others that I am ready
     std::cin.get();
-    env_ready_srv.shutdown(); // shutdown the srv once I am asked to run
+    // env_ready_srv.shutdown(); // shutdown the srv once I am asked to run
   }
 
   ROS_INFO("Starting Planner!");
   
-  my_planner.go(handle);
+  if (is_offline_learning) {
+    my_planner.offlineGo();
+  } else {
+    my_planner.go(handle);
+  }
 
   //// Publish ramp observation after one running.
   //   Note that ramp observation after one step is calculated in environment interface, not here.
@@ -652,7 +659,7 @@ int main(int argc, char** argv)
   //// publish offline reward
   std_msgs::Float64 reward;
   reward.data = my_planner.population_.getBest().reward();
-  ros::Publisher r_pub = handle.advertise<std_msgs::Float64>("ramp_collection_reward_offline", 1, true);
+  ros::Publisher r_pub = handle.advertise<std_msgs::Float64>("ramp_collection_reward_offline", 10, true);
   r_pub.publish(reward);
 
   //// kill all other nodes in the ros launch file

@@ -35,17 +35,34 @@ class RampEnv(gym.Env):
 
 
 
-	def __init__(self):
+	def __init__(self, name):
+		self.name = name
 		self._seed()
-		self.check_exe_rate = rospy.Rate(10) # 0.1s
 		
 		## get various parameters
 		self.utility = Utility()
 
-		self.action_space = spaces.Box(np.array([-0.01, -0.01, -0.01, -0.01, -0.01]),
-		                               np.array([ 0.01,  0.01,  0.01,  0.01,  0.01]))
-		self.observation_space = spaces.Box(np.array([0.0, 0.0, 0.0, 0.0, 0.0]),
-		                                    np.array([1.0, 1.0, 1.0, 1.0, 1.0]))
+		self.action_space = spaces.Box(np.array([self.utility.coe_dT_range[0],
+		                                         self.utility.coe_dA_range[0],
+												 self.utility.coe_dD_range[0],
+												 self.utility.coe_dQc_range[0],
+												 self.utility.coe_dQk_range[0]]),
+		                               np.array([self.utility.coe_dT_range[1],
+									             self.utility.coe_dA_range[1],
+												 self.utility.coe_dD_range[1],
+												 self.utility.coe_dQc_range[1],
+												 self.utility.coe_dQk_range[1]]))
+
+		self.observation_space = spaces.Box(np.array([self.utility.coe_T_range[0],
+		                                              self.utility.coe_A_range[0],
+													  self.utility.coe_D_range[0],
+													  self.utility.coe_Qc_range[0],
+													  self.utility.coe_Qk_range[0]]),
+		                                    np.array([self.utility.coe_T_range[1],
+											          self.utility.coe_A_range[1],
+													  self.utility.coe_D_range[1],
+													  self.utility.coe_Qc_range[1],
+													  self.utility.coe_Qk_range[1]]))
 		self.reward = None
 
 		self.reward_sub = rospy.Subscriber("ramp_collection_reward_offline", Float64, self.rewardCallback)
@@ -119,12 +136,6 @@ class RampEnv(gym.Env):
 		print("Wait for this execution completes......")
 		start_waiting_time = rospy.get_rostime()
 		while not rospy.core.is_shutdown() and self.reward is None:
-			try:
-				self.check_exe_rate.sleep()
-			except rospy.exceptions.ROSInterruptException:
-				print("\nCtrl+C is pressed!")
-				return observation, 0.0, False, {}
-
 			cur_time = rospy.get_rostime()
 			has_waited_exe_for = cur_time.to_sec() - start_waiting_time.to_sec() # seconds
 			if has_waited_exe_for >= self.utility.max_exe_time + 20.0: # overtime
@@ -142,6 +153,9 @@ class RampEnv(gym.Env):
 				start_waiting_time = rospy.get_rostime()
 				print("Wait for this execution completes......")
 
+		if rospy.core.is_shutdown():
+			return observation, 0.0, False, {}
+		
 		print("A execution completes!")
 		reward = self.reward
 		self.reward = None # clear self.reward after it is used

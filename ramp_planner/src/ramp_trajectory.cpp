@@ -547,10 +547,13 @@ void RampTrajectory::print() {
 }
 
 const double RampTrajectory::reward() const {
-  const double big_positive = 10000.0;
+  double min_T;
+  double max_T;
+  ros::param::param("/min_T", min_T, 15.0);
+  ros::param::param("/max_T", max_T, 30.0);
   
   if (!msg_.feasible) {
-    return -big_positive;
+    return 0.0;
   }
 
   //// p = last non-holonomic point on trajectory
@@ -560,10 +563,15 @@ const double RampTrajectory::reward() const {
   double dist = utility_.positionDistance(msg_.holonomic_path.points[holo_sz-1].motionState.positions,
                                           p.positions);
   if (dist * dist > 0.2) { // the traj. doesn't reach the goal
-    return -big_positive;
+    return 0.0;
   }
 
   //// Get total time to execute trajectory
   double T = msg_.trajectory.points.at(msg_.trajectory.points.size()-1).time_from_start.toSec();
-  return -T;
+  if (T < min_T) {
+    T = min_T;
+  } else if (T > max_T) {
+    T = max_T;
+  }
+  return (max_T - T) / (max_T - min_T); // 0.0 ~ 1.0
 }

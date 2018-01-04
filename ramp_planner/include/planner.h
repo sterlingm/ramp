@@ -58,7 +58,7 @@ class Planner {
     double biggest_fitness;
     int no_better_cnt;
     const int MAX_NO_BETTER_CNT = 200;
-    const double ZERO = 0.001;
+    const double ZERO = 0.003;
 
     // Hold the population of trajectories, 
     // the velocities of each trajectory's segments,
@@ -125,6 +125,7 @@ class Planner {
     // Start planning
     trajectory_msgs::JointTrajectoryPoint prepareForTestCase();
     void planningCycles(int num);
+    void offlineGo();
     void go(const ros::NodeHandle& h);
     void goTest(float sec=-1);
     
@@ -645,6 +646,13 @@ class Planner {
     void writeGeneralData();
     void writeDurationData();
     void writeData();
+
+  private:
+    ros::NodeHandle rh;
+    ros::ServiceClient gazebo_srv_client;
+    ros::Publisher pub_reset_odom;
+    ros::Publisher off_r_pub;
+    ros::ServiceServer env_ready_srv;
 };
 
 #endif

@@ -2,7 +2,7 @@ replay_buffer_size: 100000 # size(R)
 
 discount_factor: 0.9 # gamma
 
-target_net_update_factor: 0.001 # tao
+target_net_update_factor: 0.1 # tao
 
 mini_batch_size: 32 # N
 
@@ -21,14 +21,19 @@ nb_steps_warmup_actor: 32 # number of steps needed before updating actor
 
 critic_lr: 0.001 # learning rate of critic
 
-coe_dT_range: [0.0, 0.01]
-coe_dA_range: [0.0, 0.01] # coefficients of orientation changing of feasible trajectory
-coe_dD_range: [0.0, 0.01] # coefficients of obstacle distance of feasible trajectory
-coe_dQk_range: [0.0, 0.01]
-coe_dQk_range: [0.0, 0.01] # coefficietns of orientation changing of infeasible trajectory
+coe_dT_range: [-0.01, 0.01]
+coe_dA_range: [-0.01, 0.01] # coefficients of orientation changing of feasible trajectory
+coe_dD_range: [-0.01, 0.01] # coefficients of obstacle distance of feasible trajectory
+coe_dQk_range: [-0.01, 0.01]
+coe_dQk_range: [-0.01, 0.01] # coefficietns of orientation changing of infeasible trajectory
 
 coe_T_range: [0.0, 1.0]
 coe_A_range: [0.0, 1.0] # coefficients of orientation changing of feasible trajectory
 coe_D_range: [0.0, 1.0] # coefficients of obstacle distance of feasible trajectory
 coe_Qk_range: [0.0, 1.0]
 coe_Qk_range: [0.0, 1.0] # coefficietns of orientation changing of infeasible trajectory
+
+min_T: 15.0 # In offline learning, the theory execution time of
+            # a trajectory is at least 15.0s. This value is strongly
+            # related to the working environment of robot.
+max_T: 30.0

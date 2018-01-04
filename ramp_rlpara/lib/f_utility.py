@@ -20,10 +20,19 @@ class Utility(object):
         self.nb_steps_warmup_critic = rospy.get_param('/nb_steps_warmup_critic', 0)
         self.nb_steps_warmup_actor = rospy.get_param('/nb_steps_warmup_actor', 0)
         self.critic_lr = rospy.get_param('/critic_lr', 0.001)
-        self.coe_A_range = rospy.get_param('/coe_A_range', [0.0, 0.05])
-        self.coe_D_range = rospy.get_param('/coe_D_range', [0.0, 50.0])
-        self.coe_Qk_range = rospy.get_param('/coe_Qk_range', [0.0, 50.0])
+
+        self.coe_dT_range = rospy.get_param('/coe_dT_range', [-0.01, 0.01])
+        self.coe_dA_range = rospy.get_param('/coe_dA_range', [-0.01, 0.01])
+        self.coe_dD_range = rospy.get_param('/coe_dD_range', [-0.01, 0.01])
+        self.coe_dQc_range = rospy.get_param('/coe_dQc_range', [-0.01, 0.01])
+        self.coe_dQk_range = rospy.get_param('/coe_dQk_range', [-0.01, 0.01])
         
+        self.coe_T_range = rospy.get_param('/coe_T_range', [0.0, 1.0])
+        self.coe_A_range = rospy.get_param('/coe_A_range', [0.0, 1.0])
+        self.coe_D_range = rospy.get_param('/coe_D_range', [0.0, 1.0])
+        self.coe_Qc_range = rospy.get_param('/coe_Qc_range', [0.0, 1.0])
+        self.coe_Qk_range = rospy.get_param('/coe_Qk_range', [0.0, 1.0])
+
         ## max time stamp of motion state in the best trajectory
         self.time_stamp_max = rospy.get_param('/time_stamp_max', 25.0) # seconds
         assert self.time_stamp_max > 0
@@ -48,7 +57,11 @@ class Utility(object):
         self.max_linear_a = rospy.get_param('/robot_info/max_acceleration_linear', 2.0)
         self.max_angular_a = rospy.get_param('/robot_info/max_acceleration_angular', 1.0)
 
+
+
     def normalizeMotionState(self, s): # s is a np.array whose shape is (10,)
+        assert len(s) == 10
+
         ## normalize time stamp of motion state
         t = s[0]
         t = np.clip(t, 0.0, self.time_stamp_max) # clip using non-normalized value
@@ -105,7 +118,24 @@ class Utility(object):
                                    x_dot_normed, y_dot_normed, theta_dot_normed,
                                    x_dd_normed, y_dd_normed, theta_dd_normed])
 
+
+    def normCoes(self, coes, env):
+        assert len(coes) == 5
+
+        coes_normed = coes
+        coes_normed = np.clip(coes_normed,
+                              env.observation_space.low,
+                              env.observation_space.high)
+
+        coes_normed = (coes_normed - env.observation_space.low) / (env.observation_space.high - env.observation_space.low)
+
+        return coes_normed
+
+
+
     def antiNormalizeCoes(self, coes):
+        assert len(coes) == 3
+        
         A = self.coe_A_range[0] + coes[0] * (self.coe_A_range[1] - self.coe_A_range[0]) # transfer into non-normalized value
         A = np.clip(A, self.coe_A_range[0], self.coe_A_range[1]) # clip using non-normalized value
 
@@ -116,6 +146,32 @@ class Utility(object):
         Qk = np.clip(Qk, self.coe_Qk_range[0], self.coe_Qk_range[1])
 
         return np.array([A, D, Qk])
+
+
+
+    def normDeltaCoes(self, delta_coes, env):
+        assert len(delta_coes) == 5
+
+        delta_coes_normed = delta_coes
+        delta_coes_normed = np.clip(delta_coes_normed,
+                                    env.action_space.low,
+                                    env.action_space.high)
+
+        delta_coes_normed = (delta_coes_normed - env.action_space.low) / (env.action_space.high - env.action_space.low)
+
+        return delta_coes_normed
+
+    def antiNormDeltaCoes(self, delta_coes_normed, env):
+        assert len(delta_coes_normed) == 5
+
+        delta_coes = delta_coes_normed
+        delta_coes = np.clip(delta_coes, 0.0, 1.0)
+
+        delta_coes = env.action_space.low + delta_coes * (env.action_space.high - env.action_space.low)
+
+        return delta_coes
+
+
 
     ## TODO: implement it
     # def nparray2Float64MultiArray(np_arr)

@@ -19,6 +19,10 @@ Planner::Planner() : resolutionRate_(1.f / 10.f), ob_dists_timer_dur_(0.1), gene
 
   // Set time to ignore delta theta in evaluation after IC occurs
   d_IC_ = ros::Duration(10);
+
+  gazebo_srv_client = rh.serviceClient<std_srvs::Empty>("/gazebo/reset_world");
+  pub_reset_odom = rh.advertise<std_msgs::Empty>("mobile_base/commands/reset_odometry", 10);
+  off_r_pub = rh.advertise<std_msgs::Float64>("ramp_collection_reward_offline", 10, true);
 }
 
 Planner::~Planner() 
@@ -3823,7 +3827,8 @@ bool Planner::genBetter() {
   bool result;
 
   double cur_fitness = population_.getBest().msg_.fitness;
-  if (cur_fitness > biggest_fitness + ZERO) {
+  double percent = cur_fitness / biggest_fitness - 1.0;
+  if (percent > ZERO) {
     result = true;
   } else {
     result = false;
@@ -4387,6 +4392,104 @@ void Planner::drawTrajectory() {
   while(ros::ok()) {
     r.sleep();
   }
+}
+
+void Planner::offlineGo() {
+  //// One loop is one execution
+  long int exe_cnt = 0;
+  while(ros::ok()) { // Match *
+    // //// Wait start command
+    // ros::Rate r_wait_start(10); // 10Hz
+    // start_planner = false;
+    // handle.setParam("ramp/start_planner", false);
+    // ROS_INFO("Waiting for param ramp/start_planner to be true");
+    // ros::ServiceServer env_ready_srv = handle.advertiseService("env_ready_srv",
+    //                                                            doNothing); // tell others that I am ready
+    //                                                                        // others just need to check whether
+    //                                                                        // this srv exists, no need to call
+    //                                                                        // this srv actually.
+    // while(ros::ok() && !start_planner)
+    // {
+    //   handle.param("ramp/start_planner", start_planner, false);
+    //   r_wait_start.sleep();
+    //   ros::spinOnce();
+    // }
+    // env_ready_srv.shutdown(); // shutdown the srv once I am asked to run
+
+    //// Start a new execution
+    printf("########################## EXECUTION %ld ##########################\n", exe_cnt);
+    exe_cnt++;
+
+    //// Reset the robot in gazebo
+    bool use_sim_time;
+    ros::param::param("/use_sim_time", use_sim_time, false);
+    if (use_sim_time) {
+      std_srvs::Empty gazebo_srv;
+      //// reset the robot in gazebo
+      if (gazebo_srv_client.call(gazebo_srv)) {
+        printf("The robot in gazebo has been reset!\n");
+      } else {
+        printf("Please launch gazebo if you want simulation.\n");
+      }
+    }
+
+    //// Reset odom.
+    std_msgs::Empty reset_odom_msg;
+    pub_reset_odom.publish(reset_odom_msg);
+
+    //// Reset variables
+    biggest_fitness = -1.0;
+    no_better_cnt = 0;
+    generation_ = 0;
+
+    //// Re-initialize population and re-evaluate it
+    initPopulation();
+    evaluatePopulation();
+
+    //// Other initialization in go()
+    t_start_ = ros::Time::now();
+    h_parameters_.setCCStarted(false); 
+    int num_pc = generationsBeforeCC_; 
+    if(num_pc < 0) {
+      num_pc = 0;
+    }
+    diff_ = diff_.zero(3);
+    if (!moving_robot_) {
+      sendPopTimer_.start();
+    } else {
+      sendPopTimer_.stop();
+    }
+    double max_exe_time;
+    ros::param::param("/max_exe_time", max_exe_time, 60.0); // seconds
+    int check_time_cnt = 0;
+    ros::Duration t_elapse;
+    ros::Time t_startLoop = ros::Time::now();
+    
+    //// One loop is one generation
+    while(ros::ok() && no_better_cnt < MAX_NO_BETTER_CNT) {
+      planningCycleCallback();
+      ros::spinOnce();
+
+      //// exit if plan too long
+      check_time_cnt++;
+      if (check_time_cnt > 50) {
+        check_time_cnt = 0;
+        t_elapse = ros::Time::now() - t_startLoop;
+        double seconds_elapse = t_elapse.toSec();
+        printf("%lfs have elapsed after starting planning!\n", seconds_elapse);
+        printf("biggest fitness:\t%.10lf\n", biggest_fitness);
+        if (seconds_elapse > max_exe_time) { // seconds
+          //// planning for too long, force quit
+          break;
+        }
+      }
+    }
+
+    //// Publish offline reward
+    std_msgs::Float64 reward;
+    reward.data = population_.getBest().reward();
+    off_r_pub.publish(reward);
+  } // Match *
 }
 
 void Planner::go(const ros::NodeHandle& h) 

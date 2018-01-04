@@ -1,16 +1,21 @@
 from __future__ import division
 from collections import deque
 import os
+import sys
+
+## use the keras-rl in this repository
+rl_root = os.path.join(os.path.dirname(__file__), '../')
+sys.path.append(rl_root) # directory_name
+
+from core import Agent
+from util import *
+
 import warnings
 import datetime
 
 import numpy as np
 import keras.backend as K
 import keras.optimizers as optimizers
-
-from rl.core import Agent
-from rl.random import OrnsteinUhlenbeckProcess
-from rl.util import *
 
 
 def mean_q(y_true, y_pred):
@@ -182,8 +187,8 @@ class DDPGAgent(Agent):
 
         self.actor.save_weights(actor_filepath, overwrite=overwrite)
         self.critic.save_weights(critic_filepath, overwrite=overwrite)
-        self.target_critic.save_weights(tar_actor_filepath, overwrite=overwrite)
-        self.target_actor.save_weights(tar_critic_filepath, overwrite=overwrite)
+        self.target_actor.save_weights(tar_actor_filepath, overwrite=overwrite)
+        self.target_critic.save_weights(tar_critic_filepath, overwrite=overwrite)
 
     def update_target_models_hard(self):
         self.target_critic.set_weights(self.critic.get_weights())
@@ -270,7 +275,7 @@ class DDPGAgent(Agent):
         # Train the network on a single stochastic batch.
         can_train_either = self.step > self.nb_steps_warmup_critic or self.step > self.nb_steps_warmup_actor
         if can_train_either and self.step % self.train_interval == 0:
-            ## TODO: how to sample (data in buffer is discarded too quickly in our case)
+            ## TODO: how to sample (data in buffer is discarded too quickly in small input version)
             experiences = self.memory.sample(self.batch_size)
             assert len(experiences) == self.batch_size
 
@@ -299,11 +304,11 @@ class DDPGAgent(Agent):
 
             # Update critic, if warm up is over.
             if self.step > self.nb_steps_warmup_critic:
-                # origin: target_actions = self.target_actor.predict_on_batch(state1_batch)
+                target_actions = self.target_actor.predict_on_batch(state1_batch)
                 
-                ## action remains unchanged in one execution, so the action of state1 should be
+                ## action remains unchanged in one execution in si version, so the action of state1 should be
                 #  the same as the action of state0
-                target_actions = action_batch
+                # target_actions = action_batch
 
                 assert target_actions.shape == (self.batch_size, self.nb_actions)
                 if len(self.critic.inputs) >= 3:
