@@ -15,6 +15,7 @@ class Population {
     /* Methods */
     const unsigned int    size() const;
     const int             add(const RampTrajectory& rt); // w
+    void                  initBestIndex();
     const int             calcBestIndex() const;
     const int             calcWorstIndex() const;
     void                  clear(); // w
@@ -50,6 +51,8 @@ class Population {
     unsigned int                maxSize_;
 
     double                      t_start_;
+    int                         best_index;
+    double                      max_fitness;
     
     std::vector<RampTrajectory> trajectories_;
     

@@ -4,6 +4,9 @@
 #include "ramp_msgs/RampTrajectory.h"
 #include "path.h"
 #include "utility.h"
+#include <random>
+#include <ctime>
+#include <stdlib.h>
 
 class RampTrajectory 
 {

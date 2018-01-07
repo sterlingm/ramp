@@ -1,5 +1,10 @@
 #include "ramp_trajectory.h"
 
+double no_col_dis = 0.1;
+static std::default_random_engine generator(time(0));
+static std::normal_distribution<double> norm_distri(0, no_col_dis); // no_col_dis is actually standard deviation here
+static std::uniform_real_distribution<double> uni_distri(0, no_col_dis);
+
 RampTrajectory::RampTrajectory(unsigned int id) 
 {
   msg_.id = id;
@@ -547,15 +552,14 @@ void RampTrajectory::print() {
 }
 
 const double RampTrajectory::reward() const {
-  double min_T;
-  double max_T;
-  ros::param::param("/min_T", min_T, 15.0);
-  ros::param::param("/max_T", max_T, 30.0);
+  const double fail_reward = -45.0;
+  double min_obs_dis_limit = 0.93; // m
+  const double fail_time = 23.0; // m, this para may confict with no_col_dis
+  double reward = fail_reward;
   
   if (!msg_.feasible) {
-    return 0.0;
+    return reward;
   }
-
   //// p = last non-holonomic point on trajectory
   trajectory_msgs::JointTrajectoryPoint p = msg_.trajectory.points.at(msg_.trajectory.points.size()-1);
 
@@ -563,15 +567,24 @@ const double RampTrajectory::reward() const {
   double dist = utility_.positionDistance(msg_.holonomic_path.points[holo_sz-1].motionState.positions,
                                           p.positions);
   if (dist * dist > 0.2) { // the traj. doesn't reach the goal
-    return 0.0;
+    return reward;
   }
-
+  
   //// Get total time to execute trajectory
   double T = msg_.trajectory.points.at(msg_.trajectory.points.size()-1).time_from_start.toSec();
-  if (T < min_T) {
-    T = min_T;
-  } else if (T > max_T) {
-    T = max_T;
+  //// Too long executiontime means failure
+  if (T > fail_time) {
+    return reward;
   }
-  return (max_T - T) / (max_T - min_T); // 0.0 ~ 1.0
+
+  //// Reward needs to be calculated
+  reward = 21.0 - T;
+
+  //// Collide with obstacle randomly
+  double tolerance = msg_.min_obs_dis - min_obs_dis_limit; // m
+  if (tolerance < uni_distri(generator)) {
+    reward -= 15;
+  }
+
+  return reward;
 }

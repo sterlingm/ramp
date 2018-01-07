@@ -154,26 +154,26 @@ const bool BezierCurve::verify() const
 void BezierCurve::printReflexxesInfo() const 
 {
 
-  std::cout<<"\n\nreflexxesData_.inputParameters->CurrentPositionVector->VecData[0]: "<<
-    reflexxesData_.inputParameters->CurrentPositionVector->VecData[0];
+  // std::cout<<"\n\nreflexxesData_.inputParameters->CurrentPositionVector->VecData[0]: "<<
+  //   reflexxesData_.inputParameters->CurrentPositionVector->VecData[0];
   
-  std::cout<<"\nreflexxesData_.inputParameters->CurrentVelocityVector->VecData[0]: "<<
-    reflexxesData_.inputParameters->CurrentVelocityVector->VecData[0];
+  // std::cout<<"\nreflexxesData_.inputParameters->CurrentVelocityVector->VecData[0]: "<<
+  //   reflexxesData_.inputParameters->CurrentVelocityVector->VecData[0];
 
-  std::cout<<"\nreflexxesData_.inputParameters->MaxVelocityVector->VecData[0]: "<<
-    reflexxesData_.inputParameters->MaxVelocityVector->VecData[0];
+  // std::cout<<"\nreflexxesData_.inputParameters->MaxVelocityVector->VecData[0]: "<<
+  //   reflexxesData_.inputParameters->MaxVelocityVector->VecData[0];
 
-  std::cout<<"\n\nreflexxesData_.inputParameters->CurrentAccelerationVector->VecData[0]: "<<
-    reflexxesData_.inputParameters->CurrentAccelerationVector->VecData[0];
+  // std::cout<<"\n\nreflexxesData_.inputParameters->CurrentAccelerationVector->VecData[0]: "<<
+  //   reflexxesData_.inputParameters->CurrentAccelerationVector->VecData[0];
 
-  std::cout<<"\nreflexxesData_.inputParameters->MaxAccelerationVector->VecData[0]: "<<
-    reflexxesData_.inputParameters->MaxAccelerationVector->VecData[0];
+  // std::cout<<"\nreflexxesData_.inputParameters->MaxAccelerationVector->VecData[0]: "<<
+  //   reflexxesData_.inputParameters->MaxAccelerationVector->VecData[0];
 
-  std::cout<<"\n\nreflexxesData_.inputParameters->TargetPositionVector->VecData[0]: "<<
-    reflexxesData_.inputParameters->TargetPositionVector->VecData[0];
+  // std::cout<<"\n\nreflexxesData_.inputParameters->TargetPositionVector->VecData[0]: "<<
+  //   reflexxesData_.inputParameters->TargetPositionVector->VecData[0];
 
-  std::cout<<"\nreflexxesData_.inputParameters->TargetVelocityVector->VecData[0]: "<<
-    reflexxesData_.inputParameters->TargetVelocityVector->VecData[0]<<"\n";
+  // std::cout<<"\nreflexxesData_.inputParameters->TargetVelocityVector->VecData[0]: "<<
+  //   reflexxesData_.inputParameters->TargetVelocityVector->VecData[0]<<"\n";
 } // End printReflexxesInfo
 
 
@@ -953,11 +953,11 @@ const std::vector<ramp_msgs::MotionState> BezierCurve::generateCurve()
 
   
 
-  std::cout<<"\nControl Points:";
-  for(int i=0;i<controlPoints_.size();i++) {
-    std::cout<<"\n"<<utility_.toString(controlPoints_.at(i));
-  }
-  std::cout<<"\n";
+  // std::cout<<"\nControl Points:";
+  // for(int i=0;i<controlPoints_.size();i++) {
+  //   std::cout<<"\n"<<utility_.toString(controlPoints_.at(i));
+  // }
+  // std::cout<<"\n";
 
 
   if(initialized_) 

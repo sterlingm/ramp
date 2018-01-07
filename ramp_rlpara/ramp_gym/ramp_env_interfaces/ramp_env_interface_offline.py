@@ -42,30 +42,21 @@ class RampEnv(gym.Env):
 		## get various parameters
 		self.utility = Utility()
 
-		self.action_space = spaces.Box(np.array([self.utility.coe_dT_range[0],
-		                                         self.utility.coe_dA_range[0],
-												 self.utility.coe_dD_range[0],
-												 self.utility.coe_dQc_range[0],
-												 self.utility.coe_dQk_range[0]]),
-		                               np.array([self.utility.coe_dT_range[1],
-									             self.utility.coe_dA_range[1],
-												 self.utility.coe_dD_range[1],
-												 self.utility.coe_dQc_range[1],
-												 self.utility.coe_dQk_range[1]]))
+		self.action_space = spaces.Box(np.array([self.utility.coe_dA_range[0],
+												 self.utility.coe_dD_range[0]]),
+		                               np.array([self.utility.coe_dA_range[1],
+												 self.utility.coe_dD_range[1]]))
 
-		self.observation_space = spaces.Box(np.array([self.utility.coe_T_range[0],
-		                                              self.utility.coe_A_range[0],
-													  self.utility.coe_D_range[0],
-													  self.utility.coe_Qc_range[0],
-													  self.utility.coe_Qk_range[0]]),
-		                                    np.array([self.utility.coe_T_range[1],
-											          self.utility.coe_A_range[1],
-													  self.utility.coe_D_range[1],
-													  self.utility.coe_Qc_range[1],
-													  self.utility.coe_Qk_range[1]]))
+		self.observation_space = spaces.Box(np.array([self.utility.coe_A_range[0],
+													  self.utility.coe_D_range[0]]),
+		                                    np.array([self.utility.coe_A_range[1],
+													  self.utility.coe_D_range[1]]))
+		self.observation = None
 		self.reward = None
 
 		self.reward_sub = rospy.Subscriber("ramp_collection_reward_offline", Float64, self.rewardCallback)
+		self.my_A_inf = 0.5
+		self.my_D_inf = 0.5
 
 
 
@@ -77,45 +68,42 @@ class RampEnv(gym.Env):
 
 	def _reset(self):
 		## set coefficients randomly
-		# observation = self.observation_space.sample()
+		self.observation = self.observation_space.sample()
+		# self.observation = np.array([0.0, 0.0])
 
-		observation = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
-		rospy.set_param("/ramp/eval_weight_T", observation[0].item())
-		rospy.set_param("/ramp/eval_weight_A", observation[1].item())
-		rospy.set_param("/ramp/eval_weight_D", observation[2].item())
-		rospy.set_param("/ramp/eval_weight_Qc", observation[3].item())
-		rospy.set_param("/ramp/eval_weight_Qk", observation[4].item())
+		A_T = self.my_A_inf * self.observation[0].item()
+		D_T = self.my_D_inf * self.observation[1].item()
+
+		T = 1.0 / (1.0 + A_T + D_T)
+		A = A_T * T
+		D = D_T * T
+
+		rospy.set_param("/ramp/eval_weight_T", T)
+		rospy.set_param("/ramp/eval_weight_A", A)
+		rospy.set_param("/ramp/eval_weight_D", D)
 		
-		return observation
+		return self.observation
 
 
 
 	def _step(self, action):
 		assert self.action_space.contains(action)
 
-		## read the coefficients of RAMP
-		wT = rospy.get_param("/ramp/eval_weight_T")
-		wA = rospy.get_param("/ramp/eval_weight_A")
-		wD = rospy.get_param("/ramp/eval_weight_D")
-		wQc = rospy.get_param("/ramp/eval_weight_Qc")
-		wQk = rospy.get_param("/ramp/eval_weight_Qk")
+		self.observation += action
+		self.observation = np.clip(self.observation,
+		                           self.observation_space.low,
+							       self.observation_space.high)
 
-		## build a observation
-		observation = np.array([wT, wA, wD, wQc, wQk])
-		assert self.observation_space.contains(observation)
-		observation += action
-		
-		## limit the coefficients (observation vector) into the observation space
-		observation = np.clip(observation,
-		                      self.observation_space.low,
-							  self.observation_space.high)
-		
-		## change the coefficients of RAMP
-		rospy.set_param("/ramp/eval_weight_T", observation[0].item())
-		rospy.set_param("/ramp/eval_weight_A", observation[1].item())
-		rospy.set_param("/ramp/eval_weight_D", observation[2].item())
-		rospy.set_param("/ramp/eval_weight_Qc", observation[3].item())
-		rospy.set_param("/ramp/eval_weight_Qk", observation[4].item())
+		A_T = self.my_A_inf * self.observation[0].item()
+		D_T = self.my_D_inf * self.observation[1].item()
+
+		T = 1.0 / (1.0 + A_T + D_T)
+		A = A_T * T
+		D = D_T * T
+
+		rospy.set_param("/ramp/eval_weight_T", T)
+		rospy.set_param("/ramp/eval_weight_A", A)
+		rospy.set_param("/ramp/eval_weight_D", D)
 		
 		## wait the actual environment to get ready......
 		print("Wait the actual environment to get ready......")
@@ -123,7 +111,7 @@ class RampEnv(gym.Env):
 			rospy.wait_for_service("env_ready_srv")
 		except rospy.exceptions.ROSInterruptException:
 			print("\nCtrl+C is pressed!")
-			return observation, 0.0, False, {}
+			return self.observation, 0.0, False, {}
 
 		print("Set start_planner to true for to start one execution!")
 		rospy.set_param("/ramp/start_planner", True)
@@ -146,7 +134,7 @@ class RampEnv(gym.Env):
 					rospy.wait_for_service("env_ready_srv")
 				except rospy.exceptions.ROSInterruptException:
 					print("\nCtrl+C is pressed!")
-					return observation, 0.0, False, {}
+					return self.observation, 0.0, False, {}
 
 				print("Set start_planner to true for to start one execution!")
 				rospy.set_param("/ramp/start_planner", True)
@@ -154,10 +142,24 @@ class RampEnv(gym.Env):
 				print("Wait for this execution completes......")
 
 		if rospy.core.is_shutdown():
-			return observation, 0.0, False, {}
+			return self.observation, 0.0, False, {}
 		
 		print("A execution completes!")
 		reward = self.reward
 		self.reward = None # clear self.reward after it is used
 
-		return observation, reward, False, {}
+		if reward < -40.0:
+			plan_fail = True
+		else:
+			plan_fail = False
+
+		if self.observation[0].item() > 0.0 and self.observation[0].item() < 1.0:
+			ob_can_change = True
+		elif self.observation[1].item() > 0.0 and self.observation[1].item() < 1.0:
+			ob_can_change = True
+		else:
+			ob_can_change = False
+
+		done = plan_fail or (not ob_can_change)
+
+		return self.observation, reward, done, {}

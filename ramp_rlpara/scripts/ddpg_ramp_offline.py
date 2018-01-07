@@ -74,8 +74,8 @@ assert len(env.action_space.shape) == 1 # assert action is a vector (not a matri
 action_size = env.action_space.shape[0] # number of scalars in one action
 assert len(env.observation_space.shape) == 1 # assert observatoin is a vector (not a matrix or tensor)
 observation_size = env.observation_space.shape[0] # number of scalars in one observation
-assert action_size == 5
-assert observation_size == 5
+assert action_size == 2
+assert observation_size == 2
 
 ## warmup rospy timer
 warmup_cnt = 0
@@ -160,7 +160,21 @@ replay_buffer = SequentialMemory(limit = utility.replay_buffer_size, window_leng
 # #  the output noise is normalized
 # random_process = OrnsteinUhlenbeckProcess(size = action_size, sigma_min = 0.0, theta = utility.orn_paras['theta'],
 #                                           n_steps_annealing = int(utility.max_nb_exe * utility.orn_paras['percent']))
-random_process = None
+random_process = OrnsteinUhlenbeckProcess(size=action_size, theta=.17, mu=0., sigma=.1)
+# random_process = None
+
+# A = np.array([])
+# D = np.array([])
+# for i in range(1000):
+#     sample = random_process.sample()
+#     A = np.append(A, sample[0])
+#     D = np.append(D, sample[1])
+# plt.plot(A)
+# plt.ylabel("A")
+# plt.show()
+# plt.plot(D)
+# plt.ylabel("D")
+# plt.show()
 
 ## build the agent
 #  after this building, use agent.actor, agent.memory, agent.random_process if needed,
@@ -178,13 +192,15 @@ agent = DDPGAgent(nb_actions = action_size, actor = actor, critic = critic, crit
 agent.compile(Adam(lr = utility.critic_lr, clipnorm = 1.0), metrics=['mae'])
 
 ## Load weights if needed
-agent.load_weights("/home/kai/data/ramp/ramp_rlpara/ddpg_ramp_offline/2018-01-03_23:21:42/raw_data/1/" +
-                   "ddpg_{}_weights.h5f".format(env.name))
+# agent.load_weights("/home/kai/data/ramp/ramp_rlpara/ddpg_ramp_offline/2018-01-06_05:52:40/raw_data/1/" +
+#                    "ddpg_{}_weights.h5f".format(env.name))
 
 ## Okay, now it's time to learn something!
 #  You can always safely abort the training prematurely using
 #  Ctrl + C.
-agent.fit(env, nb_steps = utility.max_nb_exe, verbose = 0, file_dir = file_dir, file_h = file_h, utility = utility)
+agent.fit(env, nb_steps = utility.max_nb_exe, verbose = 0,
+          file_dir = file_dir, file_h = file_h, utility = utility,
+          nb_max_episode_steps = 100)
 
 ## close file
 file_h.close()

@@ -120,8 +120,6 @@ class Utility(object):
 
 
     def normCoes(self, coes, env):
-        assert len(coes) == 5
-
         coes_normed = coes
         coes_normed = np.clip(coes_normed,
                               env.observation_space.low,
@@ -150,8 +148,6 @@ class Utility(object):
 
 
     def normDeltaCoes(self, delta_coes, env):
-        assert len(delta_coes) == 5
-
         delta_coes_normed = delta_coes
         delta_coes_normed = np.clip(delta_coes_normed,
                                     env.action_space.low,
@@ -162,8 +158,6 @@ class Utility(object):
         return delta_coes_normed
 
     def antiNormDeltaCoes(self, delta_coes_normed, env):
-        assert len(delta_coes_normed) == 5
-
         delta_coes = delta_coes_normed
         delta_coes = np.clip(delta_coes, 0.0, 1.0)
 

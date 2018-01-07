@@ -225,7 +225,7 @@ const ramp_msgs::Path Planner::getObstaclePath(const ramp_msgs::Obstacle ob, con
 
 void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
 {
-  //ROS_INFO("In sensingCycleCallback");
+  // ROS_INFO("In sensingCycleCallback");
   ////ROS_INFO("msg.obstacles.size(): %i", (int) msg.obstacles.size());
   ////ROS_INFO("msg: %s", utility_.toString(msg).c_str());
 
@@ -234,7 +234,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   ob_trajectory_.clear();
   ob_radii_.clear();
 
-  Population pop_obs;
+  // Population pop_obs;
   Population copy = population_;
 
   /*
@@ -365,8 +365,28 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   d.sleep();
   std::cin.get();*/
 
-  //ROS_INFO("Exiting sensingCycleCallback");
+  // ROS_INFO("Exiting sensingCycleCallback, only sense once, kill sensing");
+  // system("rosnode kill /ramp_sensing");
 }
+
+
+
+// void senseOnce() {
+//   ob_trajectory_.clear();
+//   ob_radii_.clear();
+//   Population copy = population_;
+
+//   /*
+//    * Predict obstacle trajectories
+//    */
+//   for(uint8_t i=0;i<msg.obstacles.size();i++)
+//   {
+//     RampTrajectory ob_temp_trj = getPredictedTrajectory(msg.obstacles.at(i));
+//     ob_trajectory_.push_back(ob_temp_trj);
+//     ob_radii_.push_back(msg.obstacles[i].radius);
+//     copy.trajectories_.push_back(ob_temp_trj);
+//   }
+// }
 
 
 
@@ -2760,7 +2780,7 @@ void Planner::modification()
 
     // Compute full switch (method evaluates the trajectory)
     RampTrajectory traj_final = mod_trajec[i];
-    if(cc_started_)
+    if(moving_robot_ && cc_started_)
     {
       computeFullSwitch(movingOn_, mod_trajec[i], controlCycle_.toSec(), traj_final);
     }
@@ -2950,7 +2970,7 @@ void Planner::planningCycleCallback()
   // Must have started control cycles
   // errorReduction is true
   // Not driving on curve
-  if(errorReduction_ && !imminent_collision_ && cc_started_ && generation_ % 1 == 0 &&
+  if(moving_robot_ && errorReduction_ && !imminent_collision_ && cc_started_ && generation_ % 1 == 0 &&
       !(fabs(latestUpdate_.msg_.velocities.at(2)) > 0.2 && sqrt(pow(latestUpdate_.msg_.velocities[0],2) + pow(latestUpdate_.msg_.velocities[1],2)) > 0.01))
   {
     // Get time for recording duration data
@@ -3689,7 +3709,8 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
     result.scale.x = 0.01;
   }
   // trajec may be an obstacle trajectory which has no points in the path member
-  if(trajec.msg_.holonomic_path.points.size() > 0 && trajec.equals(population_.getBest()))
+  // if(trajec.msg_.holonomic_path.points.size() > 0 && trajec.equals(population_.getBest()))
+  if(trajec.msg_.holonomic_path.points.size() > 0 && id == population_.calcBestIndex())
   {
     result.color.r = 0;
     result.color.g = 1;
@@ -3753,6 +3774,7 @@ void Planner::requestEvaluation(std::vector<RampTrajectory>& trajecs)
       trajecs[i].msg_.fitness          = srv.response.resps[i].fitness;
       trajecs[i].msg_.feasible         = srv.response.resps[i].feasible;
       trajecs[i].msg_.t_firstCollision = srv.response.resps[i].t_firstCollision;
+      trajecs[i].msg_.min_obs_dis      = srv.response.resps[i].min_obs_dis;
     }
   }
   else
@@ -3779,6 +3801,7 @@ void Planner::requestEvaluation(ramp_msgs::EvaluationRequest& request)
     request.trajectory.fitness          = srv.response.resps[0].fitness;
     request.trajectory.feasible         = srv.response.resps[0].feasible;
     request.trajectory.t_firstCollision = srv.response.resps[0].t_firstCollision;
+    request.trajectory.min_obs_dis      = srv.response.resps[0].min_obs_dis;
   }
   else
   {
@@ -3801,6 +3824,7 @@ void Planner::requestEvaluation(RampTrajectory& trajec, bool full)
   trajec.msg_.fitness           = req.trajectory.fitness;
   trajec.msg_.feasible          = req.trajectory.feasible;
   trajec.msg_.t_firstCollision  = req.trajectory.t_firstCollision;
+  trajec.msg_.min_obs_dis       = req.trajectory.min_obs_dis;
   ////////ROS_INFO("trajec.fitness: %f", trajec.msg_.fitness);
   ////////ROS_INFO("Exiting Planner::requestEvaluation(RampTrajectory&, bool)");
 }
@@ -3821,6 +3845,7 @@ void Planner::evaluatePopulation()
   if(subPopulations_) {
     population_.createSubPopulations();
   }
+  population_.initBestIndex();
 }
 
 bool Planner::genBetter() {
@@ -4394,33 +4419,40 @@ void Planner::drawTrajectory() {
   }
 }
 
+bool emptyCb(std_srvs::Empty::Request  &req,
+             std_srvs::Empty::Response &res) {
+  return true;
+}
+
 void Planner::offlineGo() {
   //// One loop is one execution
   long int exe_cnt = 0;
-  while(ros::ok()) { // Match *
-    // //// Wait start command
-    // ros::Rate r_wait_start(10); // 10Hz
-    // start_planner = false;
-    // handle.setParam("ramp/start_planner", false);
-    // ROS_INFO("Waiting for param ramp/start_planner to be true");
-    // ros::ServiceServer env_ready_srv = handle.advertiseService("env_ready_srv",
-    //                                                            doNothing); // tell others that I am ready
-    //                                                                        // others just need to check whether
-    //                                                                        // this srv exists, no need to call
-    //                                                                        // this srv actually.
-    // while(ros::ok() && !start_planner)
-    // {
-    //   handle.param("ramp/start_planner", start_planner, false);
-    //   r_wait_start.sleep();
-    //   ros::spinOnce();
-    // }
-    // env_ready_srv.shutdown(); // shutdown the srv once I am asked to run
 
+  while(ros::ok()) { // Match *
     //// Start a new execution
     printf("########################## EXECUTION %ld ##########################\n", exe_cnt);
     exe_cnt++;
 
-    //// Reset the robot in gazebo
+    //// Wait start command
+    ros::Rate r_wait_start(10); // 10Hz
+    bool start_planner = false;
+    ros::param::set("ramp/start_planner", false);
+    ROS_INFO("Waiting for param ramp/start_planner to be true");
+    env_ready_srv = rh.advertiseService("env_ready_srv",
+                                        emptyCb); // tell others that I am ready
+                                                  // others just need to check whether
+                                                  // this srv exists, no need to call
+                                                  // this srv actually.
+    while(ros::ok() && !start_planner)
+    {
+      ros::param::param("ramp/start_planner", start_planner, false);
+      r_wait_start.sleep();
+      ros::spinOnce();
+    }
+    env_ready_srv.shutdown(); // shutdown the srv once I am asked to run
+    ROS_INFO("A new execution starts!");
+
+    // Reset the robot in gazebo
     bool use_sim_time;
     ros::param::param("/use_sim_time", use_sim_time, false);
     if (use_sim_time) {
@@ -4433,7 +4465,7 @@ void Planner::offlineGo() {
       }
     }
 
-    //// Reset odom.
+    // Reset odom.
     std_msgs::Empty reset_odom_msg;
     pub_reset_odom.publish(reset_odom_msg);
 
@@ -4442,9 +4474,11 @@ void Planner::offlineGo() {
     no_better_cnt = 0;
     generation_ = 0;
 
-    //// Re-initialize population and re-evaluate it
-    initPopulation();
-    evaluatePopulation();
+    if (!is_population_initialized || 1) { // Initialize population only once,
+                                      // later modification is based on the last population.
+      initPopulation();
+    }
+    evaluatePopulation(); // Coefficients are adjusted, re-evaluation is needed.
 
     //// Other initialization in go()
     t_start_ = ros::Time::now();
@@ -4459,6 +4493,10 @@ void Planner::offlineGo() {
     } else {
       sendPopTimer_.stop();
     }
+
+    sendPopTimer_.stop();
+    ros::spinOnce();
+
     double max_exe_time;
     ros::param::param("/max_exe_time", max_exe_time, 60.0); // seconds
     int check_time_cnt = 0;
@@ -4468,11 +4506,11 @@ void Planner::offlineGo() {
     //// One loop is one generation
     while(ros::ok() && no_better_cnt < MAX_NO_BETTER_CNT) {
       planningCycleCallback();
-      ros::spinOnce();
+      // ros::spinOnce();
 
       //// exit if plan too long
       check_time_cnt++;
-      if (check_time_cnt > 50) {
+      if (check_time_cnt > 100) {
         check_time_cnt = 0;
         t_elapse = ros::Time::now() - t_startLoop;
         double seconds_elapse = t_elapse.toSec();

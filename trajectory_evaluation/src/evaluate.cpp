@@ -1,6 +1,6 @@
 #include "evaluate.h"
 
-Evaluate::Evaluate() : orientation_infeasible_(0), _1_T_norm_(0.0), _1_A_norm_(0.0), D_norm_(0.0), coll_time_norm_(zero),
+Evaluate::Evaluate() : orientation_infeasible_(0), T_norm_(25.0), A_norm_(PI/4.0), _1_D_norm_(1.0/0.91), coll_time_norm_(zero),
                        last_T_weight_(-1.0), last_A_weight_(-1.0), last_D_weight_(-1.0), last_Q_coll_(-1.0), last_Q_kine_(-1.0) {}
 
 void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res)
@@ -52,7 +52,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   if(req.full_eval)
   {
     ////ROS_INFO("Requesting fitness!");
-    performFitness(req.trajectory, req.offset, res.fitness);
+    performFitness(req.trajectory, req.offset, res.fitness, res.min_obs_dis);
   }
   //////ROS_INFO("performFitness: %f", (ros::Time::now()-t_start).toSec());
 }
@@ -100,7 +100,7 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
 
 
 /** This method computes the fitness of the trajectory_ member */
-void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offset, double& result) 
+void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offset, double& result, double& min_obs_dis) 
 {
   //////ROS_INFO("In Evaluate::performFitness");
   ros::Time t_start = ros::Time::now();
@@ -186,22 +186,23 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     double D = cd_.min_dist_;
     if (D < zero) D = zero;
     double _1_D = 1.0 / D; // consider 1/D, not D
+    min_obs_dis = D;
     
     //ROS_INFO("T: %f A: %f D: %f", T, A, D);
 
     // Update normalization for Time if necessary
-    if(T > T_norm_)
-    {
-      T_norm_ = T;
-    }
-    if(A > A_norm_)
-    {
-      A_norm_ = A;
-    }
-    if(_1_D > _1_D_norm_)
-    {
-      _1_D_norm_ = _1_D;
-    }
+    // if(T > T_norm_)
+    // {
+    //   T_norm_ = T;
+    // }
+    // if(A > A_norm_)
+    // {
+    //   A_norm_ = A;
+    // }
+    // if(_1_D > _1_D_norm_)
+    // {
+    //   _1_D_norm_ = _1_D;
+    // }
 
     // Normalize terms
     T /= T_norm_;
@@ -306,9 +307,9 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
         is_set_Qk = true;
       }
 
-      if (delta_theta > A_norm_) {
-        A_norm_ = delta_theta;
-      }
+      // if (delta_theta > A_norm_) {
+      //   A_norm_ = delta_theta;
+      // }
       delta_theta /= A_norm_;
     }
 

@@ -47,6 +47,10 @@ class Agent(object):
         self.processor = processor
         self.training = False
         self.step = 0
+        self.last_reward = 0.0
+        self.min_reward = 100000.0
+        self.max_reward = -100000.0
+        self.sum_reward = 0.0
 
     def get_config(self):
         """Configuration of the agent for serialization.
@@ -135,7 +139,7 @@ class Agent(object):
         episode_step = None
         did_abort = False
         try:
-            while self.step < nb_steps:
+            while not rospy.core.is_shutdown() and self.step < nb_steps:
                 file_h.write("######################################### STEP " + str(self.step) +
                             " #########################################\n")
                 print("######################################### STEP " + str(self.step) +
@@ -263,10 +267,22 @@ class Agent(object):
                 print("< reward >")
                 print(reward)
 
+                running_reward = self.last_reward * 0.7 + reward * 0.3
+                file_h.write("< running_reward >\n")
+                file_h.write(str(running_reward) + "\n")
+                print("< running_reward >")
+                print(running_reward)
+
                 file_h.write("< done >\n")
                 file_h.write(str(done) + "\n")
                 print("< done >")
                 print(done)
+
+                if reward < self.min_reward:
+                    self.min_reward = reward
+                if reward > self.max_reward:
+                    self.max_reward = reward
+                self.sum_reward += reward
 
                 if done:
                     # We are in a terminal state but the agent hasn't yet seen it. We therefore
@@ -282,13 +298,24 @@ class Agent(object):
                         'episode_reward': episode_reward,
                         'nb_episode_steps': episode_step,
                         'nb_steps': self.step,
+                        'min_reward': self.min_reward,
+                        'max_reward': self.max_reward,
+                        'ave_reward': 1.0 * self.sum_reward / episode_step
                     }
                     callbacks.on_episode_end(episode, episode_logs)
+
+                    print("##################### episode {} infomation #####################".format(episode))
+                    print(episode_logs)
+                    file_h.write("##################### episode {} infomation #####################\n".format(episode))
+                    file_h.write(str(episode_logs) + "\n")
 
                     episode += 1
                     observation = None
                     episode_step = None
                     episode_reward = None
+                    self.min_reward = 100000.0
+                    self.max_reward = -100000.0
+                    self.sum_reward = 0.0
         except KeyboardInterrupt:
             # We catch keyboard interrupts here so that training can be be safely aborted.
             # This is so common that we've built this right into this function, which ensures that
