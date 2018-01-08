@@ -187,27 +187,15 @@ utility = Utility()
 #  here just use window_length = 1 for simplity of understanding
 replay_buffer = SequentialMemory(limit = utility.replay_buffer_size, window_length = 1)
 
-## max number of switching the best trajectory
-max_num_switch = math.ceil(utility.max_exe_time / utility.switch_period)
-
-## the initial, not normalized, meter and second
-s_init = np.array([0.0, utility.the_initial[0], utility.the_initial[1], utility.the_initial[2],
-                        0.0, 0.0, 0.0,
-                        0.0, 0.0, 0.0])
-
-## normalize the initial
-s_init_normed = utility.normalizeMotionState(s_init)
-
 ## init random action probability
 #  the output noise is normalized
 random_process = OrnsteinUhlenbeckProcess(size = action_size, sigma_min = 0.0, theta = utility.orn_paras['theta'],
-                                          n_steps_annealing = int(utility.max_nb_exe * utility.orn_paras['percent']))
+                                          n_steps_annealing = 80)
 ## test noise added on action:
-'''
 A = np.array([])
 D = np.array([])
 Qk = np.array([])
-for i in range(utility.max_nb_exe):
+for i in range(100):
     sample = random_process.sample()
     A = np.append(A, sample[0])
     D = np.append(D, sample[1])
@@ -221,7 +209,6 @@ plt.show()
 plt.plot(Qk)
 plt.ylabel("Qk")
 plt.show()
-'''
 
 ## build the agent, in our case memory_interval must be set to 1
 #  after this building, use agent.actor, agent.memory, agent.random_process if needed,

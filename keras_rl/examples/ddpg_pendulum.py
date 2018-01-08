@@ -9,6 +9,9 @@ from rl.agents import DDPGAgent
 from rl.memory import SequentialMemory
 from rl.random import OrnsteinUhlenbeckProcess
 
+import math
+import matplotlib.pyplot as plt
+
 
 ENV_NAME = 'Pendulum-v0'
 gym.undo_logger_setup()
@@ -53,6 +56,16 @@ print(critic.summary())
 # even the metrics!
 memory = SequentialMemory(limit=100000, window_length=1)
 random_process = OrnsteinUhlenbeckProcess(size=nb_actions, theta=.15, mu=0., sigma=.3)
+
+# test noise added on action:
+tor = np.array([])
+for i in range(50000):
+    sample = random_process.sample()
+    tor = np.append(tor, sample[0])
+plt.plot(tor)
+plt.ylabel("tor")
+plt.show()
+
 agent = DDPGAgent(nb_actions=nb_actions, actor=actor, critic=critic, critic_action_input=action_input,
                   memory=memory, nb_steps_warmup_critic=100, nb_steps_warmup_actor=100,
                   random_process=random_process, gamma=.99, target_model_update=1e-3)
