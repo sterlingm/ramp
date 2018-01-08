@@ -37,7 +37,7 @@ class TDEnv(object):
     
     def reset(self):
         self.ob = np.random.randint(0, ob_size)
-        # self.ob = 0
+        self.ob = 0
         return self.ob
 
     def step(self, a):
@@ -51,18 +51,18 @@ class TDEnv(object):
         self.ob = np.clip(self.ob, 0, ob_size - 1)
 
         cost = self.calcCost() + 0.001 * a**2 # a**2 means energy cost
-        reward = -cost + 4  # Remove the conflict
+        reward = -cost + 10  # Remove the conflict
 
         done = beyond_limit # Conflict with target = exp.reward in replay
-        if beyond_limit:
-            reward -= 100.0 # Remove the above conflict
-        # done = False
+        # if beyond_limit:
+        #     reward -= 100.0 # Remove the above conflict
+        done = False
         info = {}
 
         return self.ob, reward, done, info
 
 def test():
-    # print("Final Q-Table Values:\n %s" % Q)
+    print("Final Q-Table Values:\n %s" % Q)
     result_str = ''
     for s in range(ob_size):
         #### No random action in testing
@@ -80,11 +80,11 @@ rospy.init_node('q_tb_TD', anonymous = True)
 np.random.seed()
 
 D_max = 0.5
-ob_size = 100
+ob_size = 30
 d_D = D_max / ob_size
 act_size = 3
 discount_factor = 0.99 # gamma
-lr = 0.5 # In ramp it is 0.001
+lr = 0.8 # In ramp it is 0.001
 max_epi_steps = 100
 batch_size = 1 # only replay, there is no mini_batch training for q table
 warm_up_steps = 100
@@ -143,18 +143,18 @@ while not rospy.core.is_shutdown():
         if d == True:
             break
     
-    if n_step - last_print_step > 1000:
-        last_print_step = n_step
-        test()
-        mean_q = np.mean(Q)
-        if last_mean_q is None:
-            mean_q_dot = 1.0
-        else:
-            mean_q_dot = mean_q / last_mean_q - 1.0
-        last_mean_q = mean_q
-        print("Episode [%d] mean reward: %f, total steps: %d, mean_q: %f, mean_q_dot: %f%%" %
-             (i, 1.0 * episode_reward / max_epi_steps, n_step, mean_q, mean_q_dot * 100.0))
-        ## TODO: plot
+        if n_step - last_print_step > 10000:
+            last_print_step = n_step
+            test()
+            mean_q = np.mean(Q)
+            if last_mean_q is None:
+                mean_q_dot = 1.0
+            else:
+                mean_q_dot = mean_q / last_mean_q - 1.0
+            last_mean_q = mean_q
+            print("Episode [%d] mean reward: %f, total steps: %d, mean_q: %f, mean_q_dot: %f%%" %
+                (i, 1.0 * episode_reward / max_epi_steps, n_step, mean_q, mean_q_dot * 100.0))
+            ## TODO: plot
 
     i += 1
 
