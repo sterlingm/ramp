@@ -1,12 +1,12 @@
 replay_buffer_size: 100000 # size(R)
 
-discount_factor: 0.95 # gamma
+discount_factor: 0.99 # gamma
 
-target_net_update_factor: 0.005 # tao
+target_net_update_factor: 0.01 # tao
 
 mini_batch_size: 32 # N
 
-max_exe_time: 60.0 # seconds
+max_exe_time: 20.0 # seconds
 
 max_nb_exe: 50000 # max number of execution
 
@@ -19,13 +19,13 @@ nb_steps_warmup_critic: 100 # number of steps needed before updating critic
                           
 nb_steps_warmup_actor: 100 # number of steps needed before updating actor
 
-critic_lr: 0.001 # learning rate of critic
+critic_lr: 0.0015 # learning rate of critic
 
-coe_dT_range: [-0.05, 0.05]
-coe_dA_range: [-0.05, 0.05] # coefficients of orientation changing of feasible trajectory
-coe_dD_range: [-0.05, 0.05] # coefficients of obstacle distance of feasible trajectory
-coe_dQc_range: [-0.05, 0.05]
-coe_dQk_range: [-0.05, 0.05] # coefficietns of orientation changing of infeasible trajectory
+coe_dT_range: [-0.5, 0.5]
+coe_dA_range: [-0.5, 0.5] # coefficients of orientation changing of feasible trajectory
+coe_dD_range: [-0.5, 0.5] # coefficients of obstacle distance of feasible trajectory
+coe_dQc_range: [-0.5, 0.5]
+coe_dQk_range: [-0.5, 0.5] # coefficietns of orientation changing of infeasible trajectory
 
 coe_T_range: [0.0, 1.0]
 coe_A_range: [0.0, 1.0] # coefficients of orientation changing of feasible trajectory

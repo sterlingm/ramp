@@ -148,11 +148,6 @@ class RampEnv(gym.Env):
 		reward = self.reward
 		self.reward = None # clear self.reward after it is used
 
-		if reward < -40.0:
-			plan_fail = True
-		else:
-			plan_fail = False
-
 		if self.observation[0].item() > 0.0 and self.observation[0].item() < 1.0:
 			ob_can_change = True
 		elif self.observation[1].item() > 0.0 and self.observation[1].item() < 1.0:
@@ -160,6 +155,10 @@ class RampEnv(gym.Env):
 		else:
 			ob_can_change = False
 
-		done = plan_fail or (not ob_can_change)
+		if not ob_can_change:
+			done = True
+			reward = -100.0
+		else:
+			done = False
 
 		return self.observation, reward, done, {}

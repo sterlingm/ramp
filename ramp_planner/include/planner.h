@@ -57,8 +57,8 @@ class Planner {
     bool is_population_initialized;
     double biggest_fitness;
     int no_better_cnt;
-    const int MAX_NO_BETTER_CNT = 280;
-    const double ZERO = 0.01;
+    const int MAX_NO_BETTER_CNT = 200;
+    const double ZERO = 0.05;
 
     // Hold the population of trajectories, 
     // the velocities of each trajectory's segments,
