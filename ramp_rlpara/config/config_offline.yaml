@@ -1,8 +1,8 @@
 replay_buffer_size: 100000 # size(R)
 
-discount_factor: 0.99 # gamma
+discount_factor: 0.95 # gamma
 
-target_net_update_factor: 0.01 # tao
+target_net_update_factor: 0.005 # tao
 
 mini_batch_size: 32 # N
 
