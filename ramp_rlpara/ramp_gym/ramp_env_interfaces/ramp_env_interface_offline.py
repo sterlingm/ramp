@@ -157,7 +157,7 @@ class RampEnv(gym.Env):
 
 		if not ob_can_change:
 			done = True
-			reward = -100.0
+			reward = -5000.0
 		else:
 			done = False
 
