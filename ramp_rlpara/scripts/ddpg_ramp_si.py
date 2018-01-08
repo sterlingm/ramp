@@ -144,11 +144,11 @@ actor = Sequential()
 actor.add(Flatten(input_shape=(1,) + env.observation_space.shape)) # input layer, the values in the
                                                                    # observation should be normalized
                                                                    # before being fed to the actor
-actor.add(Dense(observation_size)) # hidden layer 1
+actor.add(Dense(20)) # hidden layer 1
 actor.add(Activation('relu')) # activation function of hidden layer 1
-actor.add(Dense(observation_size)) # hidden layer 2
+actor.add(Dense(20)) # hidden layer 2
 actor.add(Activation('relu')) # activation function of hidden layer 2
-actor.add(Dense(observation_size)) # hidden layer 3
+actor.add(Dense(20)) # hidden layer 3
 actor.add(Activation('relu')) # activation function of hidden layer 3
 actor.add(Dense(action_size)) # outpue layer
 actor.add(Activation('sigmoid')) # activation function of output layer,
@@ -165,11 +165,11 @@ action_input = Input(shape=(action_size,), name='action_input')
 observation_input = Input(shape=(1,) + env.observation_space.shape, name='observation_input')
 flattened_observation = Flatten()(observation_input)
 x = Concatenate()([action_input, flattened_observation]) # input layer
-x = Dense(observation_size + action_size)(x) # dense 1
+x = Dense(30)(x) # dense 1
 x = Activation('relu')(x) # activation 1
-x = Dense(observation_size + action_size)(x) # dense 2
+x = Dense(30)(x) # dense 2
 x = Activation('relu')(x) # activation 2
-x = Dense(observation_size + action_size)(x) # dense 3
+x = Dense(30)(x) # dense 3
 x = Activation('relu')(x) # activation 3
 x = Dense(1)(x) # output layer
 x = Activation('softplus')(x) # activation of output
