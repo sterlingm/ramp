@@ -1117,7 +1117,6 @@ bool CirclePacker::cellInPolyConcave(Polygon poly, Point cell)
 
   //ROS_INFO("collPoints.size(): %i", (int)collPoints.size());
   return collPoints.size() % 2 == 1;
-
 }
 
 

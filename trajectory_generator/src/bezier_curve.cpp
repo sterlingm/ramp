@@ -1077,7 +1077,7 @@ void BezierCurve::buildMotionState(const ReflexxesData& data, ramp_msgs::MotionS
   double  y_dot_dot = u_dot_dot*(B_*u+D_) + B_*u_dot*u_dot;
   //////////ROS_INFO("theta_dot_prev: %f", theta_dot_prev_);
   //////////ROS_INFO("utility_.findDistanceBetweenAngles(theta_dot_prev_, theta_dot): %f", utility_.findDistanceBetweenAngles(theta_dot_prev_, theta_dot));
-  double theta_dot_dot  = utility_.findDistanceBetweenAngles(theta_dot, theta_dot_prev_) / CYCLE_TIME_IN_SECONDS;
+  double theta_dot_dot  = utility_.findDistanceBetweenAngles(theta_dot_prev_, theta_dot) / CYCLE_TIME_IN_SECONDS;
 
 
   // Set previous motion values 

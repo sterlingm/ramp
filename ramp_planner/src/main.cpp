@@ -39,7 +39,7 @@ bool start_planner;
 
 // Initializes a vector of Ranges that the Planner is initialized with
 // Must be called AFTER radius is set
-void initDOF(const std::vector<double> dof_min, const std::vector<double> dof_max) 
+void initDOF(const std::vector<double> dof_min, const std::vector<double> dof_max)
 {
   for(unsigned int i=0;i<dof_min.size();i++) 
   {

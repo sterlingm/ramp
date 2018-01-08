@@ -38,7 +38,7 @@ std::vector<visualization_msgs::Marker> cLines;
 nav_msgs::OccupancyGrid global_costmap;
 
 Utility util;
-double rate=10;
+double rate=20;
 ros::Publisher pub_obj, pub_rviz, pub_cons_costmap, pub_half_costmap, pub_global_costmap;
 std::vector< Obstacle> obs;
 ramp_msgs::ObstacleList list;
@@ -665,7 +665,7 @@ void publishMarkers(const ros::TimerEvent& e)
   visualization_msgs::Marker text;
   text.header.stamp   = ros::Time::now();
   text.header.frame_id  = global_frame;
-  text.id       = populationSize + result.markers.size()+1;
+  text.id       = 70000;
   text.ns       = "basic_shapes";
   text.type     = visualization_msgs::Marker::TEXT_VIEW_FACING;
   text.action   = visualization_msgs::Marker::ADD;

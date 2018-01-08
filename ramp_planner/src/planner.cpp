@@ -2681,7 +2681,7 @@ void Planner::modification()
   mod_traj_durs_.push_back( time_span.count() );
 
   ////////ROS_INFO("t_p: %f", (t_p-now).toSec());
-  ////ROS_INFO("Modification trajectories obtained: %i", (int)mod_trajec.size());
+  ROS_INFO("Modification trajectories obtained: %i", (int)mod_trajec.size());
   
   // Set boolean to signal more than 1 trajec was modified
   modded_two = mod_trajec.size() > 1;
@@ -2692,7 +2692,7 @@ void Planner::modification()
   for(unsigned int i=0;i<mod_trajec.size();i++) 
   {
     //////ROS_INFO("i: %i", i);
-    ////ROS_INFO("Modified trajectory: %s", mod_trajec.at(i).toString().c_str());
+    //ROS_INFO("Modified trajectory: %s", mod_trajec.at(i).toString().c_str());
     ////ROS_INFO("controlCycle_.toSec(): %f", controlCycle_.toSec());
     //////////ROS_INFO("Path size: %i", (int)mod_trajec[i].msg_.holonomic_path.points.size());
     //std::cout<<"\nramp_planner: Evaluating trajectory "<<(int)i<<"\n";
@@ -2708,13 +2708,13 @@ void Planner::modification()
       evaluateTrajectory(traj_final);
     }
 
-    ////ROS_INFO("Final mod: %s", traj_final.toString().c_str());
+    ROS_INFO("Final mod: %s", traj_final.toString().c_str());
 
     // Add the new trajectory to the population
     // Index is where the trajectory was added in the population (may replace another)
     // If it was successfully added, push its index onto the result
     ros::Time t_start = ros::Time::now();
-    ////ROS_INFO("Adding to pop");
+    ROS_INFO("Adding to pop");
     int index = population_.add(traj_final);
     ////ROS_INFO("Done adding");
     
@@ -3246,7 +3246,7 @@ void Planner::getTransPop(const Population& pop, const RampTrajectory& movingOn,
 void Planner::doControlCycle() 
 {
   ////////ROS_WARN("Control Cycle %i occurring at Time: %f", num_cc_, ros::Time::now().toSec());
-  //ROS_INFO("controlCycle_: %f", controlCycle_.toSec());
+  ROS_INFO("controlCycle_: %f", controlCycle_.toSec());
   //////ROS_INFO("Time between control cycles: %f", (ros::Time::now() - t_prevCC_).toSec());
   ////////ROS_INFO("Number of planning cycles that occurred between CC's: %i", c_pc_);
 
@@ -3275,7 +3275,7 @@ void Planner::doControlCycle()
 
   // Send the best trajectory and set movingOn
   //////////ROS_INFO("Sending best");
-  //ROS_INFO("bestT: %s", bestT.toString().c_str());
+  ROS_INFO("bestT: %s", bestT.toString().c_str());
   sendBest();
  
   // Set t_lastFeasible on first CC because we haven't done a sensing cycle yet
