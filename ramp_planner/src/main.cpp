@@ -2,6 +2,7 @@
 #include "planner.h"
 #include <visualization_msgs/MarkerArray.h>
 #include <stdlib.h>
+#include <random>
  
 
 Utility utility;
@@ -433,7 +434,7 @@ bool doNothing(std_srvs::Empty::Request  &req,
 
 int main(int argc, char** argv) 
 {
-  srand( time(0));
+  srand(time(0));
 
   ros::init(argc, argv, "ramp_planner");
   ros::NodeHandle handle;
@@ -538,7 +539,8 @@ int main(int argc, char** argv)
    */
  
   // Initialize the planner
-  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, global_frame, update_topic, pt, gensBeforeCC, t_sc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
+  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations,
+                  global_frame, update_topic, pt, gensBeforeCC, t_sc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
   my_planner.modifications_   = modifications;
   my_planner.evaluations_     = evaluations;
   my_planner.seedPopulation_  = seedPopulation;
@@ -598,8 +600,11 @@ int main(int argc, char** argv)
   ros::Publisher pub_set_env_rdy_true_ = handle.advertise<std_msgs::Empty>("set_env_ready_true", 1, true);// latch = true
   std_msgs::Empty empty_msg;
 
+  bool is_offline_learning;
+  ros::param::param("/ramp/is_offline_learning", is_offline_learning, true);
+
   /******* Start the planner *******/
-  if(use_start_param) // TODO: use triggered srv
+  if(use_start_param && !is_offline_learning) // TODO: use triggered srv
   {
     ros::Rate r_wait_start(10); // 10Hz
     start_planner = false;
@@ -621,15 +626,19 @@ int main(int argc, char** argv)
   else
   {
     std::cout<<"\nPress Enter to start the planner\n";
-    pub_set_env_rdy_true_.publish(empty_msg); // tell others that I am ready
-    ros::ServiceServer env_ready_srv = handle.advertiseService("env_ready_srv", doNothing); // tell others that I am ready
+    // pub_set_env_rdy_true_.publish(empty_msg); // tell others that I am ready
+    // ros::ServiceServer env_ready_srv = handle.advertiseService("env_ready_srv", doNothing); // tell others that I am ready
     std::cin.get();
-    env_ready_srv.shutdown(); // shutdown the srv once I am asked to run
+    // env_ready_srv.shutdown(); // shutdown the srv once I am asked to run
   }
 
   ROS_INFO("Starting Planner!");
   
-  my_planner.go(handle);
+  if (is_offline_learning) {
+    my_planner.offlineGo();
+  } else {
+    my_planner.go(handle);
+  }
 
   //// Publish ramp observation after one running.
   //   Note that ramp observation after one step is calculated in environment interface, not here.
@@ -642,10 +651,17 @@ int main(int argc, char** argv)
   pub_ramp_collection_exe_time_.publish(et_msg);
 
   //// publish the number of best trajectory switches during the execution
-  ros::Publisher pub_nb_best_traj_switches_ = handle.advertise<std_msgs::Int64>("ramp_collection_nb_best_traj_switches", 1, true);
+  ros::Publisher pub_nb_best_traj_switches_ = handle.advertise<std_msgs::Int64>("ramp_collection_nb_best_traj_switches",
+                                                                                1, true);
   std_msgs::Int64 msg_nb_best_t_switch;
   msg_nb_best_t_switch.data = my_planner.h_control_->nb_best_traj_switches;
   pub_nb_best_traj_switches_.publish(msg_nb_best_t_switch);
+
+  //// publish offline reward
+  std_msgs::Float64 reward;
+  reward.data = my_planner.population_.getBest().reward();
+  ros::Publisher r_pub = handle.advertise<std_msgs::Float64>("ramp_collection_reward_offline", 10, true);
+  r_pub.publish(reward);
 
   //// kill all other nodes in the ros launch file
   killNodes();

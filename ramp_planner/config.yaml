@@ -1,4 +1,6 @@
-population_size: 5
+is_offline_learning: true
+
+population_size: 50
 
 sub_populations: false 
 
@@ -14,15 +16,17 @@ error_reduction: true
 only_sensing: false
 
 # If false, control cycles are cut off
-moving_robot: true
+moving_robot: false
 
-gens_before_control_cycle: 50
+gens_before_control_cycle: 1
 
-pop_traj_type: 1 #0=holonomic, 1=hybrid
+pop_traj_type: 0 #0=holonomic, 1=hybrid
 
-fixed_control_cycle_rate: 2.0 # second
+fixed_control_cycle_rate: 15.0 # second
 
 sensing_cycle_rate: 15
+
+is_same_thre: 0.3
 
 # eval_weight_T: 1.75
 
@@ -58,6 +62,6 @@ use_start_param: true
 #obstacle_delays: [2, 0]
 
 
-#gazebo_model_names: ['cardboard_box', 'cardboard_box_0']
+# gazebo_model_names: ['cardboard_box', 'cardboard_box_0']
 gazebo_model_names: []
 

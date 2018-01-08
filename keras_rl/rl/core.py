@@ -1,11 +1,23 @@
 # -*- coding: utf-8 -*-
+import os
+import sys
+import rospy
+from std_msgs.msg import Header
+from std_msgs.msg import Float64
+from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import Int64
+
+## use the keras-rl in this repository
+rl_root = os.path.join(os.path.dirname(__file__), '/')
+sys.path.append(rl_root) # directory_name
+
 import warnings
 from copy import deepcopy
 
 import numpy as np
 from keras.callbacks import History
 
-from rl.callbacks import TestLogger, TrainEpisodeLogger, TrainIntervalLogger, Visualizer, CallbackList
+from callbacks import TestLogger, TrainEpisodeLogger, TrainIntervalLogger, Visualizer, CallbackList
 
 
 class Agent(object):
@@ -35,6 +47,10 @@ class Agent(object):
         self.processor = processor
         self.training = False
         self.step = 0
+        self.last_reward = 0.0
+        self.min_reward = 100000.0
+        self.max_reward = -100000.0
+        self.sum_reward = 0.0
 
     def get_config(self):
         """Configuration of the agent for serialization.
@@ -43,7 +59,7 @@ class Agent(object):
 
     def fit(self, env, nb_steps, action_repetition=1, callbacks=None, verbose=1,
             visualize=False, nb_max_start_steps=0, start_step_policy=None, log_interval=10000,
-            nb_max_episode_steps=None):
+            nb_max_episode_steps=None, chg_file_inter=100, file_dir=None, file_h=None, utility=None):
         """Trains the agent on the given environment.
 
         # Arguments
@@ -68,10 +84,21 @@ class Agent(object):
             nb_max_episode_steps (integer): Number of steps per episode that the agent performs before
                 automatically resetting the environment. Set to `None` if each episode should run
                 (potentially indefinitely) until the environment signals a terminal state.
+            chg_file_inter (integer): interval of changing file to save the weights of networks
 
         # Returns
             A `keras.callbacks.History` instance that recorded the entire training process.
         """
+        ## publish sth. to display in rqt
+        step_pub = rospy.Publisher('ramp_collection_offline_step', Int64, queue_size = 1)
+        act_normed_pub = rospy.Publisher('ramp_collection_offline_act_normed', Float64MultiArray, queue_size = 1)
+        act_pub = rospy.Publisher('ramp_collection_offline_act', Float64MultiArray, queue_size = 1)
+        ob_pub = rospy.Publisher('ramp_collection_offline_ob', Float64MultiArray, queue_size = 1)
+
+        assert file_h is not None
+        assert file_dir is not None
+        assert utility is not None
+
         if not self.compiled:
             raise RuntimeError('Your tried to fit your agent but it hasn\'t been compiled yet. Please call `compile()` before `fit()`.')
         if action_repetition < 1:
@@ -112,7 +139,19 @@ class Agent(object):
         episode_step = None
         did_abort = False
         try:
-            while self.step < nb_steps:
+            while not rospy.core.is_shutdown() and self.step < nb_steps:
+                file_h.write("######################################### STEP " + str(self.step) +
+                            " #########################################\n")
+                print("######################################### STEP " + str(self.step) +
+                    " #########################################")
+
+                ## save the weights
+                if self.step % chg_file_inter == 0:
+                    weights_file_id = int(self.step / chg_file_inter)
+                    weights_dir = file_dir + str(weights_file_id) + "/"
+                    os.system('mkdir -p ' + weights_dir)
+                self.save_weights(weights_dir + 'ddpg_{}_weights.h5f'.format(env.name), overwrite = True)
+
                 if observation is None:  # start of a new episode
                     callbacks.on_episode_begin(episode)
                     episode_step = 0
@@ -121,6 +160,8 @@ class Agent(object):
                     # Obtain the initial observation by resetting the environment.
                     self.reset_states()
                     observation = deepcopy(env.reset())
+                    # Normalize observation
+                    observation = utility.normCoes(observation, env)
                     if self.processor is not None:
                         observation = self.processor.process_observation(observation)
                     assert observation is not None
@@ -137,6 +178,8 @@ class Agent(object):
                             action = self.processor.process_action(action)
                         callbacks.on_action_begin(action)
                         observation, reward, done, info = env.step(action)
+                        # Normalize observation
+                        observation = utility.normCoes(observation, env)
                         observation = deepcopy(observation)
                         if self.processor is not None:
                             observation, reward, done, info = self.processor.process_step(observation, reward, done, info)
@@ -158,6 +201,8 @@ class Agent(object):
                 # This is were all of the work happens. We first perceive and compute the action
                 # (forward step) and then use the reward to improve (backward step).
                 action = self.forward(observation)
+                # Anti-normalize action
+                action = utility.antiNormDeltaCoes(action, env)
                 if self.processor is not None:
                     action = self.processor.process_action(action)
                 reward = 0.
@@ -166,6 +211,8 @@ class Agent(object):
                 for _ in range(action_repetition):
                     callbacks.on_action_begin(action)
                     observation, r, done, info = env.step(action)
+                    # Normalize observation
+                    observation = utility.normCoes(observation, env)
                     observation = deepcopy(observation)
                     if self.processor is not None:
                         observation, r, done, info = self.processor.process_step(observation, r, done, info)
@@ -197,6 +244,46 @@ class Agent(object):
                 episode_step += 1
                 self.step += 1
 
+                ## logging and displaying
+                #  need rosbag close slowly
+                step_pub.publish(Int64(self.step))
+                action_normed = utility.normDeltaCoes(action, env)
+                act_normed_pub.publish(Float64MultiArray(data = action_normed.tolist()))
+                act_pub.publish(Float64MultiArray(data = action.tolist()))
+                ob_pub.publish(Float64MultiArray(data = observation.tolist()))
+                
+                file_h.write("< action >\n")
+                file_h.write(str(action) + "\n")
+                print("< action >")
+                print(action)
+
+                file_h.write("< returned_observation >\n")
+                file_h.write(str(observation) + "\n")
+                print("< returned_observation >")
+                print(observation)
+
+                file_h.write("< reward >\n")
+                file_h.write(str(reward) + "\n")
+                print("< reward >")
+                print(reward)
+
+                running_reward = self.last_reward * 0.7 + reward * 0.3
+                file_h.write("< running_reward >\n")
+                file_h.write(str(running_reward) + "\n")
+                print("< running_reward >")
+                print(running_reward)
+
+                file_h.write("< done >\n")
+                file_h.write(str(done) + "\n")
+                print("< done >")
+                print(done)
+
+                if reward < self.min_reward:
+                    self.min_reward = reward
+                if reward > self.max_reward:
+                    self.max_reward = reward
+                self.sum_reward += reward
+
                 if done:
                     # We are in a terminal state but the agent hasn't yet seen it. We therefore
                     # perform one more forward-backward call and simply ignore the action before
@@ -211,13 +298,24 @@ class Agent(object):
                         'episode_reward': episode_reward,
                         'nb_episode_steps': episode_step,
                         'nb_steps': self.step,
+                        'min_reward': self.min_reward,
+                        'max_reward': self.max_reward,
+                        'ave_reward': 1.0 * self.sum_reward / episode_step
                     }
                     callbacks.on_episode_end(episode, episode_logs)
+
+                    print("##################### episode {} infomation #####################".format(episode))
+                    print(episode_logs)
+                    file_h.write("##################### episode {} infomation #####################\n".format(episode))
+                    file_h.write(str(episode_logs) + "\n")
 
                     episode += 1
                     observation = None
                     episode_step = None
                     episode_reward = None
+                    self.min_reward = 100000.0
+                    self.max_reward = -100000.0
+                    self.sum_reward = 0.0
         except KeyboardInterrupt:
             # We catch keyboard interrupts here so that training can be be safely aborted.
             # This is so common that we've built this right into this function, which ensures that

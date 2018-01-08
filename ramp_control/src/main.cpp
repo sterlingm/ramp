@@ -160,7 +160,7 @@ int main(int argc, char** argv)
   // With rate even as high as 1000, goes down to ~10-15%
   // Shouldn't have problem moving right away on a trajectory with 1000Hz as the rate
   ros::Rate r(1000);
-  while(ros::ok()) 
+  while(ros::ok())
   {
     robot.moveOnTrajectory();
     r.sleep();

@@ -49,6 +49,11 @@ Path::Path(const ramp_msgs::Path p)
   //ROS_INFO("In Path::Path");
   //ROS_INFO("p.size(): %i", (int)p.points.size());
 
+  if (p.points.size() == 0) {
+    ROS_WARN("Use zero point to build path!");
+    return;
+  }
+
   KnotPoint s(p.points.at(0));
   start_ = s;
 

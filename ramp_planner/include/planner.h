@@ -55,6 +55,10 @@ class Planner {
      *******************************************/
     
     bool is_population_initialized;
+    double biggest_fitness;
+    int no_better_cnt;
+    const int MAX_NO_BETTER_CNT = 280;
+    const double ZERO = 0.01;
 
     // Hold the population of trajectories, 
     // the velocities of each trajectory's segments,
@@ -121,10 +125,12 @@ class Planner {
     // Start planning
     trajectory_msgs::JointTrajectoryPoint prepareForTestCase();
     void planningCycles(int num);
+    void offlineGo();
     void go(const ros::NodeHandle& h);
     void goTest(float sec=-1);
     
-    // Initialization 
+    void drawTrajectory();
+    // Initialization
     void initPopulation();
     void init(const uint8_t             i,                
               const ros::NodeHandle&    h, 
@@ -161,6 +167,8 @@ class Planner {
     // Evaluate the population 
     void evaluateTrajectory(RampTrajectory& t, bool full=true);
     void evaluatePopulation();
+    bool genBetter(); // whether the current generation result becomes better
+                      // than the best in history
     
     // Modify trajectory or path
     const std::vector<Path> modifyPath();
@@ -638,6 +646,13 @@ class Planner {
     void writeGeneralData();
     void writeDurationData();
     void writeData();
+
+  private:
+    ros::NodeHandle rh;
+    ros::ServiceClient gazebo_srv_client;
+    ros::Publisher pub_reset_odom;
+    ros::Publisher off_r_pub;
+    ros::ServiceServer env_ready_srv;
 };
 
 #endif

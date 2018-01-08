@@ -1,0 +1,9 @@
+<launch>
+
+<!-- LOAD CONFIG FILES -->
+<rosparam file="$(find ramp_rlpara)/config/config_offline.yaml" command="load"/>
+
+<!-- LOAD NODES -->
+<node name="ddpg_ramp_offline" pkg="ramp_rlpara" type="ddpg_ramp_offline.py" output="screen" />
+
+</launch>

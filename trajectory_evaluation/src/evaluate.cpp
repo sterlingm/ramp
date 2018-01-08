@@ -1,6 +1,7 @@
 #include "evaluate.h"
 
-Evaluate::Evaluate() : orientation_infeasible_(0), T_norm_(50), A_norm_(PI), D_norm_(1.0), last_T_weight_(-1.0), last_A_weight_(-1.0), last_D_weight_(-1.0), last_Q_coll_(-1.0), last_Q_kine_(-1.0) {}
+Evaluate::Evaluate() : orientation_infeasible_(0), T_norm_(25.0), A_norm_(PI/4.0), _1_D_norm_(1.0/0.91), coll_time_norm_(zero),
+                       last_T_weight_(-1.0), last_A_weight_(-1.0), last_D_weight_(-1.0), last_Q_coll_(-1.0), last_Q_kine_(-1.0) {}
 
 void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res)
 {
@@ -51,7 +52,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   if(req.full_eval)
   {
     ////ROS_INFO("Requesting fitness!");
-    performFitness(req.trajectory, req.offset, res.fitness);
+    performFitness(req.trajectory, req.offset, res.fitness, res.min_obs_dis);
   }
   //////ROS_INFO("performFitness: %f", (ros::Time::now()-t_start).toSec());
 }
@@ -83,7 +84,7 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
   ramp_msgs::RampTrajectory* trj = &er.trajectory;
   
   if((!er.imminent_collision && er.consider_trans && !er.trans_possible) ||
-      orientation_.getDeltaTheta(*trj) > 1.5708)
+      orientation_.getDeltaTheta(*trj) > 1.5708) // 90 degree
   {
     ////ROS_INFO("In final if statement");
     orientation_infeasible_ = true;
@@ -99,14 +100,11 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
 
 
 /** This method computes the fitness of the trajectory_ member */
-void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offset, double& result) 
+void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offset, double& result, double& min_obs_dis) 
 {
   //////ROS_INFO("In Evaluate::performFitness");
   ros::Time t_start = ros::Time::now();
   
-  double cost=0;
-  double penalties = 0;
-
   if(trj.feasible)
   {
     //ROS_INFO("In if(feasible)");
@@ -163,8 +161,8 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     }
     //////ROS_INFO("dist: %f delta_theta: %f", dist, delta_theta);
 
-    double max_v=0.25/2;
-    double max_w=PI/8.f;
+    double max_v = 0.1;
+    double max_w = 0.5;
 
     // Estimate how long to execute positional and angular displacements based on max velocity
     double estimated_linear   = dist / max_v;
@@ -173,33 +171,52 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     //////ROS_INFO("estimated_linear: %f estimated_rotation: %f", estimated_linear, estimated_rotation);
 
     T += (estimated_linear + estimated_rotation);
+    if (T < zero) T = zero;
+    double _1_T = 1.0 / T;
 
     // Orientation
-    double A = orientation_.perform(trj);
+    double A = fabs(orientation_.perform(trj));
+    if (A < zero) A = zero;
+    double _1_A = 1.0 / A;
 
     /*double v = sqrt( pow(trj.trajectory.points[0].velocities[0],2) + pow(trj.trajectory.points[1].velocities[1],2) );
     A_weight_ = v;*/
 
     // Minimum distance to any obstacle
     double D = cd_.min_dist_;
+    if (D < zero) D = zero;
+    double _1_D = 1.0 / D; // consider 1/D, not D
+    min_obs_dis = D;
     
     //ROS_INFO("T: %f A: %f D: %f", T, A, D);
 
     // Update normalization for Time if necessary
-    if(T > T_norm_)
-    {
-      T_norm_ = T;
-    }
+    // if(T > T_norm_)
+    // {
+    //   T_norm_ = T;
+    // }
+    // if(A > A_norm_)
+    // {
+    //   A_norm_ = A;
+    // }
+    // if(_1_D > _1_D_norm_)
+    // {
+    //   _1_D_norm_ = _1_D;
+    // }
 
     // Normalize terms
     T /= T_norm_;
     A /= A_norm_;
-    D /= D_norm_;
+    _1_D /= _1_D_norm_;
     
     //ROS_INFO("Normalized terms T: %f A: %f D: %f", T, A, D);
 
     // Weight terms
-    T_weight_ = 1.0;
+    // T_weight_ = 1.0;
+    if (!ros::param::get("/ramp/eval_weight_T", T_weight_)) {
+      // if fail to get the parameter
+      T_weight_ = 1.0; // set it to the default
+    }
     static bool is_set_T = false;
     if (!is_set_T) {
       ros::param::set("/ramp/eval_weight_T", T_weight_);
@@ -226,14 +243,19 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
       is_set_D = true;
     }
 
-    T *= T_weight_;
-    A *= A_weight_;
-    D *= D_weight_;
+    // T *= T_weight_;
+    // A *= A_weight_;
+    // D *= D_weight_; // this is wrong! (1.0)/(D * D_weight_)
     
     //ROS_INFO("Weighted terms T: %f A: %f D: %f", T, A, D);
     
     // Compute overall cost
-    cost = T + A + (1.f/D);
+    double cost = zero;
+    cost += T_weight_ * T + A_weight_ * A + D_weight_ * _1_D;
+    result = 1.0 / cost;
+
+    // result = 100000; // must be larger than infeasible
+    // result += T_weight_ * _1_T + A_weight_ * _1_A + D_weight_ * D;
   }
 
   else // infeasible
@@ -244,33 +266,39 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     
     ////////////ROS_INFO("trj.t_firstColl: %f", trj.t_firstCollision.toSec());
 
-    Q_coll_ = 1.0;
+    // Q_coll_ = 1.0;
+    if (!ros::param::get("/ramp/eval_weight_Qc", Q_coll_)) {
+      Q_coll_ = 1.0; // default
+    }
     static bool is_set_Qc = false;
     if (!is_set_Qc) {
       ros::param::set("/ramp/eval_weight_Qc", Q_coll_);
       is_set_Qc = true;
     }
-    // Add the Penalty for being infeasible due to collision, at some point i was limiting the time to 10s, but i don't know why
-    if(trj.t_firstCollision.toSec() > 0 && trj.t_firstCollision.toSec() < 9998)
-    {
-      ////ROS_INFO("In if t_firstCollision: %f", trj.t_firstCollision.toSec());
-      ////ROS_INFO("Collision penalty: %f",(Q_coll_ / trj.t_firstCollision.toSec()));
-      penalties += (Q_coll_ / trj.t_firstCollision.toSec());
+
+    double coll_time = trj.t_firstCollision.toSec(); // larger, better
+    if (coll_time < zero) {
+      coll_time = zero;
     }
-    else
-    {
-      ////ROS_INFO("Collision penalty (Full): %f",Q_coll_);
-      penalties += Q_coll_;
+    double _1_coll_time = 1.0 / coll_time;
+    if (_1_coll_time > _1_coll_time_norm_) {
+      _1_coll_time_norm_ = _1_coll_time;
     }
+    _1_coll_time /= _1_coll_time_norm_;
 
     // If infeasible due to orientation change (i.e. no smooth curve)
     // If there is imminent collision, do not add this penalty (it's okay to stop and rotate)
-    if(orientation_infeasible_)// && !imminent_collision_)
+    double delta_theta;
+    double _1_delta_theta;
+    if(1 || orientation_infeasible_)// && !imminent_collision_)
     {
-      //ROS_INFO("In if orientation_infeasible_: %f", orientation_.getDeltaTheta(trj));
-      double delta_theta = orientation_.getDeltaTheta(trj) < 0.11 ? 0.1 : orientation_.getDeltaTheta(trj);
+      delta_theta = fabs(orientation_.getDeltaTheta(trj) < 0.11 ? 0.1 : orientation_.getDeltaTheta(trj));
+      if (delta_theta < zero) {
+        delta_theta = zero;
+      }
+      _1_delta_theta = 1.0 / delta_theta;
+
       if (!ros::param::get("/ramp/eval_weight_Qk", Q_kine_)) {
-        // if fail to get the parameter
         Q_kine_ = 10.0; // set it to the default
       }
       static bool is_set_Qk = false;
@@ -278,15 +306,19 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
         ros::param::set("/ramp/eval_weight_Qk", Q_kine_);
         is_set_Qk = true;
       }
-      //ROS_INFO("delta_theta: %f getDeltaTheta: %f Orientation penalty: %f", delta_theta, orientation_.getDeltaTheta(trj), Q_kine_ * (orientation_.getDeltaTheta(trj) / PI));
-      penalties += Q_kine_ * (delta_theta / PI);
-    }
-    
-    penalties *= 10000.0; // the fitness of infeasible trajextory must be smaller than feasible trajectory
-  }
 
-  ////////ROS_INFO("cost: %f penalties: %f", cost, penalties);
-  result = (1. / (cost + penalties));
+      // if (delta_theta > A_norm_) {
+      //   A_norm_ = delta_theta;
+      // }
+      delta_theta /= A_norm_;
+    }
+
+    double penalties = 1.0; // for infeasible trajectory, penalties cannot be zero
+    penalties += Q_coll_ * _1_coll_time + Q_kine_ * delta_theta;
+    penalties *= 10000.0; // the fitness of infeasible trajextory must be smaller than feasible trajectory
+    result = 1.0 / penalties;
+    // result = Q_coll_* coll_time + Q_kine_ * _1_delta_theta;
+  }
 
   // if weights change, print them
   if (T_weight_ != last_T_weight_ ||
@@ -300,6 +332,6 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
         last_Q_coll_   = Q_coll_;   last_Q_kine_   = Q_kine_;
       }
 
-  ////////////ROS_INFO("performFitness time: %f", (ros::Time::now() - t_start).toSec());
-  //ROS_INFO("Exiting Evaluate::performFitness");
-} //End performFitness
+  // ROS_INFO("performFitness time: %f", (ros::Time::now() - t_start).toSec());
+  // ROS_INFO("Exiting Evaluate::performFitness");
+} // End performFitness

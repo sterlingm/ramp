@@ -23,6 +23,25 @@ MotionState::MotionState(const trajectory_msgs::JointTrajectoryPoint p) : mobile
 
 MotionState::MotionState(const ramp_msgs::MotionState ms) : msg_(ms), mobile_base_k_(2) {}
 
+MotionState::MotionState(double x, double y, double theta,
+                         double vx, double vy, double vtheta,
+                         double ax, double ay, double atheta,
+                         double time) {
+                           msg_.positions.push_back(x);
+                           msg_.positions.push_back(y);
+                           msg_.positions.push_back(theta);
+
+                           msg_.velocities.push_back(vx);
+                           msg_.velocities.push_back(vy);
+                           msg_.velocities.push_back(vtheta);
+
+                           msg_.accelerations.push_back(ax);
+                           msg_.accelerations.push_back(ay);
+                           msg_.accelerations.push_back(atheta);
+
+                           msg_.time = time;
+                         }
+
 
 
 

@@ -38,6 +38,6 @@
 <node name="ramp_planner" pkg="ramp_planner" type="ramp_planner" output="screen" respawn="true" />
 
 <!-- Move obstacles -->
-<node name="move_obstacles" pkg="ramp_planner" type="move_gazebo_obs" output="log" respawn="true" />
+<!-- <node name="move_obstacles" pkg="ramp_planner" type="move_gazebo_obs" output="log" respawn="true" /> -->
 
 </launch>

@@ -17,7 +17,7 @@ while not rospy.core.is_shutdown():
 	cnt += 1
 	print(str(cnt * sleep_time) + "s has elapsed since last cleaning...")
 	
-	if cnt >= 6*3: # 3 minutes
+	if cnt >= 6*1: # 1 minutes
 		cnt = 0
 		os.system("rm -rf /home/kai/.ros/log")
 		print("/home/kai/.ros/log is cleaned!")

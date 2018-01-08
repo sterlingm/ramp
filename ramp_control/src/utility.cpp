@@ -71,24 +71,33 @@ const double Utility::findDistanceBetweenAngles(const double a1, const double a2
   double result;
   double difference = a2 - a1;
   
+  while (difference > PI) {
+    difference -= 2.0 * PI;
+  }
+
+  while (difference < -PI) {
+    difference += 2.0 * PI;
+  }
+
+  return difference;
   
-  // If difference > pi, the result should be in [-PI,0] range
-  if(difference > PI) {
-    difference = fmodf(difference, PI);
-    result = difference - PI;
-  }
+  // // If difference > pi, the result should be in [-PI,0] range
+  // if(difference > PI) {
+  //   difference = fmodf(difference, PI);
+  //   result = difference - PI;
+  // }
 
-  // If difference < -pi, the result should be in [0,PI] range
-  else if(difference < -PI) {
-    result = difference + (2*PI);
-  }
+  // // If difference < -pi, the result should be in [0,PI] range
+  // else if(difference < -PI) {
+  //   result = difference + (2*PI);
+  // }
 
-  // Else, the difference is fine
-  else {
-    result = difference;
-  }
+  // // Else, the difference is fine
+  // else {
+  //   result = difference;
+  // }
 
-  return result;
+  // return result;
 } //End findDistanceBetweenAngles
 
 

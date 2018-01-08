@@ -37,7 +37,7 @@
 
 
 <!-- Trajectory Visualization -->
-<node name="trajectory_visualisation" pkg="trajectory_visualisation" type="trajectory_visualisation" output="screen" />
+<node name="trajectory_visualisation" pkg="trajectory_visualisation" type="trajectory_visualisation" output="log" /> 
 
 <!-- map->odom transform -->
 <node name="pub_map_odom" pkg="ramp_planner" type="pub_map_odom" output="screen" />

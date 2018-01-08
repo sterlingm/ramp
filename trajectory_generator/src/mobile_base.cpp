@@ -89,7 +89,7 @@ void MobileBase::initReflexxes()
 // TODO: change 3 booleans to 1 enum
 void MobileBase::init(const ramp_msgs::TrajectoryRequest req) 
 {
-  ROS_INFO("Entered MobileBase::init");
+  // ROS_INFO("Entered MobileBase::init");
 
   //if(req.bezierInfo.u_0 > 0)
     //std::cout<<"\nBezier Info passed in: "<<utility_.toString(req.bezierInfo);
@@ -100,7 +100,7 @@ void MobileBase::init(const ramp_msgs::TrajectoryRequest req)
   // Set max speeds
   MAX_SPEED_LINEAR  = req.max_speed_linear;
   MAX_SPEED_ANGULAR = req.max_speed_angular;
-  ROS_INFO("MAX_SPEED_LINEAR: %f MAX_SPEED_ANGULAR: %f", MAX_SPEED_LINEAR, MAX_SPEED_ANGULAR);
+  // ROS_INFO("MAX_SPEED_LINEAR: %f MAX_SPEED_ANGULAR: %f", MAX_SPEED_LINEAR, MAX_SPEED_ANGULAR);
 
   // Set print
   print_ = req.print;
@@ -224,8 +224,8 @@ void MobileBase::setTarget(const ramp_msgs::MotionState& ms)
 
 void MobileBase::setMaxV(const double x_dot, const double theta_dot)
 {
-  ROS_INFO("In MobileBase::setMaxV");
-  ROS_INFO("x_dot: %f theta_dot: %f", x_dot, theta_dot);
+  // ROS_INFO("In MobileBase::setMaxV");
+  // ROS_INFO("x_dot: %f theta_dot: %f", x_dot, theta_dot);
 
 
   /*
@@ -918,71 +918,71 @@ void MobileBase::bezier(ramp_msgs::Path& p, bool only_curve, std::vector<BezierC
 /** Print Reflexxes input and output for the latest call */
 void MobileBase::printReflexxesSpinInfo() const 
 {
-  std::cout<<"\n\n*****************************************************************************";
-  std::cout<<"\nCalled reflexxes with input:";
+  // std::cout<<"\n\n*****************************************************************************";
+  // std::cout<<"\nCalled reflexxes with input:";
   
-  std::cout<<"\nreflexxesData_.inputParameters->CurrentPositionVector->VecData[0]: "<<
-                reflexxesData_.inputParameters->CurrentPositionVector->VecData[0];
-  std::cout<<"\nreflexxesData_.inputParameters->CurrentPositionVector->VecData[1]: "<<
-                reflexxesData_.inputParameters->CurrentPositionVector->VecData[1];
-  //std::cout<<"\nreflexxesData_.inputParameters->CurrentPositionVector->VecData[2]: "<<
-  //              reflexxesData_.inputParameters->CurrentPositionVector->VecData[2];
+  // std::cout<<"\nreflexxesData_.inputParameters->CurrentPositionVector->VecData[0]: "<<
+  //               reflexxesData_.inputParameters->CurrentPositionVector->VecData[0];
+  // std::cout<<"\nreflexxesData_.inputParameters->CurrentPositionVector->VecData[1]: "<<
+  //               reflexxesData_.inputParameters->CurrentPositionVector->VecData[1];
+  // //std::cout<<"\nreflexxesData_.inputParameters->CurrentPositionVector->VecData[2]: "<<
+  // //              reflexxesData_.inputParameters->CurrentPositionVector->VecData[2];
   
-  std::cout<<"\n\nreflexxesData_.inputParameters->CurrentVelocityVector->VecData[0]: "<<
-                  reflexxesData_.inputParameters->CurrentVelocityVector->VecData[0];
-  std::cout<<"\nreflexxesData_.inputParameters->CurrentVelocityVector->VecData[1]: "<<
-                reflexxesData_.inputParameters->CurrentVelocityVector->VecData[1];
-  //std::cout<<"\nreflexxesData_.inputParameters->CurrentVelocityVector->VecData[2]: "<<
-  //              reflexxesData_.inputParameters->CurrentVelocityVector->VecData[2];
+  // std::cout<<"\n\nreflexxesData_.inputParameters->CurrentVelocityVector->VecData[0]: "<<
+  //                 reflexxesData_.inputParameters->CurrentVelocityVector->VecData[0];
+  // std::cout<<"\nreflexxesData_.inputParameters->CurrentVelocityVector->VecData[1]: "<<
+  //               reflexxesData_.inputParameters->CurrentVelocityVector->VecData[1];
+  // //std::cout<<"\nreflexxesData_.inputParameters->CurrentVelocityVector->VecData[2]: "<<
+  // //              reflexxesData_.inputParameters->CurrentVelocityVector->VecData[2];
   
-  std::cout<<"\n\nreflexxesData_.inputParameters->CurrentAccelerationVector->VecData[0]: "<<
-                  reflexxesData_.inputParameters->CurrentAccelerationVector->VecData[0];
-  std::cout<<"\nreflexxesData_.inputParameters->CurrentAccelerationVector->VecData[1]: "<<
-                reflexxesData_.inputParameters->CurrentAccelerationVector->VecData[1];
-  //std::cout<<"\nreflexxesData_.inputParameters->CurrentAccelerationVector->VecData[2]: "<<
-  //              reflexxesData_.inputParameters->CurrentAccelerationVector->VecData[2];
-  
-  
-  std::cout<<"\n\nreflexxesData_.inputParameters->MaxVelocityVector->VecData[0]: "<<
-                  reflexxesData_.inputParameters->MaxVelocityVector->VecData[0];
-  std::cout<<"\nreflexxesData_.inputParameters->MaxVelocityVector->VecData[1]: "<<
-                reflexxesData_.inputParameters->MaxVelocityVector->VecData[1];
-  //std::cout<<"\nreflexxesData_.inputParameters->MaxVelocityVector->VecData[2]: "<<
-  //              reflexxesData_.inputParameters->MaxVelocityVector->VecData[2];
-  
-  std::cout<<"\n\nreflexxesData_.inputParameters->MaxAccelerationVector->VecData[0]: "<<
-                  reflexxesData_.inputParameters->MaxAccelerationVector->VecData[0];
-  std::cout<<"\nreflexxesData_.inputParameters->MaxAccelerationVector->VecData[1]: "<<
-                reflexxesData_.inputParameters->MaxAccelerationVector->VecData[1];
-  //std::cout<<"\nreflexxesData_.inputParameters->MaxAccelerationVector->VecData[2]: "<<
-  //              reflexxesData_.inputParameters->MaxAccelerationVector->VecData[2];
+  // std::cout<<"\n\nreflexxesData_.inputParameters->CurrentAccelerationVector->VecData[0]: "<<
+  //                 reflexxesData_.inputParameters->CurrentAccelerationVector->VecData[0];
+  // std::cout<<"\nreflexxesData_.inputParameters->CurrentAccelerationVector->VecData[1]: "<<
+  //               reflexxesData_.inputParameters->CurrentAccelerationVector->VecData[1];
+  // //std::cout<<"\nreflexxesData_.inputParameters->CurrentAccelerationVector->VecData[2]: "<<
+  // //              reflexxesData_.inputParameters->CurrentAccelerationVector->VecData[2];
   
   
-  std::cout<<"\n\nOutput: ";
-  std::cout<<"\nreflexxesData_.outputParameters->NewPositionVector->VecData[0]: "<<
-                reflexxesData_.outputParameters->NewPositionVector->VecData[0];
-  std::cout<<"\nreflexxesData_.outputParameters->NewPositionVector->VecData[1]: "<<
-                reflexxesData_.outputParameters->NewPositionVector->VecData[1];
-  //std::cout<<"\nreflexxesData_.outputParameters->NewPositionVector->VecData[2]: "<<
-  //              reflexxesData_.outputParameters->NewPositionVector->VecData[2];
+  // std::cout<<"\n\nreflexxesData_.inputParameters->MaxVelocityVector->VecData[0]: "<<
+  //                 reflexxesData_.inputParameters->MaxVelocityVector->VecData[0];
+  // std::cout<<"\nreflexxesData_.inputParameters->MaxVelocityVector->VecData[1]: "<<
+  //               reflexxesData_.inputParameters->MaxVelocityVector->VecData[1];
+  // //std::cout<<"\nreflexxesData_.inputParameters->MaxVelocityVector->VecData[2]: "<<
+  // //              reflexxesData_.inputParameters->MaxVelocityVector->VecData[2];
   
-  std::cout<<"\n\nreflexxesData_.outputParameters->NewVelocityVector->VecData[0]: "<<
-                reflexxesData_.outputParameters->NewVelocityVector->VecData[0];
-  std::cout<<"\nreflexxesData_.outputParameters->NewVelocityVector->VecData[1]: "<<
-                reflexxesData_.outputParameters->NewVelocityVector->VecData[1];
-  //std::cout<<"\nreflexxesData_.outputParameters->NewVelocityVector->VecData[2]: "<<
-  //              reflexxesData_.outputParameters->NewVelocityVector->VecData[2];
+  // std::cout<<"\n\nreflexxesData_.inputParameters->MaxAccelerationVector->VecData[0]: "<<
+  //                 reflexxesData_.inputParameters->MaxAccelerationVector->VecData[0];
+  // std::cout<<"\nreflexxesData_.inputParameters->MaxAccelerationVector->VecData[1]: "<<
+  //               reflexxesData_.inputParameters->MaxAccelerationVector->VecData[1];
+  // //std::cout<<"\nreflexxesData_.inputParameters->MaxAccelerationVector->VecData[2]: "<<
+  // //              reflexxesData_.inputParameters->MaxAccelerationVector->VecData[2];
   
-  std::cout<<"\n\nreflexxesData_.outputParameters->NewAccelerationVector->VecData[0]: "<<
-                reflexxesData_.outputParameters->NewAccelerationVector->VecData[0];
-  std::cout<<"\nreflexxesData_.outputParameters->NewAccelerationVector->VecData[1]: "<<
-                reflexxesData_.outputParameters->NewAccelerationVector->VecData[1];
-  //std::cout<<"\nreflexxesData_.outputParameters->NewAccelerationVector->VecData[2]: "<<
-  //              reflexxesData_.outputParameters->NewAccelerationVector->VecData[2];
+  
+  // std::cout<<"\n\nOutput: ";
+  // std::cout<<"\nreflexxesData_.outputParameters->NewPositionVector->VecData[0]: "<<
+  //               reflexxesData_.outputParameters->NewPositionVector->VecData[0];
+  // std::cout<<"\nreflexxesData_.outputParameters->NewPositionVector->VecData[1]: "<<
+  //               reflexxesData_.outputParameters->NewPositionVector->VecData[1];
+  // //std::cout<<"\nreflexxesData_.outputParameters->NewPositionVector->VecData[2]: "<<
+  // //              reflexxesData_.outputParameters->NewPositionVector->VecData[2];
+  
+  // std::cout<<"\n\nreflexxesData_.outputParameters->NewVelocityVector->VecData[0]: "<<
+  //               reflexxesData_.outputParameters->NewVelocityVector->VecData[0];
+  // std::cout<<"\nreflexxesData_.outputParameters->NewVelocityVector->VecData[1]: "<<
+  //               reflexxesData_.outputParameters->NewVelocityVector->VecData[1];
+  // //std::cout<<"\nreflexxesData_.outputParameters->NewVelocityVector->VecData[2]: "<<
+  // //              reflexxesData_.outputParameters->NewVelocityVector->VecData[2];
+  
+  // std::cout<<"\n\nreflexxesData_.outputParameters->NewAccelerationVector->VecData[0]: "<<
+  //               reflexxesData_.outputParameters->NewAccelerationVector->VecData[0];
+  // std::cout<<"\nreflexxesData_.outputParameters->NewAccelerationVector->VecData[1]: "<<
+  //               reflexxesData_.outputParameters->NewAccelerationVector->VecData[1];
+  // //std::cout<<"\nreflexxesData_.outputParameters->NewAccelerationVector->VecData[2]: "<<
+  // //              reflexxesData_.outputParameters->NewAccelerationVector->VecData[2];
 
-  std::cout<<"\n\nResult value: "<<reflexxesData_.resultValue;
-  std::cout<<"\nFinalStateReached: "<<finalStateReached();
-  std::cout<<"\n*****************************************************************************";
+  // std::cout<<"\n\nResult value: "<<reflexxesData_.resultValue;
+  // std::cout<<"\nFinalStateReached: "<<finalStateReached();
+  // std::cout<<"\n*****************************************************************************";
 } // End printReflexxesInfo
 
 

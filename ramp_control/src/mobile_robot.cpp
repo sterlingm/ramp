@@ -382,7 +382,7 @@ void MobileRobot::moveOnTrajectory()
       // When driving straight, adjust the angular speed 
       // to maintain orientation
       // TODO: Works with Bezier curve?
-      if(fabs(twist_.linear.x) > 0.0f && fabs(twist_.angular.z) < 0.0001f) 
+      if(fabs(twist_.linear.x) > 0.0f && fabs(twist_.angular.z) < 0.0001f)
       {
         //ROS_INFO("initial_theta_: %f motion_state_.positions.at(2): %f -tf_rot: %f", initial_theta_, motion_state_.positions.at(2), -tf_rot_);
         double theta_global = utility_.displaceAngle(motion_state_.positions[2], -tf_rot_); 

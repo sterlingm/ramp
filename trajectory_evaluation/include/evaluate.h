@@ -15,7 +15,7 @@ class Evaluate {
 
     void perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res);
     void performFeasibility(ramp_msgs::EvaluationRequest& er);
-    void performFitness(ramp_msgs::RampTrajectory& trj, const double& offset, double& result);
+    void performFitness(ramp_msgs::RampTrajectory& trj, const double& offset, double& result, double& min_obs_dis);
 
     /** Different evaluation criteria */
     EuclideanDistance eucDist_;
@@ -38,20 +38,31 @@ class Evaluate {
     bool imminent_collision_;
 
     double T_norm_;
+    double _1_T_norm_;
     double A_norm_;
+    double _1_A_norm_;
     double D_norm_;
+    double _1_D_norm_;
+    double coll_time_norm_;
+    double _1_coll_time_norm_;
+
     double last_T_weight_;
     double last_A_weight_;
     double last_D_weight_;
+
     double T_weight_;
     double A_weight_;
     double D_weight_;
+
+    double max_speed_linear;
+    double max_speed_angular;
 
     std::vector< ros::Duration > t_analy_;
     std::vector< ros::Duration > t_numeric_;
   private:
     Utility utility_;
     bool orientation_infeasible_;
+    const double zero = 0.00001;
 };
 
 #endif
