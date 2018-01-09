@@ -1,6 +1,6 @@
 #include "evaluate.h"
 
-Evaluate::Evaluate() : orientation_infeasible_(0), T_norm_(25.0), A_norm_(PI/4.0), _1_D_norm_(1.0/0.91), coll_time_norm_(zero),
+Evaluate::Evaluate() : orientation_infeasible_(0), T_norm_(30.0), A_norm_(PI), _1_D_norm_(1.0/0.9), coll_time_norm_(zero),
                        last_T_weight_(-1.0), last_A_weight_(-1.0), last_D_weight_(-1.0), last_Q_coll_(-1.0), last_Q_kine_(-1.0) {}
 
 void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res)
@@ -161,8 +161,8 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     }
     //////ROS_INFO("dist: %f delta_theta: %f", dist, delta_theta);
 
-    double max_v = 0.1;
-    double max_w = 0.5;
+    double max_v = 0.25 / 2.0;
+    double max_w = PI / 8.0;
 
     // Estimate how long to execute positional and angular displacements based on max velocity
     double estimated_linear   = dist / max_v;
@@ -245,7 +245,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
 
     // T *= T_weight_;
     // A *= A_weight_;
-    // D *= D_weight_; // this is wrong! (1.0)/(D * D_weight_)
+    // D *= D_weight_; // this is wrong! this is 1.0 / (D * D_weight_), but what we need is D * (1.0 / D_weight_)
     
     //ROS_INFO("Weighted terms T: %f A: %f D: %f", T, A, D);
     

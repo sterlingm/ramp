@@ -552,10 +552,9 @@ void RampTrajectory::print() {
 }
 
 const double RampTrajectory::reward() const {
-  const double fail_reward = -45.0;
   double min_obs_dis_limit = 0.93; // m
-  const double fail_time = 23.0; // m, this para may confict with no_col_dis
-  double reward = fail_reward;
+  const double max_time = 27.0; // m
+  double reward = 0.0;
   
   if (!msg_.feasible) {
     return reward;
@@ -572,19 +571,16 @@ const double RampTrajectory::reward() const {
   
   //// Get total time to execute trajectory
   double T = msg_.trajectory.points.at(msg_.trajectory.points.size()-1).time_from_start.toSec();
-  //// Too long executiontime means failure
-  if (T > fail_time) {
-    return reward;
-  }
-
   //// Reward needs to be calculated
-  reward = 21.0 - T;
+  reward = max_time - T;
 
   //// Collide with obstacle randomly
   double tolerance = msg_.min_obs_dis - min_obs_dis_limit; // m
   if (tolerance < uni_distri(generator)) {
-    reward -= 15;
+    reward = 0.0;
   }
 
+  if (reward < 0.0)
+    reward = 0.0;
   return reward;
 }

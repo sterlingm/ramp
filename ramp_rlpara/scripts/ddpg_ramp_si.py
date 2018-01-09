@@ -144,11 +144,11 @@ actor = Sequential()
 actor.add(Flatten(input_shape=(1,) + env.observation_space.shape)) # input layer, the values in the
                                                                    # observation should be normalized
                                                                    # before being fed to the actor
-actor.add(Dense(observation_size)) # hidden layer 1
+actor.add(Dense(20)) # hidden layer 1
 actor.add(Activation('relu')) # activation function of hidden layer 1
-actor.add(Dense(observation_size)) # hidden layer 2
+actor.add(Dense(20)) # hidden layer 2
 actor.add(Activation('relu')) # activation function of hidden layer 2
-actor.add(Dense(observation_size)) # hidden layer 3
+actor.add(Dense(20)) # hidden layer 3
 actor.add(Activation('relu')) # activation function of hidden layer 3
 actor.add(Dense(action_size)) # outpue layer
 actor.add(Activation('sigmoid')) # activation function of output layer,
@@ -165,11 +165,11 @@ action_input = Input(shape=(action_size,), name='action_input')
 observation_input = Input(shape=(1,) + env.observation_space.shape, name='observation_input')
 flattened_observation = Flatten()(observation_input)
 x = Concatenate()([action_input, flattened_observation]) # input layer
-x = Dense(observation_size + action_size)(x) # dense 1
+x = Dense(30)(x) # dense 1
 x = Activation('relu')(x) # activation 1
-x = Dense(observation_size + action_size)(x) # dense 2
+x = Dense(30)(x) # dense 2
 x = Activation('relu')(x) # activation 2
-x = Dense(observation_size + action_size)(x) # dense 3
+x = Dense(30)(x) # dense 3
 x = Activation('relu')(x) # activation 3
 x = Dense(1)(x) # output layer
 x = Activation('softplus')(x) # activation of output
@@ -187,27 +187,15 @@ utility = Utility()
 #  here just use window_length = 1 for simplity of understanding
 replay_buffer = SequentialMemory(limit = utility.replay_buffer_size, window_length = 1)
 
-## max number of switching the best trajectory
-max_num_switch = math.ceil(utility.max_exe_time / utility.switch_period)
-
-## the initial, not normalized, meter and second
-s_init = np.array([0.0, utility.the_initial[0], utility.the_initial[1], utility.the_initial[2],
-                        0.0, 0.0, 0.0,
-                        0.0, 0.0, 0.0])
-
-## normalize the initial
-s_init_normed = utility.normalizeMotionState(s_init)
-
 ## init random action probability
 #  the output noise is normalized
 random_process = OrnsteinUhlenbeckProcess(size = action_size, sigma_min = 0.0, theta = utility.orn_paras['theta'],
-                                          n_steps_annealing = int(utility.max_nb_exe * utility.orn_paras['percent']))
+                                          n_steps_annealing = 80)
 ## test noise added on action:
-'''
 A = np.array([])
 D = np.array([])
 Qk = np.array([])
-for i in range(utility.max_nb_exe):
+for i in range(100):
     sample = random_process.sample()
     A = np.append(A, sample[0])
     D = np.append(D, sample[1])
@@ -221,7 +209,6 @@ plt.show()
 plt.plot(Qk)
 plt.ylabel("Qk")
 plt.show()
-'''
 
 ## build the agent, in our case memory_interval must be set to 1
 #  after this building, use agent.actor, agent.memory, agent.random_process if needed,

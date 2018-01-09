@@ -160,12 +160,12 @@ replay_buffer = SequentialMemory(limit = utility.replay_buffer_size, window_leng
 # #  the output noise is normalized
 # random_process = OrnsteinUhlenbeckProcess(size = action_size, sigma_min = 0.0, theta = utility.orn_paras['theta'],
 #                                           n_steps_annealing = int(utility.max_nb_exe * utility.orn_paras['percent']))
-random_process = OrnsteinUhlenbeckProcess(size=action_size, theta=.17, mu=0., sigma=.1)
+random_process = OrnsteinUhlenbeckProcess(size=action_size, theta=.1, mu=0., sigma=.8)
 # random_process = None
 
 # A = np.array([])
 # D = np.array([])
-# for i in range(1000):
+# for i in range(100):
 #     sample = random_process.sample()
 #     A = np.append(A, sample[0])
 #     D = np.append(D, sample[1])
@@ -200,7 +200,7 @@ agent.compile(Adam(lr = utility.critic_lr, clipnorm = 1.0), metrics=['mae'])
 #  Ctrl + C.
 agent.fit(env, nb_steps = utility.max_nb_exe, verbose = 0,
           file_dir = file_dir, file_h = file_h, utility = utility,
-          nb_max_episode_steps = 100)
+          nb_max_episode_steps = 300)
 
 ## close file
 file_h.close()

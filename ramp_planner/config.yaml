@@ -1,6 +1,6 @@
 is_offline_learning: true
 
-population_size: 50
+population_size: 10
 
 sub_populations: false 
 
