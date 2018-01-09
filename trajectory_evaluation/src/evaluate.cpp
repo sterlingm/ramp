@@ -1,6 +1,6 @@
 #include "evaluate.h"
 
-Evaluate::Evaluate() : orientation_infeasible_(0), T_norm_(30.0), A_norm_(PI), _1_D_norm_(1.0/0.9), coll_time_norm_(zero),
+Evaluate::Evaluate() : orientation_infeasible_(0), T_norm_(25.0), A_norm_(PI/4.0), _1_D_norm_(1.0/0.91), coll_time_norm_(zero),
                        last_T_weight_(-1.0), last_A_weight_(-1.0), last_D_weight_(-1.0), last_Q_coll_(-1.0), last_Q_kine_(-1.0) {}
 
 void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res)
