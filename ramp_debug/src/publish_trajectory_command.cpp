@@ -35,9 +35,9 @@ int main(int argc, char** argv) {
 
   // Build a Path
   ramp_msgs::KnotPoint c1;
-  c1.motionState.positions.push_back(-0.721173); // 0.70455
-  c1.motionState.positions.push_back(1.14242); // 0.4026
-  c1.motionState.positions.push_back(0.0334094); // 0.519146
+  c1.motionState.positions.push_back(1.4105); // 0.70455
+  c1.motionState.positions.push_back(0.3275); // 0.4026
+  c1.motionState.positions.push_back(0.308); // 0.519146
   
   ramp_msgs::KnotPoint c2;
   c2.motionState.positions.push_back(2.2); // 0.70455
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
   // Velocities
   c1.motionState.velocities.push_back(0.);  //.151426
   c1.motionState.velocities.push_back(0.); //-.297903
-  c1.motionState.velocities.push_back(0.); //-.118126*/
+  c1.motionState.velocities.push_back(-0.57); //-.118126*/
  
   /*c2.motionState.velocities.push_back(0.175905);  //.151426
   c2.motionState.velocities.push_back(-0.0106699); //-.297903
@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
   c5.motionState.accelerations.push_back(0.); //.0746295
   
   ramp_msgs::Path p;
-  p.points.push_back(zero);
+  //p.points.push_back(zero);
   p.points.push_back(c1);
   p.points.push_back(c2);
   //p.points.push_back(c3);
@@ -382,7 +382,7 @@ int main(int argc, char** argv) {
 
 
   std::vector<ramp_msgs::BezierCurve> curves;
-  curves.push_back(bi);
+  //curves.push_back(bi);
   //curves.push_back(bi2);
   
   ramp_msgs::TrajectoryRequest tr;
@@ -390,7 +390,7 @@ int main(int argc, char** argv) {
   tr.type = HYBRID;
   tr.print = true;
   tr.bezierCurves = curves;
-  tr.segments = 0;
+  tr.segments = 2;
   tr.max_speed_linear = 0.33f;
   tr.max_speed_angular = 0.57f;
 

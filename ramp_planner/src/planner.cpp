@@ -638,7 +638,8 @@ void Planner::adaptPaths(const MotionState& ms, const ros::Duration& d, std::vec
   {
 
     // For each trajectory
-    for(uint8_t i=0;i<population_.size();i++) {
+    for(uint8_t i=0;i<population_.size();i++) 
+    {
       ////ROS_INFO("Path: %s", population_.paths_.at(i).toString().c_str());
       ////ROS_INFO("Get Path: %s", population_.get(i).getNonHolonomicPath().toString().c_str());
       Path temp = population_.paths_.at(i);

@@ -22,6 +22,9 @@
 #include <bfl/pdf/linearanalyticconditionalgaussian.h>
 #include <bfl/pdf/analyticconditionalgaussian.h>
 
+
+bool cropMap = false;
+
 ramp_msgs::MotionState robotState;
 double fovAngle;
 std::vector<double> viewMinMax;
@@ -453,6 +456,8 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
   
   if(global_grid.info.width != 0 && global_grid.info.height != 0)
   {
+    //ROS_INFO("cir_obs.size(): %i", (int)cir_obs.size());
+    
     // For each CircleOb, make a Marker
     for(int i=0;i<cir_obs.size();i++)
     {
@@ -533,6 +538,10 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
         result.push_back(marker);
       }
     }
+  }
+  else
+  {
+    ROS_WARN("Global grid dimensions wrong");
   }
   return result;
 }
@@ -670,7 +679,7 @@ void publishMarkers(const ros::TimerEvent& e)
   text.type     = visualization_msgs::Marker::TEXT_VIEW_FACING;
   text.action   = visualization_msgs::Marker::ADD;
   std::stringstream num_obs;
-  num_obs<<"Number of obstacles: "<<(int)cirs.size();
+  num_obs<<"Number of obstacles: "<<(int)cirGroups.size();
   text.text = num_obs.str();
 
   // Set poses
@@ -1620,20 +1629,20 @@ void setRobotPos(const ramp_msgs::MotionState& ms)
 
 void robotUpdateCb(const ramp_msgs::MotionStateConstPtr ms)
 {
-  //ROS_INFO("In robotUpdateCb");
-  //ROS_INFO("ms: %s", util.toString(*ms).c_str());
+  ROS_INFO("In robotUpdateCb");
+  ROS_INFO("ms: %s", util.toString(*ms).c_str());
   setRobotPos(*ms);
 }
 
 
 bool checkViewingObstacle(Circle cir)
 {
-  //ROS_INFO("In checkViewingObstacle");
+  ROS_INFO("In checkViewingObstacle");
   
   if(robotState.positions.size() > 0)
   {
-    //ROS_INFO("viewMinMax.size(): %i", (int)viewMinMax.size());
-    //ROS_INFO("robotState.positions.size(): %i ob.msg_.ob_ms.positions: %i", (int)robotState.positions.size(), (int)ob.msg_.ob_ms.positions.size());
+    ROS_INFO("viewMinMax.size(): %i", (int)viewMinMax.size());
+    ROS_INFO("robotState.positions.size(): %i", (int)robotState.positions.size());
     
     std::vector<double> obMs;
     obMs.push_back(cir.center.x);
@@ -1644,18 +1653,18 @@ bool checkViewingObstacle(Circle cir)
     // Get difference between angleToOb and robot's orientation
     double deltaTheta = util.findDistanceBetweenAngles(robotState.positions[2], angleToOb);
 
-    //ROS_INFO("[min,max]: [%f,%f] angleToOb: %f", viewMinMax[0], viewMinMax[1], angleToOb);
-    //ROS_INFO("robotState.positions[2]: %f deltaTheta: %f fovAngle: %f", robotState.positions[2], deltaTheta, fovAngle);
+    ROS_INFO("[min,max]: [%f,%f] angleToOb: %f", viewMinMax[0], viewMinMax[1], angleToOb);
+    ROS_INFO("robotState.positions[2]: %f deltaTheta: %f fovAngle: %f", robotState.positions[2], deltaTheta, fovAngle);
 
 
     if(fabs(deltaTheta) < fovAngle/2.0)
     {
-      //ROS_INFO("Returning true for deltaTheta");
+      ROS_INFO("Returning true for deltaTheta");
       return true;
     }
   }
 
-  //ROS_INFO("Returning false");
+  ROS_INFO("Returning false");
   return false;
 }
 
@@ -1819,58 +1828,69 @@ void computeVelocities(const std::vector<CircleMatch> cm, const ros::Duration d_
 
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
-  /*ROS_INFO("**************************************************");
+  ROS_INFO("**************************************************");
   ROS_INFO("In costmapCb");
-  ROS_INFO("**************************************************");*/
+  ROS_INFO("**************************************************");
   ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;
   t_last_costmap = ros::Time::now();
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
+  ROS_INFO("grid (w,h): (%i,%i)", grid->info.width, grid->info.height);
 
-  /*
-   * Only use half of the costmap since the kinect can only see in front of the robot
-   */
-  //nav_msgs::OccupancyGrid half;
-  //halfCostmap(grid, half);
-
-  //ROS_INFO("New costmap size: %i", (int)grid->data.size());
-  
-  // Update global grid
-  nav_msgs::OccupancyGrid cropped;
-  cropCostmap(grid, cropped);
-
-  transformCostmap(cropped);
-  pub_global_costmap.publish(global_costmap);
-
-  double grid_resolution = grid->info.resolution; 
-  
-  //global_grid = *grid;
-  global_grid = cropped;
-  //global_grid = half;
-  
-
-  //ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
   // Consolidate this occupancy grid with prev ones
   nav_msgs::OccupancyGrid accumulated_grid;
-  //consolidateCostmaps(half, prev_grids, consolidated_grid);
-  //accumulateCostmaps(*grid, prev_grids, accumulated_grid);
-  //accumulateCostmaps(cropped, prev_grids, accumulated_grid);
-  accumulateCostmaps(global_costmap, prev_grids, accumulated_grid);
-  //accumulated_grid = cropped;
-  global_grid = global_costmap;
-  
-  //ROS_INFO("Finished getting consolidated_grid");
-  
-  // Push this grid onto prev_grids
-  //prev_grids.push_back(global_grid);
-  prev_grids.push_back(global_costmap);
-  if(prev_grids.size() > num_costmaps_accumulate)
-  {
-    prev_grids.erase(prev_grids.begin(), prev_grids.begin()+1);
-  }
 
-  // Publish the modified costmap(s)
-  //pub_half_costmap.publish(half);
-  pub_cons_costmap.publish(accumulated_grid);
+  if(cropMap)
+  {
+    /*
+     * Only use half of the costmap since the kinect can only see in front of the robot
+     */
+    //nav_msgs::OccupancyGrid half;
+    //halfCostmap(grid, half);
+
+    //ROS_INFO("New costmap size: %i", (int)grid->data.size());
+    
+    // Update global grid
+    nav_msgs::OccupancyGrid cropped;
+    cropCostmap(grid, cropped);
+
+    transformCostmap(cropped);
+    pub_global_costmap.publish(global_costmap);
+
+    double grid_resolution = grid->info.resolution; 
+    
+    global_grid = cropped;
+    ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
+    
+
+    //ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
+    accumulateCostmaps(global_costmap, prev_grids, accumulated_grid);
+    
+    // Set global_grid 
+    global_grid = global_costmap;
+    ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
+    ROS_INFO("global costmap (w,h): (%i,%i)", global_costmap.info.width, global_costmap.info.height);
+    
+    //ROS_INFO("Finished getting consolidated_grid");
+    
+    // Push this grid onto prev_grids
+    //prev_grids.push_back(global_grid);
+    prev_grids.push_back(global_costmap);
+    if(prev_grids.size() > num_costmaps_accumulate)
+    {
+      prev_grids.erase(prev_grids.begin(), prev_grids.begin()+1);
+    }
+
+    // Publish the modified costmap(s)
+    //pub_half_costmap.publish(half);
+    pub_cons_costmap.publish(accumulated_grid);
+    ROS_INFO("accumulated grid (w,h): (%i,%i)", accumulated_grid.info.width, accumulated_grid.info.height);
+  }
+  else
+  {
+    accumulated_grid = *grid;
+    global_grid = *grid;
+    pub_cons_costmap.publish(accumulated_grid);
+  }
 
   // Make a pointer for the modified costmap
   boost::shared_ptr<nav_msgs::OccupancyGrid> cg_ptr = boost::make_shared<nav_msgs::OccupancyGrid>(accumulated_grid);
@@ -1924,7 +1944,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    /*
     * Check if obstacles are in viewing angle
     */
-  if(fovAngle > 1.5708f)
+  /*if(fovAngle > 1.5708f)
   {
     int i=0;
     while(i<cirGroups.size())
@@ -1938,6 +1958,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
       i++;
     }
   }
+  ROS_INFO("After checking viewing angle, cirGroups.size(): %i", (int)cirGroups.size());*/
  
 
   /*
@@ -2298,11 +2319,11 @@ int main(int argc, char** argv)
   dd.sleep();
 
   // Set initial robot position
-  /*ramp_msgs::MotionState ms;
-  ms.positions.push_back(3);
-  ms.positions.push_back(1);
-  ms.positions.push_back(PI);
-  setRobotPos(ms);*/
+  ramp_msgs::MotionState ms;
+  ms.positions.push_back(0);
+  ms.positions.push_back(0);
+  ms.positions.push_back(PI/4.f);
+  //setRobotPos(ms);
 
   printf("\nSpinning\n");
 
