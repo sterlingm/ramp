@@ -87,7 +87,8 @@ class RampEnv(gym.Env):
 		                                    np.array([t1, x1, y1, theta1, x_d1, y_d1, theta_d1, x_dd1, y_dd1, theta_dd1]))
 		self.this_exe_info = None
 
-		self.one_exe_info_sub = rospy.Subscriber("ramp_collection_ramp_ob_one_run", RampObservationOneRunning, self.oneExeInfoCallback)
+		self.one_exe_info_sub = rospy.Subscriber("ramp_collection_ramp_ob_one_run", RampObservationOneRunning,
+		                                         self.oneExeInfoCallback)
 
 	def _seed(self, seed=None):
 		self.np_random, seed = seeding.np_random(seed)

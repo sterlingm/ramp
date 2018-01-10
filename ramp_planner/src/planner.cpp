@@ -4593,11 +4593,21 @@ void Planner::go(const ros::NodeHandle& h)
 
   // Run # of planning cycles before control cycles start
   //ROS_INFO("Starting pre planning cycles");
+
+  // Start Timer to send population to rviz
+  sendPopTimer_.start();
   
   // Wait for the specified number of generations before starting CC's
   while (generation_ < num_pc && no_better_cnt < MAX_NO_BETTER_CNT)
   {
-    planningCycleCallback(); 
+    planningCycleCallback();
+    ros::spinOnce();
+  }
+
+  if (!moving_robot_) {
+    sendPopTimer_.start();
+  } else {
+    sendPopTimer_.stop();
   }
  
   //ROS_INFO("Starting CCs at t: %f", ros::Time::now().toSec());
@@ -4614,14 +4624,6 @@ void Planner::go(const ros::NodeHandle& h)
     //ROS_INFO("CCs started");
   }
 
-  // Start Timer to send population to rviz
-  if (!moving_robot_) {
-    sendPopTimer_.start();
-  } else {
-    sendPopTimer_.stop();
-  }
-
- 
   /*
    *********************************************************************************************
                                   Main loop begins here
@@ -4635,7 +4637,7 @@ void Planner::go(const ros::NodeHandle& h)
   // Do planning until robot has reached goal
   // D = 0.4 if considering mobile base, 0.2 otherwise
   ros::Rate r(20); // 20Hz
-  goalThreshold_ = 0.25;
+  goalThreshold_ = 0.5;
   int check_time_cnt = 0;
   ros::Duration t_elapse;
   ros::Time t_startLoop = ros::Time::now();

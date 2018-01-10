@@ -1,17 +1,22 @@
 #!/usr/bin/env python
+import os
 import rosbag
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+## get directory
+cur_dir = os.path.join(os.path.dirname(__file__) + '/')
+file_h = open(cur_dir + "actual_exe_time.csv", "a")
+
 ## open bag
-bag = rosbag.Bag("/home/kai/data/ramp/simulation_env_data/2017-12-19_16:59:42/raw_data/1.bag")
+bag = rosbag.Bag("/home/kai/catkin_ws/src/ramp/rl_data/ramp_test_data/raw/2018-01-09_17:51:37/raw_data/1.bag")
 
 exe_times = np.array([])
 A = np.array([])
 D = np.array([])
 Qk = np.array([])
-window_size = 50
+window_size = 1
 print("Processing data......")
 for topic, msg, t in bag.read_messages(topics=["/ramp_collection_exe_time", "/ramp_collection_si_act"]):
     topic = topic.decode()
@@ -27,33 +32,36 @@ for topic, msg, t in bag.read_messages(topics=["/ramp_collection_exe_time", "/ra
         ## never enter here
         assert False
 
+    file_h.write('{}\n'.format(msg.data))
+
 print("Processing completed!")
 
 ## plot
 fig_times = plt.figure(figsize = (15, 10))
 
 times_smoothed = pd.Series(exe_times).rolling(window_size, min_periods = window_size).mean()
-plt.subplot(2, 2, 1)
+plt.subplot(1, 1, 1)
 plt.plot(times_smoothed)
 plt.xlabel("execution")
 plt.ylabel("durations/s (smoothed over window size {})".format(window_size))
 
-plt.subplot(2, 2, 2)
-plt.plot(A)
-plt.xlabel("execution")
-plt.ylabel("A")
+# plt.subplot(2, 2, 2)
+# plt.plot(A)
+# plt.xlabel("execution")
+# plt.ylabel("A")
 
-plt.subplot(2, 2, 3)
-plt.plot(D)
-plt.xlabel("execution")
-plt.ylabel("D")
+# plt.subplot(2, 2, 3)
+# plt.plot(D)
+# plt.xlabel("execution")
+# plt.ylabel("D")
 
-plt.subplot(2, 2, 4)
-plt.plot(Qk)
-plt.xlabel("execution")
-plt.ylabel("Qk")
-
-plt.show(fig_times)
+# plt.subplot(2, 2, 4)
+# plt.plot(Qk)
+# plt.xlabel("execution")
+# plt.ylabel("Qk")
 
 ## close bag
 bag.close()
+file_h.close()
+
+plt.show(fig_times)
