@@ -16,10 +16,12 @@ class Utility(object):
         self.switch_period = rospy.get_param('/ramp/fixed_control_cycle_rate', 1.2) # seconds
         self.the_initial = rospy.get_param('/robot_info/start', [0.0, 0.0, 0.785])
         self.orn_paras = rospy.get_param('/ornstein_uhlenbeck_paras', {'theta': 10.0, 'percent': 0.33333})
-        self.max_nb_exe = rospy.get_param('/max_nb_exe', 600)
+        self.max_nb_exe = rospy.get_param('/max_nb_exe', 50000)
+        self.max_episode_steps = rospy.get_param('/max_episode_steps', 100)
         self.nb_steps_warmup_critic = rospy.get_param('/nb_steps_warmup_critic', 0)
         self.nb_steps_warmup_actor = rospy.get_param('/nb_steps_warmup_actor', 0)
         self.critic_lr = rospy.get_param('/critic_lr', 0.001)
+        self.gradient_clip_norm = rospy.get_param('/gradient_clip_norm', 0.5)
 
         self.coe_dT_range = rospy.get_param('/coe_dT_range', [-0.01, 0.01])
         self.coe_dA_range = rospy.get_param('/coe_dA_range', [-0.01, 0.01])

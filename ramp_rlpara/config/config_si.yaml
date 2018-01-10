@@ -1,11 +1,12 @@
-replay_buffer_size: 300000 # size(R)
-discount_factor: 0.9 # gamma
+replay_buffer_size: 1000000 # size(R)
+discount_factor: 0.99 # gamma
 target_net_update_factor: 0.01 # tao
-mini_batch_size: 3000 # N
+mini_batch_size: 32 # N
 max_exe_time: 60.0 # seconds
 time_stamp_max: 25.0 # maximal time stamp in motion state
-max_nb_exe: 10000 # max number of execution
-ornstein_uhlenbeck_paras: {'theta': 10.0, 'percent': 0.04} # theta and percent of max_nb_exe to make random disappear,
+max_nb_exe: 100000 # max number of execution
+max_episode_steps: 100
+ornstein_uhlenbeck_paras: {'theta': 10.0, 'percent': 0.8} # theta and percent of max_episode_steps to make random disappear,
                                                             # but bias need some time to be clear
 nb_steps_warmup_critic: 1 # number of steps needed before updating critic
                           # warmup is needed to fill the replay buffer with mini_batch_size data,
@@ -13,6 +14,11 @@ nb_steps_warmup_critic: 1 # number of steps needed before updating critic
                           # but in our application, after one execution, many transitions will be returned.
 nb_steps_warmup_actor: 1 # number of steps needed before updating actor
 critic_lr: 0.001 # learning rate of critic
-coe_A_range: [0.0, 0.05] # coefficients of orientation changing of feasible trajectory
-coe_D_range: [0.0, 50.0] # coefficients of obstacle distance of feasible trajectory
-coe_Qk_range: [0.0, 50.0] # coefficietns of orientation changing of infeasible trajectory
+gradient_clip_norm: 0.5
+
+coe_dA_range: [-0.1, 0.1] # coefficients of orientation changing of feasible trajectory
+coe_dD_range: [-0.1, 0.1] # coefficients of obstacle distance of feasible trajectory
+
+coe_A_range: [0.0, 1.0] # coefficients of orientation changing of feasible trajectory
+coe_D_range: [0.0, 1.0] # coefficients of obstacle distance of feasible trajectory
+# coe_Qk_range: [0.0, 50.0] # coefficietns of orientation changing of infeasible trajectory

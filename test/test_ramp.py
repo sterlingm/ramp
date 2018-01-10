@@ -25,18 +25,14 @@ one_exe_info_sub = rospy.Subscriber("ramp_collection_ramp_ob_one_run", RampObser
 coes_for_test = [[0.0, 0.0],
                  [0.0, 1.0],
                  [1.0, 0.0],
-                 [1.0, 1.0],
-                 [0.0, 0.3],
-                 [0.0, 0.5],
-                 [0.3, 0.3],
-                 [0.3, 0.5]]
+                 [1.0, 1.0]]
 
 
 step = 0
 for i in range(len(coes_for_test)):
     rospy.set_param("/ramp/eval_weight_A", coes_for_test[i][0])
     rospy.set_param("/ramp/eval_weight_D", coes_for_test[i][1])
-    for j in range(10):
+    for j in range(100):
         print("################################ STEP {} ################################".format(step))
         ## wait the actual environment to get ready......
         print("Wait the actual environment to get ready......")

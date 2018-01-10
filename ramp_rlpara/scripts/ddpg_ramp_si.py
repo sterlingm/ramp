@@ -31,20 +31,22 @@ import matplotlib.pyplot as plt
 from keras.models import Sequential, Model
 from keras.layers import Dense, Activation, Flatten, Input, Concatenate
 from keras.optimizers import Adam
+from keras import backend as K
+from keras.utils.generic_utils import get_custom_objects
+
+def custom_actor_activation(x):
+    return K.linear(x) * 0.1
+
+get_custom_objects().update({'custom_actor_activation': Activation(custom_actor_activation)})
 
 ## use the keras-rl in this repository
 ramp_root = os.path.join(os.path.dirname(__file__), '../../')
 sys.path.append(ramp_root) # directory_name
-# keras_rl_dir = os.path.join(ramp_root, 'keras-rl/')
-# sys.path.append(keras_rl_dir) # directory_name
-# rl_dir = os.path.join(keras_rl_dir, 'rl/')
-# sys.path.append(rl_dir) # directory_name
-# agents_dir = os.path.join(rl_dir, 'agents/')
-# sys.path.append(agents_dir) # directory_name
 
 from keras_rl.rl.memory import SequentialMemory
 from keras_rl.rl.random import OrnsteinUhlenbeckProcess
 from keras_rl.rl.agents.ddpg import DDPGAgent
+from keras_rl.rl.agents.ddpg_si import DDPGAgentSi
 
 ## make directory of logging
 home_dir = os.getenv("HOME")
@@ -144,14 +146,14 @@ actor = Sequential()
 actor.add(Flatten(input_shape=(1,) + env.observation_space.shape)) # input layer, the values in the
                                                                    # observation should be normalized
                                                                    # before being fed to the actor
-actor.add(Dense(20)) # hidden layer 1
+actor.add(Dense(25)) # hidden layer 1
 actor.add(Activation('relu')) # activation function of hidden layer 1
-actor.add(Dense(20)) # hidden layer 2
+actor.add(Dense(25)) # hidden layer 2
 actor.add(Activation('relu')) # activation function of hidden layer 2
-actor.add(Dense(20)) # hidden layer 3
+actor.add(Dense(25)) # hidden layer 3
 actor.add(Activation('relu')) # activation function of hidden layer 3
 actor.add(Dense(action_size)) # outpue layer
-actor.add(Activation('sigmoid')) # activation function of output layer,
+actor.add(Activation('custom_actor_activation')) # activation function of output layer,
                                  # the output is normalized output,
                                  # need to be transfered into actual coefficients
                                  # 0 represents minimal and 1 represents maximal
@@ -165,14 +167,14 @@ action_input = Input(shape=(action_size,), name='action_input')
 observation_input = Input(shape=(1,) + env.observation_space.shape, name='observation_input')
 flattened_observation = Flatten()(observation_input)
 x = Concatenate()([action_input, flattened_observation]) # input layer
-x = Dense(30)(x) # dense 1
+x = Dense(35)(x) # dense 1
 x = Activation('relu')(x) # activation 1
-x = Dense(30)(x) # dense 2
+x = Dense(35)(x) # dense 2
 x = Activation('relu')(x) # activation 2
-x = Dense(30)(x) # dense 3
+x = Dense(35)(x) # dense 3
 x = Activation('relu')(x) # activation 3
 x = Dense(1)(x) # output layer
-x = Activation('softplus')(x) # activation of output
+x = Activation('linear')(x) # activation of output
 critic = Model(inputs=[action_input, observation_input], outputs=x)
 print(critic.summary())
 
@@ -190,46 +192,41 @@ replay_buffer = SequentialMemory(limit = utility.replay_buffer_size, window_leng
 ## init random action probability
 #  the output noise is normalized
 random_process = OrnsteinUhlenbeckProcess(size = action_size, sigma_min = 0.0, theta = utility.orn_paras['theta'],
-                                          n_steps_annealing = 80)
+                                          n_steps_annealing = utility.max_episode_steps * utility.orn_paras['percent'])
 ## test noise added on action:
-A = np.array([])
-D = np.array([])
-Qk = np.array([])
-for i in range(100):
-    sample = random_process.sample()
-    A = np.append(A, sample[0])
-    D = np.append(D, sample[1])
-    Qk = np.append(Qk, sample[2])
-plt.plot(A)
-plt.ylabel("A")
-plt.show()
-plt.plot(D)
-plt.ylabel("D")
-plt.show()
-plt.plot(Qk)
-plt.ylabel("Qk")
-plt.show()
+# dA = np.array([])
+# dD = np.array([])
+# for i in range(utility.max_episode_steps):
+#     sample = random_process.sample()
+#     dA = np.append(dA, sample[0])
+#     dD = np.append(dD, sample[1])
+# plt.plot(dA)
+# plt.ylabel("dA")
+# plt.show()
+# plt.plot(dD)
+# plt.ylabel("dD")
+# plt.show()
 
 ## build the agent, in our case memory_interval must be set to 1
 #  after this building, use agent.actor, agent.memory, agent.random_process if needed,
 #  don't use actor, replay_buffer and random_process (see arguments of function in Python)
-agent = DDPGAgent(nb_actions = action_size, actor = actor, critic = critic, critic_action_input = action_input,
-                  memory = replay_buffer, nb_steps_warmup_critic = utility.nb_steps_warmup_critic,
-                  nb_steps_warmup_actor = utility.nb_steps_warmup_actor, random_process = random_process,
-                  gamma = utility.discount_factor, target_model_update = utility.target_net_update_factor,
-                  batch_size = utility.mini_batch_size)
+agent = DDPGAgentSi(nb_actions = action_size, actor = actor, critic = critic, critic_action_input = action_input,
+                    memory = replay_buffer, nb_steps_warmup_critic = utility.nb_steps_warmup_critic,
+                    nb_steps_warmup_actor = utility.nb_steps_warmup_actor, random_process = random_process,
+                    gamma = utility.discount_factor, target_model_update = utility.target_net_update_factor,
+                    batch_size = utility.mini_batch_size)
 
 ## conpile the agent with optimizer and metrics (it seems that the metrics is only used in logging, not in training)
 #  clipnorm is the max norm of gradients, to avoid too big gradients. Note that the operation is clip, not normalization,
 #  that means if the norm of gradients is already smaller than clipnorm, then there is nothing happening to the gradients.
 #  lr is leaning rate of critic Q-net.
-agent.compile(Adam(lr = utility.critic_lr, clipnorm = 1.0), metrics=['mae'])
+agent.compile(Adam(lr = utility.critic_lr, clipnorm = utility.gradient_clip_norm), metrics=['mae'])
 
 ## maintain some variables that are maintained in fit()
 agent.training = True
 
 ## -------------------- do one learning in one execution --------------------
-chg_file_inter = 100
+chg_file_inter = utility.max_episode_steps
 for k in range(utility.max_nb_exe):
     file_h.write("######################################### STEP " + str(agent.step) +
                  " #########################################\n")

@@ -10,7 +10,7 @@ cur_dir = os.path.join(os.path.dirname(__file__) + '/')
 file_h = open(cur_dir + "actual_exe_time.csv", "a")
 
 ## open bag
-bag = rosbag.Bag("/home/kai/catkin_ws/src/ramp/rl_data/ramp_test_data/raw/2018-01-09_17:51:37/raw_data/1.bag")
+bag = rosbag.Bag("/home/kai/data/ramp/simulation_env_data/2018-01-09_22:53:04/raw_data/1.bag")
 
 exe_times = np.array([])
 A = np.array([])
