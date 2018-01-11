@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/kai/env/bin python3.4
 
 '''
 ddpg_rl_si.py corresponds to document RAMP-RL(Small Input) in Google Doc. shown below (si means small input):
@@ -35,7 +35,7 @@ from keras import backend as K
 from keras.utils.generic_utils import get_custom_objects
 
 def custom_actor_activation(x):
-    return K.linear(x) * 0.1
+    return x * 0.1
 
 get_custom_objects().update({'custom_actor_activation': Activation(custom_actor_activation)})
 
@@ -192,11 +192,11 @@ replay_buffer = SequentialMemory(limit = utility.replay_buffer_size, window_leng
 ## init random action probability
 #  the output noise is normalized
 random_process = OrnsteinUhlenbeckProcess(size = action_size, sigma_min = 0.0, theta = utility.orn_paras['theta'],
-                                          n_steps_annealing = utility.max_episode_steps * utility.orn_paras['percent'])
+                                          n_steps_annealing = utility.max_nb_exe * utility.orn_paras['percent'])
 ## test noise added on action:
 # dA = np.array([])
 # dD = np.array([])
-# for i in range(utility.max_episode_steps):
+# for i in range(utility.max_nb_exe):
 #     sample = random_process.sample()
 #     dA = np.append(dA, sample[0])
 #     dD = np.append(dD, sample[1])

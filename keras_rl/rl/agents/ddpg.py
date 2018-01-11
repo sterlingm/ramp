@@ -179,7 +179,7 @@ class DDPGAgent(Agent):
 
     def save_weights(self, filepath, overwrite=False):
         filename, extension = os.path.splitext(filepath)
-        
+
         actor_filepath = filename + '_actor' + extension
         critic_filepath = filename + '_critic' + extension
         tar_actor_filepath = filename + '_target_actor' + extension

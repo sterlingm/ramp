@@ -5,12 +5,15 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+## open bag
+bag = rosbag.Bag("/home/kai/data/ramp/simulation_env_data/2018-01-10_16:58:39/raw_data/1.bag")
+file_name = 'actual_exe_time.csv'
+
+
+
 ## get directory
 cur_dir = os.path.join(os.path.dirname(__file__) + '/')
-file_h = open(cur_dir + "actual_exe_time.csv", "a")
-
-## open bag
-bag = rosbag.Bag("/home/kai/data/ramp/simulation_env_data/2018-01-09_22:53:04/raw_data/1.bag")
+file_h = open(cur_dir + file_name, "a")
 
 exe_times = np.array([])
 A = np.array([])
@@ -32,16 +35,21 @@ for topic, msg, t in bag.read_messages(topics=["/ramp_collection_exe_time", "/ra
         ## never enter here
         assert False
 
-    file_h.write('{}\n'.format(msg.data))
+    # file_h.write('{}\n'.format(msg.data))
 
 print("Processing completed!")
+
+## save data
+df = pd.DataFrame()
+df['actual_exe_time'] = exe_times
+df.to_csv(file_name, index=False)
 
 ## plot
 fig_times = plt.figure(figsize = (15, 10))
 
 times_smoothed = pd.Series(exe_times).rolling(window_size, min_periods = window_size).mean()
 plt.subplot(1, 1, 1)
-plt.plot(times_smoothed)
+plt.plot(times_smoothed, 'ro')
 plt.xlabel("execution")
 plt.ylabel("durations/s (smoothed over window size {})".format(window_size))
 

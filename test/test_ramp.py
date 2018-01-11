@@ -3,6 +3,7 @@
 import os
 import sys
 import rospy
+import numpy as np
 from ramp_msgs.msg import RampObservationOneRunning
 
 this_exe_info = None
@@ -18,21 +19,18 @@ def oneExeInfoCallback(data):
 max_exe_time = 60.0
 rospy.set_param("/max_exe_time", max_exe_time)
 rospy.set_param("/ramp/eval_weight_T", 1.0)
+rospy.set_param("/ramp/eval_weight_D", 0.7)
 rospy.set_param("/ramp/eval_weight_Qc", 1.0)
 rospy.set_param("/ramp/eval_weight_Qk", 1.0)
 one_exe_info_sub = rospy.Subscriber("ramp_collection_ramp_ob_one_run", RampObservationOneRunning,
 		                            oneExeInfoCallback)
-coes_for_test = [[0.0, 0.0],
-                 [0.0, 1.0],
-                 [1.0, 0.0],
-                 [1.0, 1.0]]
+coes_for_test = np.arange(0.0, 1.0, 0.005)
 
 
 step = 0
 for i in range(len(coes_for_test)):
-    rospy.set_param("/ramp/eval_weight_A", coes_for_test[i][0])
-    rospy.set_param("/ramp/eval_weight_D", coes_for_test[i][1])
-    for j in range(100):
+    rospy.set_param("/ramp/eval_weight_A", coes_for_test[i].item())
+    for j in range(1):
         print("################################ STEP {} ################################".format(step))
         ## wait the actual environment to get ready......
         print("Wait the actual environment to get ready......")

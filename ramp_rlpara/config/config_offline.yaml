@@ -10,7 +10,7 @@ max_exe_time: 20.0 # seconds
 
 max_nb_exe: 50000 # max number of execution
 
-ornstein_uhlenbeck_paras: {'theta': 100.0, 'percent': 0.0001} # theta and percent of max_nb_exe to make random disappear,
+ornstein_uhlenbeck_paras: {'theta': 100.0, 'percent': 0.8} # theta and percent of max_nb_exe to make random disappear,
                                                               # but bias need some time to be clear
                                                               
 nb_steps_warmup_critic: 100 # number of steps needed before updating critic

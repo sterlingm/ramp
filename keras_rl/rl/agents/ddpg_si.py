@@ -28,17 +28,27 @@ class DDPGAgentSi(DDPGAgent):
         print('Initialize ddpg_si agent!')
         pass
 
-    def forwardSi(self, ob):
+    def select_action_without_noise(self, state):
+        """Select a action according to a single motion state (and coefficients) without noise
+        """
+        batch = self.process_state_batch([state])
+        action = self.actor.predict_on_batch(batch).flatten()
+        assert action.shape == (self.nb_actions,)
+        return action
+
+    def forwardSi(self, trjas):
         """The customized forward method of class DDPGAgentSi.
 
         In si version, the observation is different from the input of network.
         This method is used to connect our si agent to the original forward
-        method in the original ddpg agent of keras-rl.
+        method in the original ddpg agent of keras-rl. This method uses multiple
+        motion states as input to calculate just one action and then add
+        noise on it.
 
         # Arguments
-            ob: The observatioin of si agent, there are many ordered single motion states in it.
+            trajs: The observatioin of si agent, there are many ordered single motion states in it.
 
         # Returns
-            A action, which means delta coefficients. Note that this action is not limited, the limitation
+            A action, which means (delta) coefficients. Note that this action is not limited, the limitation
             should be done by the environment class.
         """
