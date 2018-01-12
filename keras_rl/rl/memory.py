@@ -141,8 +141,8 @@ class SequentialMemory(Memory):
             batch_idxs = sample_batch_indexes(
                 self.window_length, self.nb_entries - 1, size=batch_size)
         
-        ## 100% sample final transition in a execution
-        batch_idxs[len(batch_idxs) - 1] = self.nb_entries - 2
+        ## 100% sample the final transition in a execution
+        # batch_idxs[len(batch_idxs) - 1] = self.nb_entries - 2
 
         batch_idxs = np.array(batch_idxs) + 1
 

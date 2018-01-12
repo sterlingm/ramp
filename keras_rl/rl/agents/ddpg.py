@@ -84,6 +84,8 @@ class DDPGAgent(Agent):
         ## date_for_file
         self.date_for_file = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         print("Create file to log learning samples at " + self.date_for_file + "!")
+        self.bk_step = 0
+        self.log_interval = 100
 
     @property
     def uses_learning_phase(self):
@@ -250,19 +252,20 @@ class DDPGAgent(Agent):
             names += self.processor.metrics_names[:]
         return names
 
-    def backward(self, reward, terminal=False):
+    def backward(self, reward, terminal=False, is_push_exp=True, logger=None):
+        self.bk_step += 1
         ## make directory of logging
         home_dir = os.getenv("HOME")
         file_dir = home_dir + '/data/ddpg_agent/' + self.date_for_file + '/raw_data/'
         os.system('mkdir -p ' + file_dir)
         file_h = open(file_dir + "learning_samples.txt", "a")
-        file_h.write("######################################### LEARNING " + str(self.step) +
+        file_h.write("######################################### TRAINING " + str(self.step) +
                      " #########################################\n")
-        # print("######################################### LEARNING " + str(self.step) +
+        # print("######################################### TRAINING " + str(self.step) +
         #       " #########################################")
 
         # Store most recent experience in memory.
-        if self.step % self.memory_interval == 0:
+        if self.step % self.memory_interval == 0 and is_push_exp:
             self.memory.append(self.recent_observation, self.recent_action, reward, terminal,
                                training=self.training)
 
@@ -318,11 +321,13 @@ class DDPGAgent(Agent):
                 state1_batch_with_action.insert(self.critic_action_input_idx, target_actions)
                 target_q_values = self.target_critic.predict_on_batch(state1_batch_with_action).flatten()
                 assert target_q_values.shape == (self.batch_size,)
-                ## logging target Q values
-                file_h.write("< target_q_values >\n")
-                file_h.write(str(target_q_values) + "\n")
-                # print("< target_q_values >")
-                # print(target_q_values)
+                
+                if self.bk_step % self.log_interval == 0:
+                    ## logging target Q values
+                    file_h.write("< target_q_values >\n")
+                    file_h.write(str(target_q_values) + "\n")
+                    # print("< target_q_values >")
+                    # print(target_q_values)
 
                 # Compute r_t + gamma * max_a Q(s_t+1, a) and update the target ys accordingly,
                 # but only for the affected output units (as given by action_batch).
@@ -330,15 +335,17 @@ class DDPGAgent(Agent):
                 discounted_reward_batch *= terminal1_batch
                 assert discounted_reward_batch.shape == reward_batch.shape
                 targets = (reward_batch + discounted_reward_batch).reshape(self.batch_size, 1)
-                ## logging
-                file_h.write("< rewards >\n")
-                file_h.write(str(reward_batch) + "\n")
-                # print("< rewards >")
-                # print(reward_batch)
-                file_h.write("< targets >\n")
-                file_h.write(str(targets) + "\n")
-                # print("< targets >")
-                # print(targets)
+
+                if self.bk_step % self.log_interval == 0:
+                    ## logging
+                    file_h.write("< rewards >\n")
+                    file_h.write(str(reward_batch) + "\n")
+                    # print("< rewards >")
+                    # print(reward_batch)
+                    file_h.write("< targets >\n")
+                    file_h.write(str(targets) + "\n")
+                    # print("< targets >")
+                    # print(targets)
 
                 # Perform a single batch update on the critic network.
                 if len(self.critic.inputs) >= 3:
@@ -349,13 +356,37 @@ class DDPGAgent(Agent):
                 metrics = self.critic.train_on_batch(state0_batch_with_action, targets)
                 if self.processor is not None:
                     metrics += self.processor.metrics
-                ## logging, TODO: logging with association (state0_batch_with_action_a, target_a)
-                #                                          (state0_batch_with_action_b, target_b)
-                #                                          ......
-                file_h.write("< state0_batch_with_action >\n")
-                file_h.write(str(state0_batch_with_action) + "\n")
-                # print("< state0_batch_with_action >")
-                # print(state0_batch_with_action)
+
+                if self.bk_step % self.log_interval == 0:
+                    ## logging, TODO: logging with association (state0_batch_with_action_a, target_a)
+                    #                                          (state0_batch_with_action_b, target_b)
+                    #                                          ......
+                    file_h.write("< state0_batch_with_action >\n")
+                    file_h.write(str(state0_batch_with_action) + "\n")
+                    # print("< state0_batch_with_action >")
+                    # print(state0_batch_with_action)
+
+                ## Log precise training data.
+                if logger is not None and self.bk_step % self.log_interval == 0:
+                    for e_id, e in enumerate(experiences):
+                        if e_id == len(experiences) - 1:
+                            logger.logOneFrame([self.bk_step,
+                                                np.array2string(np.array(e.state0),precision=2,suppress_small=True),
+                                                np.array2string(np.array(e.action),suppress_small=True), e.reward,
+                                                np.array2string(np.array(e.state1),precision=2,suppress_small=True),
+                                                np.array2string(np.array(target_actions[e_id]),suppress_small=True), e.terminal1,
+                                                target_q_values[e_id], targets[e_id],
+                                                metrics[0], metrics[1], metrics[2]])
+                        else:
+                            logger.logOneFrame([self.bk_step,
+                                                np.array2string(np.array(e.state0),precision=2,suppress_small=True),
+                                                np.array2string(np.array(e.action),suppress_small=True), e.reward,
+                                                np.array2string(np.array(e.state1),precision=2,suppress_small=True),
+                                                np.array2string(np.array(target_actions[e_id]),suppress_small=True), e.terminal1,
+                                                target_q_values[e_id], targets[e_id],
+                                                '', '', ''])
+
+
 
             # Update actor, if warm up is over.
             if self.step > self.nb_steps_warmup_actor:

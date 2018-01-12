@@ -1,4 +1,4 @@
-#!/home/kai/env/bin python3.4
+#!/usr/bin/env python
 
 '''
 ddpg_rl_si.py corresponds to document RAMP-RL(Small Input) in Google Doc. shown below (si means small input):
@@ -10,6 +10,8 @@ do learning (implemented customly).
 This file itself is not a agent. The agent is implemented in keras-rl/rl/agents/ddpg.py.
 This file is similar to the files in keras-rl/rl/examples/,
 which means using ddpg agent (ddpg.py) in RAMP (env).
+
+T, Qc and Qk are all preset to 1.0. A and D are both directly decided by action.
 '''
 
 ## -------------------- import --------------------
@@ -65,9 +67,21 @@ sys.path.append(lib_dir)
 ## from .py_file_name import class_name
 from ramp_env_interface_si import RampEnv
 from f_utility import Utility
+from f_logger import RampRlLogger
+
+## Initialize logger
+coarse_logger = RampRlLogger(file_dir + "ddpg_coarse_si.csv",
+                             ['exe#', 'orien_chg_weight', 'obs_dis_weight',
+                              'exe_reward', 'exe_done', 'exe_time',
+                              'coarse_loss', 'coarse_mae', 'coarse_mean_q',
+                              'noise_on_A', 'noise_on_D', 'pure_A', 'pure_D'])
+
+precise_logger = RampRlLogger(file_dir + "ddpg_precise_si.csv",
+                              ['train#', 's', 'a', 'r', 's1', 'a1', 'terminal1', 'target_q', 'target',
+                               'precise_loss', 'precise_mae', 'precise_mean_q'], sep_char='@')
 
 ## -------------------- init --------------------
-np.set_printoptions(threshold=np.inf)
+np.set_printoptions(linewidth=500)
 ENV_NAME = 'ramp-env-interface-si'
 rospy.init_node('ddpg_ramp_si', anonymous=True)
 gym.undo_logger_setup()
@@ -83,7 +97,7 @@ assert len(env.action_space.shape) == 1 # assert action is a vector (not a matri
 action_size = env.action_space.shape[0] # number of scalars in one action
 assert len(env.observation_space.shape) == 1 # assert observatoin is a vector (not a matrix or tensor)
 observation_size = env.observation_space.shape[0] # number of scalars in one observation
-assert action_size == 3
+assert action_size == 2
 assert observation_size == 10
 
 ## publish sth. to display in rqt
@@ -140,7 +154,7 @@ print("s: " + str(s) + ", r: " + str(r) + ", info: " + str(info))
 
 ## model for actor (policy, a = u(s)).
 #  input: normalized single motion state (10-dimensional continuous)
-#  output: normalized coefficients (3-dimensional continuous)
+#  output: normalized coefficients (2-dimensional continuous)
 #  TODO: number of layers, units number of each layer, activation function
 actor = Sequential()
 actor.add(Flatten(input_shape=(1,) + env.observation_space.shape)) # input layer, the values in the
@@ -153,14 +167,14 @@ actor.add(Activation('relu')) # activation function of hidden layer 2
 actor.add(Dense(25)) # hidden layer 3
 actor.add(Activation('relu')) # activation function of hidden layer 3
 actor.add(Dense(action_size)) # outpue layer
-actor.add(Activation('custom_actor_activation')) # activation function of output layer,
+actor.add(Activation('sigmoid')) # activation function of output layer,
                                  # the output is normalized output,
                                  # need to be transfered into actual coefficients
                                  # 0 represents minimal and 1 represents maximal
 print(actor.summary())
 
 ## model for critic (Q(s,a)).
-#  input: normalized s and a, size is 10 + 3 = 13
+#  input: normalized s and a, size is 10 + 2 = 12
 #  output: just one scalar, Q value
 #  TODO: number of layers, units number of each layer, activation function
 action_input = Input(shape=(action_size,), name='action_input')
@@ -215,19 +229,24 @@ agent = DDPGAgentSi(nb_actions = action_size, actor = actor, critic = critic, cr
                     nb_steps_warmup_actor = utility.nb_steps_warmup_actor, random_process = random_process,
                     gamma = utility.discount_factor, target_model_update = utility.target_net_update_factor,
                     batch_size = utility.mini_batch_size)
-
 ## conpile the agent with optimizer and metrics (it seems that the metrics is only used in logging, not in training)
 #  clipnorm is the max norm of gradients, to avoid too big gradients. Note that the operation is clip, not normalization,
 #  that means if the norm of gradients is already smaller than clipnorm, then there is nothing happening to the gradients.
 #  lr is leaning rate of critic Q-net.
 agent.compile(Adam(lr = utility.critic_lr, clipnorm = utility.gradient_clip_norm), metrics=['mae'])
-
+## Load weights if needed. Put this after compiling may be better.
+# agent.load_weights("/home/kai/data/ramp/ramp_rlpara/ddpg_ramp_si/2018-01-11_21:13:40/raw_data/0/" +
+#                    "ddpg_{}_weights.h5f".format(ENV_NAME))
 ## maintain some variables that are maintained in fit()
 agent.training = True
+print('metrics_names: {}'.format(agent.metrics_names))
+
+## Get the initial observation
+ob = env.reset()
 
 ## -------------------- do one learning in one execution --------------------
 chg_file_inter = utility.max_episode_steps
-for k in range(utility.max_nb_exe):
+while not rospy.core.is_shutdown() and agent.step < utility.max_nb_exe:
     file_h.write("######################################### STEP " + str(agent.step) +
                  " #########################################\n")
     print("######################################### STEP " + str(agent.step) +
@@ -240,81 +259,49 @@ for k in range(utility.max_nb_exe):
         os.system('mkdir -p ' + weights_dir)
     agent.save_weights(weights_dir + 'ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite = True)
     
-    action_normed = agent.forward(s_init_normed) # the noise is added in the "forward" function
-    action = utility.antiNormalizeCoes(action_normed)
-
-    ## apply new coefficients and start a new execution
-    observations, reward, done, info = env.step(action)
-
-    ## ctrl+c interrupt
-    if rospy.core.is_shutdown():
-        break
+    action, noise = agent.forwardSi(ob) # the noise is added in the "forwardSi" function
+    ## apply new coefficients and start a new cycle
+    ob, reward, done, info = env.step(action)
 
     ## logging and displaying
     #  need rosbag close slowly
     si_step_pub.publish(Int64(agent.step))
-    si_act_normed_pub.publish(Float64MultiArray(data = action_normed.tolist()))
     si_act_pub.publish(Float64MultiArray(data = action.tolist()))
-    
     file_h.write("< action >\n")
     file_h.write(str(action) + "\n")
     print("< action >")
     print(action)
-
     file_h.write("< reward >\n")
     file_h.write(str(reward) + "\n")
     print("< reward >")
     print(reward)
-
     file_h.write("< done >\n")
     file_h.write(str(done) + "\n")
     print("< done >")
     print(done)
 
-    ## Store all observations (normalized) in the new execution into agent.memory
-    #  TODO: Stora what observations (experiences) (motion states not actually being experienced may be wrong observations,
+    ## Store all experiences in the new execution into agent.memory
+    #  TODO: Store what experiences (motion states not actually being experienced may be wrong,
     #        because what we really evaluate is the actual execution time, only the actual experienced motion states can
     #        associated with the actual execution time)
-    nb_observations = 0
-    trajs = observations.best_trajectory_vector
-    for traj in trajs:
-        nb_observations += len(traj.trajectory.points)
-
-    ob_id = 0
-    for traj in trajs: # for each best traj.
-        for motion_state in traj.trajectory.points: # for each motion state
-            s = np.array([motion_state.time_from_start.to_sec()]) # time stamp
-            s = np.append(s, motion_state.positions) # position (x, y, theta)
-            s = np.append(s, motion_state.velocities) # velocity
-            s = np.append(s, motion_state.accelerations) # acceleration
-            s_normed = utility.normalizeMotionState(s) # normalization
-            agent.recent_observation = s_normed
-            agent.recent_action = action_normed
-
-            if ob_id == nb_observations - 2: # second last ob., whose next ob. is the last ob.
-                agent.memory.append(agent.recent_observation, agent.recent_action,
-                                    reward, done, agent.training) # s0, a0, r0, terminal1, _ (r0 is determined by s1)
-            elif ob_id < nb_observations - 2:
-                agent.memory.append(agent.recent_observation, agent.recent_action,
-                                    0.0, False, agent.training)
-            else: # the last ob. is stored in backward()
-                assert ob_id == nb_observations - 1
-
-            ob_id += 1
-
-    assert ob_id == nb_observations
-
+    agent.pushExps(ob, reward)
     ## Updating all neural networks
-    agent.backward(reward = 0.0, terminal = False)
-
+    coarse_metrics = agent.backwardSi(precise_logger)
     ## maintain some variables that are maintained in fit()
     agent.step += 1
 
+    ## Log some data for plotting
+    action = np.clip(action, env.action_space.low, env.action_space.high)
+    coarse_logger.logOneFrame([agent.step, action[0], action[1],
+                               reward, done, info['actual_exe_time'],
+                               coarse_metrics[0], coarse_metrics[1], coarse_metrics[2],
+                               noise[0], noise[1], action[0]-noise[0], action[1]-noise[1]])
+
 ## close file
 file_h.close()
-
+coarse_logger.close()
+precise_logger.close()
 ## -------------------- After training is done, we save the final weights --------------------
 agent.save_weights(file_dir + 'ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite = True)
-
 ## TODO: test
 agent.training = False
