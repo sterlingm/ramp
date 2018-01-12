@@ -115,7 +115,7 @@ struct CircleOb
 
 struct CircleMatch
 {
-  int i_cirs;
+  int i_cir;
   int i_prevCir;
   double dist;
   double delta_r;

@@ -910,24 +910,43 @@ double CirclePacker::getMinDistToPoly(const Polygon& poly, const Cell& cell)
     //ROS_INFO("poly.edges[%i].start: (%f,%f) end: (%f,%f)", n, poly.edges[n].start.x, poly.edges[n].start.y, poly.edges[n].end.x, poly.edges[n].end.y);  
     //ROS_INFO("Poly.normals[%i]: <%f,%f> c=%f", n, poly.normals[n].a, poly.normals[n].b, poly.normals[n].c);
     
-    // Get unit normal
-    double l = sqrt( pow(poly.normals[n].a,2) + pow(poly.normals[n].b,2) );
-    Normal e_hat;
-    e_hat.a = poly.normals[n].a / l;
-    e_hat.b = poly.normals[n].b / l;
-    
-    // Vector from cell to start of edge
-    std::vector<double> sc;
-    sc.push_back(cell.p.x - poly.edges[n].start.x);
-    sc.push_back(cell.p.y - poly.edges[n].start.y);
-    
-    // Get length of vectors SC and AD (dot product of SC and normal)
-    double scLen = sqrt( pow(sc[0],2) + pow(sc[1],2) );
-    double adLen = sc[0]*e_hat.a + sc[1]*e_hat.b;
+    Point a,b,p;
+    a = poly.edges[n].start;
+    b = poly.edges[n].end;
+    p = cell.p;
 
-    double d = sqrt( pow(scLen,2) + pow(adLen,2) );
-    
-    //ROS_INFO("l: %f ehat: <%f,%f> sc: <%f,%f> d: %f", l, e_hat.a, e_hat.b, sc[0], sc[1], d);
+    double d;
+
+    std::vector<double> ab;
+    ab.push_back(b.x - a.x);
+    ab.push_back(b.y - a.y);
+    std::vector<double> pa, pb;
+    pa.push_back(a.x - p.x);
+    pa.push_back(a.y - p.y);
+    pb.push_back(b.x - p.x);
+    pb.push_back(b.y - p.y);
+
+    double t_numer = ((a.x - p.x) * (b.x - a.x)) + ((a.y - p.y) * (b.y - a.y));
+    double t_denom = pow(b.x - a.x,2) + pow(b.y - a.y,2);
+    double t = -t_numer / t_denom;
+    //ROS_INFO("t: %f t_numer: %f t_denom: %f", t, t_numer, t_denom);
+    if(t >= 0 && t <= 1)
+    {
+      double d_numer = fabs( ((b.x - a.x)*(a.y - p.y)) - ((b.y - a.y)*(a.x - p.x)) );
+      double d_denom = sqrt( pow(b.x - a.x,2) + pow(b.y - a.y,2) );
+      d = d_numer / d_denom;
+      //ROS_INFO("d: %f d_numer: %f d_denom: %f", d, d_numer, d_denom);
+    }
+    else
+    {
+      // Get distance to each endpoint
+      double d_a = sqrt( pow(a.x - p.x,2) + pow(a.y - p.y,2) );
+      double d_b = sqrt( pow(b.x - p.x,2) + pow(b.y - p.y,2) );
+      //ROS_INFO("d: %f d_a: %f d_b: %f", d, d_a, d_b);
+      d = d_a < d_b ? d_a : d_b;
+    }
+
+
     if(d < result)
     {
       result = d;
@@ -1248,11 +1267,11 @@ std::vector<Circle> CirclePacker::packCirsIntoPoly(Polygon poly, double min_r)
   std::vector<Circle> result;
 
   // Print polygon information
-  /*ROS_INFO("Polygon");
+  ROS_INFO("Polygon");
   for(int j=0;j<poly.edges.size();j++)
   {
-    ROS_INFO("  Edge %i - Start: (%i,%i) End: (%i,%i)", j, poly.edges[j].start.x, poly.edges[j].start.y, poly.edges[j].end.x, poly.edges[j].end.y);
-  }*/
+    ROS_INFO("  Edge %i - Start: (%f,%f) End: (%f,%f)", j, poly.edges[j].start.x, poly.edges[j].start.y, poly.edges[j].end.x, poly.edges[j].end.y);
+  }
 
   /*
    * Create cells inside the polygon
@@ -1303,13 +1322,13 @@ std::vector<Circle> CirclePacker::packCirsIntoPoly(Polygon poly, double min_r)
     {
       Cell& cell = reduced_cells[i];
 
-      //ROS_INFO("Cell %i: (%f,%f)", i, cell.p.x, cell.p.y);
+      ROS_INFO("Cell %i: (%f,%f)", i, cell.p.x, cell.p.y);
 
       // Get min distance to polygon edges and set of circles already created
       double min_d=getMinDistToPoly(poly, cell);
       double min_cir=getMinDistToCirs(result, cell);
 
-      //ROS_INFO("min_d: %f min_cir: %f", min_d, min_cir);
+      ROS_INFO("min_d: %f min_cir: %f", min_d, min_cir);
 
       // Set new distance value
       if(min_d < min_cir || min_cir < 0)
@@ -1812,6 +1831,8 @@ std::vector<CircleGroup> CirclePacker::getGroups()
 
   // ***** findContours modifies src! *****
   findContours( srcCopy, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
+  if(contours.size() > 1)
+  drawContourPoints(contours, hierarchy);
   //ROS_INFO("contours.size(): %i", (int)contours.size());
   
   // Go through each set of contour points

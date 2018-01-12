@@ -26,6 +26,10 @@
 bool cropMap = false;
 
 ramp_msgs::MotionState robotState;
+ramp_msgs::MotionState initialOdomState;
+bool initOdom = false;
+
+
 double fovAngle;
 std::vector<double> viewMinMax;
 
@@ -772,18 +776,43 @@ int getClosestPrev(Circle m, std::vector<Circle> N, std::vector<int> matched)
   return min_index;
 }
 
+// ***************************************************
+// Add in check for angles where tan is undefined
+// ***************************************************
+double getDistToFOV(Point p, double angle)
+{
+  ROS_INFO("In getDistToFOV");
+  ROS_INFO("p: (%f,%f)", p.x, p.y);
+  ROS_INFO("Robot pos: (%f,%f)", robotState.positions[0], robotState.positions[1]);
+  double m = tan(angle);
+  double b = robotState.positions[1] - (m*robotState.positions[0]);
+
+  double d = fabs( (m*p.x) + p.y - b );
+
+  ROS_INFO("angle: %f m: %f b: %f d: %f", angle, m, b, d);
+
+  d /= sqrt( pow(m,2) + pow(b,2) );
+
+  ROS_INFO("denom: %f d: %f", sqrt( pow(m,2) + pow(b,2) ), d);
+
+  ROS_INFO("Exiting getDistToFOV");
+  return d;
+}
+
+
 
 
 std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const ros::Duration d_elapsed)
 {
-  //ROS_INFO("In predictVelocities, d_elapsed: %f", d_elapsed.toSec());
+  ROS_INFO("In predictVelocities, d_elapsed: %f", d_elapsed.toSec());
+  ROS_INFO("cir_obs.size(): %i cm.size(): %i", (int)cir_obs.size(), (int)cm.size());
 
   std::vector<Velocity> result;
   
   // For each circle obstacle,
   for(int i=0;i<cir_obs.size();i++)
   {
-    //ROS_INFO("CircleOb %i prevCirs.size(): %i", i, (int)cir_obs[i]->prevCirs.size());
+    ROS_INFO("CircleOb %i prevCirs.size(): %i", i, (int)cir_obs[i]->prevCirs.size());
     //ROS_INFO("Current: (%f, %f)", cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
 
     Velocity temp;
@@ -800,21 +829,40 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
 
       double dist = util.positionDistance(cir_obs[i]->prevCirs[i_prev].center.x, cir_obs[i]->prevCirs[i_prev].center.y, cir_obs[i]->cirGroup.fitCir.center.x, cir_obs[i]->cirGroup.fitCir.center.y);
 
+      std::vector<double> obPos;
+      obPos.push_back(cir_obs[i]->cirGroup.fitCir.center.x);
+      obPos.push_back(cir_obs[i]->cirGroup.fitCir.center.y);
 
       double theta = atan2(y_dist, x_dist);
+      double dirToOb = util.findAngleFromAToB(robotState.positions, obPos);
       
       // Add on change in radius
       if(cm.size()>0)
       {
-        // Check if previous velocity was nonzero
-        //if(cir_obs[i]->vels[cir_obs[i]->vels.size()-1].v > 0.1)
-        //{
-          dist += cm[0].delta_r;
-          //ROS_INFO("Prev v: %f Adding delta r: %f to dist, new dist: %f", cir_obs[i]->vels[cir_obs[i]->vels.size()-1].v, cm[0].delta_r, dist);
-        //}
-        
-        // If so, then make theta be towards the robot
-        //theta = PI;
+        // Get cm for ob
+        for(int j=0;j<cm.size();j++)
+        {
+          if(cm[j].i_cir == i)
+          {
+            ROS_INFO("dist: %f delta_r: %f", dist, cm[j].delta_r);
+            // If the obstacle is moving towards the robot, then add delta_r
+            //if( fabs(util.findAngleBetweenAngles(theta, robotState.positions[2])) > (3.f*PI)/4.f)
+            //if(robotState.velocities[2] < 0)
+            //if(dist > 0.01 && cm[j].delta_r > 0.1 && util.findDistanceBetweenAngles(robotState.positions[2], dirToOb) > (3.f*PI)/4.f)
+            double dMin = getDistToFOV(cir_obs[i]->cirGroup.fitCir.center, viewMinMax[0]);
+            double dMax = getDistToFOV(cir_obs[i]->cirGroup.fitCir.center, viewMinMax[1]);
+            ROS_INFO("viewMinMax[0]: %f viewMinMax[1]: %f dMin: %f dMax: %f r: %f", viewMinMax[0], viewMinMax[1], dMin, dMax, cir_obs[i]->cirGroup.fitCir.radius);
+            if(dMin < cir_obs[i]->cirGroup.fitCir.radius+0.5 || dMax < cir_obs[i]->cirGroup.fitCir.radius+0.5)
+            {
+              dist -= cm[j].delta_r;
+            }
+            // Otherwise, subtract it
+            else
+            {
+              dist += cm[j].delta_r;
+            }
+          }
+        }
       }
 
       /*
@@ -833,7 +881,7 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
       temp.vy = linear_v*sin(theta);
       temp.v  = linear_v;
       temp.w  = w;
-      //ROS_INFO("dist: %f t: %f vx: %f vy: %f speed: %f theta: %f w: %f", dist, d_elapsed.toSec(), temp.vx, temp.vy, linear_v, theta, w);
+      ROS_INFO("dist: %f t: %f vx: %f vy: %f speed: %f theta: %f w: %f", dist, d_elapsed.toSec(), temp.vx, temp.vy, linear_v, theta, w);
 
       if(dist > 0.075)
       {
@@ -1085,7 +1133,7 @@ std::vector<CircleMatch> matchCircles(std::vector<CircleGroup> cirs, std::vector
 
       // Create CircleMatch object
       CircleMatch temp;
-      temp.i_cirs = j;
+      temp.i_cir = j;
       temp.i_prevCir = i;
       temp.dist = util.positionDistance(cirs[j].fitCir.center.x, cirs[j].fitCir.center.y, targets[i].fitCir.center.x, targets[i].fitCir.center.y);
       temp.delta_r = fabs(cirs[j].fitCir.radius - targets[i].fitCir.radius);
@@ -1122,7 +1170,7 @@ std::vector<CircleMatch> matchCircles(std::vector<CircleGroup> cirs, std::vector
       for(int r=0;r<result.size();r++)
       {
         //ROS_INFO("r: %i result[%i].i_cirs: %i result[%i]: %i", r, r, result[r].i_cirs, r, result[r].i_cirs);
-        if(result[r].i_cirs == all_dists[i].i_cirs || result[r].i_prevCir == all_dists[i].i_prevCir)
+        if(result[r].i_cir == all_dists[i].i_cir || result[r].i_prevCir == all_dists[i].i_prevCir)
         {
           //ROS_INFO("Previously matched!");
           prev_matched = true;
@@ -1187,7 +1235,7 @@ void addNewObs(std::vector<CircleMatch> cm, std::vector<CircleGroup> cirs)
   std::vector<int> matched_cirs(cirs.size(), 0);
   for(int i=0;i<cm.size();i++)
   {
-    matched_cirs[ cm[i].i_cirs ]++;
+    matched_cirs[ cm[i].i_cir ]++;
   }
 
   // Create new filters
@@ -1232,7 +1280,7 @@ std::vector<CircleMatch> dataAssociation(std::vector<CircleGroup> cirs)
     // Set cir value for this circle obstacle!
     if(cir_obs.size() > cm[i].i_prevCir)
     {
-      cir_obs[cm[i].i_prevCir]->cirGroup = copy[cm[i].i_cirs];
+      cir_obs[cm[i].i_prevCir]->cirGroup = copy[cm[i].i_cir];
       //ROS_INFO("Setting cir_obs[%i]->cir to (%f,%f)", cm[i].i_prevCir, copy[cm[i].i_cirs].center.x, copy[cm[i].i_cirs].center.y);
     }
   } // end for each potential match
@@ -1510,8 +1558,11 @@ void initGlobalMap()
   }
 }
 
+
 void setRobotPos(const ramp_msgs::MotionState& ms)
 {
+  //ROS_INFO("In setRobotPos");
+  //ROS_INFO("ms: (%f,%f,%f)", ms.positions[0], ms.positions[1], ms.positions[2]);
   robotState.positions.clear();
   
   // Set new position
@@ -1627,6 +1678,49 @@ void setRobotPos(const ramp_msgs::MotionState& ms)
   pub_rviz.publish(viewingInfo);
 }
 
+
+void odomCb(const nav_msgs::OdometryConstPtr msg)
+{
+  //ROS_INFO("In odomCb");
+  //ROS_INFO("msg: Position: (%f,%f,%f)", msg->pose.pose.position.x, msg->pose.pose.position.y, tf::getYaw(msg->pose.pose.orientation));
+
+  // Need to create a MotionState from odom msg
+  ramp_msgs::MotionState ms;
+
+  if(!initOdom)
+  {
+    initialOdomState.positions.push_back(msg->pose.pose.position.x);
+    initialOdomState.positions.push_back(msg->pose.pose.position.y);
+    double theta = tf::getYaw(msg->pose.pose.orientation);
+    initialOdomState.positions.push_back(theta);
+
+    initOdom = true;
+  }
+  else
+  {
+    // Get new odometry changes
+    double delta_x = (msg->pose.pose.position.x - initialOdomState.positions[0] - robotState.positions[0]);
+    double delta_y = msg->pose.pose.position.y - initialOdomState.positions[1] - robotState.positions[1];
+    double delta_th = util.findAngleBetweenAngles(initialOdomState.positions[2], tf::getYaw(msg->pose.pose.orientation));
+    delta_th = util.findAngleBetweenAngles(robotState.positions[2], tf::getYaw(msg->pose.pose.orientation));
+
+    // Apply changes
+    ms = robotState;
+    ms.positions[0] += delta_x;
+    ms.positions[1] += delta_y;
+    ms.positions[2] = util.displaceAngle(robotState.positions[2], delta_th);
+
+    ms.positions[0] = msg->pose.pose.position.x;
+    ms.positions[1] = msg->pose.pose.position.y;
+    ms.positions[2] = util.displaceAngle(0.785, tf::getYaw(msg->pose.pose.orientation));
+
+    //ROS_INFO("Calling setRobotPos with position (%f,%f,%f)", ms.positions[0], ms.positions[1], ms.positions[2]);
+
+    // And then call setRobotPos
+    setRobotPos(ms);
+  }
+}
+
 void robotUpdateCb(const ramp_msgs::MotionStateConstPtr ms)
 {
   ROS_INFO("In robotUpdateCb");
@@ -1684,16 +1778,16 @@ void convertGroups()
   // Convert fit circles in outer loop
   for(int i=0;i<cirGroups.size();i++)
   {
-    //ROS_INFO("Fit circle for cirGroup %i center: (%f,%f) radius: %f", i, cirGroups[i].fitCir.center.x, cirGroups[i].fitCir.center.y, cirGroups[i].fitCir.radius);
+    ROS_INFO("Fit circle for cirGroup %i center: (%f,%f) radius: %f", i, cirGroups[i].fitCir.center.x, cirGroups[i].fitCir.center.y, cirGroups[i].fitCir.radius);
     convertCircleToGlobal(global_grid, cirGroups[i].fitCir);
-    //ROS_INFO("New point: (%f,%f) New radius: %f", cirGroups[i].fitCir.center.x, cirGroups[i].fitCir.center.y, cirGroups[i].fitCir.radius);
+    ROS_INFO("New point: (%f,%f) New radius: %f", cirGroups[i].fitCir.center.x, cirGroups[i].fitCir.center.y, cirGroups[i].fitCir.radius);
 
     // Convert packed circles in inner loop
     for(int j=0;j<cirGroups[i].packedCirs.size();j++)
     {
-      //ROS_INFO("Packed circle %i center: (%f,%f) radius: %f ", j, cirGroups[i].packedCirs[j].center.x, cirGroups[i].packedCirs[j].center.y, cirGroups[i].packedCirs[j].radius);
+      ROS_INFO("Packed circle %i center: (%f,%f) radius: %f ", j, cirGroups[i].packedCirs[j].center.x, cirGroups[i].packedCirs[j].center.y, cirGroups[i].packedCirs[j].radius);
       convertCircleToGlobal(global_grid, cirGroups[i].packedCirs[j]);
-      //ROS_INFO("New Point: (%f,%f) New Radius: %f ", cirGroups[i].packedCirs[j].center.x, cirGroups[i].packedCirs[j].center.y, cirGroups[i].packedCirs[j].radius);
+      ROS_INFO("New Point: (%f,%f) New Radius: %f ", cirGroups[i].packedCirs[j].center.x, cirGroups[i].packedCirs[j].center.y, cirGroups[i].packedCirs[j].radius);
     }
   }
 }
@@ -2298,6 +2392,7 @@ int main(int argc, char** argv)
   ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);
   //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/hilbert_map_grid", 1, &costmapCb);
   ros::Subscriber sub_robot_update = handle.subscribe<ramp_msgs::MotionState>("/updateAfterTf", 1, &robotUpdateCb);
+  ros::Subscriber sub_odom = handle.subscribe<nav_msgs::Odometry>("/odom", 1, &odomCb);
   //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/consolidated_costmap", 1, &costmapCb);
 
   //Publishers
@@ -2323,7 +2418,7 @@ int main(int argc, char** argv)
   ms.positions.push_back(0);
   ms.positions.push_back(0);
   ms.positions.push_back(PI/4.f);
-  //setRobotPos(ms);
+  setRobotPos(ms);
 
   printf("\nSpinning\n");
 
