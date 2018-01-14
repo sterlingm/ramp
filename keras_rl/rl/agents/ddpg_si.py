@@ -75,7 +75,7 @@ class DDPGAgentSi(DDPGAgent):
                 a_sum += a
 
         if a_cnt == 0:
-            a_ave = np.ones((self.nb_actions,))
+            a_ave = np.ones(self.nb_actions)
         else:
             a_ave = 1.0 * a_sum / a_cnt
 

@@ -37,7 +37,7 @@ class TDEnv(object):
     
     def reset(self):
         self.ob = np.random.randint(0, ob_size)
-        self.ob = 0
+        # self.ob = 0
         return self.ob
 
     def step(self, a):
@@ -56,7 +56,7 @@ class TDEnv(object):
         done = beyond_limit # Conflict with target = exp.reward in replay
         # if beyond_limit:
         #     reward -= 100.0 # Remove the above conflict
-        done = False
+        # done = False
         info = {}
 
         return self.ob, reward, done, info
@@ -80,14 +80,13 @@ rospy.init_node('q_tb_TD', anonymous = True)
 np.random.seed()
 
 D_max = 0.5
-ob_size = 30
+ob_size = 5
 d_D = D_max / ob_size
 act_size = 3
+# TODO: gamma=1 cannot converge in practice
 discount_factor = 0.99 # gamma
 lr = 0.8 # In ramp it is 0.001
-max_epi_steps = 100
-batch_size = 1 # only replay, there is no mini_batch training for q table
-warm_up_steps = 100
+max_epi_steps = 10
 
 env = TDEnv()
 # Q = np.zeros((ob_size, act_size)) # Q Table
@@ -113,23 +112,12 @@ while not rospy.core.is_shutdown():
         ## Get new state and reward from environment
         s1, r, d, info = env.step(a)
 
-        # replay_buffer.append(s, a, r, d, training = True)
-        # if n_step > warm_up_steps:
-        #     experiences = replay_buffer.sample(batch_size)
-        #     assert len(experiences) == batch_size
-        #     sum_loss = 0.0
-        #     for exp in experiences:
-        #         if exp.terminal1:
-        #             target = exp.reward # Conflict with done = beyond_limit
-        #         else:
-        #             target = exp.reward + discount_factor * np.max(Q[exp.state1,:]) # TODO: try on-policy
-        #         loss = target - Q[exp.state0, exp.action]
-        #         sum_loss += loss
-        #     ave_loss = 1.0 * sum_loss / batch_size
-        #     Q[exp.state0, exp.action] += lr * ave_loss
+        # can't use this, not converge
+        if j == max_epi_steps - 1:
+            d = True
 
         if d:
-            loss = r
+            loss = r + discount_factor * np.max(Q[s1, :]) - Q[s, a]
         else:
             loss = r + discount_factor * np.max(Q[s1, :]) - Q[s, a]
         

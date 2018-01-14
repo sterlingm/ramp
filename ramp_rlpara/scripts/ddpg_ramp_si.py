@@ -235,7 +235,7 @@ agent = DDPGAgentSi(nb_actions = action_size, actor = actor, critic = critic, cr
 #  lr is leaning rate of critic Q-net.
 agent.compile(Adam(lr = utility.critic_lr, clipnorm = utility.gradient_clip_norm), metrics=['mae'])
 ## Load weights if needed. Put this after compiling may be better.
-# agent.load_weights("/home/kai/data/ramp/ramp_rlpara/ddpg_ramp_si/2018-01-11_21:13:40/raw_data/0/" +
+# agent.load_weights("/home/kai/data/ramp/ramp_rlpara/ddpg_ramp_si/2018-01-12_04:50:49/raw_data/4/" +
 #                    "ddpg_{}_weights.h5f".format(ENV_NAME))
 ## maintain some variables that are maintained in fit()
 agent.training = True
