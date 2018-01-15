@@ -18,13 +18,13 @@ class Callback(KerasCallback):
     def on_episode_begin(self, episode, logs={}):
         pass
 
-    def on_episode_end(self, episode, logs={}):
+    def on_episode_end(self, episode, logs={}, Q=None):
         pass
 
     def on_step_begin(self, step, logs={}):
         pass
 
-    def on_step_end(self, step, logs={}):
+    def on_step_end(self, step, logs={}, Q=None):
         pass
 
     def on_action_begin(self, action, logs={}):
@@ -346,3 +346,25 @@ class ModelIntervalCheckpoint(Callback):
         if self.verbose > 0:
             print('Step {}: saving model to {}'.format(self.total_steps, filepath))
         self.model.save_weights(filepath, overwrite=True)
+
+
+
+class QTBVisualizer(Callback):
+    """docstring for ClassName"""
+
+
+
+    def __init__(self, interval=10000):
+        self.interval = interval
+        self.step = 0
+
+
+
+    def on_step_begin(self, step, logs={}, Q=None):
+        if self.step % self.interval == 0:
+            print('My QTBVisualizer!')
+
+
+
+    def on_step_end(self, step, logs):
+        self.step += 1

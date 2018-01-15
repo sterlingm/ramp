@@ -22,7 +22,7 @@ class TDEnv(object):
         self.cost_array = (self.cost_array - 30.0)**2 # convenient to monitor
 
     def calcCost(self):
-        state = D_max * self.ob / ob_size
+        state = D_max * self.ob / (ob_size - 1)
 
         if state < 0.1:
             return self.cost_array[0]
@@ -54,9 +54,9 @@ class TDEnv(object):
         reward = -cost + 10  # Remove the conflict
 
         done = beyond_limit # Conflict with target = exp.reward in replay
-        # if beyond_limit:
-        #     reward -= 100.0 # Remove the above conflict
-        # done = False
+        if beyond_limit:
+            reward -= 100.0 # Remove the above conflict
+
         info = {}
 
         return self.ob, reward, done, info
@@ -84,7 +84,7 @@ ob_size = 5
 d_D = D_max / ob_size
 act_size = 3
 # TODO: gamma=1 cannot converge in practice
-discount_factor = 0.99 # gamma
+discount_factor = 0.9 # gamma
 lr = 0.8 # In ramp it is 0.001
 max_epi_steps = 10
 
@@ -113,11 +113,11 @@ while not rospy.core.is_shutdown():
         s1, r, d, info = env.step(a)
 
         # can't use this, not converge
-        if j == max_epi_steps - 1:
-            d = True
+        # if j == max_epi_steps - 1:
+        #     d = True
 
         if d:
-            loss = r + discount_factor * np.max(Q[s1, :]) - Q[s, a]
+            loss = r - Q[s, a]
         else:
             loss = r + discount_factor * np.max(Q[s1, :]) - Q[s, a]
         

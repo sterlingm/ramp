@@ -36,6 +36,8 @@ class AbstractDQNAgent(Agent):
             warnings.warn('`delta_range` is deprecated. Please use `delta_clip` instead, which takes a single scalar. For now we\'re falling back to `delta_range[1] = {}`'.format(delta_range[1]))
             delta_clip = delta_range[1]
 
+        print('Initialize my own dqn agent!')
+
         # Parameters.
         self.nb_actions = nb_actions
         self.gamma = gamma

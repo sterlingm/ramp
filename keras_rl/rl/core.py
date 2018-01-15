@@ -59,7 +59,7 @@ class Agent(object):
 
     def fit(self, env, nb_steps, action_repetition=1, callbacks=None, verbose=1,
             visualize=False, nb_max_start_steps=0, start_step_policy=None, log_interval=10000,
-            nb_max_episode_steps=None, chg_file_inter=100, file_dir=None, file_h=None, utility=None):
+            nb_max_episode_steps=None, chg_file_inter=100, file_dir=None, file_h=None, utility=None, cdd=False):
         """Trains the agent on the given environment.
 
         # Arguments
@@ -197,7 +197,7 @@ class Agent(object):
                 assert observation is not None
 
                 # Run a single step.
-                callbacks.on_step_begin(episode_step)
+                callbacks.on_step_begin(episode_step, self.model)
                 # This is were all of the work happens. We first perceive and compute the action
                 # (forward step) and then use the reward to improve (backward step).
                 action = self.forward(observation)
@@ -400,7 +400,7 @@ class Agent(object):
             # Run the episode until we're done.
             done = False
             while not done:
-                callbacks.on_step_begin(episode_step)
+                callbacks.on_step_begin(episode_step, self.model)
 
                 action = self.forward(observation)
                 if self.processor is not None:
