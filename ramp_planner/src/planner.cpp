@@ -1628,6 +1628,15 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
   ma.markers.push_back(arrow);
   h_rviz_->sendRobotPose(ma);
 
+  // push the latest motion state into msg.
+  push_ms_cnt++;
+  if (push_ms_cnt > 3) {
+    push_ms_cnt = 0;
+    ramp_msgs::MotionState ms = latestUpdate_.msg_;
+    ms.time = ros::Time::now().toSec() - start_run_time;
+    obser_one_run.robot_state_vector.push_back(ms);
+  }
+
   // static int theta_cnt = 0;
   // theta_cnt++;
   // if (theta_cnt > 5) {
@@ -3558,7 +3567,7 @@ void Planner::controlCycleCallback(const ros::TimerEvent& e)
   ////////ROS_INFO("*************************************************");*/
   
   //////////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
-  
+
   // Do the control cycle
   doControlCycle();
 
@@ -3566,7 +3575,9 @@ void Planner::controlCycleCallback(const ros::TimerEvent& e)
   if(!cc_started_) 
   {
     cc_started_ = true;
-    h_parameters_.setCCStarted(true); 
+    h_parameters_.setCCStarted(true);
+    // Initialize the time cc started
+    start_run_time = ros::Time::now().toSec();
   }
     
   num_ccs_++;
@@ -3619,7 +3630,7 @@ void Planner::sendBest() {
     sendPopulation();
 
     best.msg_.header.stamp = ros::Time::now(); // TODO: time stamp should be the same as the latestUpdate_ it uses for planning
-    obser_one_run.best_trajectory_vector.push_back(best.msg_);
+    // obser_one_run.best_trajectory_vector.push_back(best.msg_);
     h_control_->send(best.msg_);
   //} // end if not stopped
   /*else {

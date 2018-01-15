@@ -59,6 +59,8 @@ class Planner {
     int no_better_cnt;
     const int MAX_NO_BETTER_CNT = 200;
     const double ZERO = 0.05;
+    double start_run_time = -1.0;
+    int push_ms_cnt = 0;
 
     // Hold the population of trajectories, 
     // the velocities of each trajectory's segments,

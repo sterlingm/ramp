@@ -18,4 +18,3 @@ add_service_files(FILES EvaluationSrv.srv ModificationRequest.srv TrajectorySrv.
 generate_messages(DEPENDENCIES nav_msgs std_msgs trajectory_msgs)
 
 catkin_package(CATKIN_DEPENDS message_runtime nav_msgs std_msgs trajectory_msgs)
-
