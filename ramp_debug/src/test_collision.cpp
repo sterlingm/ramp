@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
   ramp_msgs::TrajectoryRequest tr;
   tr.path = p;
   tr.type = HYBRID;
-  tr.print = true;
+  tr.is_print = true;
 
   ramp_msgs::TrajectorySrv tr_srv;
   tr_srv.request.reqs.push_back(tr);

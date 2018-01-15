@@ -103,7 +103,7 @@ void MobileBase::init(const ramp_msgs::TrajectoryRequest req)
   // ROS_INFO("MAX_SPEED_LINEAR: %f MAX_SPEED_ANGULAR: %f", MAX_SPEED_LINEAR, MAX_SPEED_ANGULAR);
 
   // Set print
-  print_ = req.print;
+  print_ = req.is_print;
  
   // Set trajectory type
   ////ROS_INFO("req.type: %i", req.type);

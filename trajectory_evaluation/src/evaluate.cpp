@@ -235,7 +235,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
 
     if (!ros::param::get("/ramp/eval_weight_D", D_weight_)) {
       // if fail to get the parameter
-      D_weight_ = 15.0; // set it to the default
+      D_weight_ = 0.4; // set it to the default
     }
     static bool is_set_D = false;
     if (!is_set_D) {
@@ -299,7 +299,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
       _1_delta_theta = 1.0 / delta_theta;
 
       if (!ros::param::get("/ramp/eval_weight_Qk", Q_kine_)) {
-        Q_kine_ = 10.0; // set it to the default
+        Q_kine_ = 1.0; // set it to the default
       }
       static bool is_set_Qk = false;
       if (!is_set_Qk) {

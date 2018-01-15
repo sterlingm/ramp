@@ -69,7 +69,7 @@ int main(int argc, char** argv)
   ramp_msgs::TrajectoryRequest tr;
   tr.path = mod.response.mod_paths[0];
   tr.type = HYBRID;
-  tr.print = true;
+  tr.is_print = true;
   
   std::vector<ramp_msgs::BezierCurve> curves;
   

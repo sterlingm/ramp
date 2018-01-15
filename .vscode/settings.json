@@ -2,6 +2,9 @@
     "python.pythonPath": "/home/kai/env/bin/python3.4",
     "files.associations": {
         "array": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "chrono": "cpp",
+        "ratio": "cpp",
+        "type_traits": "cpp"
     }
 }
