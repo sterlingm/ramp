@@ -1630,7 +1630,7 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
 
   // push the latest motion state into msg.
   push_ms_cnt++;
-  if (push_ms_cnt > 3) {
+  if (push_ms_cnt > 3 && cc_started_) {
     push_ms_cnt = 0;
     ramp_msgs::MotionState ms = latestUpdate_.msg_;
     ms.time = ros::Time::now().toSec() - start_run_time;
