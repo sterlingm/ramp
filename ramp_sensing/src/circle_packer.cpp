@@ -988,7 +988,7 @@ double CirclePacker::getMinDistToCirs(const std::vector<Circle>& cirs, const Cel
 
 
 /*
- * Returns true if the center of the cell is inside the Polygon
+ *zz Returns true if the center of the cell is inside the Polygon
  */ 
 bool CirclePacker::cellInPoly(Polygon poly, Point cell)
 {
@@ -1123,7 +1123,7 @@ bool CirclePacker::cellInPolyConcave(Polygon poly, Point cell)
 {
   // Extend a ray to the right of the cell
   Point endRay;
-  endRay.x = 70; // 3.5 (x_max) / 0.05 (resolution)
+  endRay.x = grid_.info.width / grid_.info.resolution; // width (x_max) / resolution
   endRay.y = cell.y; 
   
   //ROS_INFO("In cellInPoly, cell: (%f,%f)", cell.x, cell.y);
@@ -1267,18 +1267,23 @@ std::vector<Circle> CirclePacker::packCirsIntoPoly(Polygon poly, double min_r)
   std::vector<Circle> result;
 
   // Print polygon information
-  ROS_INFO("Polygon");
+  /*ROS_INFO("Polygon");
   for(int j=0;j<poly.edges.size();j++)
   {
     ROS_INFO("  Edge %i - Start: (%f,%f) End: (%f,%f)", j, poly.edges[j].start.x, poly.edges[j].start.y, poly.edges[j].end.x, poly.edges[j].end.y);
-  }
+  }*/
 
   /*
    * Create cells inside the polygon
    */
   std::vector<Cell> cells = getCellsInPolygon(poly);
-  //cMarkers_ = drawCells(cells);
-  //ROS_INFO("cells.size(): %i", (int)cells.size());
+  cMarkers_ = drawCells(cells);
+  /*ROS_INFO("cells.size(): %i", (int)cells.size());
+  ROS_INFO("IN CIRCLEPACKERS");
+  for(int i=0;i<cMarkers_.size();i++)
+  {
+    ROS_INFO("cMarkers[%i]: (%f,%f)", i, cMarkers_[i].pose.position.x, cMarkers_[i].pose.position.y);
+  }*/
   
 
   // Initialize reduced_cells to contain all cells
@@ -1322,13 +1327,13 @@ std::vector<Circle> CirclePacker::packCirsIntoPoly(Polygon poly, double min_r)
     {
       Cell& cell = reduced_cells[i];
 
-      ROS_INFO("Cell %i: (%f,%f)", i, cell.p.x, cell.p.y);
+      //ROS_INFO("Cell %i: (%f,%f)", i, cell.p.x, cell.p.y);
 
       // Get min distance to polygon edges and set of circles already created
       double min_d=getMinDistToPoly(poly, cell);
       double min_cir=getMinDistToCirs(result, cell);
 
-      ROS_INFO("min_d: %f min_cir: %f", min_d, min_cir);
+      //ROS_INFO("min_d: %f min_cir: %f", min_d, min_cir);
 
       // Set new distance value
       if(min_d < min_cir || min_cir < 0)
@@ -1461,11 +1466,14 @@ visualization_msgs::Marker CirclePacker::drawLines(const std::vector<Point>& poi
   // Push on all the trajectory points
   for(int i=0;i<points.size();i++)
   {
-    //////ROS_INFO("Point %i: (%f,%f,%f)", i, trajec.msg_.trajectory.points[i].positions[0], trajec.msg_.trajectory.points[i].positions[1], trajec.msg_.trajectory.points[i].positions[2]);
+    //ROS_INFO("Point %i: (%f,%f)", i, points[i].x, points[i].y);
     geometry_msgs::Point p;
     p.x = (points[i].x * 0.05);
+    p.x -= 2;
     p.y = (points[i].y * 0.05);
+    p.y -= 2;
     p.z = 0;
+    //ROS_INFO("Point %i: (%f,%f)", i, p.x, p.y);
 
     result.points.push_back(p);
   }
@@ -1576,6 +1584,7 @@ visualization_msgs::Marker CirclePacker::drawPolygon(const Polygon& poly, const 
   std::vector<Point> points;
   for(int i=0;i<poly.edges.size();i++)
   {
+    //ROS_INFO("poly.edges[i].start: (%f,%f)", poly.edges[i].start.x, poly.edges[i].start.y);
     points.push_back(poly.edges[i].start); 
     if(i == poly.edges.size()-1)
     {
@@ -1831,8 +1840,8 @@ std::vector<CircleGroup> CirclePacker::getGroups()
 
   // ***** findContours modifies src! *****
   findContours( srcCopy, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
-  if(contours.size() > 1)
-  drawContourPoints(contours, hierarchy);
+  //if(contours.size() > 1)
+  //drawContourPoints(contours, hierarchy);
   //ROS_INFO("contours.size(): %i", (int)contours.size());
   
   // Go through each set of contour points

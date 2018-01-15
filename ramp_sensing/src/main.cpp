@@ -708,6 +708,7 @@ void publishMarkers(const ros::TimerEvent& e)
   /*ROS_INFO("cLines.size(): %i", (int)cLines.size());
   for(int i=0;i<cLines.size();i++)
   {
+    ROS_INFO("cLines[%i]: (%f,%f)", i, cLines[i].pose.position.x, cLines[i].pose.position.y);
     result.markers.push_back(cLines[i]);
   }*/
   //ROS_INFO("publishMarkers polygonLines.size(): %i", (int)polygonLines.points.size());
