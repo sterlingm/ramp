@@ -388,7 +388,7 @@ int main(int argc, char** argv) {
   ramp_msgs::TrajectoryRequest tr;
   tr.path = p;
   tr.type = HYBRID;
-  tr.print = true;
+  tr.is_print = true;
   tr.bezierCurves = curves;
   tr.segments = 0;
   tr.max_speed_linear = 0.33f;

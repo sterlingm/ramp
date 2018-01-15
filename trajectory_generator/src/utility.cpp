@@ -393,7 +393,7 @@ const std::string Utility::toString(const ramp_msgs::TrajectoryRequest tr) const
       result<<"Prediction";
   }
 
-  result<<"\nPrint: "<<(tr.print ? "True" : "False");
+  result<<"\nPrint: "<<(tr.is_print ? "True" : "False");
 
   for(uint8_t i=0;i<tr.bezierCurves.size();i++) {
     result<<"\n Curve "<<(int)i<<"\n"<<toString(tr.bezierCurves.at(i));
