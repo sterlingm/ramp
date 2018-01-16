@@ -10,6 +10,8 @@ import numpy as np
 from keras.callbacks import Callback as KerasCallback, CallbackList as KerasCallbackList
 from keras.utils.generic_utils import Progbar
 
+import matplotlib.pyplot as plt
+
 
 class Callback(KerasCallback):
     def _set_env(self, env):
@@ -195,6 +197,8 @@ class TrainIntervalLogger(Callback):
         self.interval = interval
         self.step = 0
         self.reset()
+        self.epi_r_arr = []
+        self.mean_q_arr = []
 
     def reset(self):
         self.interval_start = timeit.default_timer()
@@ -233,8 +237,21 @@ class TrainIntervalLogger(Callback):
                         assert means.shape == (len(self.info_names),)
                         for name, mean in zip(self.info_names, means):
                             formatted_infos += ' - {}: {:.3f}'.format(name, mean)
-                print('{} episodes - episode_reward: {:.3f} [{:.3f}, {:.3f}]{}{}'.format(len(self.episode_rewards), np.mean(self.episode_rewards), np.min(self.episode_rewards), np.max(self.episode_rewards), formatted_metrics, formatted_infos))
+                print('{} episodes - episode_reward: {:.3f} [{:.3f}, {:.3f}]{}{}'.format(len(self.episode_rewards),
+                                                                                         np.mean(self.episode_rewards),
+                                                                                         np.min(self.episode_rewards),
+                                                                                         np.max(self.episode_rewards),
+                                                                                         formatted_metrics, formatted_infos))
                 print('')
+
+                self.epi_r_arr.append(np.mean(self.episode_rewards))
+                self.mean_q_arr.append(means[2])
+
+                plt.plot(self.epi_r_arr)
+                plt.plot(self.mean_q_arr)
+
+                plt.pause(0.0001)
+
             self.reset()
             print('Interval {} ({} steps performed)'.format(self.step // self.interval + 1, self.step))
 
@@ -242,7 +259,7 @@ class TrainIntervalLogger(Callback):
         if self.info_names is None:
             self.info_names = logs['info'].keys()
         values = [('reward', logs['reward'])]
-        self.progbar.update((self.step % self.interval) + 1, values=values, force=True)
+        # self.progbar.update((self.step % self.interval) + 1, values=values, force=True)
         self.step += 1
         self.metrics.append(logs['metrics'])
         if len(self.info_names) > 0:

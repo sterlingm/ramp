@@ -2,6 +2,7 @@ import os
 import sys
 import numpy as np
 import gym
+from gym.spaces import prng
 
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten
@@ -10,13 +11,21 @@ from keras.optimizers import Adam
 ramp_root = os.path.join(os.path.dirname(__file__), '../../')
 sys.path.append(ramp_root) # directory_name
 
-from rl.agents.dqn import DQNAgent
-from rl.policy import BoltzmannQPolicy
-from rl.policy import GreedyQPolicy
-from rl.policy import EpsGreedyQPolicy
-from rl.memory import SequentialMemory
+from keras_rl.rl.agents.dqn_si import DQNAgentSi
+from keras_rl.rl.policy import BoltzmannQPolicy
+from keras_rl.rl.policy import GreedyQPolicy
+from keras_rl.rl.policy import EpsGreedyQPolicy
+from keras_rl.rl.memory import SequentialMemory
 
 from ramp_rlpara.rl_exercise.envs.path_dcoe_discre import PathDcoeDiscre
+
+
+
+# Seed
+seed_str = input("Enter a seed for random generator (must be integer): ")
+seed_int = int(seed_str)
+np.random.seed(seed_int) # numpy
+prng.seed(seed_int) # space
 
 
 
@@ -43,10 +52,10 @@ print(model.summary())
 
 # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
 # even the metrics!
-memory = SequentialMemory(limit=50000, window_length=1)
+memory = SequentialMemory(limit=10000, window_length=1)
 policy = BoltzmannQPolicy()
-dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=10,
-               target_model_update=1e-2, policy=policy)
+dqn = DQNAgentSi(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=300,
+               target_model_update=1, policy=policy)
 dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
 
@@ -54,7 +63,9 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 # Okay, now it's time to learn something! We visualize the training here for show, but this
 # slows down training quite a lot. You can always safely abort the training prematurely using
 # Ctrl + C.
-# dqn.fit(env, nb_steps=50000, verbose=2)
+log_interval = 1000
+nb_max_episode_steps = 30
+dqn.fitSip(env, nb_steps=5000000, log_interval=log_interval, nb_max_episode_steps=nb_max_episode_steps)
 
 
 
@@ -64,4 +75,5 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
 
 # Finally, evaluate our algorithm for 5 episodes.
-# dqn.test(env, nb_episodes=5, visualize=True)
+# TODO: why 41.87355 * 99 = 4152.378
+dqn.testSip(env, nb_episodes=10, visualize=False, nb_max_episode_steps=nb_max_episode_steps)

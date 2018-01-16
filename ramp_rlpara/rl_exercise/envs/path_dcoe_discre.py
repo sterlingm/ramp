@@ -25,10 +25,10 @@ class PathDcoeDiscre(gym.Env):
         self.state = 0.0 # D weight
         self.state_min = 0.0
         self.state_max = 1.0
-        self.max_len = 60.0
-        self.goal = np.array([10, 10])
+        self.max_len = 18.2-0.07354
+        self.goal = np.array([10., 10.])
         self.action_space = spaces.Discrete(3)
-        self.observation_space = spaces.Box(0, 10, shape=(2,)) # single motion state
+        self.observation_space = spaces.Box(np.array([0., 0., 0.]), np.array([10., 10., 1.])) # single motion state
 
 
 
@@ -48,19 +48,19 @@ class PathDcoeDiscre(gym.Env):
         ------
             A path.
         """
-        ob = np.zeros((3,2))
-        if self.state < 0.2: # too close
-            ob[0] = [3, 2] # first point
-            ob[1] = [5, 3] # second point
-            ob[2] = [5, 3] # the last point
-        elif self.state < 0.5: # medium
-            ob[0] = [5, 2]
-            ob[1] = [8, 3]
-            ob[2] = [10, 10]
+        ob = np.zeros((3,self.observation_space.low.shape[0]))
+        if self.state < 0.4: # too close
+            ob[0] = [3., 2., self.state] # first point
+            ob[1] = [5., 3., self.state] # second point
+            ob[2] = [5., 3., self.state] # the last point
+        elif self.state < 0.8: # medium
+            ob[0] = [5., 2., self.state]
+            ob[1] = [8., 3., self.state]
+            ob[2] = [10., 10., self.state]
         else: # too far
-            ob[0] = [7, 1]
-            ob[1] = [9, 1]
-            ob[2] = [10, 10]
+            ob[0] = [7., 1., self.state]
+            ob[1] = [9., 1., self.state]
+            ob[2] = [10., 10., self.state]
 
         return ob
 
@@ -82,6 +82,7 @@ class PathDcoeDiscre(gym.Env):
         last_pt = [0, 0]
         plen = 0.0
         for pt in ob:
+            pt = pt[0:2]
             plen += np.linalg.norm(pt - last_pt)
             last_pt = pt
 
@@ -115,7 +116,8 @@ class PathDcoeDiscre(gym.Env):
         ------
             done or not
         """
-        return (ob[len(ob)-1] == self.goal).all()
+        return (ob[len(ob)-1][0] == self.goal[0] and
+                ob[len(ob)-1][1] == self.goal[1])
 
 
 
@@ -171,4 +173,5 @@ class PathDcoeDiscre(gym.Env):
         self.setState(self.state + dD)
         ob = self.getOb()
 
-        return ob, self.getReward(ob), self.done(ob), {}
+        # return ob, self.getReward(ob), self.done(ob), {}
+        return ob, self.getReward(ob), False, {}
