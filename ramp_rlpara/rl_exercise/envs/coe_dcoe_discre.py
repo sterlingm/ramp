@@ -8,15 +8,15 @@ class CoeDcoeDiscre(gym.Env):
         super(CoeDcoeDiscre, self).__init__()
         self.name = name
         self.action_space = spaces.Discrete(3)
-        self.observation_space = spaces.Box(0, 5, shape=(1,))
+        self.observation_space = spaces.Box(0, 100, shape=(1,))
         self.ob = None
         self.D_max = 0.5
         self.ob_max = int(self.observation_space.high[0].item())
 
-        self.cost_array = np.array([0.91, 1.115, 1.32, 1.525, 1.73])
+        self.cost_array = np.array([0.91, 1.115, 1.42, 1.525, 1.73])
         self.cost_array = 15.0 / self.cost_array
-        self.cost_array += [16.0, 17.9, 19.8, 21.7, 23.6]
-        self.cost_array = (self.cost_array - 30.0)**2 # convenient to monitor
+        self.cost_array += [16.0, 17.9, 18.8, 21.7, 23.6]
+        self.cost_array = (self.cost_array - 29.0)
 
 
 
@@ -55,7 +55,8 @@ class CoeDcoeDiscre(gym.Env):
                           self.observation_space.high)
         self.ob = int(self.ob.item())
 
-        cost = self.calcCost() + 0.001 * a**2 # a**2 means energy cost
+        # cost = self.calcCost() + 0.001 * a**2 # a**2 means energy cost
+        cost = self.calcCost()
         reward = -cost
 
         # if self.ob == 2:

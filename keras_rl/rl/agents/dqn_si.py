@@ -13,6 +13,10 @@ sys.path.append(ramp_root) # directory_name
 from keras_rl.rl.agents.dqn import DQNAgent
 from keras_rl.rl.callbacks import TestLogger, TrainEpisodeLogger, TrainIntervalLogger, Visualizer, CallbackList
 
+from colorama import init as clr_ama_init
+from colorama import Fore
+clr_ama_init(autoreset = True)
+
 class DQNAgentSi(DQNAgent):
     """Write me
     """
@@ -24,6 +28,15 @@ class DQNAgentSi(DQNAgent):
                  dueling_type=dueling_type, *args, **kwargs)
         
         print('Initialize dqn_si agent!')
+
+
+
+    def noMemForward(self, observation):
+        state = self.memory.get_recent_state(observation)
+        q_values = self.compute_q_values(state)
+        action = self.test_policy.select_action(q_values=q_values)
+
+        return action
 
 
 
@@ -188,23 +201,28 @@ class DQNAgentSi(DQNAgent):
                 episode_step += 1
                 self.step += 1
 
+
+
                 if self.step % log_interval == 0:
-                    self.training = False
                     # print("Final Q-Table Values:\n %s" % Q)
                     result_str = ''
                     for s in range(env.ob_max):
-                        # No random action in testing
-                        a = self.forward(np.array([s]))
+                        # No random action
+                        tmp_state = self.memory.get_recent_state(np.array([s]))
+                        q_values = self.compute_q_values(tmp_state)
+                        a = self.test_policy.select_action(q_values=q_values)
+                        # a = self.noMemForward(np.array([s]))
+                        # print(q_values)
                         if a == 0:
-                            a_str = '<-   '
+                            a_str = Fore.BLUE + '<-   '
                         elif a == 1:
-                            a_str = 'stop   '
+                            a_str = Fore.RED + 'stop   '
                         else:
-                            a_str = '->   '
+                            a_str = Fore.GREEN + '->   '
                         result_str += a_str
                     print(result_str)
 
-                    self.training = True
+
 
                 if done:
                     # We are in a terminal state but the agent hasn't yet seen it. We therefore
