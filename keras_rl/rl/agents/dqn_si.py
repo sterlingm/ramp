@@ -17,6 +17,8 @@ from colorama import init as clr_ama_init
 from colorama import Fore
 clr_ama_init(autoreset = True)
 
+import matplotlib.pyplot as plt
+
 class DQNAgentSi(DQNAgent):
     """Write me
     """
@@ -334,6 +336,9 @@ class DQNAgentSi(DQNAgent):
         episode_reward = None
         episode_step = None
         did_abort = False
+        coes = []
+        coes_for_plot = []
+
         try:
             while not rospy.core.is_shutdown() and self.step < nb_steps:
 
@@ -405,8 +410,11 @@ class DQNAgentSi(DQNAgent):
                         break
                 if nb_max_episode_steps and episode_step >= nb_max_episode_steps - 1:
                     # Force a terminal state.
-                    done = True
-                metrics = self.backwardSip(reward, observation)
+                    beyond_max_epi_steps = True
+                else:
+                    beyond_max_epi_steps = False
+
+                metrics = self.backwardSip(reward, observation, done)
                 episode_reward += reward
 
                 step_logs = {
@@ -421,7 +429,15 @@ class DQNAgentSi(DQNAgent):
                 episode_step += 1
                 self.step += 1
 
-
+                if verbose == 1 and self.step % log_interval == 0:
+                    plt.figure(2)
+                    coes_for_plot.append(np.mean(coes))
+                    plt.plot(coes_for_plot)
+                    plt.xlabel('Interval')
+                    plt.ylabel('Coes')
+                    plt.pause(0.0001)
+                    print('coes: {}'.format(np.mean(coes)))
+                    coes = []
 
                 # if self.step % log_interval == 0:
                 #     result_str = ''
@@ -443,22 +459,19 @@ class DQNAgentSi(DQNAgent):
 
 
 
-                if done:
-                    # We are in a terminal state but the agent hasn't yet seen it. We therefore
-                    # perform one more forward-backward call and simply ignore the action before
-                    # resetting the environment. We need to pass in `terminal=False` here since
-                    # the *next* state, that is the state of the newly reset environment, is
-                    # always non-terminal by convention.
-                    self.forwardSip(observation)
-                    self.backwardSip(0.0, observation)
-
+                if done or beyond_max_epi_steps:
                     # This episode is finished, report and reset.
                     episode_logs = {
                         'episode_reward': episode_reward,
                         'nb_episode_steps': episode_step,
                         'nb_steps': self.step,
+                        'coes': env.getState(),
                     }
                     callbacks.on_episode_end(episode, episode_logs)
+                    if verbose == 1:
+                        coes.append(env.getState())
+                    # elif verbose == 2:
+                    #     print('episode_reward: {}'.format(episode_reward))
 
                     episode += 1
                     observation = None
@@ -502,7 +515,7 @@ class DQNAgentSi(DQNAgent):
 
 
 
-    def backwardSip(self, reward, next_ob):
+    def backwardSip(self, reward, next_ob, terminal=False):
         metrics = [np.nan for _ in self.metrics_names]
         if not self.training:
             # We're done here. No need to update the experience memory since we only use the working
@@ -510,8 +523,8 @@ class DQNAgentSi(DQNAgent):
             return metrics
 
         # Train the network
-        if self.step > self.nb_steps_warmup and self.step % self.train_interval == 0:
-
+        # if self.step > self.nb_steps_warmup and self.step % self.train_interval == 0:
+        if True:
             # Start by extracting the necessary parameters (we use a vectorized implementation).
             state0_batch = []
             reward_batch = []
@@ -521,7 +534,7 @@ class DQNAgentSi(DQNAgent):
                 state0_batch.append([ms])
                 reward_batch.append(reward)
                 action_batch.append(self.recent_action)
-                terminal1_batch.append(1)
+                terminal1_batch.append(0. if terminal else 1.)
 
             state1_batch = [next_ob]
 
@@ -652,6 +665,7 @@ class DQNAgentSi(DQNAgent):
 
         self._on_test_begin()
         callbacks.on_train_begin()
+        # test_init_state = 0.0
         for episode in range(nb_episodes):
             callbacks.on_episode_begin(episode)
             episode_reward = 0.
@@ -689,7 +703,8 @@ class DQNAgentSi(DQNAgent):
 
             # Run the episode until we're done.
             done = False
-            while not done:
+            beyond_max_epi_steps = False
+            while not done and not beyond_max_epi_steps:
                 callbacks.on_step_begin(episode_step, self.model)
 
                 action = self.forwardSip(observation)
@@ -715,8 +730,11 @@ class DQNAgentSi(DQNAgent):
                         done = True
                         break
                 if nb_max_episode_steps and episode_step >= nb_max_episode_steps - 1:
-                    done = True
-                self.backwardSip(reward, observation)
+                    beyond_max_epi_steps = True
+                else:
+                    beyond_max_epi_steps = False
+
+                self.backwardSip(reward, observation, done)
                 episode_reward += reward
 
                 step_logs = {
@@ -730,20 +748,16 @@ class DQNAgentSi(DQNAgent):
                 episode_step += 1
                 self.step += 1
 
-            # We are in a terminal state but the agent hasn't yet seen it. We therefore
-            # perform one more forward-backward call and simply ignore the action before
-            # resetting the environment. We need to pass in `terminal=False` here since
-            # the *next* state, that is the state of the newly reset environment, is
-            # always non-terminal by convention.
-            self.forwardSip(observation)
-            self.backwardSip(0., observation)
-
             # Report end of episode.
             episode_logs = {
                 'episode_reward': episode_reward,
                 'nb_steps': episode_step,
+                'coes': env.getState(),
             }
             callbacks.on_episode_end(episode, episode_logs)
+            # print('test_init_state: {:.3f},\ttest_final_state: {:.3f}'.format(test_init_state, env.getState()))
+            # test_init_state += 0.1
+
         callbacks.on_train_end()
         self._on_test_end()
 

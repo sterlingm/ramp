@@ -114,6 +114,8 @@ class TrainEpisodeLogger(Callback):
         self.actions = {}
         self.metrics = {}
         self.step = 0
+        self.mean_r_arr = []
+        self.mean_q_arr = []
 
     def on_train_begin(self, logs):
         self.train_start = timeit.default_timer()
@@ -139,6 +141,7 @@ class TrainEpisodeLogger(Callback):
         metrics = np.array(self.metrics[episode])
         metrics_template = ''
         metrics_variables = []
+        mean_q = 0.0
         with warnings.catch_warnings():
             warnings.filterwarnings('error')
             for idx, name in enumerate(self.metrics_names):
@@ -150,7 +153,10 @@ class TrainEpisodeLogger(Callback):
                 except Warning:
                     value = '--'
                     metrics_template += '{}: {}'
-                metrics_variables += [name, value]          
+                metrics_variables += [name, value]
+                if name == 'mean_q' and value != '--':
+                    mean_q = value.item()
+
         metrics_text = metrics_template.format(*metrics_variables)
 
         nb_step_digits = str(int(np.ceil(np.log10(self.params['nb_steps']))) + 1)
@@ -182,6 +188,20 @@ class TrainEpisodeLogger(Callback):
         del self.rewards[episode]
         del self.actions[episode]
         del self.metrics[episode]
+
+        plt.figure(1)
+        self.mean_r_arr.append(variables['reward_mean'])
+        plt.plot(self.mean_r_arr)
+        plt.xlabel('Episode')
+        plt.ylabel('Mean Reward')
+
+        plt.figure(2)
+        self.mean_q_arr.append(mean_q)
+        plt.plot(self.mean_q_arr)
+        plt.xlabel('Episode')
+        plt.ylabel('Mean Q')
+
+        plt.pause(0.0001)
 
     def on_step_end(self, step, logs):
         episode = logs['episode']
@@ -244,11 +264,16 @@ class TrainIntervalLogger(Callback):
                                                                                          formatted_metrics, formatted_infos))
                 print('')
 
+                plt.figure(1)
+                
                 self.epi_r_arr.append(np.mean(self.episode_rewards))
                 self.mean_q_arr.append(means[2])
 
                 plt.plot(self.epi_r_arr)
                 plt.plot(self.mean_q_arr)
+
+                plt.xlabel('Interval')
+                plt.ylabel('Mean_r and Mean_q')
 
                 plt.pause(0.0001)
 
