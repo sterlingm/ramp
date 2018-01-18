@@ -31,6 +31,7 @@ class PathDcoeDiscre(gym.Env):
         self.observation_space = spaces.Box(np.array([0., 0., self.state_min]),
                                             np.array([10., 10., self.state_max])) # single motion state
         self.cut = [0.1, 0.3, 0.4, 0.6]
+        self.min_reward = 0.3
 
 
 
@@ -40,13 +41,45 @@ class PathDcoeDiscre(gym.Env):
         --------
         D: D weight
         """
-        # self.state = np.clip(D, self.state_min, self.state_max)
-        self.state = D
+        self.state = np.clip(D, self.state_min, self.state_max)
+        # self.state = D
 
 
 
     def getState(self):
         return self.state
+
+
+
+    # def getOb(self):
+    #     """
+    #     Return
+    #     ------
+    #         A path.
+    #     """
+    #     ob = np.zeros((3,self.observation_space.low.shape[0]))
+    #     if self.state < self.cut[0]: # too close
+    #         ob[0] = [3., 2., self.state] # first point
+    #         ob[1] = [5., 3., self.state] # second point
+    #         ob[2] = [5., 3., self.state] # the last point
+    #     elif self.state < self.cut[1]:
+    #         ob[0] = [6., 3., self.state]
+    #         ob[1] = [8.2, 7., self.state]
+    #         ob[2] = [10., 10., self.state]
+    #     elif self.state < self.cut[2]:
+    #         ob[0] = [5., 2., self.state]
+    #         ob[1] = [8., 3., self.state]
+    #         ob[2] = [10., 10., self.state]
+    #     elif self.state < self.cut[3]:
+    #         ob[0] = [7., 2., self.state]
+    #         ob[1] = [8.5, 3., self.state]
+    #         ob[2] = [10., 10., self.state]
+    #     else: # too far
+    #         ob[0] = [7., 1., self.state]
+    #         ob[1] = [9., 1., self.state]
+    #         ob[2] = [10., 10., self.state]
+
+    #     return ob
 
 
 
@@ -56,27 +89,22 @@ class PathDcoeDiscre(gym.Env):
         ------
             A path.
         """
-        ob = np.zeros((3,self.observation_space.low.shape[0]))
         if self.state < self.cut[0]: # too close
-            ob[0] = [3., 2., self.state] # first point
-            ob[1] = [5., 3., self.state] # second point
-            ob[2] = [5., 3., self.state] # the last point
+            ob = np.array([[5.0, 3.2, self.state]])
         elif self.state < self.cut[1]:
-            ob[0] = [6., 3., self.state]
-            ob[1] = [8.2, 7., self.state]
-            ob[2] = [10., 10., self.state]
+            ob = np.array([[6.4, 3.3, self.state]])
+            ob = np.concatenate((ob, [[9.5, 9.1, self.state]]))
         elif self.state < self.cut[2]:
-            ob[0] = [5., 2., self.state]
-            ob[1] = [8., 3., self.state]
-            ob[2] = [10., 10., self.state]
+            ob = np.array([[7.8, 2.8, self.state]])
+            ob = np.concatenate((ob, [[9.4, 8.9, self.state]]))
         elif self.state < self.cut[3]:
-            ob[0] = [7., 2., self.state]
-            ob[1] = [8.5, 3., self.state]
-            ob[2] = [10., 10., self.state]
+            ob = np.array([[7.0, 2.0, self.state]])
+            ob = np.concatenate((ob, [[8.5, 3.1, self.state]]))
+            ob = np.concatenate((ob, [[9.0, 8.0, self.state]]))
+            ob = np.concatenate((ob, [[9.5, 8.7, self.state]]))
         else: # too far
-            ob[0] = [7., 1., self.state]
-            ob[1] = [9., 1., self.state]
-            ob[2] = [10., 10., self.state]
+            ob = np.array([[9.0, 1.3, self.state]])
+            ob = np.concatenate((ob, [[9.3, 8.4, self.state]]))
 
         return ob
 
@@ -123,6 +151,9 @@ class PathDcoeDiscre(gym.Env):
 
 
     def getHardReward(self):
+        # if np.random.rand() < 0.2:
+        #     return self.min_reward
+
         # if self.state < self.cut[0]: # too close
         #     return 0.0 # 0.0
         # elif self.state < self.cut[1]:
@@ -133,16 +164,23 @@ class PathDcoeDiscre(gym.Env):
         #     return 1.8 + 3.2 # 5.0
         # else: # too far
         #     return 7e-6 + 3.5 # 3.500007
+
         if self.state < self.cut[0]: # too close
-            return 0.0
+            reward = self.min_reward
         elif self.state < self.cut[1]:
-            return 2.0
+            reward = 1.4
         elif self.state < self.cut[2]:
-            return 5.0
+            reward = 3.0
         elif self.state < self.cut[3]:
-            return 2.0
+            reward = 1.4
         else: # too far
-            return 0.0
+            reward = self.min_reward
+
+        # if np.random.rand() < 0.3:
+        #     reward -= 0.5
+
+        reward = max(self.min_reward, reward)
+        return reward
 
 
 
@@ -161,7 +199,7 @@ class PathDcoeDiscre(gym.Env):
 
 
 
-    def reset(self, init_state=None):
+    def reset(self, init_state=None, full_rand=False):
         """
         Set state randomly default and calculate corresponding path.
 
@@ -174,12 +212,16 @@ class PathDcoeDiscre(gym.Env):
             A path.
         """
         if init_state is None:
-            tmp_state = 0.5 + (np.random.rand() * 0.25 - 0.125) # [0.375, 0.625)
+            if full_rand:
+                tmp_state = np.random.rand()
+            else:
+                tmp_state = 0.5 + (np.random.rand() * 0.25 - 0.125) # [0.375, 0.625)
+
             self.setState(tmp_state)
+            return self.getOb(), tmp_state
         else:
             self.setState(init_state)
-
-        return self.getOb()
+            return self.getOb(), init_state
 
 
 
@@ -220,4 +262,4 @@ class PathDcoeDiscre(gym.Env):
             done = False
 
         # return ob, self.getHardReward(), self.done(ob), {}
-        return ob, self.getHardReward(), done, {}
+        return ob, self.getHardReward(), False, {}

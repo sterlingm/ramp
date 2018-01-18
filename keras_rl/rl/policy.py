@@ -120,6 +120,10 @@ class BoltzmannQPolicy(Policy):
         config['clip'] = self.clip
         return config
 
+    def change_tau(self, dtau):
+        self.tau += dtau
+        self.tau = max(0.3, self.tau)
+
 
 class MaxBoltzmannQPolicy(Policy):
     """

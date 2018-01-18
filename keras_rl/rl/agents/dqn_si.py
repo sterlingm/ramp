@@ -11,7 +11,7 @@ ramp_root = os.path.join(os.path.dirname(__file__), '../../../')
 sys.path.append(ramp_root) # directory_name
 
 from keras_rl.rl.agents.dqn import DQNAgent
-from keras_rl.rl.callbacks import TestLogger, TrainEpisodeLogger, TrainIntervalLogger, Visualizer, CallbackList
+from keras_rl.rl.callbacks import TestLogger, TrainEpisodeLoggerSip, TrainIntervalLogger, Visualizer, CallbackList
 
 from colorama import init as clr_ama_init
 from colorama import Fore
@@ -126,7 +126,7 @@ class DQNAgentSi(DQNAgent):
 
                     # Obtain the initial observation by resetting the environment.
                     self.reset_states()
-                    observation = deepcopy(env.reset())
+                    observation, _ = deepcopy(env.reset())
                     if self.processor is not None:
                         observation = self.processor.process_observation(observation)
                     assert observation is not None
@@ -149,7 +149,7 @@ class DQNAgentSi(DQNAgent):
                         callbacks.on_action_end(action)
                         if done:
                             warnings.warn('Env ended before {} random steps could be performed at the start. You should probably lower the `nb_max_start_steps` parameter.'.format(nb_random_start_steps))
-                            observation = deepcopy(env.reset())
+                            observation, _ = deepcopy(env.reset())
                             if self.processor is not None:
                                 observation = self.processor.process_observation(observation)
                             break
@@ -309,7 +309,7 @@ class DQNAgentSi(DQNAgent):
         if verbose == 1:
             callbacks += [TrainIntervalLogger(interval=log_interval)]
         elif verbose > 1:
-            callbacks += [TrainEpisodeLogger()]
+            callbacks += [TrainEpisodeLoggerSip()]
         if visualize:
             callbacks += [Visualizer()]
         history = History()
@@ -349,7 +349,7 @@ class DQNAgentSi(DQNAgent):
 
                     # Obtain the initial observation by resetting the environment.
                     self.reset_states()
-                    observation = deepcopy(env.reset())
+                    observation, _ = deepcopy(env.reset(full_rand=True))
                     if self.processor is not None:
                         observation = self.processor.process_observation(observation)
                     assert observation is not None
@@ -372,7 +372,7 @@ class DQNAgentSi(DQNAgent):
                         callbacks.on_action_end(action)
                         if done:
                             warnings.warn('Env ended before {} random steps could be performed at the start. You should probably lower the `nb_max_start_steps` parameter.'.format(nb_random_start_steps))
-                            observation = deepcopy(env.reset())
+                            observation, _ = deepcopy(env.reset(full_rand=True))
                             if self.processor is not None:
                                 observation = self.processor.process_observation(observation)
                             break
@@ -428,6 +428,7 @@ class DQNAgentSi(DQNAgent):
                 callbacks.on_step_end(episode_step, step_logs)
                 episode_step += 1
                 self.step += 1
+                self.policy.change_tau(-0.0001)
 
                 if verbose == 1 and self.step % log_interval == 0:
                     plt.figure(2)
@@ -480,6 +481,8 @@ class DQNAgentSi(DQNAgent):
                     self.min_reward = 100000.0
                     self.max_reward = -100000.0
                     self.sum_reward = 0.0
+                    # self.policy.change_tau(-0.001)
+
         except KeyboardInterrupt:
             # We catch keyboard interrupts here so that training can be be safely aborted.
             # This is so common that we've built this right into this function, which ensures that
@@ -542,7 +545,7 @@ class DQNAgentSi(DQNAgent):
             state0_batch = self.process_state_batch(state0_batch)
             terminal1_batch = np.array(terminal1_batch)
             reward_batch = np.array(reward_batch)
-            assert reward_batch.shape == (len(next_ob),)
+            assert reward_batch.shape == (len(self.recent_observation),)
             assert terminal1_batch.shape == reward_batch.shape
             assert len(action_batch) == len(reward_batch)
 
@@ -555,28 +558,28 @@ class DQNAgentSi(DQNAgent):
                 # assert multi_q_values.shape == (len(next_ob), self.nb_actions)
                 # q_values_sum = multi_q_values.sum(0)
                 # q_values_ave = 1.0 * q_values_sum / len(multi_q_values)
-                q_values = self.predictSip(self.model, state1_batch[0])
-                assert q_values.shape == (len(next_ob), self.nb_actions)
+                q_values = self.predictSip(self.model, state1_batch[0], len(self.recent_observation))
+                assert q_values.shape == (len(self.recent_observation), self.nb_actions)
                 actions = np.argmax(q_values, axis=1)
-                assert actions.shape == (len(next_ob),)
+                assert actions.shape == (len(self.recent_observation),)
 
                 # Now, estimate Q values using the target network but select the values with the
                 # highest Q value wrt to the online model (as computed above).
-                target_q_values = self.predictSip(self.target_model, state1_batch[0])
-                assert target_q_values.shape == (len(next_ob), self.nb_actions)
-                q_batch = target_q_values[range(len(next_ob)), actions]
+                target_q_values = self.predictSip(self.target_model, state1_batch[0], len(self.recent_observation))
+                assert target_q_values.shape == (len(self.recent_observation), self.nb_actions)
+                q_batch = target_q_values[range(len(self.recent_observation)), actions]
             else:
                 # Compute the q_values given state1, and extract the maximum for each sample in the batch.
                 # We perform this prediction on the target_model instead of the model for reasons
                 # outlined in Mnih (2015). In short: it makes the algorithm more stable.
-                target_q_values = self.predictSip(self.target_model, state1_batch[0])
-                assert target_q_values.shape == (len(next_ob), self.nb_actions)
+                target_q_values = self.predictSip(self.target_model, state1_batch[0], len(self.recent_observation))
+                assert target_q_values.shape == (len(self.recent_observation), self.nb_actions)
                 q_batch = np.max(target_q_values, axis=1).flatten()
-            assert q_batch.shape == (len(next_ob),)
+            assert q_batch.shape == (len(self.recent_observation),)
 
-            targets = np.zeros((len(next_ob), self.nb_actions))
-            dummy_targets = np.zeros((len(next_ob),))
-            masks = np.zeros((len(next_ob), self.nb_actions))
+            targets = np.zeros((len(self.recent_observation), self.nb_actions))
+            dummy_targets = np.zeros((len(self.recent_observation),))
+            masks = np.zeros((len(self.recent_observation), self.nb_actions))
 
             # Compute r_t + gamma * max_a Q(s_t+1, a) and update the target targets accordingly,
             # but only for the affected output units (as given by action_batch).
@@ -609,7 +612,7 @@ class DQNAgentSi(DQNAgent):
 
 
 
-    def predictSip(self, model, ob):
+    def predictSip(self, model, ob, out_len):
         ms_batch = []
         for ms in ob:
             ms_batch.append([ms])
@@ -621,7 +624,7 @@ class DQNAgentSi(DQNAgent):
         q_values_ave = 1.0 * q_values_sum / len(multi_q_values)
 
         out_q_values_ave = []
-        for _ in range(len(ob)):
+        for _ in range(out_len):
             out_q_values_ave.append(q_values_ave.tolist())
 
         out_q_values_ave = np.array(out_q_values_ave)
@@ -673,7 +676,7 @@ class DQNAgentSi(DQNAgent):
 
             # Obtain the initial observation by resetting the environment.
             self.reset_states()
-            observation = deepcopy(env.reset())
+            observation, test_init_state = deepcopy(env.reset(full_rand=True))
             if self.processor is not None:
                 observation = self.processor.process_observation(observation)
             assert observation is not None
@@ -696,7 +699,7 @@ class DQNAgentSi(DQNAgent):
                 callbacks.on_action_end(action)
                 if done:
                     warnings.warn('Env ended before {} random steps could be performed at the start. You should probably lower the `nb_max_start_steps` parameter.'.format(nb_random_start_steps))
-                    observation = deepcopy(env.reset())
+                    observation, _ = deepcopy(env.reset(full_rand=True))
                     if self.processor is not None:
                         observation = self.processor.process_observation(observation)
                     break
@@ -754,8 +757,9 @@ class DQNAgentSi(DQNAgent):
                 'nb_steps': episode_step,
                 'coes': env.getState(),
             }
+            print('########################################################################')
             callbacks.on_episode_end(episode, episode_logs)
-            # print('test_init_state: {:.3f},\ttest_final_state: {:.3f}'.format(test_init_state, env.getState()))
+            print('test_init_state: {:.3f},\ttest_final_state: {:.3f}'.format(test_init_state, env.getState()))
             # test_init_state += 0.1
 
         callbacks.on_train_end()

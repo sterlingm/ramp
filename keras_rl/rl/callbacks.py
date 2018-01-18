@@ -11,6 +11,7 @@ from keras.callbacks import Callback as KerasCallback, CallbackList as KerasCall
 from keras.utils.generic_utils import Progbar
 
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 class Callback(KerasCallback):
@@ -116,6 +117,7 @@ class TrainEpisodeLogger(Callback):
         self.step = 0
         self.mean_r_arr = []
         self.mean_q_arr = []
+        self.step_coes = []
 
     def on_train_begin(self, logs):
         self.train_start = timeit.default_timer()
@@ -188,10 +190,12 @@ class TrainEpisodeLogger(Callback):
         del self.rewards[episode]
         del self.actions[episode]
         del self.metrics[episode]
+        self.step_coes = []
 
         plt.figure(1)
         self.mean_r_arr.append(variables['reward_mean'])
-        plt.plot(self.mean_r_arr)
+        mean_r_smoothed = pd.Series(self.mean_r_arr).rolling(10, min_periods = 10).mean()
+        plt.plot(mean_r_smoothed)
         plt.xlabel('Episode')
         plt.ylabel('Mean Reward')
 
@@ -210,6 +214,15 @@ class TrainEpisodeLogger(Callback):
         self.actions[episode].append(logs['action'])
         self.metrics[episode].append(logs['metrics'])
         self.step += 1
+
+        if self.step % 5 == 0:
+            plt.figure(3)
+            self.step_coes.append(logs['observation'][0][2])
+            plt.plot(self.step_coes)
+            plt.xlabel('Step')
+            plt.ylabel('Coes')
+            plt.pause(0.0001)
+
 
 
 class TrainIntervalLogger(Callback):
@@ -410,3 +423,150 @@ class QTBVisualizer(Callback):
 
     def on_step_end(self, step, logs):
         self.step += 1
+
+
+
+class TrainEpisodeLoggerSip(Callback):
+    def __init__(self):
+        # Some algorithms compute multiple episodes at once since they are multi-threaded.
+        # We therefore use a dictionary that is indexed by the episode to separate episodes
+        # from each other.
+        self.episode_start = {}
+        self.observations = {}
+        self.rewards = {}
+        self.actions = {}
+        self.metrics = {}
+        self.step = 0
+        self.mean_r_arr = []
+        self.mean_q_arr = []
+        self.step_coes = []
+        self.epi_steps_arr = []
+        self.epi_r_arr = []
+        self.step_r = []
+
+    def on_train_begin(self, logs):
+        self.train_start = timeit.default_timer()
+        self.metrics_names = self.model.metrics_names
+        print('Training for {} steps ...'.format(self.params['nb_steps']))
+        
+    def on_train_end(self, logs):
+        duration = timeit.default_timer() - self.train_start
+        print('done, took {:.3f} seconds'.format(duration))
+
+    def on_episode_begin(self, episode, logs):
+        self.episode_start[episode] = timeit.default_timer()
+        self.observations[episode] = []
+        self.rewards[episode] = []
+        self.actions[episode] = []
+        self.metrics[episode] = []
+
+    def on_episode_end(self, episode, logs):
+        duration = timeit.default_timer() - self.episode_start[episode]
+        episode_steps = len(self.observations[episode])
+
+        # Format all metrics.
+        metrics = np.array(self.metrics[episode])
+        metrics_template = ''
+        metrics_variables = []
+        mean_q = 0.0
+        with warnings.catch_warnings():
+            warnings.filterwarnings('error')
+            for idx, name in enumerate(self.metrics_names):
+                if idx > 0:
+                    metrics_template += ', '
+                try:
+                    value = np.nanmean(metrics[:, idx])
+                    metrics_template += '{}: {:f}'
+                except Warning:
+                    value = '--'
+                    metrics_template += '{}: {}'
+                metrics_variables += [name, value]
+                if name == 'mean_q' and value != '--':
+                    mean_q = value.item()
+
+        metrics_text = metrics_template.format(*metrics_variables)
+
+        nb_step_digits = str(int(np.ceil(np.log10(self.params['nb_steps']))) + 1)
+        template = '{step: ' + nb_step_digits + 'd}/{nb_steps}: episode: {episode}, duration: {duration:.3f}s, episode steps: {episode_steps}, steps per second: {sps:.0f}, episode reward: {episode_reward:.3f}, mean reward: {reward_mean:.3f} [{reward_min:.3f}, {reward_max:.3f}], mean action: {action_mean:.3f} [{action_min:.3f}, {action_max:.3f}], mean observation: {obs_mean:.3f} [{obs_min:.3f}, {obs_max:.3f}], {metrics}'
+        variables = {
+            'step': self.step,
+            'nb_steps': self.params['nb_steps'],
+            'episode': episode + 1,
+            'duration': duration,
+            'episode_steps': episode_steps,
+            'sps': float(episode_steps) / duration,
+            'episode_reward': np.sum(self.rewards[episode]),
+            'reward_mean': np.mean(self.rewards[episode]),
+            'reward_min': np.min(self.rewards[episode]),
+            'reward_max': np.max(self.rewards[episode]),
+            'action_mean': np.mean(self.actions[episode]),
+            'action_min': np.min(self.actions[episode]),
+            'action_max': np.max(self.actions[episode]),
+            'obs_mean': 0.0,
+            'obs_min': 0.0,
+            'obs_max': 0.0,
+            'metrics': metrics_text,
+        }
+        print(template.format(**variables))
+
+        # Free up resources.
+        del self.episode_start[episode]
+        del self.observations[episode]
+        del self.rewards[episode]
+        del self.actions[episode]
+        del self.metrics[episode]
+        # self.step_coes = []
+
+        plt.figure(1)
+        self.mean_r_arr.append(variables['reward_mean'])
+        mean_r_smoothed = pd.Series(self.mean_r_arr).rolling(10, min_periods = 10).mean()
+        plt.plot(mean_r_smoothed)
+        plt.xlabel('Episode')
+        plt.ylabel('Mean Reward')
+
+        plt.figure(2)
+        self.mean_q_arr.append(mean_q)
+        plt.plot(self.mean_q_arr)
+        plt.xlabel('Episode')
+        plt.ylabel('Mean Q')
+
+        plt.figure(3)
+        self.epi_steps_arr.append(episode_steps)
+        epi_steps_smoothed = pd.Series(self.epi_steps_arr).rolling(10, min_periods = 10).mean()
+        plt.plot(epi_steps_smoothed)
+        plt.xlabel('Episode')
+        plt.ylabel('Episode Steps')
+
+        plt.figure(4)
+        self.epi_r_arr.append(variables['episode_reward'])
+        epi_r_smoothed = pd.Series(self.epi_r_arr).rolling(10, min_periods = 10).mean()
+        plt.plot(epi_r_smoothed)
+        plt.xlabel('Episode')
+        plt.ylabel('Sum of Reward')
+
+        plt.pause(0.0001)
+
+    def on_step_end(self, step, logs):
+        episode = logs['episode']
+        self.observations[episode].append(logs['observation'])
+        self.rewards[episode].append(logs['reward'])
+        self.actions[episode].append(logs['action'])
+        self.metrics[episode].append(logs['metrics'])
+        self.step += 1
+
+        if self.step % 200 == 0:
+            plt.figure(5)
+            self.step_r.append(logs['reward'])
+            # step_r_smoothed = pd.Series(self.step_r).rolling(1, min_periods = 1).mean()
+            plt.plot(self.step_r)
+            plt.xlabel('Step')
+            plt.ylabel('Reward')
+
+            plt.figure(6)
+            self.step_coes.append(logs['observation'][0][2])
+            # step_coes_smoothed = pd.Series(self.step_coes).rolling(1, min_periods = 1).mean()
+            plt.plot(self.step_coes)
+            plt.xlabel('Step')
+            plt.ylabel('Coes')
+
+            plt.pause(0.0001)

@@ -64,7 +64,7 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 # slows down training quite a lot. You can always safely abort the training prematurely using
 # Ctrl + C.
 log_interval = 1000
-nb_max_episode_steps = None
+nb_max_episode_steps = 1000
 dqn.fitSip(env, nb_steps=5000000, log_interval=log_interval, nb_max_episode_steps=nb_max_episode_steps, verbose=2)
 
 
