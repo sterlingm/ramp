@@ -3361,8 +3361,8 @@ void Planner::doControlCycle()
     population_.trajectories_[i].msg_.t_start = ros::Duration(0);
   }*/
 
-  //// control only once
-  // controlCycleTimer_.stop();
+  // control only once
+  controlCycleTimer_.stop();
 
   // Set the bestT
   RampTrajectory bestT = population_.getBest();
@@ -4648,7 +4648,7 @@ void Planner::go(const ros::NodeHandle& h)
   // Do planning until robot has reached goal
   // D = 0.4 if considering mobile base, 0.2 otherwise
   ros::Rate r(20); // 20Hz
-  goalThreshold_ = 0.5;
+  goalThreshold_ = 1.0;
   int check_time_cnt = 0;
   ros::Duration t_elapse;
   ros::Time t_startLoop = ros::Time::now();
@@ -4666,12 +4666,12 @@ void Planner::go(const ros::NodeHandle& h)
 
     //// exit if plan too long
     check_time_cnt++;
-    if (check_time_cnt > 50) {
+    if (check_time_cnt > 5) {
       check_time_cnt = 0;
       t_elapse = ros::Time::now() - t_startLoop;
       double seconds_elapse = t_elapse.toSec();
-      printf("%lfs have elapsed after starting planning!\n", seconds_elapse);
-      printf("biggest fitness:\t%.10lf\n", biggest_fitness);
+      // printf("%lfs have elapsed after starting planning!\n", seconds_elapse);
+      // printf("biggest fitness:\t%.10lf\n", biggest_fitness);
       if (seconds_elapse > max_exe_time) { // seconds
         //// planning for too long, force quit
         obser_one_run.done = false;
