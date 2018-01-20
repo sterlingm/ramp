@@ -306,7 +306,7 @@ const bool MobileRobot::checkImminentCollision()
   ros::param::get("imminent_collision", result);
   if(result)
   {
-    ROS_ERROR("Imminent Collision exists! Stopping robot, initial_theta_: %f", initial_theta_);
+    // ROS_ERROR("Imminent Collision exists! Stopping robot, initial_theta_: %f", initial_theta_);
   }
   //ROS_INFO("Imminent Collision: %s", result ? "True" : "False");
   return result;
@@ -348,7 +348,7 @@ void MobileRobot::moveOnTrajectory()
     {
       ros::Time t_startIC = ros::Time::now();
       while(imminent_coll_ && ros::ok()) {
-        ROS_ERROR("Imminent Collision Exists, Stopping robot");
+        // ROS_ERROR("Imminent Collision Exists, Stopping robot");
         sendTwist(zero_twist_);
         r_ic.sleep();
         ros::spinOnce();

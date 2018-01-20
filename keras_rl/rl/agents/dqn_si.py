@@ -264,7 +264,7 @@ class DQNAgentSi(DQNAgent):
 
     def fitSip(self, env, nb_steps, action_repetition=1, callbacks=None, verbose=1,
             visualize=False, nb_max_start_steps=0, start_step_policy=None, log_interval=10000,
-            nb_max_episode_steps=None):
+            nb_max_episode_steps=None, file_dir=None, logger=None):
         print('Fit dqn_si agent!')
 
         """Trains the agent on the given environment.
@@ -342,6 +342,14 @@ class DQNAgentSi(DQNAgent):
         try:
             while not rospy.core.is_shutdown() and self.step < nb_steps:
 
+                if file_dir is not None:
+                    # save the weights
+                    if self.step % 100 == 0:
+                        weights_file_id = int(self.step / 100)
+                        weights_dir = file_dir + str(weights_file_id) + "/"
+                        os.system('mkdir -p ' + weights_dir)
+                    self.save_weights_sip(weights_dir + 'dqn_{}_weights.h5f'.format(env.name), overwrite = True)
+
                 if observation is None:  # start of a new episode
                     callbacks.on_episode_begin(episode)
                     episode_step = 0
@@ -350,6 +358,10 @@ class DQNAgentSi(DQNAgent):
                     # Obtain the initial observation by resetting the environment.
                     self.reset_states()
                     observation, _ = deepcopy(env.reset(full_rand=True))
+                    if rospy.core.is_shutdown():
+                        did_abort = True
+                        break
+
                     if self.processor is not None:
                         observation = self.processor.process_observation(observation)
                     assert observation is not None
@@ -414,6 +426,10 @@ class DQNAgentSi(DQNAgent):
                 else:
                     beyond_max_epi_steps = False
 
+                if rospy.core.is_shutdown():
+                    did_abort = True
+                    break
+
                 metrics = self.backwardSip(reward, observation, done)
                 episode_reward += reward
 
@@ -428,7 +444,7 @@ class DQNAgentSi(DQNAgent):
                 callbacks.on_step_end(episode_step, step_logs)
                 episode_step += 1
                 self.step += 1
-                self.policy.change_tau(-0.0001)
+                self.policy.change_tau(-0.0004)
 
                 if verbose == 1 and self.step % log_interval == 0:
                     plt.figure(2)
@@ -439,6 +455,16 @@ class DQNAgentSi(DQNAgent):
                     plt.pause(0.0001)
                     print('coes: {}'.format(np.mean(coes)))
                     coes = []
+
+                if logger is not None:
+                    logger.logOneFrame([self.step, observation[0][2], observation[0][3],
+                                reward, info['time'], info['obs_dis'],
+                                metrics[0], metrics[1], metrics[2]])
+
+                    print('Step: {}\tA: {:.2f}\tD: {:.2f}\tReward: {:.2f}\tTime: {:.2f}\tDis: {:.2f}\tQ: {:.2f}'.format(
+                            self.step, observation[0][2], observation[0][3],
+                            reward, info['time'], info['obs_dis'],
+                            metrics[2]))
 
                 # if self.step % log_interval == 0:
                 #     result_str = ''
@@ -766,3 +792,25 @@ class DQNAgentSi(DQNAgent):
         self._on_test_end()
 
         return history
+
+
+
+    def load_weights_sip(self, filepath):
+        filename, extension = os.path.splitext(filepath)
+
+        model_filepath = filename + '_model' + extension
+        target_filepath = filename + '_target' + extension
+
+        self.model.load_weights(model_filepath)
+        self.target_model.load_weights(target_filepath)
+
+
+
+    def save_weights_sip(self, filepath, overwrite=False):
+        filename, extension = os.path.splitext(filepath)
+
+        model_filepath = filename + '_model' + extension
+        target_filepath = filename + '_target' + extension
+
+        self.model.save_weights(model_filepath, overwrite=overwrite)
+        self.target_model.save_weights(target_filepath, overwrite=overwrite)

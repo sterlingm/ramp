@@ -41,14 +41,14 @@ class Utility(object):
 
         ## minimal x, y and theta
         dof_min = rospy.get_param('/robot_info/DOF_min', [0.0, 0.0, -math.pi])
-        self.min_x = dof_min[0] - 0.6
-        self.min_y = dof_min[1] - 0.6
+        self.min_x = dof_min[0] - 1.0
+        self.min_y = dof_min[1] - 1.0
         self.min_theta = dof_min[2]
 
         ## maximal x, y and theta
         dof_max = rospy.get_param('/robot_info/DOF_max', [3.5, 3.5, math.pi])
-        self.max_x = dof_max[0] + 0.05
-        self.max_y = dof_max[1] + 0.05
+        self.max_x = dof_max[0] + 1.0
+        self.max_y = dof_max[1] + 1.0
         self.max_theta = dof_max[2]
 
         ## maximal velocity, linear and angular, both absolute

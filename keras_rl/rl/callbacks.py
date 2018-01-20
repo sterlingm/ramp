@@ -439,10 +439,12 @@ class TrainEpisodeLoggerSip(Callback):
         self.step = 0
         self.mean_r_arr = []
         self.mean_q_arr = []
-        self.step_coes = []
+        self.step_coes1 = []
+        self.step_coes2 = []
         self.epi_steps_arr = []
         self.epi_r_arr = []
         self.step_r = []
+        self.step_q = []
 
     def on_train_begin(self, logs):
         self.train_start = timeit.default_timer()
@@ -554,19 +556,31 @@ class TrainEpisodeLoggerSip(Callback):
         self.metrics[episode].append(logs['metrics'])
         self.step += 1
 
-        if self.step % 200 == 0:
+        self.step_r.append(logs['reward'])
+        self.step_coes1.append(logs['observation'][0][2])
+        self.step_coes2.append(logs['observation'][0][3])
+        self.step_q.append(logs['metrics'][2])
+        if self.step % 1 == 0:
             plt.figure(5)
-            self.step_r.append(logs['reward'])
-            # step_r_smoothed = pd.Series(self.step_r).rolling(1, min_periods = 1).mean()
+            # step_r_smoothed = pd.Series(self.step_r).rolling(40, min_periods = 40).mean()
             plt.plot(self.step_r)
             plt.xlabel('Step')
             plt.ylabel('Reward')
 
             plt.figure(6)
-            self.step_coes.append(logs['observation'][0][2])
-            # step_coes_smoothed = pd.Series(self.step_coes).rolling(1, min_periods = 1).mean()
-            plt.plot(self.step_coes)
+            # step_coes_smoothed = pd.Series(self.step_coes).rolling(40, min_periods = 40).mean()
+            plt.plot(self.step_coes1)
             plt.xlabel('Step')
-            plt.ylabel('Coes')
+            plt.ylabel('Coes 1')
+
+            plt.figure(7)
+            plt.plot(self.step_coes2)
+            plt.xlabel('Step')
+            plt.ylabel('Coes 2')
+
+            plt.figure(8)
+            plt.plot(self.step_q)
+            plt.xlabel('Step')
+            plt.ylabel('Mean Q')
 
             plt.pause(0.0001)

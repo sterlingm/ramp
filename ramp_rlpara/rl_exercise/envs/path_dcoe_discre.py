@@ -31,7 +31,7 @@ class PathDcoeDiscre(gym.Env):
         self.observation_space = spaces.Box(np.array([0., 0., self.state_min]),
                                             np.array([10., 10., self.state_max])) # single motion state
         self.cut = [0.1, 0.3, 0.4, 0.6]
-        self.min_reward = 0.3
+        self.min_reward = -4.0
 
 
 
@@ -168,11 +168,11 @@ class PathDcoeDiscre(gym.Env):
         if self.state < self.cut[0]: # too close
             reward = self.min_reward
         elif self.state < self.cut[1]:
-            reward = 1.4
+            reward = -2.5
         elif self.state < self.cut[2]:
-            reward = 3.0
+            reward = -1.0
         elif self.state < self.cut[3]:
-            reward = 1.4
+            reward = -2.5
         else: # too far
             reward = self.min_reward
 
@@ -211,17 +211,21 @@ class PathDcoeDiscre(gym.Env):
         ------
             A path.
         """
-        if init_state is None:
-            if full_rand:
-                tmp_state = np.random.rand()
-            else:
-                tmp_state = 0.5 + (np.random.rand() * 0.25 - 0.125) # [0.375, 0.625)
+        # if init_state is None:
+        #     if full_rand:
+        #         tmp_state = np.random.rand()
+        #     else:
+        #         tmp_state = 0.5 + (np.random.rand() * 0.25 - 0.125) # [0.375, 0.625)
 
-            self.setState(tmp_state)
-            return self.getOb(), tmp_state
-        else:
-            self.setState(init_state)
-            return self.getOb(), init_state
+        #     self.setState(tmp_state)
+        #     return self.getOb(), tmp_state
+        # else:
+        #     self.setState(init_state)
+        #     return self.getOb(), init_state
+
+        init_state = 0.0
+        self.setState(init_state)
+        return self.getOb(), init_state
 
 
 
