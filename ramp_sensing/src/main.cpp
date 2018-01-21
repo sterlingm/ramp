@@ -23,11 +23,11 @@
 #include <bfl/pdf/analyticconditionalgaussian.h>
 
 
-bool cropMap = false;
+bool cropMap = true;
 
 ramp_msgs::MotionState robotState;
 ramp_msgs::MotionState initialOdomState;
-bool initOdom = false;
+bool initOdom = true;
 
 
 double fovAngle;
@@ -201,7 +201,7 @@ void loadParameters(const ros::NodeHandle& handle)
     handle.getParam("costmap_node/costmap/origin_y", costmap_origin_y);
     handle.getParam("costmap_node/costmap/resolution", costmap_res);
 
-    //ROS_INFO("Got costmap parameters. w: %i h: %i x: %f y: %f res: %f", costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res);
+    ////ROS_INFO("Got costmap parameters. w: %i h: %i x: %f y: %f res: %f", costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res);
   }
 
   // Get the radius of the robot
@@ -211,7 +211,7 @@ void loadParameters(const ros::NodeHandle& handle)
   }
   else 
   {
-    ROS_ERROR("Did not find parameter robot_info/radius");
+    //ROS_ERROR("Did not find parameter robot_info/radius");
   }
 
   // Get the dofs
@@ -226,48 +226,48 @@ void loadParameters(const ros::NodeHandle& handle)
   }
   else 
   {
-    ROS_ERROR("Did not find parameters robot_info/DOF_min, robot_info/DOF_max");
+    //ROS_ERROR("Did not find parameters robot_info/DOF_min, robot_info/DOF_max");
   }
 
   if(handle.hasParam("/ramp/global_frame"))
   {
     handle.getParam("/ramp/global_frame", global_frame);
-    ROS_INFO("global_frame: %s", global_frame.c_str());
+    //ROS_INFO("global_frame: %s", global_frame.c_str());
   }
   else
   {
-    ROS_ERROR("Did not find rosparam /ramp/global_frame");
+    //ROS_ERROR("Did not find rosparam /ramp/global_frame");
   }
 
   if(handle.hasParam("/costmap_node/costmap/robot_base_frame"))
   {
     handle.getParam("/costmap_node/costmap/robot_base_frame", robot_base_frame);
-    ROS_INFO("robot_base_frame: %s", robot_base_frame.c_str());
+    //ROS_INFO("robot_base_frame: %s", robot_base_frame.c_str());
   }
   else
   {
-    ROS_ERROR("Did not find rosparam /costmap_node/costmap/robot_base_frame");
+    //ROS_ERROR("Did not find rosparam /costmap_node/costmap/robot_base_frame");
     robot_base_frame = "map";
   }
 
   if(handle.hasParam("/ramp/population_size"))
   {
     handle.getParam("/ramp/population_size", populationSize);
-    ROS_INFO("populationSize: %i", populationSize);
+    //ROS_INFO("populationSize: %i", populationSize);
   }
   else
   {
-    ROS_ERROR("Did not find rosparam /ramp/population_size");
+    //ROS_ERROR("Did not find rosparam /ramp/population_size");
   }
 
   if(handle.hasParam("/ramp/field_of_view_angle"))
   {
     handle.getParam("/ramp/field_of_view_angle", fovAngle);
-    ROS_INFO("fovAngle: %f", fovAngle);
+    //ROS_INFO("fovAngle: %f", fovAngle);
   }
   else
   {
-    ROS_ERROR("Did not find rosparam /ramp/sensing_angle");
+    //ROS_ERROR("Did not find rosparam /ramp/sensing_angle");
   }
 }
 
@@ -279,7 +279,7 @@ void loadObstacleTF()
 
   if(!ifile.is_open())
   {
-    //ROS_ERROR("Cannot open obstacle_tf.txt file!");
+    ////ROS_ERROR("Cannot open obstacle_tf.txt file!");
   }
   else
   {
@@ -287,19 +287,19 @@ void loadObstacleTF()
     std::string delimiter = ",";
     while( getline(ifile, line) )
     {
-      //ROS_INFO("Got line: %s", line.c_str());
+      ////ROS_INFO("Got line: %s", line.c_str());
       std::vector<double> conf;
       size_t pos = 0;
       std::string token;
       while((pos = line.find(delimiter)) != std::string::npos)
       {
         token = line.substr(0, pos);
-        //ROS_INFO("Got token: %s", token.c_str());
+        ////ROS_INFO("Got token: %s", token.c_str());
         conf.push_back(std::stod(token));
         line.erase(0, pos+1);
       } // end inner while
     
-      //ROS_INFO("Last token: %s", line.c_str());
+      ////ROS_INFO("Last token: %s", line.c_str());
 
       conf.push_back(std::stod(line));
 
@@ -319,7 +319,7 @@ void loadObstacleTF()
 
 void init_measurement_model()
 {
-  //ROS_INFO("In init_measurement_model");
+  ////ROS_INFO("In init_measurement_model");
 
   MatrixWrapper::Matrix H(STATE_SIZE,STATE_SIZE);
   H = 0.0;
@@ -328,7 +328,7 @@ void init_measurement_model()
   H(1,1) = 1;
   H(2,2) = 1;
 
-  //ROS_INFO("Setting mu");
+  ////ROS_INFO("Setting mu");
 
   BFL::ColumnVector meas_noise_mu(STATE_SIZE);
   meas_noise_mu(1) = MU_MEAS_NOISE;
@@ -336,7 +336,7 @@ void init_measurement_model()
   meas_noise_mu(3) = 0;
   meas_noise_mu(4) = 0;
 
-  //ROS_INFO("Setting cov");
+  ////ROS_INFO("Setting cov");
 
   MatrixWrapper::SymmetricMatrix meas_noise_cov(STATE_SIZE);
   meas_noise_cov = 0.0;
@@ -345,12 +345,12 @@ void init_measurement_model()
     meas_noise_cov(i,i) = SIGMA_MEAS_NOISE;
   }
 
-  //ROS_INFO("Setting measurement_uncertainty");
+  ////ROS_INFO("Setting measurement_uncertainty");
 
   // Make the Gaussian
   BFL::Gaussian measurement_uncertainty(meas_noise_mu, meas_noise_cov);
 
-  //ROS_INFO("Setting meas_pdf");
+  ////ROS_INFO("Setting meas_pdf");
 
   // Make the pdf
   meas_pdf = new BFL::LinearAnalyticConditionalGaussian(H, measurement_uncertainty);
@@ -359,7 +359,7 @@ void init_measurement_model()
 
 void init_prior_model()
 {
-  //ROS_INFO("In init_prior_model");
+  ////ROS_INFO("In init_prior_model");
 
   // Build prior distribution
   BFL::ColumnVector prior_mu(STATE_SIZE);
@@ -384,7 +384,7 @@ void init_prior_model()
  */
 void init_linear_system_model()
 {
-  //ROS_INFO("In init_linear_system_model");
+  ////ROS_INFO("In init_linear_system_model");
 
   MatrixWrapper::ColumnVector sys_noise_Mu(STATE_SIZE);
   for(int i=1;i<=STATE_SIZE;i++)
@@ -420,7 +420,7 @@ void init_linear_system_model()
   AB[0] = A;
   AB[1] = B;
 
-  //ROS_INFO("Initializing the linear system uncertainty"); 
+  ////ROS_INFO("Initializing the linear system uncertainty"); 
 
   BFL::Gaussian system_Uncertainty(sys_noise_Mu, sys_noise_Cov);
 
@@ -432,21 +432,21 @@ void init_linear_system_model()
 /** Get the other robot's current odometry information and update the obstacle info */
 /*void updateOtherRobotCb(const nav_msgs::Odometry::ConstPtr& o, const std::string& topic) 
 {
-  ////ROS_INFO("In updateOtherRobotCb");
-  ////ROS_INFO("topic: %s", topic.c_str());
+  //////ROS_INFO("In updateOtherRobotCb");
+  //////ROS_INFO("topic: %s", topic.c_str());
   int index = topic_index_map[topic];
-  ////ROS_INFO("index: %i", index);
+  //////ROS_INFO("index: %i", index);
 
   if(obs.size() < index+1)
   {
-    ////ROS_INFO("In if obs.size() < index");
+    //////ROS_INFO("In if obs.size() < index");
     Obstacle temp(*o);
     obs.push_back(temp);
     list.obstacles.push_back(temp.msg_);
   }
   else
   {
-    ////ROS_INFO("In else");
+    //////ROS_INFO("In else");
     obs.at(index).update(*o);
     list.obstacles.at(index) = obs.at(index).msg_;
   }
@@ -460,7 +460,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
   
   if(global_grid.info.width != 0 && global_grid.info.height != 0)
   {
-    //ROS_INFO("cir_obs.size(): %i", (int)cir_obs.size());
+    ////ROS_INFO("cir_obs.size(): %i", (int)cir_obs.size());
     
     // For each CircleOb, make a Marker
     for(int i=0;i<cir_obs.size();i++)
@@ -502,7 +502,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
 
       for(int j=0;j<cir_obs[i]->cirGroup.packedCirs.size();j++)
       {
-        //ROS_INFO("i: %i obs.size(): %i", i, (int)obs.size());
+        ////ROS_INFO("i: %i obs.size(): %i", i, (int)obs.size());
         visualization_msgs::Marker marker;
         marker.header.stamp = ros::Time::now();
         marker.header.frame_id = global_frame;
@@ -516,8 +516,8 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
         double x = cir_obs[i]->cirGroup.packedCirs[j].center.x;
         double y = cir_obs[i]->cirGroup.packedCirs[j].center.y;
 
-        //ROS_INFO("cir_obs[%i]->cir.center.x: %f cir_obs[%i]->cir.center.y: %f cir_obs[%i]->cir.radius: %f", i, cir_obs[i]->cir.center.x, i, cir_obs[i]->cir.center.y, i, cir_obs[i]->cir.radius);
-        //ROS_INFO("(x,y): (%f,%f) x_origin: %f y_origin: %f", x, y, x_origin, y_origin);
+        ////ROS_INFO("cir_obs[%i]->cir.center.x: %f cir_obs[%i]->cir.center.y: %f cir_obs[%i]->cir.radius: %f", i, cir_obs[i]->cir.center.x, i, cir_obs[i]->cir.center.y, i, cir_obs[i]->cir.radius);
+        ////ROS_INFO("(x,y): (%f,%f) x_origin: %f y_origin: %f", x, y, x_origin, y_origin);
 
         marker.pose.position.x = x;
         marker.pose.position.y = y;
@@ -545,7 +545,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
   }
   else
   {
-    ROS_WARN("Global grid dimensions wrong");
+    ////ROS_WARN("Global grid dimensions wrong");
   }
   return result;
 }
@@ -561,7 +561,7 @@ void publishList(const ros::TimerEvent& e)
 
 void publishMarkers(const ros::TimerEvent& e)
 {
-  //ROS_INFO("In publishMarkers");
+  ////ROS_INFO("In publishMarkers");
   
   // Publish a single Marker
   visualization_msgs::MarkerArray result;
@@ -569,7 +569,7 @@ void publishMarkers(const ros::TimerEvent& e)
   
   std::vector<visualization_msgs::Marker> markers = convertObsToMarkers();
 
-  //ROS_INFO("Publishing %i markers", (int)markers.size());
+  ////ROS_INFO("Publishing %i markers", (int)markers.size());
 
   result.markers = markers;
   
@@ -582,10 +582,10 @@ void publishMarkers(const ros::TimerEvent& e)
    */
   for(int i=0;i<cir_obs.size();i++)
   {
-    /*ROS_INFO("Creating text and arrow for marker i: %i", i);
-    ROS_INFO("prev_velocities.size(): %i", (int)prev_velocities.size());
-    ROS_INFO("prev_velocities[%i].size(): %i", i, (int)prev_velocities[i].size());
-    ROS_INFO("Marker %i position: (%f, %f) v: %f", i, markers[i].pose.position.x, markers[i].pose.position.y, prev_velocities[prev_velocities.size()-1][i].v);*/
+    /*//ROS_INFO("Creating text and arrow for marker i: %i", i);
+    //ROS_INFO("prev_velocities.size(): %i", (int)prev_velocities.size());
+    //ROS_INFO("prev_velocities[%i].size(): %i", i, (int)prev_velocities[i].size());
+    //ROS_INFO("Marker %i position: (%f, %f) v: %f", i, markers[i].pose.position.x, markers[i].pose.position.y, prev_velocities[prev_velocities.size()-1][i].v);*/
     visualization_msgs::Marker text;
     visualization_msgs::Marker arrow;
 
@@ -614,8 +614,8 @@ void publishMarkers(const ros::TimerEvent& e)
     text.action   = visualization_msgs::Marker::ADD;
     arrow.action  = visualization_msgs::Marker::ADD;
 
-    //ROS_INFO("cir_obs.size(): %i", (int)cir_obs.size());
-    //ROS_INFO("prev_velocities.size(): %i cir_obs[%i]->prevTheta.size(): %i", (int)prev_velocities.size(), i, (int)cir_obs[i]->prevTheta.size());
+    ////ROS_INFO("cir_obs.size(): %i", (int)cir_obs.size());
+    ////ROS_INFO("prev_velocities.size(): %i cir_obs[%i]->prevTheta.size(): %i", (int)prev_velocities.size(), i, (int)cir_obs[i]->prevTheta.size());
     
     // Set text value
     // Should I use cir_obs->vel?
@@ -649,10 +649,10 @@ void publishMarkers(const ros::TimerEvent& e)
     arrow.pose = text.pose;
     
     // Set the arrow orientation
-    //ROS_INFO("cir_obs.size(): %i prevTheta.size(): %i index: %i", (int)cir_obs.size(), (int)cir_obs[i]->prevTheta.size(), (int)cir_obs[i]->prevCirs.size()-1);
+    ////ROS_INFO("cir_obs.size(): %i prevTheta.size(): %i index: %i", (int)cir_obs.size(), (int)cir_obs[i]->prevTheta.size(), (int)cir_obs[i]->prevCirs.size()-1);
 
     double theta = cir_obs[i]->prevTheta.size() > 0 ? cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] : 0;
-    //ROS_INFO("prevTheta.size(): %i theta: %f", (int)cir_obs[i]->prevTheta.size(), theta);
+    ////ROS_INFO("prevTheta.size(): %i theta: %f", (int)cir_obs[i]->prevTheta.size(), theta);
     tf::Quaternion q = tf::createQuaternionFromYaw(theta);
     tf::quaternionTFToMsg(q, arrow.pose.orientation);
     
@@ -669,7 +669,7 @@ void publishMarkers(const ros::TimerEvent& e)
   }
 
 
-  //ROS_INFO("texts.size(): %i", (int)texts.size());
+  ////ROS_INFO("texts.size(): %i", (int)texts.size());
 
   result.markers.insert(std::end(result.markers), std::begin(texts), std::end(texts));  
   result.markers.insert(std::end(result.markers), std::begin(arrows), std::end(arrows));  
@@ -705,25 +705,25 @@ void publishMarkers(const ros::TimerEvent& e)
   {
     result.markers.push_back(pLines[i]);
   }*/
-  /*ROS_INFO("cLines.size(): %i", (int)cLines.size());
+  /*//ROS_INFO("cLines.size(): %i", (int)cLines.size());
   for(int i=0;i<cLines.size();i++)
   {
-    ROS_INFO("cLines[%i]: (%f,%f)", i, cLines[i].pose.position.x, cLines[i].pose.position.y);
+    //ROS_INFO("cLines[%i]: (%f,%f)", i, cLines[i].pose.position.x, cLines[i].pose.position.y);
     result.markers.push_back(cLines[i]);
   }*/
-  //ROS_INFO("publishMarkers polygonLines.size(): %i", (int)polygonLines.points.size());
+  ////ROS_INFO("publishMarkers polygonLines.size(): %i", (int)polygonLines.points.size());
 
-  //ROS_INFO("result.markers.size(): %i", (int)result.markers.size());
+  ////ROS_INFO("result.markers.size(): %i", (int)result.markers.size());
 
   pub_rviz.publish(result);
-  //ROS_INFO("Exiting publishMarkers");
+  ////ROS_INFO("Exiting publishMarkers");
 }
 
 
 int getClosestPrev(Circle m, std::vector<Circle> N, std::vector<int> matched)
 {
-  ////ROS_INFO("In getClosestPrev");
-  ////ROS_INFO("N.size(): %i", (int)N.size());
+  //////ROS_INFO("In getClosestPrev");
+  //////ROS_INFO("N.size(): %i", (int)N.size());
   int min_index = 0;
   double dist_threshold = 0.2;
 
@@ -737,7 +737,7 @@ int getClosestPrev(Circle m, std::vector<Circle> N, std::vector<int> matched)
   center.push_back(m.center.x);
   center.push_back(m.center.y);
 
-  ////ROS_INFO("center: [%f, %f]", center[0], center[1]);
+  //////ROS_INFO("center: [%f, %f]", center[0], center[1]);
 
   // If there are circles left to match
   if(N.size() > 0)
@@ -750,15 +750,15 @@ int getClosestPrev(Circle m, std::vector<Circle> N, std::vector<int> matched)
 
     double dist = util.positionDistance(center, prev_center);
     
-    ////ROS_INFO("Prev center: [%f, %f]", prev_center[0], prev_center[1]);
-    ////ROS_INFO("dist: %f", dist);
+    //////ROS_INFO("Prev center: [%f, %f]", prev_center[0], prev_center[1]);
+    //////ROS_INFO("dist: %f", dist);
 
     // Go through remaining potential matches, find min dist
     for(int i=min_index;i<N.size();i++)
     {
       prev_center.at(0) =  N[i].center.x;
       prev_center.at(1) =  N[i].center.y;
-      ////ROS_INFO("Prev center: [%f, %f] dist: %f", prev_center[0], prev_center[1], util.positionDistance(center, prev_center));
+      //////ROS_INFO("Prev center: [%f, %f] dist: %f", prev_center[0], prev_center[1], util.positionDistance(center, prev_center));
 
       // Compare distance with  min distance, and that the target has not already been matched
       if( util.positionDistance(center, prev_center) < dist && !matched[i])
@@ -782,21 +782,21 @@ int getClosestPrev(Circle m, std::vector<Circle> N, std::vector<int> matched)
 // ***************************************************
 double getDistToFOV(Point p, double angle)
 {
-  ROS_INFO("In getDistToFOV");
-  ROS_INFO("p: (%f,%f)", p.x, p.y);
-  ROS_INFO("Robot pos: (%f,%f)", robotState.positions[0], robotState.positions[1]);
+  /*//ROS_INFO("In getDistToFOV");
+  //ROS_INFO("p: (%f,%f)", p.x, p.y);
+  //ROS_INFO("Robot pos: (%f,%f)", robotState.positions[0], robotState.positions[1]);*/
   double m = tan(angle);
   double b = robotState.positions[1] - (m*robotState.positions[0]);
 
   double d = fabs( (m*p.x) + p.y - b );
 
-  ROS_INFO("angle: %f m: %f b: %f d: %f", angle, m, b, d);
+  ////ROS_INFO("angle: %f m: %f b: %f d: %f", angle, m, b, d);
 
   d /= sqrt( pow(m,2) + pow(b,2) );
 
-  ROS_INFO("denom: %f d: %f", sqrt( pow(m,2) + pow(b,2) ), d);
+  ////ROS_INFO("denom: %f d: %f", sqrt( pow(m,2) + pow(b,2) ), d);
 
-  ROS_INFO("Exiting getDistToFOV");
+  ////ROS_INFO("Exiting getDistToFOV");
   return d;
 }
 
@@ -805,16 +805,16 @@ double getDistToFOV(Point p, double angle)
 
 std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const ros::Duration d_elapsed)
 {
-  ROS_INFO("In predictVelocities, d_elapsed: %f", d_elapsed.toSec());
-  ROS_INFO("cir_obs.size(): %i cm.size(): %i", (int)cir_obs.size(), (int)cm.size());
+  ////ROS_INFO("In predictVelocities, d_elapsed: %f", d_elapsed.toSec());
+  ////ROS_INFO("cir_obs.size(): %i cm.size(): %i", (int)cir_obs.size(), (int)cm.size());
 
   std::vector<Velocity> result;
   
   // For each circle obstacle,
   for(int i=0;i<cir_obs.size();i++)
   {
-    ROS_INFO("CircleOb %i prevCirs.size(): %i", i, (int)cir_obs[i]->prevCirs.size());
-    //ROS_INFO("Current: (%f, %f)", cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
+    ////ROS_INFO("CircleOb %i prevCirs.size(): %i", i, (int)cir_obs[i]->prevCirs.size());
+    ////ROS_INFO("Current: (%f, %f)", cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
 
     Velocity temp;
 
@@ -823,7 +823,7 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
     {
       // Prev needs to be based on the global x,y
       int i_prev = cir_obs[i]->prevCirs.size()-1;
-      //ROS_INFO("Prev: (%f, %f)", cir_obs[i]->prevCirs[i_prev].center.x, cir_obs[i]->prevCirs[i_prev].center.y);
+      ////ROS_INFO("Prev: (%f, %f)", cir_obs[i]->prevCirs[i_prev].center.x, cir_obs[i]->prevCirs[i_prev].center.y);
       double x_dist = cir_obs[i]->cirGroup.fitCir.center.x - cir_obs[i]->prevCirs[i_prev].center.x;
       double y_dist = cir_obs[i]->cirGroup.fitCir.center.y - cir_obs[i]->prevCirs[i_prev].center.y;
       //double dist = sqrt( pow(x_dist,2) + pow(y_dist,2) );
@@ -845,14 +845,14 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
         {
           if(cm[j].i_cir == i)
           {
-            ROS_INFO("dist: %f delta_r: %f", dist, cm[j].delta_r);
+            ////ROS_INFO("dist: %f delta_r: %f", dist, cm[j].delta_r);
             // If the obstacle is moving towards the robot, then add delta_r
             //if( fabs(util.findAngleBetweenAngles(theta, robotState.positions[2])) > (3.f*PI)/4.f)
             //if(robotState.velocities[2] < 0)
             //if(dist > 0.01 && cm[j].delta_r > 0.1 && util.findDistanceBetweenAngles(robotState.positions[2], dirToOb) > (3.f*PI)/4.f)
             double dMin = getDistToFOV(cir_obs[i]->cirGroup.fitCir.center, viewMinMax[0]);
             double dMax = getDistToFOV(cir_obs[i]->cirGroup.fitCir.center, viewMinMax[1]);
-            ROS_INFO("viewMinMax[0]: %f viewMinMax[1]: %f dMin: %f dMax: %f r: %f", viewMinMax[0], viewMinMax[1], dMin, dMax, cir_obs[i]->cirGroup.fitCir.radius);
+            ////ROS_INFO("viewMinMax[0]: %f viewMinMax[1]: %f dMin: %f dMax: %f r: %f", viewMinMax[0], viewMinMax[1], dMin, dMax, cir_obs[i]->cirGroup.fitCir.radius);
             if(dMin < cir_obs[i]->cirGroup.fitCir.radius+0.5 || dMax < cir_obs[i]->cirGroup.fitCir.radius+0.5)
             {
               dist -= cm[j].delta_r;
@@ -871,7 +871,7 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
        * In the future, i_prev won't correspond to the previous theta value 
        * so this will need to be reworked
        */
-      //ROS_INFO("cir_obs[%i]->prevTheta.size(): %i i_prev: %i", i, (int)cir_obs[i]->prevTheta.size(), i_prev);
+      ////ROS_INFO("cir_obs[%i]->prevTheta.size(): %i i_prev: %i", i, (int)cir_obs[i]->prevTheta.size(), i_prev);
       //double w = util.displaceAngle(theta, cir_obs[i]->prevTheta[i_prev]) / d_elapsed.toSec();
       double w = 0;
 
@@ -882,11 +882,11 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
       temp.vy = linear_v*sin(theta);
       temp.v  = linear_v;
       temp.w  = w;
-      ROS_INFO("dist: %f t: %f vx: %f vy: %f speed: %f theta: %f w: %f", dist, d_elapsed.toSec(), temp.vx, temp.vy, linear_v, theta, w);
+      ////ROS_INFO("dist: %f t: %f vx: %f vy: %f speed: %f theta: %f w: %f", dist, d_elapsed.toSec(), temp.vx, temp.vy, linear_v, theta, w);
 
       if(dist > 0.075)
       {
-        //ROS_INFO("Setting moving = true, dist: %f", dist);
+        ////ROS_INFO("Setting moving = true, dist: %f", dist);
         cir_obs[i]->moving = true;
       }
       
@@ -894,7 +894,7 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
     }
     else
     {
-      //ROS_INFO("No previous circles");
+      ////ROS_INFO("No previous circles");
       temp.vx = 0;
       temp.vy = 0;
       temp.v  = 0;
@@ -905,14 +905,14 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
     result.push_back(temp);
   } // end for
 
-  //ROS_INFO("Exiting predictVelocities");
+  ////ROS_INFO("Exiting predictVelocities");
   return result;
 }
 
 
 std::vector<double> predictTheta()
 {
-  //ROS_INFO("In predictTheta");
+  ////ROS_INFO("In predictTheta");
   std::vector<double> result;
 
   // For each circle obstacle
@@ -927,11 +927,11 @@ std::vector<double> predictTheta()
     {
       int i_prev = cir_obs[i]->prevCirs.size()-num_costmap_freq_theta;
       //int i_prev = cir_obs[i]->i_prevThetaCir;
-      /*//ROS_INFO("i_prev: %i", i_prev);
-      //ROS_INFO("Prev: (%f, %f) Current: (%f, %f)", cir_obs[i]->prevCirs[i_prev].center.x, cir_obs[i]->prevCirs[i_prev].center.y, cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);*/
+      /*////ROS_INFO("i_prev: %i", i_prev);
+      ////ROS_INFO("Prev: (%f, %f) Current: (%f, %f)", cir_obs[i]->prevCirs[i_prev].center.x, cir_obs[i]->prevCirs[i_prev].center.y, cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);*/
       double x_dist = cir_obs[i]->cirGroup.fitCir.center.x - cir_obs[i]->prevCirs[i_prev].center.x;
       double y_dist = cir_obs[i]->cirGroup.fitCir.center.y - cir_obs[i]->prevCirs[i_prev].center.y;
-      //ROS_INFO("x_dist: %f y_dist: %f", x_dist, y_dist);
+      ////ROS_INFO("x_dist: %f y_dist: %f", x_dist, y_dist);
 
       theta = atan2(y_dist, x_dist);
     }
@@ -939,7 +939,7 @@ std::vector<double> predictTheta()
     result.push_back(theta); 
   } // end for each circle obstacle
 
-  //ROS_INFO("Exiting predictTheta");
+  ////ROS_INFO("Exiting predictTheta");
   return result;
 }
 
@@ -965,7 +965,7 @@ CircleOb* createCircleOb(CircleGroup temp)
   CircleFilter* cir_filter = new CircleFilter(STATE_SIZE, prior, sys_pdf, meas_pdf);
   result->kf = cir_filter;
 
-  //ROS_INFO("Returning filter");
+  ////ROS_INFO("Returning filter");
   return result;
 }
 
@@ -975,28 +975,28 @@ CircleOb* createCircleOb(CircleGroup temp)
 
 void transformCostmap(nav_msgs::OccupancyGrid& g)
 {
-  //ROS_INFO("In transformCostmap");
+  ////ROS_INFO("In transformCostmap");
   tf::Vector3 p(g.info.origin.position.x, g.info.origin.position.y, 0);
   float res = g.info.resolution;
   int w = g.info.width;
   int h = g.info.height;
-  //ROS_INFO("p: (%f,%f) w: %i h: %i", p.getX(), p.getY(), w, h);
+  ////ROS_INFO("p: (%f,%f) w: %i h: %i", p.getX(), p.getY(), w, h);
 
   tf::Vector3 p_global(global_costmap.info.origin.position.x, global_costmap.info.origin.position.y, 0);
-  //ROS_INFO("p_global: (%f,%f)", p_global.getX(), p_global.getY());
+  ////ROS_INFO("p_global: (%f,%f)", p_global.getX(), p_global.getY());
 
  
   float delta_x = g.info.origin.position.x - global_costmap.info.origin.position.x;
   float delta_y = g.info.origin.position.y - global_costmap.info.origin.position.y;
   int i_dx = delta_x / res;
   int i_dy = (delta_y / res) * global_costmap.info.width;
-  //ROS_INFO("delta_x: %f delta_y: %f i_dx: %i i_dy: %i", delta_x, delta_y, i_dx, i_dy);
+  ////ROS_INFO("delta_x: %f delta_y: %f i_dx: %i i_dy: %i", delta_x, delta_y, i_dx, i_dy);
 
   for(int i=0;i<g.data.size();i++)
   {
     float r = (i / w) * res;
     float c = ((i % w)+1) * res;
-    //ROS_INFO("r: %f c: %f", r, c);
+    ////ROS_INFO("r: %f c: %f", r, c);
 
     float x = c;
     float y = r;
@@ -1012,28 +1012,28 @@ void transformCostmap(nav_msgs::OccupancyGrid& g)
     int r_global = (i / g.info.width) * global_costmap.info.width;
     //float x_gl = (c_global*res) + global_costmap.info.origin.position.x;
     //float y_gl = (r_global*res) + global_costmap.info.origin.position.y;
-    //ROS_INFO("Before considering origin, c_global: %i r_global: %i", c_global, r_global);
+    ////ROS_INFO("Before considering origin, c_global: %i r_global: %i", c_global, r_global);
 
     c_global += i_dx <= -(c/res) ? -(c/res) * global_costmap.info.width : i_dx;
     r_global += i_dy;
 
     int i_global = r_global + c_global;
-    //ROS_INFO("x: %f y: %f c_global: %i r_global: %i i: %i i_global: %i global.size(): %i", x, y, c_global, r_global, i, i_global, (int)global_costmap.data.size());
+    ////ROS_INFO("x: %f y: %f c_global: %i r_global: %i i: %i i_global: %i global.size(): %i", x, y, c_global, r_global, i, i_global, (int)global_costmap.data.size());
 
     if(i_global > 0 && i_global < global_costmap.data.size())
     {
       global_costmap.data[i_global] = g.data[i];
     }
   }
-  //ROS_INFO("global_costmap.data.size(): %i", (int)global_costmap.data.size());
+  ////ROS_INFO("global_costmap.data.size(): %i", (int)global_costmap.data.size());
 }
 
 
 void accumulateCostmaps(const nav_msgs::OccupancyGrid& g1, const nav_msgs::OccupancyGrid& g2, nav_msgs::OccupancyGrid& result)
 {
-  /*ROS_INFO("In asscumulateCostmaps(OccupancyGrid, OccupancyGrid, OccupancyGrid)");
-  ROS_INFO("g1.data.size(): %i g2.data.size(): %i", (int)g1.data.size(), (int)g2.data.size());
-  ROS_INFO("g1.w: %i g1.h: %i g2.w: %i g2.h: %i", g1.info.width, g1.info.height, g2.info.width, g2.info.height);*/
+  /*//ROS_INFO("In asscumulateCostmaps(OccupancyGrid, OccupancyGrid, OccupancyGrid)");
+  //ROS_INFO("g1.data.size(): %i g2.data.size(): %i", (int)g1.data.size(), (int)g2.data.size());
+  //ROS_INFO("g1.w: %i g1.h: %i g2.w: %i g2.h: %i", g1.info.width, g1.info.height, g2.info.width, g2.info.height);*/
   result = g1;
 
   /*float ox = g2.info.origin.position.x - g1.info.origin.position.x;
@@ -1050,11 +1050,11 @@ void accumulateCostmaps(const nav_msgs::OccupancyGrid& g1, const nav_msgs::Occup
   int i_offset_g  = x_off_g1 + y_off_g1;
   int i_offset_gg = x_off_g2 + y_off_g2;
 
-  ROS_INFO("ox: %f oy: %f i_x_offset: %i x_off_g1: %i x_off_g2: %i i_y_offset: %i y_off_g1: %i y_off_g2: %i i_offset_g: %i i_offset_gg: %i", 
+  //ROS_INFO("ox: %f oy: %f i_x_offset: %i x_off_g1: %i x_off_g2: %i i_y_offset: %i y_off_g1: %i y_off_g2: %i i_offset_g: %i i_offset_gg: %i", 
       ox, oy, i_x_offset, x_off_g1, x_off_g2, i_y_offset, y_off_g1, y_off_g2, i_offset_g, i_offset_gg);*/
 
-  //ROS_INFO("g1.info.width: %i g1.info.height: %i", g1.info.width, g1.info.height);
-  //ROS_INFO("Before for loops, result.size(): %i", (int)result.data.size());
+  ////ROS_INFO("g1.info.width: %i g1.info.height: %i", g1.info.width, g1.info.height);
+  ////ROS_INFO("Before for loops, result.size(): %i", (int)result.data.size());
   for(int c=0;c<g1.info.height && c<g2.info.height;c++)
   {
     int c_offset = g1.info.width < g2.info.width ? g1.info.width*c : g2.info.width;
@@ -1065,18 +1065,18 @@ void accumulateCostmaps(const nav_msgs::OccupancyGrid& g1, const nav_msgs::Occup
       result.data[c_offset + r] = (g1.data[c_offset + r] | g2.data[c_offset + r]);
       /*if(!g1.data[r_offset + c] && !g2.data[r_offset + c] && result.data[r_offset+c])
       {
-        ROS_INFO("g1.data[%i]: %i g2.data: %i result: %i", r_offset+c, g1.data[r_offset+c], g2.data[r_offset+c], result.data[r_offset+c]);
+        //ROS_INFO("g1.data[%i]: %i g2.data: %i result: %i", r_offset+c, g1.data[r_offset+c], g2.data[r_offset+c], result.data[r_offset+c]);
       }*/
     }
   }
 
-  //ROS_INFO("After for loops, result.size(): %i", (int)result.data.size());
+  ////ROS_INFO("After for loops, result.size(): %i", (int)result.data.size());
 }
 
 void accumulateCostmaps(const nav_msgs::OccupancyGrid gi, const std::vector<nav_msgs::OccupancyGrid> prev_grids, nav_msgs::OccupancyGrid& result)
 {
-  //ROS_INFO("In consolidateCostmaps(OccupancyGrid, vector<OccupancyGrid>, OccupancyGrid)");
-  //ROS_INFO("gi.size(): %i", (int)gi.data.size());
+  ////ROS_INFO("In consolidateCostmaps(OccupancyGrid, vector<OccupancyGrid>, OccupancyGrid)");
+  ////ROS_INFO("gi.size(): %i", (int)gi.data.size());
   
   if(prev_grids.size() == 0)
   {
@@ -1088,14 +1088,14 @@ void accumulateCostmaps(const nav_msgs::OccupancyGrid gi, const std::vector<nav_
 
     for(int i=0;i<prev_grids.size();i++)
     {
-      ////ROS_INFO("Consolidating with previous grid %i, prev_grid[%i].size(): %i", i, i, (int)prev_grids[i].data.size());
+      //////ROS_INFO("Consolidating with previous grid %i, prev_grid[%i].size(): %i", i, i, (int)prev_grids[i].data.size());
       accumulateCostmaps(temp, prev_grids[i], result);
-      ////ROS_INFO("New result size: %i", (int)result.data.size());
+      //////ROS_INFO("New result size: %i", (int)result.data.size());
       temp = result;
     }
   }
 
-  //ROS_INFO("result.size(): %i", (int)result.data.size());
+  ////ROS_INFO("result.size(): %i", (int)result.data.size());
 }
 
 
@@ -1104,15 +1104,15 @@ void accumulateCostmaps(const nav_msgs::OccupancyGrid gi, const std::vector<nav_
  */
 std::vector<CircleMatch> matchCircles(std::vector<CircleGroup> cirs, std::vector<CircleGroup> targets)
 {
-  //ROS_INFO("In matchCircles");
-  //ROS_INFO("cirs.size(): %i targets.size(): %i", (int)cirs.size(), (int)targets.size());
+  ////ROS_INFO("In matchCircles");
+  ////ROS_INFO("cirs.size(): %i targets.size(): %i", (int)cirs.size(), (int)targets.size());
   for(int i=0;i<cirs.size();i++)
   {
-    //ROS_INFO("Circle %i: (%f,%f)", i, cirs[i].center.x, cirs[i].center.y);
+    ////ROS_INFO("Circle %i: (%f,%f)", i, cirs[i].center.x, cirs[i].center.y);
   }
   for(int i=0;i<targets.size();i++)
   {
-    //ROS_INFO("Target %i: (%f,%f)", i, targets[i].center.x, targets[i].center.y);
+    ////ROS_INFO("Target %i: (%f,%f)", i, targets[i].center.x, targets[i].center.y);
   }
   std::vector<CircleMatch> result;
   std::vector<int> matched_targets(targets.size());
@@ -1145,7 +1145,7 @@ std::vector<CircleMatch> matchCircles(std::vector<CircleGroup> cirs, std::vector
     dists.push_back(target_dists);
   } // end getting dist values
 
-  //ROS_INFO("all_dists.size(): %i", (int)all_dists.size());
+  ////ROS_INFO("all_dists.size(): %i", (int)all_dists.size());
 
   // Sort dist values
   std::sort(all_dists.begin(), all_dists.end(), util.compareCircleMatches);
@@ -1153,27 +1153,27 @@ std::vector<CircleMatch> matchCircles(std::vector<CircleGroup> cirs, std::vector
   // Print all potential matches
   for(int i=0;i<all_dists.size();i++)
   {
-    //ROS_INFO("all_dists %i: i_cirs: %i targets: %i dist: %f delta_r: %f", i, all_dists[i].i_cirs, all_dists[i].i_prevCir, all_dists[i].dist, all_dists[i].delta_r);
+    ////ROS_INFO("all_dists %i: i_cirs: %i targets: %i dist: %f delta_r: %f", i, all_dists[i].i_cirs, all_dists[i].i_prevCir, all_dists[i].dist, all_dists[i].delta_r);
   }
     
   int i=0;
   while(i < all_dists.size())
   {
-    //ROS_INFO("all_dists %i: i_cirs: %i targets: %i dist: %f delta_r: %f", i, all_dists[i].i_cirs, all_dists[i].i_prevCir, all_dists[i].dist, all_dists[i].delta_r);
+    ////ROS_INFO("all_dists %i: i_cirs: %i targets: %i dist: %f delta_r: %f", i, all_dists[i].i_cirs, all_dists[i].i_prevCir, all_dists[i].dist, all_dists[i].delta_r);
 
     // Check if this is a legitimate match based on dist and radius change
     if(all_dists[i].dist < dist_threshold && all_dists[i].delta_r < radius_threshold)
     {
-      //ROS_INFO("Legitimate match");
+      ////ROS_INFO("Legitimate match");
 
       // Now check that the target or circle hasn't been matched already
       bool prev_matched = false;
       for(int r=0;r<result.size();r++)
       {
-        //ROS_INFO("r: %i result[%i].i_cirs: %i result[%i]: %i", r, r, result[r].i_cirs, r, result[r].i_cirs);
+        ////ROS_INFO("r: %i result[%i].i_cirs: %i result[%i]: %i", r, r, result[r].i_cirs, r, result[r].i_cirs);
         if(result[r].i_cir == all_dists[i].i_cir || result[r].i_prevCir == all_dists[i].i_prevCir)
         {
-          //ROS_INFO("Previously matched!");
+          ////ROS_INFO("Previously matched!");
           prev_matched = true;
           break;
         }
@@ -1181,7 +1181,7 @@ std::vector<CircleMatch> matchCircles(std::vector<CircleGroup> cirs, std::vector
 
       if(!prev_matched)
       {
-        //ROS_INFO("Not previously matched!");
+        ////ROS_INFO("Not previously matched!");
         result.push_back(all_dists[i]);
         all_dists.erase(all_dists.begin()+i);
         i--;
@@ -1189,14 +1189,14 @@ std::vector<CircleMatch> matchCircles(std::vector<CircleGroup> cirs, std::vector
     } // end if legitimate match
     else
     {
-      //ROS_INFO("Match not legitimate");
+      ////ROS_INFO("Match not legitimate");
     }
 
     i++;
   } // end for all_dists values
 
 
-  //ROS_INFO("Exiting matchCircles");
+  ////ROS_INFO("Exiting matchCircles");
   return result;
 }
 
@@ -1217,8 +1217,8 @@ void deleteOldObs(std::vector<CircleMatch> cm)
   {
     if(i < matched_tar.size() && !matched_tar[i])
     {
-      //ROS_INFO("matched_tar[%i]: %i", i, matched_tar[i]);
-      //ROS_INFO("Deleting filter at index %i!", index_cir_obs);
+      ////ROS_INFO("matched_tar[%i]: %i", i, matched_tar[i]);
+      ////ROS_INFO("Deleting filter at index %i!", index_cir_obs);
       delete cir_obs[index_cir_obs];
       cir_obs.erase(cir_obs.begin()+index_cir_obs);
 
@@ -1242,12 +1242,12 @@ void addNewObs(std::vector<CircleMatch> cm, std::vector<CircleGroup> cirs)
   // Create new filters
   for(int i=0;i<cirs.size();i++)
   {
-    //ROS_INFO("matched_cirs[%i]: %i", i, matched_cirs[i]);
+    ////ROS_INFO("matched_cirs[%i]: %i", i, matched_cirs[i]);
     if(!matched_cirs[i])
     {
-      //ROS_INFO("Creating new filter! Center: (%f,%f) Radius: %f", cirs[i].center.x, cirs[i].center.y, cirs[i].radius);
+      ////ROS_INFO("Creating new filter! Center: (%f,%f) Radius: %f", cirs[i].center.x, cirs[i].center.y, cirs[i].radius);
       CircleOb* temp = createCircleOb(cirs[i]);
-      //ROS_INFO("i: %i cir_obs.size(): %i", i, (int)cir_obs.size());
+      ////ROS_INFO("i: %i cir_obs.size(): %i", i, (int)cir_obs.size());
       //cir_obs.insert(cir_obs.begin()+i, temp);
       cir_obs.push_back(temp);
     }
@@ -1261,17 +1261,17 @@ void addNewObs(std::vector<CircleMatch> cm, std::vector<CircleGroup> cirs)
  */
 std::vector<CircleMatch> dataAssociation(std::vector<CircleGroup> cirs)
 {
-  //ROS_INFO("Starting data association");
-  //ROS_INFO("cirs.size(): %i prev_valid_cirs: %i cir_obs: %i", (int)cirs.size(), (int)prev_valid_cirs.size(), (int)cir_obs.size());
+  ////ROS_INFO("Starting data association");
+  ////ROS_INFO("cirs.size(): %i prev_valid_cirs: %i cir_obs: %i", (int)cirs.size(), (int)prev_valid_cirs.size(), (int)cir_obs.size());
   
   std::vector<CircleMatch> cm = matchCircles(cirs, prev_valid_cirs);
-  //ROS_INFO("cm.size(): %i", (int)cm.size());
-  //ROS_INFO("Matching result:");
+  ////ROS_INFO("cm.size(): %i", (int)cm.size());
+  ////ROS_INFO("Matching result:");
  
   std::vector<CircleGroup> copy = cirs;
   for(int i=0;i<cm.size();i++)
   {
-    //ROS_INFO("Match %i: i_cirs: %i i_prevCir: %i dist: %f delta_r: %f", i, cm[i].i_cirs, cm[i].i_prevCir, cm[i].dist, cm[i].delta_r);
+    ////ROS_INFO("Match %i: i_cirs: %i i_prevCir: %i dist: %f delta_r: %f", i, cm[i].i_cirs, cm[i].i_prevCir, cm[i].dist, cm[i].delta_r);
     
     /*
      * This may need to be looked at later on
@@ -1282,7 +1282,7 @@ std::vector<CircleMatch> dataAssociation(std::vector<CircleGroup> cirs)
     if(cir_obs.size() > cm[i].i_prevCir)
     {
       cir_obs[cm[i].i_prevCir]->cirGroup = copy[cm[i].i_cir];
-      //ROS_INFO("Setting cir_obs[%i]->cir to (%f,%f)", cm[i].i_prevCir, copy[cm[i].i_cirs].center.x, copy[cm[i].i_cirs].center.y);
+      ////ROS_INFO("Setting cir_obs[%i]->cir to (%f,%f)", cm[i].i_prevCir, copy[cm[i].i_cirs].center.x, copy[cm[i].i_cirs].center.y);
     }
   } // end for each potential match
  
@@ -1291,17 +1291,17 @@ std::vector<CircleMatch> dataAssociation(std::vector<CircleGroup> cirs)
   addNewObs(cm, cirs);
 
 
-  /*//ROS_INFO("Done with data association, cir_obs.size(): %i", (int)cir_obs.size());
+  /*////ROS_INFO("Done with data association, cir_obs.size(): %i", (int)cir_obs.size());
   for(int i=0;i<cir_obs.size();i++)
   {
-    //ROS_INFO("cir_obs[%i] circle: (%f,%f)", i, cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
+    ////ROS_INFO("cir_obs[%i] circle: (%f,%f)", i, cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
     if(cir_obs[i]->prevCirs.size()>0)
     {
-      //ROS_INFO("Prev: (%f,%f)", cir_obs[i]->prevCirs[cir_obs[i]->prevCirs.size()-1].center.x, cir_obs[i]->prevCirs[cir_obs[i]->prevCirs.size()-1].center.y);
+      ////ROS_INFO("Prev: (%f,%f)", cir_obs[i]->prevCirs[cir_obs[i]->prevCirs.size()-1].center.x, cir_obs[i]->prevCirs[cir_obs[i]->prevCirs.size()-1].center.y);
     }
     else
     {
-      //ROS_INFO("No prev");
+      ////ROS_INFO("No prev");
     }
   }*/
 
@@ -1314,7 +1314,7 @@ std::vector<CircleGroup> updateKalmanFilters(std::vector<CircleGroup> cirs, std:
   std::vector<CircleGroup> result;
   for(int i=0;i<cir_obs.size();i++)
   {
-    //ROS_INFO("Updating circle filter %i", i);
+    ////ROS_INFO("Updating circle filter %i", i);
 
     // Prediction
     if(prev_velocities.size() > 0 && prev_velocities[prev_velocities.size()-1].size() > i)
@@ -1340,13 +1340,13 @@ std::vector<CircleGroup> updateKalmanFilters(std::vector<CircleGroup> cirs, std:
     {
       y[i] = 0;
     }
-    //ROS_INFO("Measurement: (%f, %f)", y[0], y[1]);
-    //ROS_INFO("Prediction: (%f, %f)", u[0], u[1]);
+    ////ROS_INFO("Measurement: (%f, %f)", y[0], y[1]);
+    ////ROS_INFO("Prediction: (%f, %f)", u[0], u[1]);
 
 
     // Update the Kalman filter
     cir_obs[i]->kf->update(u, y);
-    //ROS_INFO("Posterior after update:");
+    ////ROS_INFO("Posterior after update:");
     cir_obs[i]->kf->printPosterior();
     
     // Set new circle center
@@ -1361,10 +1361,10 @@ std::vector<CircleGroup> updateKalmanFilters(std::vector<CircleGroup> cirs, std:
     cirs_pos.push_back(cir_obs[i]->cirGroup.fitCir);
   }
   
-  /*ROS_INFO("After kalman filter:");
+  /*//ROS_INFO("After kalman filter:");
   for(int i=0;i<cir_obs.size();i++)
   {
-    ROS_INFO("cir_obs[%i]->cirGroup.fitCir.center.x: %f cir_obs[%i]->cirGroup.fitCir.center.y: %f cir_obs[%i]->cir.radius: %f", i, cir_obs[i]->cirGroup.fitCir.center.x, i, cir_obs[i]->cirGroup.fitCir.center.y, i, cir_obs[i]->cir.radius);
+    //ROS_INFO("cir_obs[%i]->cirGroup.fitCir.center.x: %f cir_obs[%i]->cirGroup.fitCir.center.y: %f cir_obs[%i]->cir.radius: %f", i, cir_obs[i]->cirGroup.fitCir.center.x, i, cir_obs[i]->cirGroup.fitCir.center.y, i, cir_obs[i]->cir.radius);
   }*/
 
 
@@ -1390,7 +1390,7 @@ Point getGlobalCoords(const Circle& cir)
 
 void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::OccupancyGrid& result)
 {
-  //ROS_INFO("In cropCostmap");
+  ////ROS_INFO("In cropCostmap");
 
   // This are the static bounds
   // a is the lower-left corner, then go in cw order
@@ -1404,7 +1404,7 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   float x_max=ranges[0].max;
   float y_max=ranges[1].max;
   
-  //ROS_INFO("costmap origin: (%f,%f) width: %i height: %i resolution: %f w: %f h: %f", grid->info.origin.position.x, grid->info.origin.position.y, grid->info.width, grid->info.height, grid->info.resolution, w, h);
+  ////ROS_INFO("costmap origin: (%f,%f) width: %i height: %i resolution: %f w: %f h: %f", grid->info.origin.position.x, grid->info.origin.position.y, grid->info.width, grid->info.height, grid->info.resolution, w, h);
 
   // a = costmap origin
   tf::Vector3 p_a(grid->info.origin.position.x, grid->info.origin.position.y, 0);
@@ -1427,10 +1427,10 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
 
   for(int i=0;i<p_vec.size();i++)
   {
-    //ROS_INFO("p_vec[%i]: (%f,%f)", i, p_vec[i].getX(), p_vec[i].getY());
+    ////ROS_INFO("p_vec[%i]: (%f,%f)", i, p_vec[i].getX(), p_vec[i].getY());
     tf::Vector3 p_i_w = tf_base_to_global * p_vec[i];
     p_w_vec.push_back(p_i_w);
-    //ROS_INFO("p_w_vec[%i]: (%f,%f)", i, p_w_vec[i].getX(), p_w_vec[i].getY());
+    ////ROS_INFO("p_w_vec[%i]: (%f,%f)", i, p_w_vec[i].getX(), p_w_vec[i].getY());
   }
 
 
@@ -1439,25 +1439,25 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   float delta_x_max = fabs(x_max - p_c.getX());
   float delta_y_min = fabs(y_min - p_a.getY());
   float delta_y_max = fabs(y_max - p_c.getY());
-  //ROS_INFO("delta_x_min: %f delta_x_max: %f delta_y_min: %f delta_y_max: %f", delta_x_min, delta_x_max, delta_y_min, delta_y_max);
+  ////ROS_INFO("delta_x_min: %f delta_x_max: %f delta_y_min: %f delta_y_max: %f", delta_x_min, delta_x_max, delta_y_min, delta_y_max);
   
   int x_min_ind = p_a.getX() < x_min ? delta_x_min / res : 0;
   int x_max_ind = p_c.getX() > x_max ? delta_x_max / res : 0;
   int y_min_ind = p_a.getY() < y_min ? delta_y_min / res : 0;
   int y_max_ind = p_c.getY() > y_max ? delta_y_max / res : 0;
-  //ROS_INFO("x_min_ind: %i x_max_ind: %i y_min_ind: %i y_max_ind: %i", x_min_ind, x_max_ind, y_min_ind, y_max_ind);
+  ////ROS_INFO("x_min_ind: %i x_max_ind: %i y_min_ind: %i y_max_ind: %i", x_min_ind, x_max_ind, y_min_ind, y_max_ind);
 
   int width_new   = grid->info.width  - x_max_ind - x_min_ind;
   int height_new  = grid->info.height - y_max_ind - y_min_ind;
-  /*ROS_INFO("width_new: %i height_new: %i", width_new, height_new);
-  ROS_INFO("grid->info.height-y_max_ind: %i", grid->info.height-y_max_ind);
-  ROS_INFO("grid->info.width-x_max_ind: %i", grid->info.width-x_max_ind);*/
+  /*//ROS_INFO("width_new: %i height_new: %i", width_new, height_new);
+  //ROS_INFO("grid->info.height-y_max_ind: %i", grid->info.height-y_max_ind);
+  //ROS_INFO("grid->info.width-x_max_ind: %i", grid->info.width-x_max_ind);*/
   for(int c=y_min_ind;c<grid->info.height-y_max_ind;c++)
   {
     int c_offset = (c*grid->info.width);
     for(int r=x_min_ind;r<grid->info.width-x_max_ind;r++)
     {
-      //ROS_INFO("c: %i c_offset: %i r: %i total: %i", c, c_offset, r, c_offset+r);
+      ////ROS_INFO("c: %i c_offset: %i r: %i total: %i", c, c_offset, r, c_offset+r);
       result.data.push_back(grid->data[c_offset + r]);
     }
   }
@@ -1468,8 +1468,8 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   result.info.origin.position.x += (x_min_ind*res);
   result.info.origin.position.y += (y_min_ind*res);
 
-  //ROS_INFO("result.info.width: %i result.info.height: %i", result.info.width, result.info.height);
-  //ROS_INFO("result.info.origin.position: (%f,%f)", result.info.origin.position.x, result.info.origin.position.y);
+  ////ROS_INFO("result.info.width: %i result.info.height: %i", result.info.width, result.info.height);
+  ////ROS_INFO("result.info.origin.position: (%f,%f)", result.info.origin.position.x, result.info.origin.position.y);
 }
 
 
@@ -1481,40 +1481,40 @@ void removeWallObs(std::vector<Circle>& cirs)
     while(i<cirs.size())
     {
       Point c = getGlobalCoords(cirs[i]);
-      //ROS_INFO("Circle %i global coordinates: (%f, %f)", i, c.x, c.y);
+      ////ROS_INFO("Circle %i global coordinates: (%f, %f)", i, c.x, c.y);
       
       if( c.x < ranges[0].min || c.x > ranges[0].max ||
           c.y < ranges[1].min || c.y > ranges[1].max )
       {
-        //ROS_INFO("Obstacle is too close to boundary, discarding it");
+        ////ROS_INFO("Obstacle is too close to boundary, discarding it");
         cirs.erase(cirs.begin()+i);
         i--;
       }
       else
       {
-        //ROS_INFO("Keeping obstacle");
+        ////ROS_INFO("Keeping obstacle");
       }
       i++;
     }
   }
   else
   {
-    //ROS_WARN("Not removing wall obstacles, ranges.size(): %i", (int)ranges.size());
+    ////ROS_WARN("Not removing wall obstacles, ranges.size(): %i", (int)ranges.size());
   }
 }
 
 
 void halfCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::OccupancyGrid& result)
 {
-  //ROS_INFO("In halfCostmap");
-  //ROS_INFO("Costmap info: width: %i height: %i origin: (%f,%f)", grid->info.width, grid->info.height, grid->info.origin.position.x, grid->info.origin.position.y);
+  ////ROS_INFO("In halfCostmap");
+  ////ROS_INFO("Costmap info: width: %i height: %i origin: (%f,%f)", grid->info.width, grid->info.height, grid->info.origin.position.x, grid->info.origin.position.y);
   
   for(int c=grid->info.height/2;c<grid->info.height;c++)
   {
     int c_offset = (c*grid->info.width);// + grid->info.width/2;
     for(int r=grid->info.width/2;r<grid->info.width;r++)
     {
-      //ROS_INFO("c: %i c_offset: %i r: %i total: %i", c, c_offset, r, c_offset+r);
+      ////ROS_INFO("c: %i c_offset: %i r: %i total: %i", c, c_offset, r, c_offset+r);
       result.data.push_back(grid->data[c_offset + r]);
     }
   }
@@ -1525,15 +1525,15 @@ void halfCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   result.info.origin.position.x += (result.info.width * result.info.resolution);
   result.info.origin.position.y += (result.info.height * result.info.resolution);
   
-  //ROS_INFO("Half Costmap info: width: %i height: %i origin: (%f,%f)", result.info.width, result.info.height, result.info.origin.position.x, result.info.origin.position.y);
+  ////ROS_INFO("Half Costmap info: width: %i height: %i origin: (%f,%f)", result.info.width, result.info.height, result.info.origin.position.x, result.info.origin.position.y);
 
-  //ROS_INFO("Exiting halfCostmap");
+  ////ROS_INFO("Exiting halfCostmap");
 }
 
 
 void initGlobalMap()
 {
-  //ROS_INFO("In initGlobalMap");
+  ////ROS_INFO("In initGlobalMap");
   if(ranges.size() > 1)
   {
     global_costmap.info.resolution = 0.05;
@@ -1551,19 +1551,19 @@ void initGlobalMap()
       global_costmap.data.push_back(-1);
     }
     
-    //ROS_INFO("Global CM origin: (%f,%f) w: %i h: %i size: %i", global_costmap.info.origin.position.x, global_costmap.info.origin.position.y, global_costmap.info.width, global_costmap.info.height, (int)global_costmap.data.size());
+    ////ROS_INFO("Global CM origin: (%f,%f) w: %i h: %i size: %i", global_costmap.info.origin.position.x, global_costmap.info.origin.position.y, global_costmap.info.width, global_costmap.info.height, (int)global_costmap.data.size());
   }
   else
   {
-    ROS_ERROR("Cannot set global costmap until rosparams are loaded");
+    //ROS_ERROR("Cannot set global costmap until rosparams are loaded");
   }
 }
 
 
 void setRobotPos(const ramp_msgs::MotionState& ms)
 {
-  //ROS_INFO("In setRobotPos");
-  //ROS_INFO("ms: (%f,%f,%f)", ms.positions[0], ms.positions[1], ms.positions[2]);
+  ////ROS_INFO("In setRobotPos");
+  ////ROS_INFO("ms: (%f,%f,%f)", ms.positions[0], ms.positions[1], ms.positions[2]);
   robotState.positions.clear();
   
   // Set new position
@@ -1575,7 +1575,7 @@ void setRobotPos(const ramp_msgs::MotionState& ms)
 
   viewMinMax.push_back( util.displaceAngle(robotState.positions[2], -fovAngle/2.0) );
   viewMinMax.push_back( util.displaceAngle(robotState.positions[2], fovAngle/2.0) );
-  //ROS_INFO("viewMinMax: [%f,%f]", viewMinMax[0], viewMinMax[1]);
+  ////ROS_INFO("viewMinMax: [%f,%f]", viewMinMax[0], viewMinMax[1]);
 
   /* 
    * Create markers in rviz to display this information
@@ -1682,8 +1682,8 @@ void setRobotPos(const ramp_msgs::MotionState& ms)
 
 void odomCb(const nav_msgs::OdometryConstPtr msg)
 {
-  //ROS_INFO("In odomCb");
-  //ROS_INFO("msg: Position: (%f,%f,%f)", msg->pose.pose.position.x, msg->pose.pose.position.y, tf::getYaw(msg->pose.pose.orientation));
+  ////ROS_INFO("In odomCb");
+  ////ROS_INFO("msg: Position: (%f,%f,%f)", msg->pose.pose.position.x, msg->pose.pose.position.y, tf::getYaw(msg->pose.pose.orientation));
 
   // Need to create a MotionState from odom msg
   ramp_msgs::MotionState ms;
@@ -1715,7 +1715,7 @@ void odomCb(const nav_msgs::OdometryConstPtr msg)
     ms.positions[1] = msg->pose.pose.position.y;
     ms.positions[2] = util.displaceAngle(0.785, tf::getYaw(msg->pose.pose.orientation));
 
-    //ROS_INFO("Calling setRobotPos with position (%f,%f,%f)", ms.positions[0], ms.positions[1], ms.positions[2]);
+    ////ROS_INFO("Calling setRobotPos with position (%f,%f,%f)", ms.positions[0], ms.positions[1], ms.positions[2]);
 
     // And then call setRobotPos
     setRobotPos(ms);
@@ -1724,20 +1724,21 @@ void odomCb(const nav_msgs::OdometryConstPtr msg)
 
 void robotUpdateCb(const ramp_msgs::MotionStateConstPtr ms)
 {
-  ROS_INFO("In robotUpdateCb");
-  ROS_INFO("ms: %s", util.toString(*ms).c_str());
+  //ROS_INFO("In robotUpdateCb");
+  ////ROS_INFO("ms: %s", util.toString(*ms).c_str());
   setRobotPos(*ms);
+  //ROS_INFO("Exiting robotUpdateCb");
 }
 
 
 bool checkViewingObstacle(Circle cir)
 {
-  ROS_INFO("In checkViewingObstacle");
+  ////ROS_INFO("In checkViewingObstacle");
   
   if(robotState.positions.size() > 0)
   {
-    ROS_INFO("viewMinMax.size(): %i", (int)viewMinMax.size());
-    ROS_INFO("robotState.positions.size(): %i", (int)robotState.positions.size());
+    ////ROS_INFO("viewMinMax.size(): %i", (int)viewMinMax.size());
+    ////ROS_INFO("robotState.positions.size(): %i", (int)robotState.positions.size());
     
     std::vector<double> obMs;
     obMs.push_back(cir.center.x);
@@ -1748,18 +1749,18 @@ bool checkViewingObstacle(Circle cir)
     // Get difference between angleToOb and robot's orientation
     double deltaTheta = util.findDistanceBetweenAngles(robotState.positions[2], angleToOb);
 
-    ROS_INFO("[min,max]: [%f,%f] angleToOb: %f", viewMinMax[0], viewMinMax[1], angleToOb);
-    ROS_INFO("robotState.positions[2]: %f deltaTheta: %f fovAngle: %f", robotState.positions[2], deltaTheta, fovAngle);
+    ////ROS_INFO("[min,max]: [%f,%f] angleToOb: %f", viewMinMax[0], viewMinMax[1], angleToOb);
+    ////ROS_INFO("robotState.positions[2]: %f deltaTheta: %f fovAngle: %f", robotState.positions[2], deltaTheta, fovAngle);
 
 
     if(fabs(deltaTheta) < fovAngle/2.0)
     {
-      ROS_INFO("Returning true for deltaTheta");
+      ////ROS_INFO("Returning true for deltaTheta");
       return true;
     }
   }
 
-  ROS_INFO("Returning false");
+  ////ROS_INFO("Returning false");
   return false;
 }
 
@@ -1779,16 +1780,16 @@ void convertGroups()
   // Convert fit circles in outer loop
   for(int i=0;i<cirGroups.size();i++)
   {
-    ROS_INFO("Fit circle for cirGroup %i center: (%f,%f) radius: %f", i, cirGroups[i].fitCir.center.x, cirGroups[i].fitCir.center.y, cirGroups[i].fitCir.radius);
+    ////ROS_INFO("Fit circle for cirGroup %i center: (%f,%f) radius: %f", i, cirGroups[i].fitCir.center.x, cirGroups[i].fitCir.center.y, cirGroups[i].fitCir.radius);
     convertCircleToGlobal(global_grid, cirGroups[i].fitCir);
-    ROS_INFO("New point: (%f,%f) New radius: %f", cirGroups[i].fitCir.center.x, cirGroups[i].fitCir.center.y, cirGroups[i].fitCir.radius);
+    ////ROS_INFO("New point: (%f,%f) New radius: %f", cirGroups[i].fitCir.center.x, cirGroups[i].fitCir.center.y, cirGroups[i].fitCir.radius);
 
     // Convert packed circles in inner loop
     for(int j=0;j<cirGroups[i].packedCirs.size();j++)
     {
-      ROS_INFO("Packed circle %i center: (%f,%f) radius: %f ", j, cirGroups[i].packedCirs[j].center.x, cirGroups[i].packedCirs[j].center.y, cirGroups[i].packedCirs[j].radius);
+      ////ROS_INFO("Packed circle %i center: (%f,%f) radius: %f ", j, cirGroups[i].packedCirs[j].center.x, cirGroups[i].packedCirs[j].center.y, cirGroups[i].packedCirs[j].radius);
       convertCircleToGlobal(global_grid, cirGroups[i].packedCirs[j]);
-      ROS_INFO("New Point: (%f,%f) New Radius: %f ", cirGroups[i].packedCirs[j].center.x, cirGroups[i].packedCirs[j].center.y, cirGroups[i].packedCirs[j].radius);
+      ////ROS_INFO("New Point: (%f,%f) New Radius: %f ", cirGroups[i].packedCirs[j].center.x, cirGroups[i].packedCirs[j].center.y, cirGroups[i].packedCirs[j].radius);
     }
   }
 }
@@ -1803,12 +1804,12 @@ void computeOrientations()
     std::vector<double> thetas = predictTheta();
     for(int i=0;i<cir_obs.size();i++)
     {
-      //ROS_INFO("Obstacle %i", i);
-      //ROS_INFO("theta[%i]: %f", i, thetas[i]);
+      ////ROS_INFO("Obstacle %i", i);
+      ////ROS_INFO("theta[%i]: %f", i, thetas[i]);
       cir_obs[i]->prevTheta.push_back(thetas[i]);
       if(cir_obs[i]->prevTheta.size() > num_theta_count)
       {
-        //ROS_INFO("Removing %f", cir_obs[i]->prevTheta[0]);
+        ////ROS_INFO("Removing %f", cir_obs[i]->prevTheta[0]);
         cir_obs[i]->prevTheta.erase( cir_obs[i]->prevTheta.begin(), cir_obs[i]->prevTheta.begin()+1 );
       }
 
@@ -1816,7 +1817,7 @@ void computeOrientations()
       for(int j=1;j<cir_obs[i]->prevTheta.size();j++)
       {
         theta = util.findAngleBetweenAngles(theta, cir_obs[i]->prevTheta[j]);
-        //ROS_INFO("j: %i theta: %f next theta: %f result: %f", j, theta, cir_obs[i]->prevTheta[j], util.findAngleBetweenAngles(theta, cir_obs[i]->prevTheta[j]));
+        ////ROS_INFO("j: %i theta: %f next theta: %f result: %f", j, theta, cir_obs[i]->prevTheta[j], util.findAngleBetweenAngles(theta, cir_obs[i]->prevTheta[j]));
       }
 
       // Set new theta value
@@ -1831,14 +1832,14 @@ void computeOrientations()
  */
 void populateObstacleList(const std::vector<Velocity>& velocities)
 {
-  //ROS_INFO("In populateObstacleList");
+  ////ROS_INFO("In populateObstacleList");
   
   obs.clear();
   list.obstacles.clear();
   for(int i=0;i<cir_obs.size();i++)
   {
-    //ROS_INFO("Creating obstacle, prevCirs.size(): %i prevTheta.size(): %i", (int)cir_obs[i]->prevCirs.size(), (int)cir_obs[i]->prevTheta.size());
-    //ROS_INFO("Circle Group %i: %s", i, util.toString(cir_obs[i]->cirGroup).c_str());
+    ////ROS_INFO("Creating obstacle, prevCirs.size(): %i prevTheta.size(): %i", (int)cir_obs[i]->prevCirs.size(), (int)cir_obs[i]->prevTheta.size());
+    ////ROS_INFO("Circle Group %i: %s", i, util.toString(cir_obs[i]->cirGroup).c_str());
     Obstacle o;
 
     // Update values
@@ -1847,10 +1848,10 @@ void populateObstacleList(const std::vector<Velocity>& velocities)
     
     obs.push_back(o);
     list.obstacles.push_back(o.msg_);
-    //ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
+    ////ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
   }
   
-  //ROS_INFO("Exiting populateObstacleList");
+  ////ROS_INFO("Exiting populateObstacleList");
 }
 
 
@@ -1860,13 +1861,13 @@ void populateObstacleList(const std::vector<Velocity>& velocities)
  */
 void computeVelocities(const std::vector<CircleMatch> cm, const ros::Duration d_elapsed, std::vector<Velocity>& result)
 {
-  //ROS_INFO("In computeVelocities");
+  ////ROS_INFO("In computeVelocities");
   result = predictVelocities(cm, d_elapsed);
 
   // Average the velocities
   for(int i=0;i<cir_obs.size();i++)
   {
-    //ROS_INFO("i: %i cir_obs.size(): %i result.size(): %i cir_obs[%i]->prevTheta.size(): %i", i, (int)cir_obs.size(), (int)result.size(), i, (int)cir_obs[i]->prevTheta.size());
+    ////ROS_INFO("i: %i cir_obs.size(): %i result.size(): %i cir_obs[%i]->prevTheta.size(): %i", i, (int)cir_obs.size(), (int)result.size(), i, (int)cir_obs[i]->prevTheta.size());
     cir_obs[i]->vels.push_back(result[i]);
     if(cir_obs[i]->vels.size() > num_velocity_count)
     {
@@ -1876,11 +1877,11 @@ void computeVelocities(const std::vector<CircleMatch> cm, const ros::Duration d_
     float v=0;
     for(int n=0;n<cir_obs[i]->vels.size();n++)
     {
-      //ROS_INFO("n: %i Adding %f", n, cir_obs[i]->vels[n].v);
+      ////ROS_INFO("n: %i Adding %f", n, cir_obs[i]->vels[n].v);
       v += cir_obs[i]->vels[n].v;
     }
     v /= cir_obs[i]->vels.size();
-    //ROS_INFO("Averaged v: %f", v);
+    ////ROS_INFO("Averaged v: %f", v);
 
     float theta = cir_obs[i]->prevTheta.size() > 0 ? cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] : initial_theta;
     float vx = v*cos(theta);
@@ -1897,7 +1898,7 @@ void computeVelocities(const std::vector<CircleMatch> cm, const ros::Duration d_
       cir_obs[i]->static_count++;
       if(cir_obs[i]->static_count > ob_not_moving_count)
       {
-        //ROS_INFO("Setting moving = false, static_count: %i", cir_obs[i]->static_count);
+        ////ROS_INFO("Setting moving = false, static_count: %i", cir_obs[i]->static_count);
         cir_obs[i]->moving = false;
       }
     }
@@ -1914,22 +1915,22 @@ void computeVelocities(const std::vector<CircleMatch> cm, const ros::Duration d_
     // Set updated velocity value
     cir_obs[i]->vels[cir_obs[i]->vels.size()-1] = result[i];
     cir_obs[i]->vel = result[i];
-    //ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
+    ////ROS_INFO("Velocity %i: v: %f vx: %f vy: %f w: %f", i, velocities[i].v, velocities[i].vx, velocities[i].vy, velocities[i].w);
   } // end for
 
-  //ROS_INFO("Exiting computeVelocities");
+  ////ROS_INFO("Exiting computeVelocities");
 }
 
 
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
-  ROS_INFO("**************************************************");
+  /*ROS_INFO("**************************************************");
   ROS_INFO("In costmapCb");
-  ROS_INFO("**************************************************");
+  ROS_INFO("**************************************************");*/
   ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;
   t_last_costmap = ros::Time::now();
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
-  ROS_INFO("grid (w,h): (%i,%i)", grid->info.width, grid->info.height);
+  ////ROS_INFO("grid (w,h): (%i,%i)", grid->info.width, grid->info.height);
 
   // Consolidate this occupancy grid with prev ones
   nav_msgs::OccupancyGrid accumulated_grid;
@@ -1939,10 +1940,6 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     /*
      * Only use half of the costmap since the kinect can only see in front of the robot
      */
-    //nav_msgs::OccupancyGrid half;
-    //halfCostmap(grid, half);
-
-    //ROS_INFO("New costmap size: %i", (int)grid->data.size());
     
     // Update global grid
     nav_msgs::OccupancyGrid cropped;
@@ -1954,18 +1951,18 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     double grid_resolution = grid->info.resolution; 
     
     global_grid = cropped;
-    ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
+    ////ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
     
 
-    //ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
+    ////ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
     accumulateCostmaps(global_costmap, prev_grids, accumulated_grid);
     
     // Set global_grid 
     global_grid = global_costmap;
-    ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
-    ROS_INFO("global costmap (w,h): (%i,%i)", global_costmap.info.width, global_costmap.info.height);
+    ////ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
+    ////ROS_INFO("global costmap (w,h): (%i,%i)", global_costmap.info.width, global_costmap.info.height);
     
-    //ROS_INFO("Finished getting consolidated_grid");
+    ////ROS_INFO("Finished getting consolidated_grid");
     
     // Push this grid onto prev_grids
     //prev_grids.push_back(global_grid);
@@ -1978,7 +1975,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     // Publish the modified costmap(s)
     //pub_half_costmap.publish(half);
     pub_cons_costmap.publish(accumulated_grid);
-    ROS_INFO("accumulated grid (w,h): (%i,%i)", accumulated_grid.info.width, accumulated_grid.info.height);
+    ////ROS_INFO("accumulated grid (w,h): (%i,%i)", accumulated_grid.info.width, accumulated_grid.info.height);
   }
   else
   {
@@ -1991,7 +1988,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   boost::shared_ptr<nav_msgs::OccupancyGrid> cg_ptr = boost::make_shared<nav_msgs::OccupancyGrid>(accumulated_grid);
   //boost::shared_ptr<nav_msgs::OccupancyGrid> cg_ptr = boost::make_shared<nav_msgs::OccupancyGrid>(half);
 
-  //ROS_INFO("consolidated_grid.data.size(): %i", (int)consolidated_grid.data.size());
+  ////ROS_INFO("consolidated_grid.data.size(): %i", (int)consolidated_grid.data.size());
   //ROS_INFO("cg_ptr->data.size(): %i", (int)cg_ptr->data.size());
 
 
@@ -2014,11 +2011,11 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   cLines = c.cMarkers_;
   
 
-  /*ROS_INFO("cirGroups.size(): %i", (int)cirGroups.size());
+  //ROS_INFO("cirGroups.size(): %i", (int)cirGroups.size());
   for(int i=0;i<cirGroups.size();i++)
   {
-    ROS_INFO("cirGroups[%i].packedCirs.size(): %i", i, (int)cirGroups[i].packedCirs.size());
-  }*/
+    //ROS_INFO("cirGroups[%i].packedCirs.size(): %i", i, (int)cirGroups[i].packedCirs.size());
+  }
 
 
 
@@ -2039,8 +2036,8 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    /*
     * Check if obstacles are in viewing angle
     */
-  /*if(fovAngle > 1.5708f)
-  {
+  //if(fovAngle > 1.5708f)
+  //{
     int i=0;
     while(i<cirGroups.size())
     {
@@ -2052,8 +2049,8 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
       i++;
     }
-  }
-  ROS_INFO("After checking viewing angle, cirGroups.size(): %i", (int)cirGroups.size());*/
+  //}
+  //ROS_INFO("After checking viewing angle, cirGroups.size(): %i", (int)cirGroups.size());
  
 
   /*
@@ -2105,10 +2102,10 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   }*/
   /*for(int i=0;i<attachs.size();i++)
   {
-    ROS_INFO("Attachment %i:", i);
+    //ROS_INFO("Attachment %i:", i);
     for(int j=0;j<attachs[i].cirs.size();j++)
     {
-      ROS_INFO("%i", attachs[i].cirs[j]);
+      //ROS_INFO("%i", attachs[i].cirs[j]);
     }
   }*/
 
@@ -2117,7 +2114,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    */
   /*for(int i=0;i<attachs.size();i++)
   {
-    //ROS_INFO("Attachment %i", i);
+    ////ROS_INFO("Attachment %i", i);
     // Get max speed among attached obstacles
     int i_max_speed=0;
     float speed_average = 0;
@@ -2129,15 +2126,15 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     speed_average /= attachs[i].cirs.size();
 
     double theta = cir_obs[i_max_speed]->prevTheta[cir_obs[i_max_speed]->prevTheta.size()-1];
-    //ROS_INFO("attachs.size(): %i i: %i", (int)attachs.size(), i);
+    ////ROS_INFO("attachs.size(): %i i: %i", (int)attachs.size(), i);
 
     // Based on max speed, set all circles speeds and thetas in attachment
     for(int j=0;j<attachs[i].cirs.size();j++)
     {
-      //ROS_INFO("j: %i attachs[%i].cirs.size(): %i", j, i, (int)attachs[i].cirs.size());
+      ////ROS_INFO("j: %i attachs[%i].cirs.size(): %i", j, i, (int)attachs[i].cirs.size());
       int i_cir   = attachs[i].cirs[j];
       int i_theta = cir_obs[i_cir]->prevTheta.size()-1;
-      //ROS_INFO("i_cir: %i i_theta: %i cir_obs.size(): %i velocities.size(): %i", i_cir, i_theta, (int)cir_obs.size(), (int)velocities.size());
+      ////ROS_INFO("i_cir: %i i_theta: %i cir_obs.size(): %i velocities.size(): %i", i_cir, i_theta, (int)cir_obs.size(), (int)velocities.size());
       cir_obs[ i_cir ]->vel.v = speed_average;
       //cir_obs[ i_cir ]->theta = theta;
 
@@ -2180,11 +2177,11 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   durs.push_back( time_span.count() );
 
 
-  //ROS_INFO("Duration: %f", (ros::Time::now()-t_last_costmap).toSec());
+  ////ROS_INFO("Duration: %f", (ros::Time::now()-t_last_costmap).toSec());
   num_costmaps++;
-  //ROS_INFO("**************************************************");
-  //ROS_INFO("Exiting costmapCb");
-  //ROS_INFO("**************************************************");
+  ////ROS_INFO("**************************************************");
+  ////ROS_INFO("Exiting costmapCb");
+  ////ROS_INFO("**************************************************");
 }
 
 void writeData()
@@ -2254,7 +2251,7 @@ void reportPredictedVelocity(int sig)
 
       if(predicted_velocities[i].v > 0)
       {
-        //ROS_INFO("Adding %f", predicted_velocities[i].v);
+        ////ROS_INFO("Adding %f", predicted_velocities[i].v);
         average_v += predicted_velocities[i].v;
         count_v++;
       }
@@ -2270,7 +2267,7 @@ void reportPredictedVelocity(int sig)
 
       if(predicted_velocities[i].w > 0)
       {
-        //ROS_INFO("Adding %f", predicted_velocities[i].w);
+        ////ROS_INFO("Adding %f", predicted_velocities[i].w);
         average_w += predicted_velocities[i].w;
         count_w++;
       }
@@ -2282,12 +2279,12 @@ void reportPredictedVelocity(int sig)
     printf("\nPredicted Velocities range=[%f,%f], average: %f\n", min_w, max_w, average_w);
   }
 
-  //ROS_INFO("Average differences in circle detection");
+  ////ROS_INFO("Average differences in circle detection");
   double d=0;
   int count=0;
   for(int i=0;i<d_avg_values.size();i++)
   {
-    //ROS_INFO("d_avg_values[%i]: %f", i, d_avg_values[i]);
+    ////ROS_INFO("d_avg_values[%i]: %f", i, d_avg_values[i]);
     if(!std::isnan(d_avg_values[i]))
     {
       d+=d_avg_values[i];
@@ -2295,11 +2292,11 @@ void reportPredictedVelocity(int sig)
     }
   }
   d = count > 0 ? d/count : 0;
-  //ROS_INFO("Final average difference: %f", d);
+  ////ROS_INFO("Final average difference: %f", d);
 
   /*for(int i=0;i<cirs_pos.size();i++)
   {
-    //ROS_INFO("cir_pos[%i]: (%f, %f)", i, cirs_pos[i].center.x, cirs_pos[i].center.y);
+    ////ROS_INFO("cir_pos[%i]: (%f, %f)", i, cirs_pos[i].center.x, cirs_pos[i].center.y);
   }*/
 
   deallocate();
@@ -2327,28 +2324,28 @@ int main(int argc, char** argv)
 
   /*if(handle.hasParam("/ramp/obstacle_odoms"))
   {
-    //ROS_INFO("Found rosparam obstacle_odoms");
+    ////ROS_INFO("Found rosparam obstacle_odoms");
     handle.getParam("/ramp/obstacle_odoms", ob_odoms);
-    //ROS_INFO("ob_odoms.size(): %i", (int)ob_odoms.size());
+    ////ROS_INFO("ob_odoms.size(): %i", (int)ob_odoms.size());
     for(int i=0;i<ob_odoms.size();i++)
     {
-      //ROS_INFO("ob_odoms[%i]: %s", i, ob_odoms.at(i).c_str());
+      ////ROS_INFO("ob_odoms[%i]: %s", i, ob_odoms.at(i).c_str());
       topic_index_map[ob_odoms.at(i)] = i;
     }
   }
   else
   {
-    //ROS_ERROR("ramp_sensing: Could not find obstacle_topics rosparam!");
+    ////ROS_ERROR("ramp_sensing: Could not find obstacle_topics rosparam!");
   }
 
   if(handle.hasParam("/ramp/sensing_cycle_rate"))
   {
     handle.getParam("/ramp/sensing_cycle_rate", rate);
-    //ROS_INFO("Sensing cycle rate: %f", rate);
+    ////ROS_INFO("Sensing cycle rate: %f", rate);
   }
   else
   {
-    //ROS_ERROR("ramp_sensing: Could not find sensing_cycle_rate rosparam!");
+    ////ROS_ERROR("ramp_sensing: Could not find sensing_cycle_rate rosparam!");
   }
 
   loadObstacleTF();
@@ -2382,18 +2379,18 @@ int main(int argc, char** argv)
   {
     listener.lookupTransform(global_frame, robot_base_frame, ros::Time(0), tf_base_to_global);
     //listener.lookupTransform(robot_base_frame, global_frame, ros::Time(0), tf_base_to_global);
-    ROS_INFO("Base to global tf: translate: (%f, %f) rotation: %f", tf_base_to_global.getOrigin().getX(), tf_base_to_global.getOrigin().getX(), tf_base_to_global.getRotation().getAngle());
+    //ROS_INFO("Base to global tf: translate: (%f, %f) rotation: %f", tf_base_to_global.getOrigin().getX(), tf_base_to_global.getOrigin().getX(), tf_base_to_global.getRotation().getAngle());
   }
   else
   {
-    ROS_ERROR("Could not find global tf");
+    //ROS_ERROR("Could not find global tf");
   }*/
 
 
   ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);
   //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/hilbert_map_grid", 1, &costmapCb);
   ros::Subscriber sub_robot_update = handle.subscribe<ramp_msgs::MotionState>("/updateAfterTf", 1, &robotUpdateCb);
-  ros::Subscriber sub_odom = handle.subscribe<nav_msgs::Odometry>("/odom", 1, &odomCb);
+  //ros::Subscriber sub_odom = handle.subscribe<nav_msgs::Odometry>("/odom", 1, &odomCb);
   //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/consolidated_costmap", 1, &costmapCb);
 
   //Publishers
@@ -2415,11 +2412,11 @@ int main(int argc, char** argv)
   dd.sleep();
 
   // Set initial robot position
-  ramp_msgs::MotionState ms;
+  /*ramp_msgs::MotionState ms;
   ms.positions.push_back(0);
   ms.positions.push_back(0);
-  ms.positions.push_back(PI/4.f);
-  setRobotPos(ms);
+  ms.positions.push_back(PI/4.f);*/
+  //setRobotPos(ms);
 
   printf("\nSpinning\n");
 

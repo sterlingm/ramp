@@ -1277,7 +1277,7 @@ std::vector<Circle> CirclePacker::packCirsIntoPoly(Polygon poly, double min_r)
    * Create cells inside the polygon
    */
   std::vector<Cell> cells = getCellsInPolygon(poly);
-  cMarkers_ = drawCells(cells);
+  //cMarkers_ = drawCells(cells);
   /*ROS_INFO("cells.size(): %i", (int)cells.size());
   ROS_INFO("IN CIRCLEPACKERS");
   for(int i=0;i<cMarkers_.size();i++)
