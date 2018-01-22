@@ -27,15 +27,15 @@ class PathDcoeDiscre(gym.Env):
         self.A_min = 0.0
         self.A_max = 1.0
         self.D_min = 0.0
-        self.D_max = 2.0
+        self.D_max = 1.0
         self.state = 0
         self.max_len = 18.2-0.07354
-        self.goal = np.array([10., 10.])
-        self.action_space = spaces.Discrete(9)
-        self.observation_space = spaces.Box(np.array([0., 0., self.A_min, self.D_min]),
-                                            np.array([10., 10., self.A_max, self.D_max])) # single motion state
-        self.A_cut = [0.1, 0.3, 0.4, 0.6]
-        self.D_cut = [0.3, 0.6, 0.8, 1.2]
+        self.goal = np.array([10.0, 10.0])
+        self.action_space = spaces.Discrete(3)
+        self.observation_space = spaces.Box(np.array([0.0, 0.0, self.D_min]),
+                                            np.array([10.0, 10.0, self.D_max])) # single motion state
+        self.D_cut = [0.1, 0.3, 0.4, 0.6]
+        # self.D_cut = [0.3, 0.6, 0.8, 1.2]
         self.min_reward = 0.0
         self.action_resolution = 0.05
 
@@ -55,7 +55,7 @@ class PathDcoeDiscre(gym.Env):
 
 
     def getState(self):
-        return np.array([self.A, self.D])
+        return self.D
 
 
 
@@ -108,33 +108,33 @@ class PathDcoeDiscre(gym.Env):
         else:
             self.state = 4
 
-        if self.A < self.A_cut[0]:
-            self.state -= 0
-        elif self.A < self.A_cut[1]:
-            self.state -= 0
-        elif self.A < self.A_cut[2]:
-            self.state -= 0
-        elif self.A < self.A_cut[3]:
-            self.state -= 0
-        else:
-            self.state -= 0
+        # if self.A < self.A_cut[0]:
+        #     self.state -= 0
+        # elif self.A < self.A_cut[1]:
+        #     self.state -= 0
+        # elif self.A < self.A_cut[2]:
+        #     self.state -= 0
+        # elif self.A < self.A_cut[3]:
+        #     self.state -= 0
+        # else:
+        #     self.state -= 0
 
         if self.state <= 0: # too close
-            ob = np.array([[5.0, 3.2, self.A, self.D]])
+            ob = np.array([[5.0, 3.2, self.D]])
         elif self.state == 1:
-            ob = np.array([[6.4, 3.3, self.A, self.D]])
-            ob = np.concatenate((ob, [[9.5, 9.1, self.A, self.D]]))
+            ob = np.array([[6.4, 3.3, self.D]])
+            ob = np.concatenate((ob, [[9.5, 9.1, self.D]]))
         elif self.state == 2:
-            ob = np.array([[7.8, 2.8, self.A, self.D]])
-            ob = np.concatenate((ob, [[9.4, 8.9, self.A, self.D]]))
+            ob = np.array([[7.8, 2.8, self.D]])
+            ob = np.concatenate((ob, [[9.4, 8.9, self.D]]))
         elif self.state == 3:
-            ob = np.array([[7.0, 2.0, self.A, self.D]])
-            ob = np.concatenate((ob, [[8.5, 3.1, self.A, self.D]]))
-            ob = np.concatenate((ob, [[9.0, 8.0, self.A, self.D]]))
-            ob = np.concatenate((ob, [[9.5, 8.7, self.A, self.D]]))
+            ob = np.array([[7.0, 2.0, self.D]])
+            ob = np.concatenate((ob, [[8.5, 3.1, self.D]]))
+            ob = np.concatenate((ob, [[9.0, 8.0, self.D]]))
+            ob = np.concatenate((ob, [[9.5, 8.7, self.D]]))
         else: # too far
-            ob = np.array([[9.0, 1.3, self.A, self.D]])
-            ob = np.concatenate((ob, [[9.3, 8.4, self.A, self.D]]))
+            ob = np.array([[9.0, 1.3, self.D]])
+            ob = np.concatenate((ob, [[9.3, 8.4, self.D]]))
 
         return ob
 
@@ -254,8 +254,8 @@ class PathDcoeDiscre(gym.Env):
         #     return self.getOb(), init_state
 
         coes = np.random.rand(2)
-        coes[0] *= 1.0
-        coes[1] *= 2.0
+        coes[0] *= 0.0
+        coes[1] *= 0.0
         self.setState(coes[0], coes[1])
         return self.getOb(), self.getState()
 
@@ -271,38 +271,38 @@ class PathDcoeDiscre(gym.Env):
         ------
             (float): Delta A, D weight.
         """
-        if action == 0:
-            dA = 0
-            dD = 0
-        elif action == 1:
-            dA = 0
-            dD = 1
-        elif action == 2:
-            dA = 0
-            dD = 2
-        elif action == 3:
-            dA = 1
-            dD = 0
-        elif action == 4:
-            dA = 1
-            dD = 1
-        elif action == 5:
-            dA = 1
-            dD = 2
-        elif action == 6:
-            dA = 2
-            dD = 0
-        elif action == 7:
-            dA = 2
-            dD = 1
-        elif action == 8:
-            dA = 2
-            dD = 2
+        # if action == 0:
+        #     dA = 0
+        #     dD = 0
+        # elif action == 1:
+        #     dA = 0
+        #     dD = 1
+        # elif action == 2:
+        #     dA = 0
+        #     dD = 2
+        # elif action == 3:
+        #     dA = 1
+        #     dD = 0
+        # elif action == 4:
+        #     dA = 1
+        #     dD = 1
+        # elif action == 5:
+        #     dA = 1
+        #     dD = 2
+        # elif action == 6:
+        #     dA = 2
+        #     dD = 0
+        # elif action == 7:
+        #     dA = 2
+        #     dD = 1
+        # elif action == 8:
+        #     dA = 2
+        #     dD = 2
 
-        dA = (dA - 1) * self.action_resolution
-        dD = (dD - 1) * self.action_resolution
+        # dA = (dA - 1) * self.action_resolution
+        # dD = (dD - 1) * self.action_resolution
 
-        return dA, dD
+        return (action - 1) * 0.05
 
 
 
@@ -319,8 +319,8 @@ class PathDcoeDiscre(gym.Env):
             *Done: reach the goal or not.
             *Info.
         """
-        dA, dD = self.decodeAction(action)
-        self.setState(self.A + dA, self.D + dD)
+        dD = self.decodeAction(action)
+        self.setState(self.A + 0, self.D + dD)
         ob = self.getOb()
 
         # if self.state < self.state_min or self.state > self.state_max:

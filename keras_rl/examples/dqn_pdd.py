@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import gym
 from gym.spaces import prng
+import matplotlib.pyplot as plt
 
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten
@@ -76,3 +77,5 @@ dqn.fitSip(env, nb_steps=5000000, log_interval=log_interval, nb_max_episode_step
 
 # Finally, evaluate our algorithm for 5 episodes.
 dqn.testSip(env, nb_episodes=11, visualize=False, nb_max_episode_steps=1000)
+
+plt.show()
