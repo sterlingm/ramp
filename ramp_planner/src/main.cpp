@@ -418,13 +418,14 @@ void deltaParasCallback(const ramp_msgs::ParameterUpdates::ConstPtr &delta_paras
 
 void killNodes() {
   int a = 0; // remove warning in compling
-  a = system("rosnode kill /move_obstacles");
-  a = system("rosnode kill /ramp_control");
-  a = system("rosnode kill /ramp_sensing");
-  a = system("rosnode kill /trajectory_evaluation");
-  a = system("rosnode kill /path_modification");
+  // a = system("rosnode kill /move_obstacles");
+  // a = system("rosnode kill /ramp_control");
+  // a = system("rosnode kill /ramp_sensing");
+  // a = system("rosnode kill /trajectory_evaluation");
+  // a = system("rosnode kill /path_modification");
   a = system("rosnode kill /trajectory_generator");
-  a = system("rosnode kill /pub_map_equal_odom");
+  // a = system("rosnode kill /pub_map_equal_odom");
+  a = system("rosnode kill /costmap_node");
 }
 
 bool doNothing(std_srvs::Empty::Request  &req,

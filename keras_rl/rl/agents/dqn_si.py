@@ -348,6 +348,7 @@ class DQNAgentSi(DQNAgent):
                         weights_file_id = int(self.step / 100)
                         weights_dir = file_dir + str(weights_file_id) + "/"
                         os.system('mkdir -p ' + weights_dir)
+
                     self.save_weights_sip(weights_dir + 'dqn_{}_weights.h5f'.format(env.name), overwrite = True)
 
                 if observation is None:  # start of a new episode
@@ -465,6 +466,8 @@ class DQNAgentSi(DQNAgent):
                             self.step, observation[0][2], observation[0][3],
                             reward, info['time'], info['obs_dis'],
                             metrics[2]))
+
+                    logger.reOpen()
 
                 # if self.step % log_interval == 0:
                 #     result_str = ''
@@ -785,7 +788,7 @@ class DQNAgentSi(DQNAgent):
             }
             print('########################################################################')
             callbacks.on_episode_end(episode, episode_logs)
-            print('test_init_state: {:.3f},\ttest_final_state: {:.3f}'.format(test_init_state, env.getState()))
+            print('test_init_state: {},\ttest_final_state: {}'.format(test_init_state, env.getState()))
             # test_init_state += 0.1
 
         callbacks.on_train_end()

@@ -126,10 +126,10 @@ class RampEnvSip(gym.Env):
         -------
             Multiple single states.
         """
-        coes = np.random.rand(2)
-        coes[0] *= self.a1
-        coes[1] *= self.d1
-        # coes = np.array([0.0, 0.0])
+        # coes = np.random.rand(2)
+        # coes[0] *= self.a1
+        # coes[1] *= self.d1
+        coes = np.array([0.0, 0.0])
         self.setState(coes[0], coes[1])
 
         self.oneCycle()
@@ -248,3 +248,8 @@ class RampEnvSip(gym.Env):
     def getInfo(self):
         return {'time': self.exe_info.execution_time,
                 'obs_dis': self.exe_info.best_trajectory_vector[0].min_obs_dis}
+
+
+
+    def getState(self):
+        return 0.0

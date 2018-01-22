@@ -81,10 +81,14 @@ print(model.summary())
 
 
 
+init_boltz_tau = 0.3???
+
+
+
 # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
 # even the metrics!
 memory = SequentialMemory(limit=100, window_length=1)
-policy = BoltzmannQPolicy()
+policy = BoltzmannQPolicy(tau=init_boltz_tau)
 dqn = DQNAgentSi(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=300,
                target_model_update=0.001, policy=policy)
 dqn.compile(Adam(lr=1e-3), metrics=['mae'])
@@ -92,7 +96,7 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
 
 # Load weights if needed. Put this after compiling may be better.
-dqn.load_weights_sip("/home/kai/data/ramp/ramp_rlpara/dqn_ramp_sip/2018-01-19_23:48:23/raw_data/" +
+dqn.load_weights_sip("/home/kai/data/ramp/ramp_rlpara/dqn_ramp_sip/2018-01-20_23:40:10???/raw_data/" +
                      "dqn_{}_weights.h5f".format(env.name))
 
 

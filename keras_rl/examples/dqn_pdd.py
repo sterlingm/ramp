@@ -55,7 +55,7 @@ print(model.summary())
 memory = SequentialMemory(limit=10000, window_length=1)
 policy = BoltzmannQPolicy()
 dqn = DQNAgentSi(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=300,
-               target_model_update=0.001, policy=policy)
+               target_model_update=1e-3, policy=policy)
 dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
 
@@ -64,7 +64,7 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 # slows down training quite a lot. You can always safely abort the training prematurely using
 # Ctrl + C.
 log_interval = 1000
-nb_max_episode_steps = 500
+nb_max_episode_steps = None
 dqn.fitSip(env, nb_steps=5000000, log_interval=log_interval, nb_max_episode_steps=nb_max_episode_steps, verbose=2)
 
 
@@ -75,4 +75,4 @@ dqn.fitSip(env, nb_steps=5000000, log_interval=log_interval, nb_max_episode_step
 
 
 # Finally, evaluate our algorithm for 5 episodes.
-dqn.testSip(env, nb_episodes=11, visualize=False, nb_max_episode_steps=3000)
+dqn.testSip(env, nb_episodes=11, visualize=False, nb_max_episode_steps=1000)

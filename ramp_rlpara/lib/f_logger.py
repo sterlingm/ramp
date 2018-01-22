@@ -25,6 +25,7 @@ class RampRlLogger(object):
         self.sep_char = sep_char
         self.enable = enable
         self.setColumnName(names)
+        self.file_name = file
 
 
 
@@ -35,6 +36,13 @@ class RampRlLogger(object):
 
     def disable(self):
         self.enable = False
+
+
+
+    def reOpen(self):
+        if not self.file_h.closed:
+            self.close()
+        self.file_h = open(self.file_name, 'a')
 
 
 
