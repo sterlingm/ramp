@@ -69,7 +69,7 @@ double coll_radius = 0.25;
 
 std::vector<double> d_avg_values;
 
-double dist_threshold = 0.5;
+double dist_threshold = 0.9;
 double radius_threshold = 0.5;
 
 int num_costmaps_accumulate = 5;

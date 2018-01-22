@@ -20,9 +20,9 @@ moving_robot: true
 
 gens_before_control_cycle: 50
 
-pop_traj_type: 1 #0=holonomic, 1=hybrid
+pop_traj_type: 0 #0=holonomic, 1=hybrid
 
-fixed_control_cycle_rate: 1.2 # second
+fixed_control_cycle_rate: 8.0 # second
 
 sensing_cycle_rate: 15
 

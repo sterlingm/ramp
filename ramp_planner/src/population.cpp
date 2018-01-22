@@ -298,6 +298,7 @@ const bool Population::canReplace(const RampTrajectory& rt, const int& i) const
     return false;
   }
 
+  // printf("i = %d\n", i);
   if(!rt.msg_.feasible && trajectories_.at(i).msg_.feasible) 
   {
     //ROS_INFO("rt infeasible, i feasible, returning false");
@@ -310,11 +311,11 @@ const bool Population::canReplace(const RampTrajectory& rt, const int& i) const
   {
     //std::cout<<"\nIn sub-pops are being used!";
     
-    //std::cout<<"\ntrajectories.size(): "<<trajectories_.size();
+    // std::cout<<"\ntrajectories.size(): "<<trajectories_.size();
     RampTrajectory temp = trajectories_.at(i);
 
     //std::cout<<"\nsubPopulations.size(): "<<subPopulations_.size();
-    //std::cout<<"\ntemp.i_subPopulation: "<<temp.msg_.i_subPopulation<<"\n";
+    // std::cout<<"\ntemp.i_subPopulation: "<<temp.msg_.i_subPopulation<<"\n";
     Population p = subPopulations_.at(temp.msg_.i_subPopulation);
 
     if(p.trajectories_.size() < min_size_subpop + 1) 
@@ -323,8 +324,8 @@ const bool Population::canReplace(const RampTrajectory& rt, const int& i) const
       return false;
     }
 
-    //std::cout<<"\np.trajectories.size(): "<<p.trajectories_.size();
-    //std::cout<<"\np.calcBestIndex(): "<<p.calcBestIndex()<<"\n";
+    // std::cout<<"\np.trajectories.size(): "<<p.trajectories_.size();
+    // std::cout<<"\np.calcBestIndex(): "<<p.calcBestIndex()<<"\n";
 
     // if i is the best in trajectory i's sub-population
     if(temp.equals( p.trajectories_.at(p.calcBestIndex()) )) 
@@ -409,6 +410,7 @@ const int Population::add(const RampTrajectory& rt)
  
   // If it's a sub-population or
   // If it's not full, simply push back
+  // printf("Enter add 1!\n");
   if(isSubPopulation_ || trajectories_.size() < maxSize_) 
   {
     trajectories_.push_back (rt);  
@@ -418,11 +420,13 @@ const int Population::add(const RampTrajectory& rt)
     //////ROS_INFO("Exiting Population::add");
     return trajectories_.size()-1;
   }
-
-  // If full, replace a trajectory
   else if(!contains(rt) && replacementPossible(rt))
   {
+    // printf("Exit add 1!\n");
+
+    // printf("Enter add 2!\n");
     int i = getReplacementID(rt);
+    // printf("Exit add 2!\n");
     // int i = calcWorstIndex();
 
     if(trajectories_[i].msg_.feasible && !rt.msg_.feasible)
@@ -431,7 +435,9 @@ const int Population::add(const RampTrajectory& rt)
       //ROS_INFO("Trajec being added to index %i\nTrajectory currently at %i: %s", i, i, trajectories_[i].toString().c_str());
     }
 
+    // printf("Enter add 3!\n");
     replace(i, rt);
+    // printf("Exit add 3!\n");
     
     //ROS_INFO("Added trajectory to index %i", i);
     //////ROS_INFO("Exiting Population::add");
@@ -470,28 +476,28 @@ void Population::initBestIndex() {
 /** Returns the fittest trajectory and sets calcBestIndex() */
 const int Population::calcBestIndex() const 
 {
-  return best_index;
-  // ////ROS_INFO("In Population::calcBestIndex");
-  // if(size() == 0)
-  // {
-  //   //ROS_ERROR("Calling Population::calcBestIndex(), but Population is empty");
-  //   ////ROS_INFO("Pop: %s", toString().c_str());
-  //   return -1;
-  // }
+  // return best_index;
+  ////ROS_INFO("In Population::calcBestIndex");
+  if(size() == 0)
+  {
+    //ROS_ERROR("Calling Population::calcBestIndex(), but Population is empty");
+    ////ROS_INFO("Pop: %s", toString().c_str());
+    return -1;
+  }
  
-  // // Find the index of the trajectory with the highest fitness value
-  // int i_max = 0;
-  // for(int i=1;i<trajectories_.size();i++) 
-  // {
-  //   if(trajectories_.at(i).msg_.fitness > trajectories_.at(i_max).msg_.fitness) 
-  //   {
-  //     i_max = i;
-  //   }
-  // }
+  // Find the index of the trajectory with the highest fitness value
+  int i_max = 0;
+  for(int i=1;i<trajectories_.size();i++) 
+  {
+    if(trajectories_.at(i).msg_.fitness > trajectories_.at(i_max).msg_.fitness) 
+    {
+      i_max = i;
+    }
+  }
 
 
-  ////ROS_INFO("Exiting Population::calcBestIndex");
-  // return i_max; 
+  //ROS_INFO("Exiting Population::calcBestIndex");
+  return i_max; 
 } //End calcBestIndex
 
 const int Population::calcWorstIndex() const 

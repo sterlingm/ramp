@@ -9,7 +9,7 @@
 
 
 <!-- Start Gazebo simulation -->
-<include file="$(find ramp_launch)/launch/onebot_oneobs_world.launch" />
+<include file="$(find ramp_launch)/launch/multi_obs.launch" />
 <node name="pub_tf_missing_turtlebot_gazebo"  pkg="ramp_sensing" type="pub_tf_missing_turtlebot_gazebo" />
 
 <!-- Filter laser data to set a custom MAX_RANGE value for clearing obstacles from the costmap -->

@@ -2764,7 +2764,9 @@ void Planner::modification()
 
   // Do modification
   std::vector<RampTrajectory> mod_trajec;
+  // printf("Enter modifyTrajec!\n");
   modifyTrajec(mod_trajec);
+  // printf("Exit modifyTrajec!\n");
 
   // Save duration data
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tNow);
@@ -2779,6 +2781,7 @@ void Planner::modification()
   ros::Time t_for = ros::Time::now();
   // Evaluate and add the modified trajectories to the population
   // and update the planner and the modifier on the new paths
+  
   for(unsigned int i=0;i<mod_trajec.size();i++) 
   {
     //////ROS_INFO("i: %i", i);
@@ -2789,6 +2792,7 @@ void Planner::modification()
 
     // Compute full switch (method evaluates the trajectory)
     RampTrajectory traj_final = mod_trajec[i];
+    // printf("Enter for 1!\n");
     if(moving_robot_ && cc_started_)
     {
       computeFullSwitch(movingOn_, mod_trajec[i], controlCycle_.toSec(), traj_final);
@@ -2797,6 +2801,7 @@ void Planner::modification()
     {
       evaluateTrajectory(traj_final);
     }
+    // printf("Exit for 1!\n");
 
     ////ROS_INFO("Final mod: %s", traj_final.toString().c_str());
 
@@ -2819,12 +2824,15 @@ void Planner::modification()
     // If sub-populations are being used and
     // the trajectory was added to the population, update the sub-populations 
     // (can result in infinite loop if not updated but re-evaluated)
+    // printf("Enter for 2!\n");
     if(subPopulations_ && index >= 0)
     {
       population_.createSubPopulations();
       //trans_popCopy.createSubPopulations();
     }
+    // printf("Exit for 2!\n");
   } // end for
+  
 
   num_mods_++;
   ////////////ROS_INFO("After modification, pop now: %s", result.popNew_.toString().c_str());
@@ -2950,6 +2958,7 @@ const MotionState Planner::errorCorrection()
 
 void Planner::planningCycleCallback() 
 {
+  // printf("Enter plan cycle!\n");
   // Get duration data
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
   duration<double> time_span = duration_cast<microseconds>(tStart - t_prevPC_);
@@ -3054,6 +3063,7 @@ void Planner::planningCycleCallback()
   /*
    * Modification
    */
+  // printf("Enter modification!\n");
   if(modifications_) 
   {
     //////////ROS_INFO("*****************************");
@@ -3065,6 +3075,7 @@ void Planner::planningCycleCallback()
     ////ROS_INFO("Done with modification");
     //////////ROS_INFO("*****************************");
   } // end if modifications
+  // printf("Exit modification!\n");
 
 
 
@@ -3105,6 +3116,7 @@ void Planner::planningCycleCallback()
   //////////ROS_INFO("********************************************************************");
   ////ROS_INFO("Generation %i completed, time elapse: %f", (generation_-1), (ros::Time::now() - t_start).toSec());
   //////////ROS_INFO("********************************************************************");
+  // printf("Exit plan cycle!\n");
 } // End planningCycleCallback
 
 
@@ -3558,7 +3570,7 @@ void Planner::doControlCycle()
  *  and sends a new (and better) trajectory for the robot to move along */
 void Planner::controlCycleCallback(const ros::TimerEvent& e) 
 {
-  
+  // printf("Enter control cycle!\n");
   /*////////ROS_INFO("*************************************************");
   ////////ROS_INFO("  Control cycle timer event happening  ");
   ////////ROS_INFO("  e.last_expected: %f\n  e.last_real: %f\n  current_expected: %f\n  current_real: %f\n  profile.last_duration: %f",
@@ -3582,6 +3594,7 @@ void Planner::controlCycleCallback(const ros::TimerEvent& e)
     
   num_ccs_++;
   //////////ROS_INFO("Leaving Control Cycle, period: %f", controlCycle_.toSec());
+  // printf("Exit control cycle!\n");
 } // End controlCycleCallback
 
 
@@ -4594,7 +4607,6 @@ void Planner::go(const ros::NodeHandle& h)
   
   h_parameters_.setCCStarted(false); 
 
-
   int num_pc = generationsBeforeCC_; 
   if(num_pc < 0)
   {
@@ -4630,8 +4642,8 @@ void Planner::go(const ros::NodeHandle& h)
   if(!only_sensing_ && moving_robot_)
   {
     controlCycleTimer_.start();
-    imminentCollisionTimer_.start();
-    ob_dists_timer_.start();
+    // imminentCollisionTimer_.start();
+    // ob_dists_timer_.start();
     //ROS_INFO("CCs started");
   }
 

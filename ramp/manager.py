@@ -22,7 +22,7 @@ while not rospy.core.is_shutdown():
     time.sleep(3.0)
     clean_proc = subprocess.Popen(['roslaunch', 'trajectory_generator', 'clean_log.launch'])
     time.sleep(3.0)
-    plan_proc = subprocess.Popen(['roslaunch', 'ramp_launch', 'planner_full_costmap_simulation_qn.launch'])
+    plan_proc = subprocess.Popen(['roslaunch', 'ramp_launch', 'planner_full_costmap_simulation_sipd.launch'])
     time.sleep(3.0)
 
     while not rospy.core.is_shutdown():

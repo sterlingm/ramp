@@ -145,7 +145,7 @@ void MobileRobot::updateTrajectory(const ramp_msgs::RampTrajectory& msg)
   t_immiColl_     = ros::Duration(0);
   
   // Update vectors for speeds and times
-  if(trajectory_.trajectory.points.size() > 0) 
+  if(trajectory_.trajectory.points.size() > 0 && trajectory_.feasible) 
   {
     calculateSpeedsAndTime();
   }

@@ -5,6 +5,9 @@
         "*.ipp": "cpp",
         "chrono": "cpp",
         "ratio": "cpp",
-        "type_traits": "cpp"
+        "type_traits": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "initializer_list": "cpp"
     }
 }
