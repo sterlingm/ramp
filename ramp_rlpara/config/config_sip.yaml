@@ -19,5 +19,5 @@ gradient_clip_norm: 0.5
 coe_dA_range: [-0.05, 0.05] # coefficients of orientation changing of feasible trajectory
 coe_dD_range: [-0.05, 0.05] # coefficients of obstacle distance of feasible trajectory
 
-coe_A_range: [0.0, 1.0] # coefficients of orientation changing of feasible trajectory
-coe_D_range: [0.0, 3.0] # coefficients of obstacle distance of feasible trajectory
+coe_A_range: [0.0, 0.5] # coefficients of orientation changing of feasible trajectory
+coe_D_range: [0.0, 1.5] # coefficients of obstacle distance of feasible trajectory

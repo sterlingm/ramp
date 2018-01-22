@@ -81,7 +81,7 @@ print(model.summary())
 
 
 
-init_boltz_tau = 0.3???
+init_boltz_tau = 1.0
 
 
 
@@ -96,8 +96,8 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
 
 # Load weights if needed. Put this after compiling may be better.
-dqn.load_weights_sip("/home/kai/data/ramp/ramp_rlpara/dqn_ramp_sip/2018-01-20_23:40:10???/raw_data/" +
-                     "dqn_{}_weights.h5f".format(env.name))
+# dqn.load_weights_sip("/home/kai/data/ramp/ramp_rlpara/dqn_ramp_sip/2018-01-20_23:40:10???/raw_data/" +
+#                      "dqn_{}_weights.h5f".format(env.name))
 
 
 
