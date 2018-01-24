@@ -57,6 +57,26 @@ bool checkGoal(ramp_msgs::TrajectoryRequest req)
 }
 
 
+
+// // Input: 2 points (x, y)
+// // Output: 1 trajectory (x, y)
+// // Use my own contorller
+
+
+
+// bool requestCallback(ramp_msgs::TrajectorySrv::Request& req,
+//                      ramp_msgs::TrajectorySrv::Response& res) 
+// {
+//   for(uint8_t i=0;i<req.reqs.size();i++) {
+//     ramp_msgs::TrajectoryResponse one_res;
+//     if (req.reqs[i].path.size() < 2) {
+      
+//     }
+//   }
+// }
+
+
+
 bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
                       ramp_msgs::TrajectorySrv::Response& res) 
 {

@@ -28,8 +28,10 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   performFeasibility(req);
 
   // Set response members
-  req.trajectory.feasible = !qr_.collision_ && !orientation_infeasible_;
-  res.feasible = !qr_.collision_ && !orientation_infeasible_;
+  // req.trajectory.feasible = !qr_.collision_ && !orientation_infeasible_;
+  // res.feasible = !qr_.collision_ && !orientation_infeasible_;
+  req.trajectory.feasible = !qr_.collision_;
+  res.feasible = !qr_.collision_;
   req.trajectory.feasible = res.feasible;
   //ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
   //////ROS_INFO("performFeasibility: %f", (ros::Time::now()-t_start).toSec());
@@ -52,7 +54,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   if(req.full_eval)
   {
     ////ROS_INFO("Requesting fitness!");
-    performFitness(req.trajectory, req.offset, res.fitness, res.min_obs_dis);
+    performFitness(req.trajectory, req.offset, res.fitness, res.min_obs_dis, res);
   }
   //////ROS_INFO("performFitness: %f", (ros::Time::now()-t_start).toSec());
 }
@@ -100,7 +102,8 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
 
 
 /** This method computes the fitness of the trajectory_ member */
-void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offset, double& result, double& min_obs_dis) 
+void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offset, double& result,
+                            double& min_obs_dis, ramp_msgs::EvaluationResponse& res) 
 {
   //////ROS_INFO("In Evaluate::performFitness");
   ros::Time t_start = ros::Time::now();
@@ -171,11 +174,13 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     //////ROS_INFO("estimated_linear: %f estimated_rotation: %f", estimated_linear, estimated_rotation);
 
     T += (estimated_linear + estimated_rotation);
+    res.time_fitness = T;
     if (T < zero) T = zero;
     double _1_T = 1.0 / T;
 
     // Orientation
     double A = fabs(orientation_.perform(trj));
+    res.orien_fitness = A;
     if (A < zero) A = zero;
     double _1_A = 1.0 / A;
 
@@ -184,6 +189,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
 
     // Minimum distance to any obstacle
     double D = cd_.min_dist_;
+    res.obs_fitness = D;
     if (D < zero) D = zero;
     double _1_D = 1.0 / D; // consider 1/D, not D
     min_obs_dis = D;

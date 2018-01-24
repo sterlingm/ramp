@@ -525,6 +525,12 @@ const Population Planner::getPopulation( const MotionState init, const MotionSta
   std::vector<Path> paths = random ?  getRandomPaths  (init, goal)  : 
                                       getAdjustedPaths(init, goal)  ;
 
+  // for (int i = 0; i < preset_path.size(); i++) {
+  //   paths.pop_back();
+  //   paths.push_back(preset_path.at(i));
+  // }
+  // result.preset_size = preset_path.size();
+
   // Get trajectories for the paths
   std::vector<RampTrajectory> trajecs = getTrajectories(paths);
 
@@ -1762,6 +1768,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   is_population_initialized = false;
   biggest_fitness = -1.0;
   no_better_cnt = 0;
+  preset_path.push_back(Path(s, g));
 
   // Set ID
   id_ = i;
@@ -2720,6 +2727,10 @@ void Planner::modifyTrajec(std::vector<RampTrajectory>& result)
   std::vector<Path> modded_paths = modifyPath();
   ////ROS_INFO("Number of modified paths: %i", (int)modded_paths.size());
 
+  // Preset path
+  for (int i = 0; i < preset_path.size(); i++) {
+    modded_paths.push_back(Path(latestUpdate_, goal_));
+  }
 
   ros::Time t_for = ros::Time::now();
   // For each targeted path,
@@ -3741,6 +3752,8 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
     result.color.b = 0;
     // Width of the lines
     result.scale.x = 0.05;
+    // printf("Fitness of best trajectory: %lf(%lf, %lf, %lf)\n", trajec.msg_.fitness, trajec.msg_.time_fitness,
+    //     trajec.msg_.orien_fitness, trajec.msg_.obs_fitness);
   }
   result.color.a = 1;
 
@@ -3799,6 +3812,9 @@ void Planner::requestEvaluation(std::vector<RampTrajectory>& trajecs)
       trajecs[i].msg_.feasible         = srv.response.resps[i].feasible;
       trajecs[i].msg_.t_firstCollision = srv.response.resps[i].t_firstCollision;
       trajecs[i].msg_.min_obs_dis      = srv.response.resps[i].min_obs_dis;
+      trajecs[i].msg_.time_fitness     = srv.response.resps[i].time_fitness;
+      trajecs[i].msg_.orien_fitness    = srv.response.resps[i].orien_fitness;
+      trajecs[i].msg_.obs_fitness      = srv.response.resps[i].obs_fitness;
     }
   }
   else
@@ -3826,6 +3842,9 @@ void Planner::requestEvaluation(ramp_msgs::EvaluationRequest& request)
     request.trajectory.feasible         = srv.response.resps[0].feasible;
     request.trajectory.t_firstCollision = srv.response.resps[0].t_firstCollision;
     request.trajectory.min_obs_dis      = srv.response.resps[0].min_obs_dis;
+    request.trajectory.time_fitness     = srv.response.resps[0].time_fitness;
+    request.trajectory.orien_fitness    = srv.response.resps[0].orien_fitness;
+    request.trajectory.obs_fitness      = srv.response.resps[0].obs_fitness;
   }
   else
   {
@@ -3849,6 +3868,9 @@ void Planner::requestEvaluation(RampTrajectory& trajec, bool full)
   trajec.msg_.feasible          = req.trajectory.feasible;
   trajec.msg_.t_firstCollision  = req.trajectory.t_firstCollision;
   trajec.msg_.min_obs_dis       = req.trajectory.min_obs_dis;
+  trajec.msg_.time_fitness      = req.trajectory.time_fitness;
+  trajec.msg_.orien_fitness     = req.trajectory.orien_fitness;
+  trajec.msg_.obs_fitness       = req.trajectory.obs_fitness;
   ////////ROS_INFO("trajec.fitness: %f", trajec.msg_.fitness);
   ////////ROS_INFO("Exiting Planner::requestEvaluation(RampTrajectory&, bool)");
 }
@@ -4655,7 +4677,7 @@ void Planner::go(const ros::NodeHandle& h)
   //ROS_INFO("Starting at time %f", ros::Time::now().toSec());
 
   double max_exe_time;
-  ros::param::param("/max_exe_time", max_exe_time, 60.0); // seconds
+  ros::param::param("/max_exe_time", max_exe_time, 120.0); // seconds
 
   // Do planning until robot has reached goal
   // D = 0.4 if considering mobile base, 0.2 otherwise

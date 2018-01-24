@@ -61,6 +61,7 @@ class Planner {
     const double ZERO = 0.05;
     double start_run_time = -1.0;
     int push_ms_cnt = 0;
+    std::vector<Path> preset_path;
 
     // Hold the population of trajectories, 
     // the velocities of each trajectory's segments,

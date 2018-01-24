@@ -1,0 +1,22 @@
+<launch>
+
+<param name="use_sim_time" value="True"/>
+
+<!-- Start the costmap -->
+<node name="costmap_node" pkg="costmap_2d" type="costmap_2d_node" output="screen" respawn="true" >
+  <rosparam file="$(find ramp_launch)/launch/costmap_param/my_rolling_costmap.yaml" command="load" />
+</node>
+
+
+<!-- Start Gazebo simulation -->
+<include file="$(find ramp_launch)/launch/onebot_oneobs_world.launch" />
+<node name="pub_tf_missing_turtlebot_gazebo"  pkg="ramp_sensing" type="pub_tf_missing_turtlebot_gazebo" />
+
+<!-- Filter laser data to set a custom MAX_RANGE value for clearing obstacles from the costmap -->
+<!-- Change max_range value in laser_filters/include/laser_filters/range_filter.h -->
+<include file="$(find laser_filters)/launch/range_filter.launch" />
+<!-- laser_filter -->
+<!-- <node name="scan_to_scan_filter_chain" pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" /> -->
+
+
+</launch>

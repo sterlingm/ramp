@@ -15,7 +15,7 @@ class Evaluate {
 
     void perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res);
     void performFeasibility(ramp_msgs::EvaluationRequest& er);
-    void performFitness(ramp_msgs::RampTrajectory& trj, const double& offset, double& result, double& min_obs_dis);
+    void performFitness(ramp_msgs::RampTrajectory& trj, const double& offset, double& result, double& min_obs_dis, ramp_msgs::EvaluationResponse& res);
 
     /** Different evaluation criteria */
     EuclideanDistance eucDist_;

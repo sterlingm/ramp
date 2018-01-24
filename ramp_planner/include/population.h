@@ -55,6 +55,7 @@ class Population {
     double                      max_fitness;
     
     std::vector<RampTrajectory> trajectories_;
+    int                         preset_size;
     
   private:
     std::vector<Population>     subPopulations_;

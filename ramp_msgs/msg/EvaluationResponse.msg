@@ -2,3 +2,6 @@ float64 fitness
 bool feasible
 duration t_firstCollision
 float64 min_obs_dis
+float64 time_fitness
+float64 orien_fitness
+float64 obs_fitness

@@ -1,7 +1,7 @@
 #include "population.h"
 
 Population::Population() : type_(HYBRID), maxSize_(3), isSubPopulation_(false), min_size_subpop(5),
-                           best_index(-1), max_fitness(-1.0) {}
+                           best_index(-1), max_fitness(-1.0), preset_size(0) {}
 
 Population::Population(const unsigned int size, const TrajectoryType type,
                        const bool isSubPop) : type_(type), maxSize_(size),
@@ -196,9 +196,9 @@ const bool Population::replacementPossible(const RampTrajectory& rt) const
   }*/
   
   // worse than exist worst
-  if (rt.msg_.fitness < getMinFitness()) {
-    return false;
-  }
+  // if (rt.msg_.fitness < getMinFitness()) {
+  //   return false;
+  // }
   
   // If the trajectory is infeasible and
   // no infeasible trajectories exist, no
@@ -371,6 +371,7 @@ const int Population::getReplacementID(const RampTrajectory& rt) const
   // Generate a random index for a random trajectory to remove
   do 
   {
+    // result = rand() % (trajectories_.size() - preset_size);
     result = rand() % trajectories_.size();
     // ROS_INFO("size: %i, result: %i", int(trajectories_.size()), result); 
   }

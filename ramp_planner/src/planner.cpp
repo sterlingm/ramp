@@ -525,6 +525,12 @@ const Population Planner::getPopulation( const MotionState init, const MotionSta
   std::vector<Path> paths = random ?  getRandomPaths  (init, goal)  : 
                                       getAdjustedPaths(init, goal)  ;
 
+  // for (int i = 0; i < preset_path.size(); i++) {
+  //   paths.pop_back();
+  //   paths.push_back(preset_path.at(i));
+  // }
+  // result.preset_size = preset_path.size();
+
   // Get trajectories for the paths
   std::vector<RampTrajectory> trajecs = getTrajectories(paths);
 
@@ -1763,6 +1769,10 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   biggest_fitness = -1.0;
   no_better_cnt = 0;
 
+  // Initialize preset path
+  preset_path.push_back(Path(s, g));
+
+
   // Set ID
   id_ = i;
 
@@ -2228,7 +2238,7 @@ const std::vector<RampTrajectory> Planner::getTrajectories(const std::vector<Pat
   ramp_msgs::TrajectorySrv tr_srv;
 
   // For each path
-  for(unsigned int i=0;i<p.size();i++) 
+  for(unsigned int i=0;i<p.size();i++)
   {
    // ////ROS_INFO("i: %i p.size(): %i", (int)i, (int)p.size());
     // Get a trajectory
