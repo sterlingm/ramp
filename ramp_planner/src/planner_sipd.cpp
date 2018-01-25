@@ -2727,10 +2727,13 @@ void Planner::modifyTrajec(std::vector<RampTrajectory>& result)
   std::vector<Path> modded_paths = modifyPath();
   ////ROS_INFO("Number of modified paths: %i", (int)modded_paths.size());
 
-  // Preset path
-  for (int i = 0; i < preset_path.size(); i++) {
-    modded_paths.push_back(Path(latestUpdate_, goal_));
-  }
+  // Preset path 0
+  modded_paths.push_back(Path(latestUpdate_, goal_));
+  // Preset path 1
+  Path p1(latestUpdate_, goal_);
+  p1.addBeforeGoal(MotionState(1.13, 3.33, -0.785));
+  p1.addBeforeGoal(MotionState(3.63, 2.31, 0.785));
+  modded_paths.push_back(p1);
 
   ros::Time t_for = ros::Time::now();
   // For each targeted path,
@@ -4664,7 +4667,7 @@ void Planner::go(const ros::NodeHandle& h)
   if(!only_sensing_ && moving_robot_)
   {
     controlCycleTimer_.start();
-    // imminentCollisionTimer_.start();
+    imminentCollisionTimer_.start();
     // ob_dists_timer_.start();
     //ROS_INFO("CCs started");
   }
@@ -4677,7 +4680,7 @@ void Planner::go(const ros::NodeHandle& h)
   //ROS_INFO("Starting at time %f", ros::Time::now().toSec());
 
   double max_exe_time;
-  ros::param::param("/max_exe_time", max_exe_time, 120.0); // seconds
+  ros::param::param("/max_exe_time", max_exe_time, 45.0); // seconds
 
   // Do planning until robot has reached goal
   // D = 0.4 if considering mobile base, 0.2 otherwise

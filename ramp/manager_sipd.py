@@ -18,7 +18,7 @@ exe_info_suber = rospy.Subscriber("ramp_collection_ramp_ob_one_run", RampObserva
 while not rospy.core.is_shutdown():
     rviz_proc = subprocess.Popen(['roslaunch', 'ramp_launch', 'my_view_robot_costmap.launch'])
     time.sleep(3.0)
-    gaze_proc = subprocess.Popen(['roslaunch', 'ramp_launch', 'gazebo_costmap_tmp.launch'])
+    gaze_proc = subprocess.Popen(['roslaunch', 'ramp_launch', 'gazebo_costmap_sipd.launch'])
     time.sleep(3.0)
     clean_proc = subprocess.Popen(['roslaunch', 'trajectory_generator', 'clean_log.launch'])
     time.sleep(3.0)
