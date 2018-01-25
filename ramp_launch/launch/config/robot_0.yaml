@@ -11,12 +11,12 @@ DOF_min: [0,    0,  -3.14159]
 DOF_max: [6.0,    6.0,  3.14159]
 
 # Units are m/s and rad/s
-max_speed_linear: 0.33
-max_speed_angular: 1.5708
+max_speed_linear: 0.2
+max_speed_angular: 0.75
 
 # Units are m/s^2 and rad/s^2
-max_acceleration_linear: 2.0
-max_acceleration_angular: 1.0
+max_acceleration_linear: 1.0
+max_acceleration_angular: 0.5
 
 # relative to map
 start: [0, 0, 0.785]

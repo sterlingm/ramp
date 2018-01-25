@@ -1,0 +1,9 @@
+<launch>
+
+<!-- LOAD CONFIG FILES -->
+<rosparam file="$(find ramp_rlpara)/config/config_sipd.yaml" command="load"/>
+
+<!-- LOAD NODES -->
+<node name="dqn_ramp_sipd" pkg="ramp_rlpara" type="dqn_ramp_sipd.py" output="screen" />
+
+</launch>

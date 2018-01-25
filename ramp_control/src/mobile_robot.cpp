@@ -211,10 +211,11 @@ void MobileRobot::calculateSpeedsAndTime () {
     double vx = next.velocities.at(0);
     double vy = next.velocities.at(1);
 
-    speeds_linear_.push_back( sqrt( pow(vx,2)
+    speeds_linear_.push_back(0.1  + sqrt( pow(vx,2)
                                   + pow(vy,2) ));
 
     double w = utility_.findDistanceBetweenAngles(current.positions.at(2), next.positions.at(2)) / 0.1;
+    // w *= 0.7;
     speeds_angular_.push_back( w ); 
 
     //ROS_INFO("t: %f v: %f vx: %f vy: %f w: %f", current.time_from_start.toSec(), sqrt(vx*vx+vy*vy), vx, vy, w);
@@ -382,7 +383,7 @@ void MobileRobot::moveOnTrajectory()
       // When driving straight, adjust the angular speed 
       // to maintain orientation
       // TODO: Works with Bezier curve?
-      if(fabs(twist_.linear.x) > 0.0f && fabs(twist_.angular.z) < 0.0001f)
+      if(1 || (fabs(twist_.linear.x) > 0.0f && fabs(twist_.angular.z) < 0.0001f))
       {
         //ROS_INFO("initial_theta_: %f motion_state_.positions.at(2): %f -tf_rot: %f", initial_theta_, motion_state_.positions.at(2), -tf_rot_);
         double theta_global = utility_.displaceAngle(motion_state_.positions[2], -tf_rot_); 
@@ -390,6 +391,7 @@ void MobileRobot::moveOnTrajectory()
         dist = utility_.findDistanceBetweenAngles(actual_theta, orientations_.at(num_traveled_));
         //ROS_INFO("actual_theta: %f orientations[%i]: %f dist: %f", actual_theta, num_traveled_, orientations_.at(num_traveled_), dist);
         twist_.angular.z = dist;
+        // twist_.angular.z *= 1.3;
       }
 
       //ROS_INFO("twist.linear.x: %f twist.angular.z: %f", twist_.linear.x, twist_.angular.z);

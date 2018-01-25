@@ -1,6 +1,6 @@
 is_offline_learning: false
 
-population_size: 50
+population_size: 30
 
 sub_populations: false 
 
@@ -18,7 +18,7 @@ only_sensing: false
 # If false, control cycles are cut off
 moving_robot: true
 
-gens_before_control_cycle: 50
+gens_before_control_cycle: 20
 
 pop_traj_type: 0 #0=holonomic, 1=hybrid
 

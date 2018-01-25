@@ -2731,9 +2731,13 @@ void Planner::modifyTrajec(std::vector<RampTrajectory>& result)
   modded_paths.push_back(Path(latestUpdate_, goal_));
   // Preset path 1
   Path p1(latestUpdate_, goal_);
-  p1.addBeforeGoal(MotionState(1.13, 3.33, -0.785));
-  p1.addBeforeGoal(MotionState(3.63, 2.31, 0.785));
+  p1.addBeforeGoal(MotionState(2.8, 3.0, 0.0));
+  p1.addBeforeGoal(MotionState(5.0, 3.2, 0.785));
   modded_paths.push_back(p1);
+  // Preset path 2
+  Path p2(latestUpdate_, goal_);
+  p2.addBeforeGoal(MotionState(5.0, 3.2, 0.785));
+  modded_paths.push_back(p2);
 
   ros::Time t_for = ros::Time::now();
   // For each targeted path,
@@ -4760,6 +4764,7 @@ void Planner::go(const ros::NodeHandle& h)
   
   // Send an empty trajectory
   ramp_msgs::RampTrajectory empty;
+  empty.fitness = -10000;
   h_control_->send(empty);
   h_control_->send(empty);
   h_control_->send(empty);
