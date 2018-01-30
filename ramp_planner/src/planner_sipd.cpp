@@ -4689,7 +4689,7 @@ void Planner::go(const ros::NodeHandle& h)
   // Do planning until robot has reached goal
   // D = 0.4 if considering mobile base, 0.2 otherwise
   ros::Rate r(20); // 20Hz
-  goalThreshold_ = 1.0;
+  goalThreshold_ = 2.0;
   int check_time_cnt = 0;
   ros::Duration t_elapse;
   ros::Time t_startLoop = ros::Time::now();

@@ -7,6 +7,7 @@ import numpy as np
 import gym
 from gym.spaces import prng
 import datetime
+import matplotlib.pyplot as plt
 
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten
@@ -36,6 +37,11 @@ coarse_logger = RampRlLogger(file_dir + "dqn_sipd.csv",
                              ['plan#', 'A', 'D',
                               'plan_reward', 'plan_time', 'obs_dis',
                               'loss', 'mae', 'mean_q'])
+
+epi_logger = RampRlLogger(file_dir + "dqn_epi_sipd.csv",
+                             ['epi#',
+                              'epi_reward',
+                              'epi_steps'])
 
 
 
@@ -81,7 +87,7 @@ print(model.summary())
 
 
 
-init_boltz_tau = 0.3?
+init_boltz_tau = 1.2?
 
 
 
@@ -96,8 +102,8 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
 
 # Load weights if needed. Put this after compiling may be better.
-dqn.load_weights_sip("/home/kai/data/ramp/ramp_rlpara/dqn_ramp_sipd/2018-01-25_14:19:38?/raw_data/46/" +
-                     "dqn_{}_weights.h5f".format(env.name))
+# dqn.load_weights_sip("/home/kai/data/ramp/ramp_rlpara/dqn_ramp_sipd/2018-01-25_21:09:04/raw_data/54/" +
+#                      "dqn_{}_weights.h5f".format(env.name))
 
 
 
@@ -108,7 +114,7 @@ log_interval = 1000
 nb_max_episode_steps = None
 dqn.fitSip(env, nb_steps=5000000, log_interval=log_interval,
            nb_max_episode_steps=nb_max_episode_steps, verbose=2,
-           file_dir=file_dir, logger=coarse_logger)
+           file_dir=file_dir, logger=coarse_logger, epi_logger=epi_logger)
 
 
 
@@ -120,3 +126,5 @@ coarse_logger.close()
 
 # # Finally, evaluate our algorithm for 5 episodes.
 # dqn.testSip(env, nb_episodes=11, visualize=False, nb_max_episode_steps=3000)
+
+plt.show()

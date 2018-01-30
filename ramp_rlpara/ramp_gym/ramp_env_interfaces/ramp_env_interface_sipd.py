@@ -59,13 +59,14 @@ class RampEnvSipd(gym.Env):
         self.action_resolution = 0.05
         self.done = False
         self.start_in_step = False
+        self.max_reward = -999.9
 
         self.a0 = 0.0
         self.a1 = 1.0
         self.d0 = 0.0
         self.d1 = 1.0
-        self.best_A = 0.25
-        self.best_D = 0.55
+        self.best_A = 1.0
+        self.best_D = 1.0
         self.preset_A = self.best_A
         self.preset_D = self.best_D
         
@@ -154,8 +155,9 @@ class RampEnvSipd(gym.Env):
         -------
             Multiple single states.
         """
-        coes = np.array([self.preset_A, self.preset_D])
-        # self.setState(coes[0], coes[1])
+        coes = np.array([self.best_A, self.best_D])
+        # coes = np.random.rand(2)
+        self.setState(coes[0], coes[1])
 
         self.oneCycle(start_planner=True)
         return self.getOb(), coes
@@ -231,17 +233,37 @@ class RampEnvSipd(gym.Env):
 
 
     def getReward(self):
-        A = rospy.get_param('/ramp/eval_weight_A')
-        D = rospy.get_param('/ramp/eval_weight_D')
-
-        dis = 0.1
-        dis += abs(A - self.best_A) + abs(D - self.best_D)
-        dis *= 3.0
+        # First
+        # A = rospy.get_param('/ramp/eval_weight_A')
+        # D = rospy.get_param('/ramp/eval_weight_D')
+        # dis = 0.1
+        # dis += abs(A - self.best_A) + abs(D - self.best_D)
+        # dis *= 3.0
         # reward = -dis
-        reward = -1.0
+
+        # Second
+        # reward = -1.0
+
+        # Third
+        if self.best_t is None:
+            reward = 0.0
+        else:
+            orien_cost = self.best_t.orien_fitness
+
+            if self.best_t.obs_fitness < 0.1:
+                obs_cost = 1.25
+            else:
+                obs_cost = 1.0 / self.best_t.obs_fitness
+
+            reward = -obs_cost
+
+        if reward > self.max_reward:
+            self.max_reward = reward
+            self.best_A = rospy.get_param('/ramp/eval_weight_A')
+            self.best_D = rospy.get_param('/ramp/eval_weight_D')
 
         if self.done:
-            reward += 30.0
+            reward += 10.0 # TODO: Remove this?
 
         return reward
 

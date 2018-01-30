@@ -540,14 +540,14 @@ class TrainEpisodeLoggerSip(Callback):
         # plt.xlabel('Episode')
         # plt.ylabel('Episode Steps')
 
-        # plt.figure(4)
-        # self.epi_r_arr.append(variables['episode_reward'])
-        # epi_r_smoothed = pd.Series(self.epi_r_arr).rolling(10, min_periods = 10).mean()
-        # plt.plot(epi_r_smoothed)
-        # plt.xlabel('Episode')
-        # plt.ylabel('Sum of Reward')
+        plt.figure(4)
+        self.epi_r_arr.append(variables['episode_reward'])
+        epi_r_smoothed = pd.Series(self.epi_r_arr).rolling(10, min_periods = 10).mean()
+        plt.plot(epi_r_smoothed)
+        plt.xlabel('Episode')
+        plt.ylabel('Episode Reward')
 
-        # plt.pause(0.0001)
+        plt.pause(0.0001)
 
     def on_step_end(self, step, logs):
         episode = logs['episode']

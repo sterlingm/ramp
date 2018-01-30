@@ -264,7 +264,7 @@ class DQNAgentSi(DQNAgent):
 
     def fitSip(self, env, nb_steps, action_repetition=1, callbacks=None, verbose=1,
             visualize=False, nb_max_start_steps=0, start_step_policy=None, log_interval=10000,
-            nb_max_episode_steps=None, file_dir=None, logger=None):
+            nb_max_episode_steps=None, file_dir=None, logger=None, epi_logger=None):
         print('Fit dqn_si agent!')
 
         """Trains the agent on the given environment.
@@ -502,6 +502,10 @@ class DQNAgentSi(DQNAgent):
                         coes.append(env.getState())
                     # elif verbose == 2:
                     #     print('episode_reward: {}'.format(episode_reward))
+
+                    if epi_logger is not None:
+                        epi_logger.logOneFrame([episode, episode_reward, episode_step])
+                        epi_logger.reOpen()
 
                     episode += 1
                     observation = None
