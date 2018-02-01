@@ -2731,13 +2731,17 @@ void Planner::modifyTrajec(std::vector<RampTrajectory>& result)
   modded_paths.push_back(Path(latestUpdate_, goal_));
   // Preset path 1
   Path p1(latestUpdate_, goal_);
-  p1.addBeforeGoal(MotionState(2.8, 3.0, 0.0));
-  p1.addBeforeGoal(MotionState(5.0, 3.2, 0.785));
+  p1.addBeforeGoal(MotionState(2.8, 3.0, 0.785));
+  p1.addBeforeGoal(MotionState(4.0, 3.0, 0.785));
   modded_paths.push_back(p1);
   // Preset path 2
   Path p2(latestUpdate_, goal_);
-  p2.addBeforeGoal(MotionState(5.0, 3.2, 0.785));
+  p2.addBeforeGoal(MotionState(4.0, 3.0, 0.785));
   modded_paths.push_back(p2);
+  // Preset path 3
+  Path p3(latestUpdate_, goal_);
+  p3.addBeforeGoal(MotionState(5.0, 1.0, 0.785));
+  modded_paths.push_back(p3);
 
   ros::Time t_for = ros::Time::now();
   // For each targeted path,

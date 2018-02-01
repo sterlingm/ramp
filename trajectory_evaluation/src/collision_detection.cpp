@@ -1663,8 +1663,9 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
   
   // For every point, check circle detection on a subset of the obstacle's trajectory
   // obstacle radius + turtlebot radius (0.225)
+  // float dist_threshold = ob_r + robot_r;
   float dist_threshold = ob_r + robot_r;
-  //////ROS_INFO("ob_r: %f robot_r: %f dist_threshold: %f", ob_r, robot_r, dist_threshold);
+  ////ROS_INFO("ob_r: %f robot_r: %f dist_threshold: %f", ob_r, robot_r, dist_threshold);
 
   // Trajectories start in the future, obstacle trajectories start at the present time, 
   // set an offset for obstacle indices to account for this 

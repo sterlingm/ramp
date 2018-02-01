@@ -65,10 +65,10 @@ class RampEnvSipd(gym.Env):
         self.a1 = 1.0
         self.d0 = 0.0
         self.d1 = 1.0
-        self.best_A = 1.0
-        self.best_D = 1.0
-        self.preset_A = self.best_A
-        self.preset_D = self.best_D
+        self.best_A = 0.25
+        self.best_D = 0.55
+        self.preset_A = 0.15
+        self.preset_D = 0.80
         
         self.action_space = spaces.Discrete(9) # 3 * 3 = 9
         self.observation_space = spaces.Box(np.array([self.utility.min_x, self.utility.min_y, self.a0, self.d0]),
@@ -234,28 +234,28 @@ class RampEnvSipd(gym.Env):
 
     def getReward(self):
         # First
-        # A = rospy.get_param('/ramp/eval_weight_A')
-        # D = rospy.get_param('/ramp/eval_weight_D')
-        # dis = 0.1
-        # dis += abs(A - self.best_A) + abs(D - self.best_D)
-        # dis *= 3.0
-        # reward = -dis
+        A = rospy.get_param('/ramp/eval_weight_A')
+        D = rospy.get_param('/ramp/eval_weight_D')
+        dis = 0.1
+        dis += abs(A - self.preset_A) + abs(D - self.preset_D)
+        dis *= 3.0
+        reward = -dis
 
         # Second
         # reward = -1.0
 
         # Third
-        if self.best_t is None:
-            reward = 0.0
-        else:
-            orien_cost = self.best_t.orien_fitness
+        # if self.best_t is None:
+        #     reward = 0.0
+        # else:
+        #     orien_cost = self.best_t.orien_fitness
 
-            if self.best_t.obs_fitness < 0.1:
-                obs_cost = 1.25
-            else:
-                obs_cost = 1.0 / self.best_t.obs_fitness
+        #     if self.best_t.obs_fitness < 0.1:
+        #         obs_cost = 1.25
+        #     else:
+        #         obs_cost = 1.0 / self.best_t.obs_fitness
 
-            reward = -obs_cost
+        #     reward = -obs_cost
 
         if reward > self.max_reward:
             self.max_reward = reward
@@ -263,7 +263,7 @@ class RampEnvSipd(gym.Env):
             self.best_D = rospy.get_param('/ramp/eval_weight_D')
 
         if self.done:
-            reward += 10.0 # TODO: Remove this?
+            reward += 30.0 # TODO: Remove this?
 
         return reward
 
