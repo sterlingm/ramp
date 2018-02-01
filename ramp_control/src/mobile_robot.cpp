@@ -379,8 +379,12 @@ void MobileRobot::moveOnTrajectory()
         continue;
       }
       
-      twist_.linear.x   = speeds_linear_.at(num_traveled_);
-      twist_.angular.z  = speeds_angular_.at(num_traveled_);
+      int tmp_idx = num_traveled_ + 10;
+      if (tmp_idx > speeds_linear_.size() - 5) {
+        tmp_idx = speeds_linear_.size() - 5;
+      }
+      twist_.linear.x   = speeds_linear_.at(tmp_idx);
+      twist_.angular.z  = speeds_angular_.at(tmp_idx);
  
       // When driving straight, adjust the angular speed 
       // to maintain orientation
@@ -391,7 +395,7 @@ void MobileRobot::moveOnTrajectory()
         //ROS_INFO("initial_theta_: %f motion_state_.positions.at(2): %f -tf_rot: %f", initial_theta_, motion_state_.positions.at(2), -tf_rot_);
         double theta_global = utility_.displaceAngle(motion_state_.positions[2], -tf_rot_); 
         actual_theta = utility_.displaceAngle(initial_theta_, motion_state_.positions[2]);
-        dist = utility_.findDistanceBetweenAngles(actual_theta, orientations_.at(num_traveled_));
+        dist = utility_.findDistanceBetweenAngles(actual_theta, orientations_.at(tmp_idx));
         // ROS_INFO("actual_theta: %f orientations[%i]: %f dist: %f", actual_theta, num_traveled_, orientations_.at(num_traveled_), dist);
         twist_.angular.z = dist;
         // twist_.angular.z *= 1.3;
