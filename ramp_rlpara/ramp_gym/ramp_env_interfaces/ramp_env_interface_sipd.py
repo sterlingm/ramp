@@ -65,10 +65,10 @@ class RampEnvSipd(gym.Env):
         self.a1 = 1.0
         self.d0 = 0.0
         self.d1 = 1.0
-        self.best_A = 0.25
-        self.best_D = 0.55
-        self.preset_A = 0.15
-        self.preset_D = 0.80
+        self.best_A = 0.10
+        self.best_D = 0.15
+        self.preset_A = 0.05
+        self.preset_D = 0.65
         
         self.action_space = spaces.Discrete(9) # 3 * 3 = 9
         self.observation_space = spaces.Box(np.array([self.utility.min_x, self.utility.min_y, self.a0, self.d0]),
