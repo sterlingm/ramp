@@ -4,7 +4,8 @@ Modifier::Modifier(ramp_msgs::ModificationRequest::Request& req) : mod_req(req) 
 
 
 
-const std::vector<ramp_msgs::Path> Modifier::perform() {
+const std::vector<ramp_msgs::Path> Modifier::perform() 
+{
   std::vector<ramp_msgs::Path> result;
 
   /*ROS_INFO("Modifier received path: %s", u.toString(mod_req.paths[0]).c_str());

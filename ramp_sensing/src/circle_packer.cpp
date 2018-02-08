@@ -1493,7 +1493,7 @@ std::vector<visualization_msgs::Marker> CirclePacker::drawCells(std::vector<Cell
 {
   std::vector<visualization_msgs::Marker> result;
 
-  double offset = 0.5;
+  double offset = 0;
   
   for(int i=0;i<cells.size();i++)
   {
@@ -1701,7 +1701,7 @@ Circle CirclePacker::fitCirOverContours(const std::vector<cv::Point> contours)
     }
   }
   
-  result.radius = max_dist;
+  result.radius = max_dist - 1;
 
   obs_points.clear();
   dists.clear();
@@ -1799,7 +1799,7 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours)
   std::vector<Circle> cs;
   for(int i=0;i<ps.size();i++)
   {
-    std::vector<Circle> temp = packCirsIntoPoly(ps[i], 1.5);
+    std::vector<Circle> temp = packCirsIntoPoly(ps[i], 1);
     cs.insert(std::end(cs), std::begin(temp), std::end(temp)); 
   }
   //ROS_INFO("cs.size(): %i", (int)cs.size());

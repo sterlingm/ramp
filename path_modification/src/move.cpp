@@ -56,7 +56,7 @@ const ramp_msgs::Path Move::perform()
    * Get the variables we will use in this modification
    */  
   // Distance we will use from the current position
-  Range dist_range(r_, 2*r_);
+  Range dist_range(dist_+r_, 2*(dist_+r_));
   dist = dist_range.random();
   //ROS_INFO("dist: %f", dist);
 
@@ -65,7 +65,7 @@ const ramp_msgs::Path Move::perform()
   double coll_cir_rad = r_+0.275;
   //ROS_INFO("coll_cir_rad: %f", coll_cir_rad);
 
-  /*urrent position
+  /* Current position
   Range dist_range(r_, 3*r_);
   dist = dist_range.random();
   ROS_INFO("dist: %f", dist);
@@ -178,7 +178,7 @@ const ramp_msgs::Path Move::perform()
     if(rand() % 2 == 0)
     {
       //ROS_INFO("Displacing in positive range");
-      double theta_displacement = rand() % 2 == 0 ? dir_range_pos.random() : dir_range_neg.random();
+      double theta_displacement = dir_range_pos.random();
       theta = utility_.displaceAngle(pos_theta, theta_displacement);
       //ROS_INFO("theta_displacement: %f theta: %f", theta_displacement, theta);
     }
