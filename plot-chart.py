@@ -37,7 +37,7 @@ def main():
     print pc_fq_acc
 
     # Insert where the first CC happens
-    cc_fq = np.insert(cc_fq, 0, 0.45)
+    cc_fq = np.insert(cc_fq, 0, 0.5)
     cc_fq_acc = np.cumsum(cc_fq)
     print 'cc'
     print cc_fq_acc
@@ -77,7 +77,7 @@ def main():
     plt.plot(pc_fq_acc, pc_y, 'k+', markersize=s)
     plt.plot(cc_fq_acc, cc_y, 'k+', markersize=s)
     plt.plot(sc_fq_acc, sc_y, 'k+', markersize=s)
-    plt.axis([0, 17.7, -0.05, 0.15])
+    plt.axis([0, 18.75, -0.05, 0.15])
 
     plt.show()
 

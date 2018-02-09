@@ -35,7 +35,7 @@ field_of_view_angle: 1.25
 
 fixed_control_cycle_rate: 1.2
 
-sensing_cycle_rate: 15
+sensing_cycle_rate: 10
 
 eval_weight_T: 1.75
 

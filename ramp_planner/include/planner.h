@@ -472,8 +472,10 @@ class Planner {
 
 
     ros::Time t_prevCC_ros_;
+    std::chrono::high_resolution_clock::time_point t_startRamp_;
     std::chrono::high_resolution_clock::time_point t_prevCC_;
     std::chrono::high_resolution_clock::time_point t_prevPC_;
+    std::chrono::high_resolution_clock::time_point t_prevSC_;
     uint8_t pc_switch_;
 
 
@@ -579,7 +581,7 @@ class Planner {
     std::vector<double> pc_durs_;  // planningCycleCallback
     std::vector<double> pc_freq_;  // planningCycleCallback
     std::vector<double> sc_durs_;  // sensingCycleCallback
-    int sc_freq_;                         // init
+    std::vector<double> sc_freq_;                    // doControlCycle
     std::vector<double> cc_durs_;                    // doControlCycle
     std::vector<double> cc_freq_;                    // doControlCycle
     std::vector<double> trajec_durs_;                // requestTrajectory

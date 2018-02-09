@@ -224,8 +224,13 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   //ROS_INFO("In sensingCycleCallback");
   ////ROS_INFO("msg.obstacles.size(): %i", (int) msg.obstacles.size());
   ////ROS_INFO("msg: %s", utility_.toString(msg).c_str());
+  
+  duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now() - t_prevSC_);
+  sc_freqs_.push_back(time_span);
 
+  t_prevSC_ = high_resolution_clock::now();
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
+
   
   ob_trajectory_.clear();
   obs_.clear();
@@ -331,16 +336,16 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     {
       dir = 0.001;
     }
-    modifier_->move_dir_  = dir;
-    modifier_->move_dist_ = dist;
-    modifier_->move_ob_r_ = msg.obstacles.at(i_closest).cirGroup.fitCir.radius;
+    modifier_->repair_dir_  = dir;
+    modifier_->repair_dist_ = dist;
+    modifier_->repair_ob_r_ = msg.obstacles.at(i_closest).cirGroup.fitCir.radius;
     ////ROS_INFO("dir: %f dist: %f ob_r: %f", dir, dist, msg.obstacles[i_closest].radius);
   }
  
   else
   {
     // Set direction of robot for the move operator (if no obs, then this doesn't matter much)
-    modifier_->move_dir_ = startPlanning_.msg_.positions[2];
+    modifier_->repair_dir_ = startPlanning_.msg_.positions[2];
   }
 
 
@@ -3251,6 +3256,13 @@ void Planner::doControlCycle()
   //ROS_INFO("controlCycle_: %f", controlCycle_.toSec());
   //////ROS_INFO("Time between control cycles: %f", (ros::Time::now() - t_prevCC_).toSec());
   ////////ROS_INFO("Number of planning cycles that occurred between CC's: %i", c_pc_);
+  
+  // If 1st CC, then use start of runtime as the frequency
+  // Only use this value for visualization in charts b/c
+  // it only corresponds to the time we spent doing planning cycles before moving robot
+  duration<double> time_span = num_cc_ > 0 ? duration_cast<microseconds>(high_resolution_clock::now() - t_prevCC_) : duration_cast<microseconds>(high_resolution_clock::now() - t_startRamp_)
+
+  cc_freq_.push_back( time_span.count() );
 
   t_prevCC_ = high_resolution_clock::now();
   t_prevCC_ros_ = ros::Time::now();
@@ -4360,6 +4372,8 @@ void Planner::go()
   // Do planning until robot has reached goal
   // D = 0.4 if considering mobile base, 0.2 otherwise
   ros::Time t_startLoop = ros::Time::now();
+  t_startRamp_ = high_resolution_clock::now();
+
   goalThreshold_ = 0.25;
   while( (latestUpdate_.comparePosition(goal_, false) > goalThreshold_) && ros::ok()) 
   {
