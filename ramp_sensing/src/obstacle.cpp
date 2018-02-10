@@ -27,7 +27,7 @@ Obstacle::Obstacle(float radius, int costmap_width, int costmap_height, float co
 
   x_translate_costmap_ = x_min;
   y_translate_costmap_ = y_min;
-  //ROS_INFO("width: %i height: %i o_x: %f o_y: %f x_max: %f x_min: %f y_max: %f y_min: %f", costmap_width_, costmap_height_, costmap_origin_x_, costmap_origin_y_, x_max, x_min, y_max, y_min);
+  ROS_INFO("width: %i height: %i o_x: %f o_y: %f x_max: %f x_min: %f y_max: %f y_min: %f", costmap_width_, costmap_height_, costmap_origin_x_, costmap_origin_y_, x_max, x_min, y_max, y_min);
 }
 
 Obstacle::~Obstacle() {}

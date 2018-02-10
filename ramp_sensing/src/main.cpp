@@ -37,6 +37,13 @@ std::vector< std::string > ob_odoms;
 std::map< std::string, uint8_t > topic_index_map;
 nav_msgs::OccupancyGrid global_grid;
 
+double x_max = 6.0;
+double y_max = 6.0;
+double obs1x = 0.0;
+double obs1y;
+double obs1r = 0.5;
+double step1 = 0.1;
+
 double radius;
 std::vector<double> dof_min;
 std::vector<double> dof_max;
@@ -506,7 +513,7 @@ void publishList(const ros::TimerEvent& e)
 
 void publishMarkers(const ros::TimerEvent& e)
 {
-  //ROS_INFO("In publishMarkers");
+  // ROS_INFO("In publishMarkers");
   
   // Publish a single Marker
   visualization_msgs::MarkerArray result;
@@ -514,15 +521,15 @@ void publishMarkers(const ros::TimerEvent& e)
   
   std::vector<visualization_msgs::Marker> markers = convertObsToMarkers();
 
-  //ROS_INFO("Publishing %i markers", (int)markers.size());
+  // ROS_INFO("Publishing %i markers", (int)markers.size());
 
   result.markers = markers;
   
   std::vector<visualization_msgs::Marker> texts;
   std::vector<visualization_msgs::Marker> arrows;
 
-  //ROS_INFO("markers.size(): %i", (int)markers.size());
-  //ROS_INFO("prev_velocities.size(): %i", (int)prev_velocities.size());
+  // ROS_INFO("markers.size(): %i", (int)markers.size());
+  // ROS_INFO("prev_velocities.size(): %i", (int)prev_velocities.size());
 
   /*
    * Make text to show the linear velocity value for each object
@@ -530,10 +537,10 @@ void publishMarkers(const ros::TimerEvent& e)
    */
   for(int i=0;i<markers.size();i++)
   {
-    //ROS_INFO("Creating text and arrow for marker i: %i", i);
-    //ROS_INFO("prev_velocities.size(): %i", (int)prev_velocities.size());
-    //ROS_INFO("prev_velocities[%i].size(): %i", i, (int)prev_velocities[i].size());
-    //ROS_INFO("Marker %i position: (%f, %f) v: %f", i, markers[i].pose.position.x, markers[i].pose.position.y, prev_velocities[prev_velocities.size()-1][i].v);
+    // ROS_INFO("Creating text and arrow for marker i: %i", i);
+    // ROS_INFO("prev_velocities.size(): %i", (int)prev_velocities.size());
+    // ROS_INFO("prev_velocities[%i].size(): %i", i, (int)prev_velocities[i].size());
+    // ROS_INFO("Marker %i position: (%f, %f) v: %f", i, markers[i].pose.position.x, markers[i].pose.position.y, prev_velocities[prev_velocities.size()-1][i].v);
     visualization_msgs::Marker text;
     visualization_msgs::Marker arrow;
 
@@ -567,7 +574,7 @@ void publishMarkers(const ros::TimerEvent& e)
     if(prev_velocities[prev_velocities.size()-1].size() > 0)
     {
       text.text = std::to_string(prev_velocities[prev_velocities.size()-1][i].v);
-      //ROS_INFO("Velocity: %s", text.text.c_str());
+      // ROS_INFO("Velocity: %s", text.text.c_str());
     }
 
     // Set arrow points
@@ -588,10 +595,10 @@ void publishMarkers(const ros::TimerEvent& e)
     arrow.pose = text.pose;
     
     // Set the arrow orientation
-    //ROS_INFO("cir_obs.size(): %i prevTheta.size(): %i index: %i", (int)cir_obs.size(), (int)cir_obs[i]->prevTheta.size(), (int)cir_obs[i]->prevCirs.size()-1);
+    // ROS_INFO("cir_obs.size(): %i prevTheta.size(): %i index: %i", (int)cir_obs.size(), (int)cir_obs[i]->prevTheta.size(), (int)cir_obs[i]->prevCirs.size()-1);
 
     double theta = cir_obs[i]->prevTheta.size() > 0 ? cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] : 0;
-    //ROS_INFO("prevTheta.size(): %i theta: %f", (int)cir_obs[i]->prevTheta.size(), theta);
+    // ROS_INFO("prevTheta.size(): %i theta: %f", (int)cir_obs[i]->prevTheta.size(), theta);
     tf::Quaternion q = tf::createQuaternionFromYaw(theta);
     tf::quaternionTFToMsg(q, arrow.pose.orientation);
     
@@ -684,10 +691,10 @@ void publishMarkers(const ros::TimerEvent& e)
   result.markers.push_back(text);
   
 
-  //ROS_INFO("result.markers.size(): %i", (int)result.markers.size());
+  // ROS_INFO("result.markers.size(): %i", (int)result.markers.size());
 
   pub_rviz.publish(result);
-  //ROS_INFO("Exiting publishMarkers");
+  // ROS_INFO("Exiting publishMarkers");
 }
 
 
@@ -1476,9 +1483,9 @@ void initGlobalMap()
 
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
-  //ROS_INFO("**************************************************");
-  //ROS_INFO("In costmapCb");
-  //ROS_INFO("**************************************************");
+  // ROS_INFO("**************************************************");
+  // ROS_INFO("In costmapCb");
+  // ROS_INFO("**************************************************");
   ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;
   t_last_costmap = ros::Time::now();
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
@@ -1504,7 +1511,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   //global_grid = half;
   
 
-  //ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
+  // ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
   // Consolidate this occupancy grid with prev ones
   nav_msgs::OccupancyGrid accumulated_grid;
   //consolidateCostmaps(half, prev_grids, consolidated_grid);
@@ -1551,10 +1558,10 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   //ROS_INFO("cirs array initial (right after goMyBlos()):");
   for(int i=0;i<cirs.size();i++)
   {
-    //ROS_INFO("Circle %i: (%f,%f) radius: %f", i, cirs[i].center.x, cirs[i].center.y, cirs[i].radius);
+    // ROS_INFO("Circle %i: (%f,%f) radius: %f", i, cirs[i].center.x, cirs[i].center.y, cirs[i].radius);
   }
 
-  //ROS_INFO("Finished getting cirs");
+  // ROS_INFO("Finished getting cirs");
 
   /*
    * Discard any circles too close to boundaries because those are likely walls
@@ -1605,7 +1612,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     cirs[i].center.x = x;
     cirs[i].center.y = y;
     cirs[i].radius *= global_grid.info.resolution;
-    //ROS_INFO("New Point: (%f,%f) New Radius: %f ", x, y, cirs[i].radius);
+    // ROS_INFO("New Point: (%f,%f) New Radius: %f ", x, y, cirs[i].radius);
   }
  
 
@@ -1810,6 +1817,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
 
   // Push on velocities for data
+  velocities.push_back(Velocity());
   prev_velocities.push_back(velocities);
   
   /*
@@ -1829,19 +1837,38 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   obs.clear();
   list.obstacles.clear();
 
+  // // Moving obstacles
+  // obs1x += step1;
+  // obs1y = x_max - obs1x;
+  // Circle cir1;
+  // cir1.center.x = 3.0;
+  // cir1.center.y = 3.0;
+  // cir1.radius = 0.5;
+  // CircleOb cirob1;
+  // cirob1.cir = cir1;
+  // CircleOb *cirob1ptr = &cirob1;
+  // cir_obs.push_back(cirob1ptr);
+  // if (obs1x >= x_max) {
+  //   step1 = -fabs(step1);
+  // } else if (obs1x <= 0.0) {
+  //   step1 = fabs(step1);
+  // }
+  // printf("%lf\n", cir_obs[0]->cir.radius);
+
   // Populate list
   for(int i=0;i<cir_obs.size();i++)
   {
-    //ROS_INFO("Creating obstacle, prevCirs.size(): %i prevTheta.size(): %i", (int)cir_obs[i]->prevCirs.size(), (int)cir_obs[i]->prevTheta.size());
+    // ROS_INFO("Creating obstacle, prevCirs.size(): %i prevTheta.size(): %i", (int)cir_obs[i]->prevCirs.size(), (int)cir_obs[i]->prevTheta.size());
     Obstacle o(cir_obs[i]->cir.radius, costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res, global_grid.info.origin.position.x, global_grid.info.origin.position.y); 
     
     // Update values
+    // printf("update value\n");
     float theta = cir_obs[i]->prevTheta.size() > 0 ? cir_obs[i]->prevTheta[cir_obs[i]->prevTheta.size()-1] : initial_theta;
     o.update(cir_obs[i]->cir, velocities[i], theta);
   
     obs.push_back(o);
     list.obstacles.push_back(o.msg_);
-    //ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
+    // ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
   }
 
   // Record duration data
@@ -1850,9 +1877,9 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
   //ROS_INFO("Duration: %f", (ros::Time::now()-t_last_costmap).toSec());
   num_costmaps++;
-  //ROS_INFO("**************************************************");
-  //ROS_INFO("Exiting costmapCb");
-  //ROS_INFO("**************************************************");
+  // ROS_INFO("**************************************************");
+  // ROS_INFO("Exiting costmapCb");
+  // ROS_INFO("**************************************************");
 }
 
 void writeData()
@@ -1946,8 +1973,8 @@ void reportPredictedVelocity(int sig)
     average_v /= count_v;
     average_w /= count_w;
 
-    printf("\nPredicted Velocities range=[%f,%f], average: %f\n", min_v, max_v, average_v);
-    printf("\nPredicted Velocities range=[%f,%f], average: %f\n", min_w, max_w, average_w);
+    // printf("\nPredicted Velocities range=[%f,%f], average: %f\n", min_v, max_v, average_v);
+    // printf("\nPredicted Velocities range=[%f,%f], average: %f\n", min_w, max_w, average_w);
   }
 
   //ROS_INFO("Average differences in circle detection");

@@ -229,6 +229,28 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   ////ROS_INFO("msg.obstacles.size(): %i", (int) msg.obstacles.size());
   ////ROS_INFO("msg: %s", utility_.toString(msg).c_str());
 
+  obs_msg = msg;
+
+  // Moving obstacles
+  obs1x += step1;
+  obs1y = x_max - obs1x;
+  ramp_msgs::Obstacle obs1;
+  obs1.ob_ms.positions.push_back(obs1x);
+  obs1.ob_ms.positions.push_back(obs1y);
+  obs1.ob_ms.positions.push_back(0.0);
+  obs1.ob_ms.velocities.push_back(0.0);
+  obs1.ob_ms.velocities.push_back(0.0);
+  obs1.ob_ms.velocities.push_back(0.0);
+  obs1.radius = obs1r;
+  obs_msg.obstacles.push_back(obs1);
+  if (obs1x >= x_max) {
+    step1 = -fabs(step1);
+  } else if (obs1x <= 0.0) {
+    step1 = fabs(step1);
+  }
+
+  // ROS_INFO("%lf", obs_msg.obstacles[0].T_w_odom.translation.x);
+  
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
   
   ob_trajectory_.clear();
@@ -240,18 +262,18 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   /*
    * Predict obstacle trajectories
    */
-  for(uint8_t i=0;i<msg.obstacles.size();i++)
+  for(uint8_t i=0;i<obs_msg.obstacles.size();i++)
   {
-    RampTrajectory ob_temp_trj = getPredictedTrajectory(msg.obstacles.at(i));
+    RampTrajectory ob_temp_trj = getPredictedTrajectory(obs_msg.obstacles.at(i));
     if(ob_trajectory_.size() < i+1)
     {
       ob_trajectory_.push_back(ob_temp_trj);
-      ob_radii_.push_back(msg.obstacles[i].radius);
+      ob_radii_.push_back(obs_msg.obstacles[i].radius);
     }
     else
     {
       ob_trajectory_.at(i) = ob_temp_trj;
-      ob_radii_.at(i) = msg.obstacles[i].radius;
+      ob_radii_.at(i) = obs_msg.obstacles[i].radius;
     }
 
     copy.trajectories_.push_back(ob_temp_trj);
@@ -314,7 +336,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   if(ob_trajectory_.size() > 0)
   {
     uint8_t i_closest=0;
-    for(uint8_t i=1;i<msg.obstacles.size();i++)
+    for(uint8_t i=1;i<obs_msg.obstacles.size();i++)
     {
       if(fabs(utility_.positionDistance(latestUpdate_.msg_.positions, ob_trajectory_.at(i).msg_.trajectory.points.at(0).positions)) < fabs(utility_.positionDistance(latestUpdate_.msg_.positions, ob_trajectory_.at(i_closest).msg_.trajectory.points.at(0).positions)))
       {
@@ -338,8 +360,8 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     }
     modifier_->move_dir_  = dir;
     modifier_->move_dist_ = dist;
-    modifier_->move_ob_r_ = msg.obstacles.at(i_closest).radius;
-    ////ROS_INFO("dir: %f dist: %f ob_r: %f", dir, dist, msg.obstacles[i_closest].radius);
+    modifier_->move_ob_r_ = obs_msg.obstacles.at(i_closest).radius;
+    ////ROS_INFO("dir: %f dist: %f ob_r: %f", dir, dist, obs_msg.obstacles[i_closest].radius);
   }
  
   else
@@ -1796,9 +1818,9 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   ob_dists_timer_.stop();
 
 
-  sendPop_ = ros::Duration(0.5); // 0.5second, 2hz
+  sendPop_ = ros::Duration(0.05); // second
   sendPopTimer_ = h.createTimer(sendPop_, &Planner::sendPopulationCb, this);
-  sendPopTimer_.stop();
+  // sendPopTimer_.stop();
 
   // Set the ranges vector
   ranges_ = r;
@@ -2739,9 +2761,9 @@ void Planner::modifyTrajec(std::vector<RampTrajectory>& result)
   // p2.addBeforeGoal(MotionState(4.0, 3.0, 0.785));
   // modded_paths.push_back(p2);
   // Preset path 3
-  Path p3(latestUpdate_, goal_);
-  p3.addBeforeGoal(MotionState(5.0, 1.0, 0.785));
-  modded_paths.push_back(p3);
+  // Path p3(latestUpdate_, goal_);
+  // p3.addBeforeGoal(MotionState(5.0, 1.0, 0.785));
+  // modded_paths.push_back(p3);
 
   ros::Time t_for = ros::Time::now();
   // For each targeted path,
@@ -3710,12 +3732,49 @@ void Planner::sendPopulation()
     ma.markers.push_back(pop_trj);
   }
 
-  // for(int i=0;i<ob_trajectory_.size();i++)
-  // {
-  //   visualization_msgs::Marker ob_trj;
-  //   buildLineList(ob_trajectory_[i], ++id_line_list_, ob_trj);
-  //   ma.markers.push_back(ob_trj);
-  // }
+  for(int i=0;i<obs_msg.obstacles.size();i++)
+  {
+    visualization_msgs::Marker ob;
+    ob.header.stamp = ros::Time::now();
+    ob.id = 3333 + i;
+    ob.header.frame_id = global_frame_;
+    ob.ns = "basic_shapes";
+
+    ob.type = visualization_msgs::Marker::SPHERE;
+
+    ob.action = visualization_msgs::Marker::ADD;
+    
+    // Set positions
+    ob.pose.position.x = obs_msg.obstacles[i].ob_ms.positions[0];
+    ob.pose.position.y = obs_msg.obstacles[i].ob_ms.positions[1];
+    ob.pose.position.z = 0.01;
+    
+
+    // Set orientations
+    ob.pose.orientation.x = 0.0;
+    ob.pose.orientation.y = 0.0;
+    ob.pose.orientation.z = 0.0;
+    ob.pose.orientation.w = 1.0;
+  
+
+    // Set radii
+    ob.scale.x = obs_msg.obstacles[i].radius;
+    ob.scale.y = obs_msg.obstacles[i].radius;
+    ob.scale.z = 0.1;
+  
+
+    // Set colors
+    ob.color.r = 0;
+    ob.color.g = 1;
+    ob.color.b = 0;
+    ob.color.a = 1;
+  
+
+    // Set lifetimes
+    ob.lifetime = ros::Duration(10.0);
+
+    ma.markers.push_back(ob);
+  }
 
   h_rviz_->sendMarkerArray(ma);
   t_prevSendPop_ = ros::Time::now();
@@ -4665,6 +4724,8 @@ void Planner::go(const ros::NodeHandle& h)
   } else {
     sendPopTimer_.stop();
   }
+
+  sendPopTimer_.start();
  
   //ROS_INFO("Starting CCs at t: %f", ros::Time::now().toSec());
 
