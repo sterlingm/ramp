@@ -231,7 +231,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
 
   obs_msg = msg;
 
-  // Moving obstacles
+  // Moving obstacle 1
   obs1x += step1;
   obs1y = x_max - obs1x;
   ramp_msgs::Obstacle obs1;
@@ -248,6 +248,35 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   } else if (obs1x <= 0.0) {
     step1 = fabs(step1);
   }
+
+  // Moving obstacle 2
+  obs2x += step2;
+  obs2y = x2_max - obs2x;
+  ramp_msgs::Obstacle obs2;
+  obs2.ob_ms.positions.push_back(obs2x);
+  obs2.ob_ms.positions.push_back(obs2y);
+  obs2.ob_ms.positions.push_back(0.0);
+  obs2.ob_ms.velocities.push_back(0.0);
+  obs2.ob_ms.velocities.push_back(0.0);
+  obs2.ob_ms.velocities.push_back(0.0);
+  obs2.radius = obs2r;
+  obs_msg.obstacles.push_back(obs2);
+  if (obs2x >= x2_max) {
+    step2 = -fabs(step2);
+  } else if (obs2x <= 0.0) {
+    step2 = fabs(step2);
+  }
+
+  // Moving obstacle 3
+  ramp_msgs::Obstacle obs3;
+  obs3.ob_ms.positions.push_back(obs2x + 3.0);
+  obs3.ob_ms.positions.push_back(obs2y + 3.0);
+  obs3.ob_ms.positions.push_back(0.0);
+  obs3.ob_ms.velocities.push_back(0.0);
+  obs3.ob_ms.velocities.push_back(0.0);
+  obs3.ob_ms.velocities.push_back(0.0);
+  obs3.radius = obs3r;
+  obs_msg.obstacles.push_back(obs3);
 
   // ROS_INFO("%lf", obs_msg.obstacles[0].T_w_odom.translation.x);
   

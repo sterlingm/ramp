@@ -209,7 +209,7 @@ class RampEnvSipd(gym.Env):
 
 
 
-    def _step(self, action):
+    def step(self, action):
         print('################################################################')
         dA, dD = self.decodeAction(action)
 

@@ -64,11 +64,18 @@ class Planner {
     std::vector<Path> preset_path;
     ramp_msgs::ObstacleList obs_msg;
     double x_max = 6.0;
-    double y_max = 6.0;
     double obs1x = 0.0;
     double obs1y;
     double obs1r = 0.5;
     double step1 = 0.1;
+
+    double x2_max = 3.0;
+    double obs2x = 3.0;
+    double obs2y;
+    double obs2r = 0.5;
+    double step2 = -0.05;
+
+    double obs3r = 0.5;
 
     // Hold the population of trajectories, 
     // the velocities of each trajectory's segments,

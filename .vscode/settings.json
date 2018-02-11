@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "/home/kai/env/bin/python3.4",
+    "python.pythonPath": "/home/kai/env/bin/python",
     "files.associations": {
         "array": "cpp",
         "*.ipp": "cpp",
@@ -9,5 +9,6 @@
         "hash_map": "cpp",
         "hash_set": "cpp",
         "initializer_list": "cpp"
-    }
+    },
+    "python.linting.enabled": false
 }
