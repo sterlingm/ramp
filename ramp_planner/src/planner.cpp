@@ -7,7 +7,7 @@
 
 Planner::Planner() : resolutionRate_(1.f / 10.f), ob_dists_timer_dur_(0.1), generation_(0), i_rt(1), goalThreshold_(0.4), num_ops_(6), D_(1.5f), 
   cc_started_(false), c_pc_(0), transThreshold_(1./50.), num_cc_(0), L_(0.33), h_traj_req_(0), h_eval_req_(0), h_control_(0), h_rviz_(0), modifier_(0), 
- delta_t_switch_(0.1), stop_(false), imminent_collision_(false), moving_on_coll_(false), log_enter_exit_(true), log_switching_(true), only_sensing_(0), id_line_list_(20000)
+ delta_t_switch_(0.1), stop_(false), imminent_collision_(false), moving_on_coll_(false), log_enter_exit_(true), log_switching_(true), only_sensing_(0), id_line_list_(200000)
 {
   imminentCollisionCycle_ = ros::Duration(1.f / 20.f);
   generationsPerCC_       = controlCycle_.toSec() / planningCycle_.toSec();
@@ -226,7 +226,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   ////ROS_INFO("msg: %s", utility_.toString(msg).c_str());
   
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now() - t_prevSC_);
-  sc_freqs_.push_back(time_span);
+  sc_freqs_.push_back(time_span.count());
 
   t_prevSC_ = high_resolution_clock::now();
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
@@ -286,7 +286,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     
     /*if(!population_.getBest().msg_.feasible && feasBeforeEval)
     {
-      //d_best_is_feas_ = d_best_is_feas_ + ros::Duration(1.f/sc_freq_);
+      //d_best_is_feas_ = d_best_is_feas_ + ros::Duration(1.f/sc_freqs_);
       d_best_is_feas_ = d_best_is_feas_ + (ros::Time::now() - t_startedFeas_);
     }
     else if(population_.getBest().msg_.feasible && !feasBeforeEval)
@@ -354,7 +354,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   //////////ROS_INFO("movingOn_ Feasible: %s", movingOn_.msg_.feasible ? "True" : "False");
 
 
-  duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now() - tStart);
+  time_span = duration_cast<microseconds>(high_resolution_clock::now() - tStart);
   sc_durs_.push_back( time_span.count() );
 
   num_scs_++;
@@ -1733,7 +1733,6 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   num_ccs_  = 0;
   num_switches_ = 0;
   pop_size_ = populationSize_;
-  sc_freq_  = t_sc_rate;
 
   ////ROS_INFO("Exiting Planner::init");
 } // End init
@@ -2872,7 +2871,7 @@ void Planner::planningCycleCallback()
   duration<double> time_span = duration_cast<microseconds>(tStart - t_prevPC_);
 
   // Record planning cycle frequency
-  pc_freq_.push_back( time_span.count() );
+  pc_freqs_.push_back( time_span.count() );
   
   // Set new previous PC time
   t_prevPC_ = tStart;
@@ -3260,9 +3259,9 @@ void Planner::doControlCycle()
   // If 1st CC, then use start of runtime as the frequency
   // Only use this value for visualization in charts b/c
   // it only corresponds to the time we spent doing planning cycles before moving robot
-  duration<double> time_span = num_cc_ > 0 ? duration_cast<microseconds>(high_resolution_clock::now() - t_prevCC_) : duration_cast<microseconds>(high_resolution_clock::now() - t_startRamp_)
+  duration<double> time_span = num_cc_ > 0 ? duration_cast<microseconds>(high_resolution_clock::now() - t_prevCC_) : duration_cast<microseconds>(high_resolution_clock::now() - t_startRamp_);
 
-  cc_freq_.push_back( time_span.count() );
+  cc_freqs_.push_back( time_span.count() );
 
   t_prevCC_ = high_resolution_clock::now();
   t_prevCC_ros_ = ros::Time::now();
@@ -3458,7 +3457,7 @@ void Planner::doControlCycle()
 
   ////ROS_INFO("Next CC Time: %f", controlCycle_.toSec());
 
-  duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now() - t_prevCC_);
+  time_span = duration_cast<microseconds>(high_resolution_clock::now() - t_prevCC_);
   cc_durs_.push_back( time_span.count() );
  
   num_cc_++;
@@ -3581,7 +3580,7 @@ void Planner::sendPopulation()
   {
     visualization_msgs::Marker pop_trj;
     //buildLineList(population_.trajectories_[i], ++id_line_list_, pop_trj);
-    buildLineList(population_.trajectories_[i], i, pop_trj);
+    buildLineList(population_.trajectories_[i], 300000+i, pop_trj);
     ma.markers.push_back(pop_trj);
   }
   for(int i=0;i<ob_trajectory_.size();i++)
@@ -3605,6 +3604,7 @@ void Planner::displayTrajectory(const ramp_msgs::RampTrajectory traj) const
 
 void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_msgs::Marker& result) const
 {
+  ROS_INFO("buildLineList id: %i", id);
   result.id = id;
   result.header.stamp = ros::Time::now();
   result.header.frame_id = global_frame_;
@@ -3937,14 +3937,14 @@ void Planner::printDurationData() const
 
   // Planning cycle frequency
   //ROS_INFO("Planning cycle frequencies");
-  double pc_freq_avg = 0;
-  for(int i=0;i<pc_freq_.size();i++)
+  double pc_freqs_avg = 0;
+  for(int i=0;i<pc_freqs_.size();i++)
   {
-    //ROS_INFO("pc_freq_[%i]: %f", i, pc_freq_[i]);
-    pc_freq_avg += i > 0 ? pc_freq_[i] : 0;
+    //ROS_INFO("pc_freqs_[%i]: %f", i, pc_freqs_[i]);
+    pc_freqs_avg += i > 0 ? pc_freqs_[i] : 0;
   }
-  pc_freq_avg /= pc_freq_.size()-1; //-1 because first value is not an elapsed time
-  //ROS_INFO("Average: %f", pc_freq_avg);
+  pc_freqs_avg /= pc_freqs_.size()-1; //-1 because first value is not an elapsed time
+  //ROS_INFO("Average: %f", pc_freqs_avg);
 
 
   // Sensing cycle durations
@@ -3959,7 +3959,7 @@ void Planner::printDurationData() const
   //ROS_INFO("Average: %f", sc_durs_avg);
 
   // Sensing cycle frequency
-  //ROS_INFO("Sensing cycle frequency: %i", sc_freq_);
+  //ROS_INFO("Sensing cycle frequency: %i", sc_freqs_);
 
 
   // Control cycle durations
@@ -3976,14 +3976,14 @@ void Planner::printDurationData() const
 
   // Control cycle frequency
   //ROS_INFO("Control cycle frequencies");
-  double cc_freq_avg = 0;
-  for(int i=0;i<cc_freq_.size();i++)
+  double cc_freqs_avg = 0;
+  for(int i=0;i<cc_freqs_.size();i++)
   {
-    //ROS_INFO("cc_freq_[%i]: %f", i, cc_freq_[i]);
-    cc_freq_avg += i > 0 ? cc_freq_[i] : 0;
+    //ROS_INFO("cc_freqs_[%i]: %f", i, cc_freqs_[i]);
+    cc_freqs_avg += i > 0 ? cc_freqs_[i] : 0;
   }
-  cc_freq_avg /= cc_freq_.size()-1; //-1 because first value is not an elapsed time
-  //ROS_INFO("Average: %f", cc_freq_avg);
+  cc_freqs_avg /= cc_freqs_.size()-1; //-1 because first value is not an elapsed time
+  //ROS_INFO("Average: %f", cc_freqs_avg);
 
 
   // Trajectory request durations
@@ -4074,9 +4074,9 @@ void Planner::writeDurationData()
   }
 
   // Planning cycle frequency
-  for(int i=0;i<pc_freq_.size();i++)
+  for(int i=0;i<pc_freqs_.size();i++)
   {
-    f_pc_freqs_<<"\n"<<pc_freq_[i];
+    f_pc_freqs_<<"\n"<<pc_freqs_[i];
   }
   
   // Sensing cycle durations
@@ -4084,8 +4084,12 @@ void Planner::writeDurationData()
   {
     f_sc_durs_<<"\n"<<sc_durs_[i];
   }
+  
+  for(uint16_t i=0;i<sc_freqs_.size();i++)
+  {
+    f_sc_freqs_<<"\n"<<sc_freqs_[i];
+  }
 
-  f_sc_freqs_<<sc_freq_;
 
 
   // Control cycle durations
@@ -4096,9 +4100,9 @@ void Planner::writeDurationData()
 
 
   // Control cycle frequency
-  for(int i=0;i<cc_freq_.size();i++)
+  for(int i=0;i<cc_freqs_.size();i++)
   {
-    f_cc_freqs_<<"\n"<<cc_freq_[i];
+    f_cc_freqs_<<"\n"<<cc_freqs_[i];
   }
 
 

@@ -579,11 +579,11 @@ class Planner {
      */
     // Variables to hold data
     std::vector<double> pc_durs_;  // planningCycleCallback
-    std::vector<double> pc_freq_;  // planningCycleCallback
+    std::vector<double> pc_freqs_;  // planningCycleCallback
     std::vector<double> sc_durs_;  // sensingCycleCallback
-    std::vector<double> sc_freq_;                    // doControlCycle
+    std::vector<double> sc_freqs_;                    // doControlCycle
     std::vector<double> cc_durs_;                    // doControlCycle
-    std::vector<double> cc_freq_;                    // doControlCycle
+    std::vector<double> cc_freqs_;                    // doControlCycle
     std::vector<double> trajec_durs_;                // requestTrajectory
     std::vector<double> eval_durs_;                  // requestEvaluation
     std::vector<double> mod_durs_;                   // modification
@@ -608,6 +608,7 @@ class Planner {
     std::ofstream f_error_correct_durs_no_eval_;
 
     void printDurationData() const;
+
 
     
     /*

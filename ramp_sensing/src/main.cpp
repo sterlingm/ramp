@@ -23,7 +23,8 @@
 #include <bfl/pdf/analyticconditionalgaussian.h>
 
 
-bool cropMap = false;
+bool cropMap = true;
+double rvizLifetime = 0.15;
 
 ramp_msgs::MotionState robotState;
 ramp_msgs::MotionState initialOdomState;
@@ -45,7 +46,7 @@ std::vector<visualization_msgs::Marker> cLines;
 nav_msgs::OccupancyGrid global_costmap;
 
 Utility util;
-double rate=20;
+double rate;
 ros::Publisher pub_obj, pub_rviz, pub_cons_costmap, pub_half_costmap, pub_global_costmap;
 std::vector< Obstacle> obs;
 ramp_msgs::ObstacleList list;
@@ -213,6 +214,7 @@ void loadParameters(const ros::NodeHandle& handle)
   {
     //ROS_ERROR("Did not find parameter robot_info/radius");
   }
+  
 
   // Get the dofs
   if(handle.hasParam("robot_info/DOF_min") && 
@@ -258,6 +260,16 @@ void loadParameters(const ros::NodeHandle& handle)
   else
   {
     //ROS_ERROR("Did not find rosparam /ramp/population_size");
+  }
+  
+  // Get the radius of the robot
+  if(handle.hasParam("ramp/sensing_cycle_rate")) 
+  {
+    handle.getParam("ramp/sensing_cycle_rate", rate);
+  }
+  else 
+  {
+    //ROS_ERROR("Did not find parameter robot_info/radius");
   }
 
   if(handle.hasParam("/ramp/field_of_view_angle"))
@@ -470,7 +482,8 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       cirMarker.header.stamp = ros::Time::now();
       cirMarker.header.frame_id = global_frame;
       cirMarker.ns = "basic_shapes";
-      cirMarker.id = (populationSize * i) - 1;
+      cirMarker.id = populationSize * i;
+      ROS_INFO("Bounding Circle id: %i popSize: %i i: %i", cirMarker.id, populationSize, i);
         
       cirMarker.type = visualization_msgs::Marker::SPHERE;
       cirMarker.action = visualization_msgs::Marker::ADD;
@@ -497,7 +510,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       cirMarker.color.g = 1;
       cirMarker.color.b = 0;
       cirMarker.color.a = 0.25;
-      cirMarker.lifetime = ros::Duration(0.1);
+      cirMarker.lifetime = ros::Duration(rvizLifetime);
 
       result.push_back(cirMarker);
 
@@ -509,6 +522,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
         marker.header.frame_id = global_frame;
         marker.ns = "basic_shapes";
         marker.id = 20000 + (populationSize * i) + j;
+        ROS_INFO("Packed cir id: %i popSize: %i i: %i j: %i", marker.id, populationSize, i, j);
         
         marker.type = visualization_msgs::Marker::SPHERE;
         marker.action = visualization_msgs::Marker::ADD;
@@ -538,7 +552,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
         marker.color.g = 1;
         marker.color.b = 0;
         marker.color.a = 1;
-        marker.lifetime = ros::Duration(0.1);
+        marker.lifetime = ros::Duration(rvizLifetime);
 
         result.push_back(marker);
       }
@@ -601,6 +615,9 @@ void publishMarkers(const ros::TimerEvent& e)
     text.id   = populationSize + markers.size()+i;
     arrow.id  = populationSize + markers.size()*(i+markers.size()+1);
 
+    ROS_INFO("text.id: %i popSize: %i markers.size(): %i i: %i", text.id, populationSize, (int)markers.size(), i);
+    ROS_INFO("arrow.id: %i popSize: %i markers.size(): %i i: %i", arrow.id, populationSize, (int)markers.size(), i);
+
     //text.header.frame_id  = "/map";
     //arrow.header.frame_id = "/map";
     //text.header.frame_id  = "/costmap";
@@ -647,7 +664,7 @@ void publishMarkers(const ros::TimerEvent& e)
     text.color.b = 1;
     text.color.a = 1;
     text.scale.z = 0.25;
-    text.lifetime = ros::Duration(0.1);
+    text.lifetime = ros::Duration(rvizLifetime);
 
     arrow.pose = text.pose;
     
@@ -664,7 +681,7 @@ void publishMarkers(const ros::TimerEvent& e)
     arrow.color.g = 0;
     arrow.color.b = 0;
     arrow.color.a = 1;
-    arrow.lifetime = ros::Duration(0.1);
+    arrow.lifetime = ros::Duration(rvizLifetime);
     
     // Push onto texts 
     texts.push_back(text);
@@ -698,7 +715,7 @@ void publishMarkers(const ros::TimerEvent& e)
   text.color.b = 0;
   text.color.a = 1;
   text.scale.z = 0.75;
-  text.lifetime = ros::Duration(0.1);
+  text.lifetime = ros::Duration(rvizLifetime);
 
   result.markers.push_back(text);
   
@@ -1683,6 +1700,7 @@ void setRobotPos(const ramp_msgs::MotionState& ms)
     viewingInfo.markers[i].header.frame_id = global_frame;
     viewingInfo.markers[i].ns = "basic_shapes";
     viewingInfo.markers[i].id = 100000 + i;
+    ROS_INFO("viewingInfo id: %i i: %i", viewingInfo.markers[i].id, i);
   }
 
   //pub_rviz.publish(viewingInfo);
