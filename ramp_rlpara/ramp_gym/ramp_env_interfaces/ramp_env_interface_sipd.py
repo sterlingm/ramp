@@ -269,7 +269,7 @@ class RampEnvSipd(gym.Env):
             self.best_D = rospy.get_param('/ramp/eval_weight_D')
 
         if self.done:
-            reward += 10.0 # TODO: Remove this?
+            reward += 30.0 # TODO: Remove this?
 
         return reward
 
