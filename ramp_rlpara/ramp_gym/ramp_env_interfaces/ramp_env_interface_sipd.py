@@ -83,6 +83,8 @@ class RampEnvSipd(gym.Env):
         self.one_exe_info_sub = rospy.Subscriber("ramp_collection_ramp_ob_one_run", RampObservationOneRunning,
                                                  self.oneExeInfoCallback)
 
+        self.setState(0.15, 0.5)
+
 
 
     def oneCycle(self, start_planner=False):
@@ -155,9 +157,13 @@ class RampEnvSipd(gym.Env):
         -------
             Multiple single states.
         """
-        coes = np.array([self.best_A, self.best_D])
+        # coes = np.array([self.best_A, self.best_D])
         # coes = np.random.rand(2)
-        self.setState(coes[0], coes[1])
+        # self.setState(coes[0], coes[1])
+
+        A = rospy.get_param('/ramp/eval_weight_A')
+        D = rospy.get_param('/ramp/eval_weight_D')
+        coes = np.array([A, D])
 
         self.oneCycle(start_planner=True)
         return self.getOb(), coes
@@ -234,28 +240,28 @@ class RampEnvSipd(gym.Env):
 
     def getReward(self):
         # First
-        A = rospy.get_param('/ramp/eval_weight_A')
-        D = rospy.get_param('/ramp/eval_weight_D')
-        dis = 0.1
-        dis += abs(A - self.preset_A) + abs(D - self.preset_D)
-        dis *= 3.0
-        reward = -dis
+        # A = rospy.get_param('/ramp/eval_weight_A')
+        # D = rospy.get_param('/ramp/eval_weight_D')
+        # dis = 0.1
+        # dis += abs(A - self.preset_A) + abs(D - self.preset_D)
+        # dis *= 3.0
+        # reward = -dis
 
         # Second
         # reward = -1.0
 
         # Third
-        # if self.best_t is None:
-        #     reward = 0.0
-        # else:
-        #     orien_cost = self.best_t.orien_fitness
+        if self.best_t is None:
+            reward = 0.0
+        else:
+            orien_cost = self.best_t.orien_fitness
 
-        #     if self.best_t.obs_fitness < 0.1:
-        #         obs_cost = 1.25
-        #     else:
-        #         obs_cost = 1.0 / self.best_t.obs_fitness
+            if self.best_t.obs_fitness < 0.1:
+                obs_cost = 1.25
+            else:
+                obs_cost = 1.0 / self.best_t.obs_fitness
 
-        #     reward = -obs_cost
+            reward = -obs_cost / 5.0
 
         if reward > self.max_reward:
             self.max_reward = reward
@@ -263,7 +269,7 @@ class RampEnvSipd(gym.Env):
             self.best_D = rospy.get_param('/ramp/eval_weight_D')
 
         if self.done:
-            reward += 30.0 # TODO: Remove this?
+            reward += 10.0 # TODO: Remove this?
 
         return reward
 

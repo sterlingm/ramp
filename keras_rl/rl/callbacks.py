@@ -4,6 +4,7 @@ import warnings
 import timeit
 import json
 from tempfile import mkdtemp
+import rospy
 
 import numpy as np
 
@@ -446,6 +447,8 @@ class TrainEpisodeLoggerSip(Callback):
         self.step_r = []
         self.step_q = []
         self.step_loss = []
+        self.epi_A = []
+        self.epi_D = []
 
     def on_train_begin(self, logs):
         self.train_start = timeit.default_timer()
@@ -542,10 +545,27 @@ class TrainEpisodeLoggerSip(Callback):
 
         plt.figure(4)
         self.epi_r_arr.append(variables['episode_reward'])
-        epi_r_smoothed = pd.Series(self.epi_r_arr).rolling(10, min_periods = 10).mean()
+        epi_r_smoothed = pd.Series(self.epi_r_arr).rolling(1, min_periods = 1).mean()
         plt.plot(epi_r_smoothed)
         plt.xlabel('Episode')
         plt.ylabel('Episode Reward')
+
+        A = rospy.get_param('/ramp/eval_weight_A')
+        D = rospy.get_param('/ramp/eval_weight_D')
+
+        plt.figure(44)
+        self.epi_A.append(A)
+        epi_A_smoothed = pd.Series(self.epi_A).rolling(1, min_periods = 1).mean()
+        plt.plot(epi_A_smoothed)
+        plt.xlabel('Episode')
+        plt.ylabel('A')
+
+        plt.figure(444)
+        self.epi_D.append(D)
+        epi_D_smoothed = pd.Series(self.epi_D).rolling(1, min_periods = 1).mean()
+        plt.plot(epi_D_smoothed)
+        plt.xlabel('Episode')
+        plt.ylabel('D')
 
         plt.pause(0.0001)
 
@@ -573,13 +593,13 @@ class TrainEpisodeLoggerSip(Callback):
             step_coes1_smoothed = pd.Series(self.step_coes1).rolling(40, min_periods = 40).mean()
             plt.plot(step_coes1_smoothed)
             plt.xlabel('Step')
-            plt.ylabel('Coes 1')
+            plt.ylabel('A')
 
             plt.figure(7)
             step_coes2_smoothed = pd.Series(self.step_coes2).rolling(40, min_periods = 40).mean()
             plt.plot(step_coes2_smoothed)
             plt.xlabel('Step')
-            plt.ylabel('Coes 2')
+            plt.ylabel('D')
 
             plt.figure(8)
             step_q_smoothed = pd.Series(self.step_q).rolling(40, min_periods = 40).mean()
