@@ -127,6 +127,7 @@ class Planner {
               const std::string         update_topic,
               const TrajectoryType      pop_type=HYBRID,
               const int                 gens_before_cc=0,
+              const bool                sensingBeforeCC=0,
               const double              t_sc_rate=10.,
               const double              t_fixed_cc=2.,
               const bool                only_sensing=0,
@@ -415,6 +416,9 @@ class Planner {
 
     // Number of generations to wait before starting control cycles
     unsigned int        generationsBeforeCC_;
+
+    // True if doing SCs while doing PCs before CCs start
+    bool                sensingBeforeCC_;
 
     // Maximum number of generations to occur between control cycles
     unsigned int        generationsPerCC_;

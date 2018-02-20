@@ -9,7 +9,7 @@ Planner::Planner() : resolutionRate_(1.f / 10.f), ob_dists_timer_dur_(0.1), gene
   cc_started_(false), c_pc_(0), transThreshold_(1./50.), num_cc_(0), L_(0.33), h_traj_req_(0), h_eval_req_(0), h_control_(0), h_rviz_(0), modifier_(0), 
  delta_t_switch_(0.1), stop_(false), imminent_collision_(false), moving_on_coll_(false), log_enter_exit_(true), log_switching_(true), only_sensing_(0), id_line_list_(200000)
 {
-  imminentCollisionCycle_ = ros::Duration(1.f / 20.f);
+  imminentCollisionCycle_ = ros::Duration(1.f / 10.f);
   generationsPerCC_       = controlCycle_.toSec() / planningCycle_.toSec();
 
   COLL_DISTS.push_back(0.42);
@@ -82,7 +82,7 @@ const MotionType Planner::findMotionType(const ramp_msgs::Obstacle ob) const
   // normally 0.0066 when idle
   if(mag_linear_t >= 0.0001 && mag_angular_t < 0.1) 
   {
-    //////////ROS_INFO("Obstacle MotionType: Translation");
+    //////////////ROS_INFO("Obstacle MotionType: Translation");
     result = MT_TRANSLATION;
   }
 
@@ -90,21 +90,21 @@ const MotionType Planner::findMotionType(const ramp_msgs::Obstacle ob) const
   // normally 0.053 when idle
   else if(mag_linear_t < 0.15 && mag_angular_t >= 0.1) 
   {
-    //////////ROS_INFO("Obstacle MotionType: Rotation");
+    //////////////ROS_INFO("Obstacle MotionType: Rotation");
     result = MT_ROTATION;
   }
 
   // Either translation+self-rotation or global rotation
   else if(mag_linear_t >= 0.15 && mag_angular_t >= 0.1) 
   {
-    //////////ROS_INFO("Obstacle MotionType: Translation and Rotation");
+    //////////////ROS_INFO("Obstacle MotionType: Translation and Rotation");
     result = MT_TRANSLATON_AND_ROTATION;
   }
 
   // Else, there is no motion
   else 
   {
-    //////////ROS_INFO("Obstacle MotionType: None");
+    //////////////ROS_INFO("Obstacle MotionType: None");
     result = MT_NONE;
   }
 
@@ -179,13 +179,14 @@ const ramp_msgs::Path Planner::getObstaclePath(const ramp_msgs::Obstacle ob, con
 
     double v = sqrt( pow(start.motionState.velocities[0], 2) + pow(start.motionState.velocities[1], 2) );
 
+    //ROS_INFO("start.motionState.positions.size(): %i velocities: %i", (int)start.motionState.positions.size(), (int)start.motionState.velocities.size());
     double theta = start.motionState.positions[2];
     double phi = start.motionState.positions[2];
     //double delta_x = cos(phi)*ob.odom_t.twist.twist.linear.x;
     //double delta_y = sin(phi)*ob.odom_t.twist.twist.linear.x;
     double delta_x = cos(phi)*v;
     double delta_y = sin(phi)*v;
-    //////////ROS_INFO("phi: %f theta: %f delta_x: %f delta_y: %f", phi, theta, delta_x, delta_y);
+    //////////////ROS_INFO("phi: %f theta: %f delta_x: %f delta_y: %f", phi, theta, delta_x, delta_y);
    
 
     ros::Duration predictionTime_(12.0f);
@@ -201,7 +202,7 @@ const ramp_msgs::Path Planner::getObstaclePath(const ramp_msgs::Obstacle ob, con
     goal.motionState.velocities.push_back(start.motionState.velocities.at(1));
     goal.motionState.velocities.push_back(start.motionState.velocities.at(2));
 
-    //////////ROS_INFO("goal: %s", utility_.toString(goal.motionState).c_str());
+    //////////////ROS_INFO("goal: %s", utility_.toString(goal.motionState).c_str());
 
 
     // Push goal onto the path
@@ -222,8 +223,8 @@ const ramp_msgs::Path Planner::getObstaclePath(const ramp_msgs::Obstacle ob, con
 void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
 {
   //ROS_INFO("In sensingCycleCallback");
-  ////ROS_INFO("msg.obstacles.size(): %i", (int) msg.obstacles.size());
-  ////ROS_INFO("msg: %s", utility_.toString(msg).c_str());
+  ////////ROS_INFO("msg.obstacles.size(): %i", (int) msg.obstacles.size());
+  ////////ROS_INFO("msg: %s", utility_.toString(msg).c_str());
   
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now() - t_prevSC_);
   sc_freqs_.push_back(time_span.count());
@@ -256,8 +257,8 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     }
 
     copy.trajectories_.push_back(ob_temp_trj);
-    //////////ROS_INFO("Time to get obstacle trajectory: %f", (ros::Time::now() - start).toSec());
-    //////ROS_INFO("ob_trajectory_: %s", ob_temp_trj.toString().c_str());
+    //////////////ROS_INFO("Time to get obstacle trajectory: %f", (ros::Time::now() - start).toSec());
+    //////////ROS_INFO("ob_trajectory_: %s", ob_temp_trj.toString().c_str());
   } // end for
 
   ros::Time s = ros::Time::now();
@@ -269,7 +270,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   {
     ros::Duration d_since_cc = ros::Time::now() - t_prevCC_ros_;
     double t_start_new = (controlCycle_ - d_since_cc).toSec();
-    //////ROS_INFO("New t_start: %f", t_start_new);
+    //////////ROS_INFO("New t_start: %f", t_start_new);
     population_.setStartTime(t_start_new); 
   }
 
@@ -277,14 +278,14 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
    * Evaluate population if we're not almost at the next CC
    */
   ros::Duration d = ros::Time::now()-t_prevCC_ros_;
-  ////ROS_INFO("d.toSec(): %f controlCycle_.toSec(): %f", d.toSec(), controlCycle_.toSec());
-  if(d.toSec() < (controlCycle_.toSec()-0.1) || !moving_robot_)
+  ////////ROS_INFO("d.toSec(): %f controlCycle_.toSec(): %f", d.toSec(), controlCycle_.toSec());
+  /*if(d.toSec() < (controlCycle_.toSec()-0.1) || !moving_robot_)
   {
     bool feasBeforeEval = population_.getBest().msg_.feasible;
 
     //evaluatePopulation();
     
-    /*if(!population_.getBest().msg_.feasible && feasBeforeEval)
+   *if(!population_.getBest().msg_.feasible && feasBeforeEval)
     {
       //d_best_is_feas_ = d_best_is_feas_ + ros::Duration(1.f/sc_freqs_);
       d_best_is_feas_ = d_best_is_feas_ + (ros::Time::now() - t_startedFeas_);
@@ -292,8 +293,8 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     else if(population_.getBest().msg_.feasible && !feasBeforeEval)
     {
       t_startedFeas_ = ros::Time::now();
-    }*/
-  } // end if below threshold since last CC
+    }
+  } // end if below threshold since last CC*/
   
   
   /*
@@ -301,9 +302,8 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
    */
   if(cc_started_)
   {
-    bool feasBeforeEval = movingOn_.msg_.feasible;
 
-    //////////ROS_INFO("Evaluating movingOn_ in SC");
+    //////////////ROS_INFO("Evaluating movingOn_ in SC");
     evaluateTrajectory(movingOn_, false);
     moving_on_coll_ = !movingOn_.msg_.feasible;
   } // end if evaluating movingOn
@@ -314,6 +314,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   if(ob_trajectory_.size() > 0)
   {
     uint8_t i_closest=0;
+    ////ROS_INFO("ob_trajectory_.size(): %i msg.obstacles.size(): %i", (int)ob_trajectory_.size(), (int)msg.obstacles.size());
     for(uint8_t i=1;i<msg.obstacles.size();i++)
     {
       if(fabs(utility_.positionDistance(latestUpdate_.msg_.positions, ob_trajectory_.at(i).msg_.trajectory.points.at(0).positions)) < fabs(utility_.positionDistance(latestUpdate_.msg_.positions, ob_trajectory_.at(i_closest).msg_.trajectory.points.at(0).positions)))
@@ -321,7 +322,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
         i_closest = i; 
       }
     }
-    ////ROS_INFO("Closest ob: %s", utility_.toString(ob_trajectory_.at(i_closest).msg_.trajectory.points[0]).c_str());
+    ////////ROS_INFO("Closest ob: %s", utility_.toString(ob_trajectory_.at(i_closest).msg_.trajectory.points[0]).c_str());
 
     double dir = utility_.findAngleFromAToB(latestUpdate_.msg_.positions, 
         ob_trajectory_.at(i_closest).msg_.trajectory.points.at(0).positions);
@@ -331,7 +332,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     // Record data
     min_dist_obs_.push_back(dist);
 
-    ////ROS_INFO("SENSING CYCLE dir: %f", dir);
+    ////////ROS_INFO("SENSING CYCLE dir: %f", dir);
     if( fabs(dir) < 0.001 )
     {
       dir = 0.001;
@@ -339,7 +340,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     modifier_->repair_dir_  = dir;
     modifier_->repair_dist_ = dist;
     modifier_->repair_ob_r_ = msg.obstacles.at(i_closest).cirGroup.fitCir.radius;
-    ////ROS_INFO("dir: %f dist: %f ob_r: %f", dir, dist, msg.obstacles[i_closest].radius);
+    ////////ROS_INFO("dir: %f dist: %f ob_r: %f", dir, dist, msg.obstacles[i_closest].radius);
   }
  
   else
@@ -349,9 +350,9 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   }
 
 
-  //////////ROS_INFO("sensing cycle changing CC period to: %f", controlCycle_.toSec());
+  //////////////ROS_INFO("sensing cycle changing CC period to: %f", controlCycle_.toSec());
 
-  //////////ROS_INFO("movingOn_ Feasible: %s", movingOn_.msg_.feasible ? "True" : "False");
+  //////////////ROS_INFO("movingOn_ Feasible: %s", movingOn_.msg_.feasible ? "True" : "False");
 
 
   time_span = duration_cast<microseconds>(high_resolution_clock::now() - tStart);
@@ -361,7 +362,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   
   //sendPopulation();
   
-  /*//////ROS_INFO("Pausing in Sensing Cycle");
+  /*//////////ROS_INFO("Pausing in Sensing Cycle");
   ros::Duration d(1);
   d.sleep();
   std::cin.get();*/
@@ -522,12 +523,12 @@ const Population Planner::getPopulation( const MotionState init, const MotionSta
   }
 
   // Evaluate the population 
-  //////////ROS_INFO("Calling evaluatePopulation in getPopulation");
+  //////////////ROS_INFO("Calling evaluatePopulation in getPopulation");
   //result = evaluatePopulation(result);
   //population_ = result;
   //evaluatePopulation();
 
-  ////////////ROS_INFO("Exiting Planner::getRandomPopulation");
+  ////////////////ROS_INFO("Exiting Planner::getRandomPopulation");
   return result;
 } // End getPopulation
 
@@ -541,15 +542,15 @@ const Population Planner::getPopulation( const MotionState init, const MotionSta
  */
 const uint8_t Planner::getIndexStartPathAdapting(const RampTrajectory t) const 
 {
-  ////ROS_INFO("In Planner::getIndexStartPathAdapting");
-  ////////ROS_INFO("t transTraj.size(): %i", (int)t.transitionTraj_.trajectory.points.size());
-  ////////ROS_INFO("# of curves: %i", (int)t.msg_.curves.size());
+  ////////ROS_INFO("In Planner::getIndexStartPathAdapting");
+  ////////////ROS_INFO("t transTraj.size(): %i", (int)t.transitionTraj_.trajectory.points.size());
+  ////////////ROS_INFO("# of curves: %i", (int)t.msg_.curves.size());
   uint8_t result;
   bool    has_curve = t.msg_.curves.size() > 0;
 
   if(t.transitionTraj_.trajectory.points.size() > 0) 
   {
-    //////////ROS_INFO("In t.transitionTraj_.trajectory.points.size() > 0");
+    //////////////ROS_INFO("In t.transitionTraj_.trajectory.points.size() > 0");
     result = t.transitionTraj_.i_knotPoints.size()-1;
   }
   else if(t.msg_.curves.size() > 1 && t.transitionTraj_.trajectory.points.size() == 0)
@@ -571,11 +572,11 @@ const uint8_t Planner::getIndexStartPathAdapting(const RampTrajectory t) const
                                         t.msg_.trajectory.points.at( t.msg_.i_knotPoints.at(0)).positions) 
       < 0.001)
   {
-    ////////ROS_WARN("Adding 1 to result because first two position are the same, indicating a rotation to satisfy orientation");
+    ////////////ROS_WARN("Adding 1 to result because first two position are the same, indicating a rotation to satisfy orientation");
     result++;
   }*/
 
-  ////ROS_INFO("getIndexStartPathAdapting returning: %i", result);
+  ////////ROS_INFO("getIndexStartPathAdapting returning: %i", result);
   return result;
 }
 
@@ -591,7 +592,7 @@ const uint8_t Planner::getNumThrowawayPoints(const RampTrajectory traj, const ro
       i_kp<traj.msg_.i_knotPoints.size();
       i_kp++) 
   {
-    //////////ROS_INFO("i_kp: %i", (int)i_kp);
+    //////////////ROS_INFO("i_kp: %i", (int)i_kp);
     
     // Only adapt the best trajectory
     // TODO: Make this method not do a loop
@@ -600,23 +601,23 @@ const uint8_t Planner::getNumThrowawayPoints(const RampTrajectory traj, const ro
       // Get the knot point 
       trajectory_msgs::JointTrajectoryPoint point = traj.msg_.trajectory.points.at( 
                                                       traj.msg_.i_knotPoints.at(i_kp));
-      //////////ROS_INFO("point: %s", utility_.toString(point).c_str());
+      //////////////ROS_INFO("point: %s", utility_.toString(point).c_str());
 
       // Compare the durations
       if( (dur > point.time_from_start) || 
           (fabs(dur.toSec() - point.time_from_start.toSec()) < 0.0001) ) 
       {
-        //////////ROS_INFO("Past KP, dur.toSec(): %f kp time: %f", dur.toSec(), point.time_from_start.toSec());
+        //////////////ROS_INFO("Past KP, dur.toSec(): %f kp time: %f", dur.toSec(), point.time_from_start.toSec());
         result++;
       }
       else {
-        //////////ROS_INFO("Behind KP, dur.toSec(): %f kp time: %f", dur.toSec(), point.time_from_start.toSec());
+        //////////////ROS_INFO("Behind KP, dur.toSec(): %f kp time: %f", dur.toSec(), point.time_from_start.toSec());
         break;
       }
     } // end if best trajectory
     else
     {
-      //////////ROS_INFO("Not best trajectory in transition population, only removing first knot point (startPlanning_)");
+      //////////////ROS_INFO("Not best trajectory in transition population, only removing first knot point (startPlanning_)");
     }
   } // end for
 
@@ -630,13 +631,13 @@ void Planner::adaptPaths(const MotionState& ms, const ros::Duration& d, std::vec
 {
   if(log_enter_exit_)
   {
-    ////ROS_INFO("In Planner::adaptPaths");
+    ////////ROS_INFO("In Planner::adaptPaths");
   }
 
   result.clear();
 
-  //////////ROS_INFO("pop.paths.size(): %i", (int)pop.paths_.size());
-  //////////ROS_INFO("dur.toSec(): %f", dur.toSec());
+  //////////////ROS_INFO("pop.paths.size(): %i", (int)pop.paths_.size());
+  //////////////ROS_INFO("dur.toSec(): %f", dur.toSec());
 
   // Check that time has passed
   if(d.toSec() > 0) 
@@ -645,21 +646,21 @@ void Planner::adaptPaths(const MotionState& ms, const ros::Duration& d, std::vec
     // For each trajectory
     for(uint8_t i=0;i<population_.size();i++) 
     {
-      ////ROS_INFO("Path: %s", population_.paths_.at(i).toString().c_str());
-      ////ROS_INFO("Get Path: %s", population_.get(i).getNonHolonomicPath().toString().c_str());
+      ////////ROS_INFO("Path: %s", population_.paths_.at(i).toString().c_str());
+      ////////ROS_INFO("Get Path: %s", population_.get(i).getNonHolonomicPath().toString().c_str());
       Path temp = population_.paths_.at(i);
 
       // Track how many knot points we get rid of
       // Initialize to 1 to always remove starting position
       unsigned int throwaway=getNumThrowawayPoints(population_.get(i), d);
-      ////ROS_INFO("throwaway: %i", (int)throwaway);
+      ////////ROS_INFO("throwaway: %i", (int)throwaway);
 
       
       // If the whole path has been passed, adjust throwaway so that 
       //  we are left with a path that is: {new_start_, goal_}
       if( throwaway >= temp.size() ) 
       { 
-        ////////////ROS_INFO("Decrementing throwaway");
+        ////////////////ROS_INFO("Decrementing throwaway");
         throwaway = temp.size()-1;
       }
 
@@ -675,7 +676,7 @@ void Planner::adaptPaths(const MotionState& ms, const ros::Duration& d, std::vec
 
       // Set start_ to be the new starting configuration of the path
       temp.start_ = ms;
-      ////ROS_INFO("After adapting Path: %s", temp.toString().c_str());
+      ////////ROS_INFO("After adapting Path: %s", temp.toString().c_str());
 
       result.push_back(temp);
     } // end outer for
@@ -683,7 +684,7 @@ void Planner::adaptPaths(const MotionState& ms, const ros::Duration& d, std::vec
 
   if(log_enter_exit_)
   {
-    ////ROS_INFO("Exiting adaptPaths");
+    ////////ROS_INFO("Exiting adaptPaths");
   }
 } // End adaptPaths
 
@@ -694,9 +695,9 @@ void Planner::adaptPaths(const MotionState& ms, const ros::Duration& d, std::vec
 // 1 if before curve, 2 if on curve, 3 if past curve 
 // TODO: Check for the 2nd segment as well?
 const int Planner::estimateIfOnCurve(const MotionState ms, const ramp_msgs::BezierCurve curve) const {
-  //ROS_INFO("In estimateIfOnCurve");
-  ////ROS_INFO("ms: %s", ms.toString().c_str());
-  //ROS_INFO("curve: %s", utility_.toString(curve).c_str());
+  //////ROS_INFO("In estimateIfOnCurve");
+  ////////ROS_INFO("ms: %s", ms.toString().c_str());
+  //////ROS_INFO("curve: %s", utility_.toString(curve).c_str());
 
   double x = ms.msg_.positions.at(0);
   double y = ms.msg_.positions.at(1);
@@ -728,15 +729,15 @@ const int Planner::estimateIfOnCurve(const MotionState ms, const ramp_msgs::Bezi
                                 (y >= curve.controlPoints.at(2).positions.at(1));
 
 
-  //ROS_INFO("xSlope: %s xSlopeTwo: %s ySlope: %s ySlopeTwo: %s", xSlope ? "True" : "False", xSlopeTwo ? "True" : "False", ySlope ? "True" : "False", ySlopeTwo ? "True" : "False"); 
+  //////ROS_INFO("xSlope: %s xSlopeTwo: %s ySlope: %s ySlopeTwo: %s", xSlope ? "True" : "False", xSlopeTwo ? "True" : "False", ySlope ? "True" : "False", ySlopeTwo ? "True" : "False"); 
   
-  //ROS_INFO("xSegOne: %s xSegTwo: %s ySegOne: %s ySegTwo: %s", xSegOne ? "True" : "False", xSegTwo ? "True" : "False", ySegOne ? "True" : "False", ySegTwo ?  "True" : "False");
+  //////ROS_INFO("xSegOne: %s xSegTwo: %s ySegOne: %s ySegTwo: %s", xSegOne ? "True" : "False", xSegTwo ? "True" : "False", ySegOne ? "True" : "False", ySegTwo ?  "True" : "False");
 
   bool xGood = (xSegOne || xSegTwo);
   bool yGood = (ySegOne || ySegTwo);
 
   if(xGood && yGood) {
-    //ROS_INFO("Returning 2 (on curve)");
+    //////ROS_INFO("Returning 2 (on curve)");
     return 2;
   }
   
@@ -747,7 +748,7 @@ const int Planner::estimateIfOnCurve(const MotionState ms, const ramp_msgs::Bezi
   bool yPastOne = ySlope ?  y > curve.controlPoints.at(1).positions.at(1) :
                             y < curve.controlPoints.at(1).positions.at(1) ; 
 
-  //ROS_INFO("xPastOne: %s yPastOne: %s", xPastOne ? "True" : "False", yPastOne ? "True" : "False");
+  //////ROS_INFO("xPastOne: %s yPastOne: %s", xPastOne ? "True" : "False", yPastOne ? "True" : "False");
   // If past segment 1, check if past segment 2
   if(xPastOne && yPastOne)
   { 
@@ -757,16 +758,16 @@ const int Planner::estimateIfOnCurve(const MotionState ms, const ramp_msgs::Bezi
     bool yPastTwo = ySlopeTwo ?   y > curve.controlPoints.at(2).positions.at(1) :
                                   y < curve.controlPoints.at(2).positions.at(1) ; 
 
-    //ROS_INFO("xPastTwo: %s yPastTwo: %s", xPastTwo ? "True" : "False", yPastTwo ? "True" : "False");
+    //////ROS_INFO("xPastTwo: %s yPastTwo: %s", xPastTwo ? "True" : "False", yPastTwo ? "True" : "False");
     if(xPastTwo || yPastTwo)
     {
-      //ROS_INFO("Returning 3 (after curve)");
+      //////ROS_INFO("Returning 3 (after curve)");
       return 3;
     }
   } // end if past segment 1
 
   // Else, robot has not reached curve, return 1
-  //ROS_INFO("Returning 1 (robot has not reached the curve)");
+  //////ROS_INFO("Returning 1 (robot has not reached the curve)");
   return 1;
 }
 
@@ -783,9 +784,9 @@ const ramp_msgs::BezierCurve Planner::handleCurveEnd(const RampTrajectory traj) 
   if(traj.msg_.curves.size() > 1) 
   {
     result = traj.msg_.curves.at(1);
-    ////ROS_INFO("Curve 0 has ended, new curve: %s", utility_.toString(result).c_str());
+    ////////ROS_INFO("Curve 0 has ended, new curve: %s", utility_.toString(result).c_str());
     if(estimateIfOnCurve(startPlanning_, result) == 2) {
-      ////ROS_INFO("Adding .000001");
+      ////////ROS_INFO("Adding .000001");
       result.u_0 += 0.000001;
       result.ms_begin = startPlanning_.msg_;
     }
@@ -800,14 +801,14 @@ const ramp_msgs::BezierCurve Planner::handleCurveEnd(const RampTrajectory traj) 
   {
     if(traj.msg_.holonomic_path.points.size() > 3)
     {
-      ////ROS_INFO("traj.path: %s", utility_.toString(traj.msg_.holonomic_path).c_str());
+      ////////ROS_INFO("traj.path: %s", utility_.toString(traj.msg_.holonomic_path).c_str());
       if(traj.msg_.holonomic_path.points.size() == 3)
       {
 
       } // end if size==3
       if(traj.msg_.holonomic_path.points.size() < 4)
       {
-        //////////ROS_ERROR("traj.path.size(): %i", (int)traj.msg_.holonomic_path.points.size());
+        //////////////ROS_ERROR("traj.path.size(): %i", (int)traj.msg_.holonomic_path.points.size());
       }
       result.segmentPoints.push_back(traj.msg_.holonomic_path.points.at(1).motionState);
       result.segmentPoints.push_back(traj.msg_.holonomic_path.points.at(2).motionState);
@@ -824,8 +825,8 @@ const double Planner::updateCurvePos(const RampTrajectory& traj, const ros::Dura
 {
   if(log_enter_exit_)
   {
-    ////ROS_INFO("In Planner::updateCurvePos");
-    ////ROS_INFO("d: %f", d.toSec());
+    ////////ROS_INFO("In Planner::updateCurvePos");
+    ////////ROS_INFO("d: %f", d.toSec());
   }
 
   
@@ -835,24 +836,24 @@ const double Planner::updateCurvePos(const RampTrajectory& traj, const ros::Dura
   // if u_0==0 then estimateIfOnCurve returned 2 - already on curve
   if(curve.u_0 < 0.00001) 
   {
-    ////ROS_INFO("In if curve.u_0==0");
+    ////////ROS_INFO("In if curve.u_0==0");
 
     // Get the time at the start of the curve
     double t_s0 = traj.msg_.trajectory.points.at(
         traj.msg_.i_knotPoints.at(1)).time_from_start.toSec();
-    ////ROS_INFO("t_s0: %f", t_s0);
+    ////////ROS_INFO("t_s0: %f", t_s0);
 
     // t = the time spent moving on the curve
     double t = d.toSec() - t_s0;
-    ////ROS_INFO("t: %f", t);
+    ////////ROS_INFO("t: %f", t);
     
     // Previously was subtracting 1 from index. Not sure why that worked, but keep in mind if future issues arise
     // Check if index >= size because of rounding errors
     int index = floor(t*10)+1 >= curve.u_values.size() ? floor(t*10) : floor(t*10)+1;
-    ////ROS_INFO("index: %i u_values.size: %i", index, (int)curve.u_values.size());
+    ////////ROS_INFO("index: %i u_values.size: %i", index, (int)curve.u_values.size());
     if(index < curve.u_values.size())
     {
-      ////ROS_INFO("u_values[%i]: %f", index, curve.u_values.at(index));
+      ////////ROS_INFO("u_values[%i]: %f", index, curve.u_values.at(index));
     }
 
     if(t < 0.0001)
@@ -861,13 +862,13 @@ const double Planner::updateCurvePos(const RampTrajectory& traj, const ros::Dura
     }
     else if(index >= curve.u_values.size())
     {
-      ////ROS_INFO("index: %i curve.u_values.size(): %i, setting result to 1.1", index, (int)curve.u_values.size());
+      ////////ROS_INFO("index: %i curve.u_values.size(): %i, setting result to 1.1", index, (int)curve.u_values.size());
       result = 1.1;
     }
     else
     {
 
-      ////ROS_INFO("t: %f Adding %f", t, (t*curve.u_dot_0));
+      ////////ROS_INFO("t: %f Adding %f", t, (t*curve.u_dot_0));
       
       //result += t * curve.u_dot_0;
       result = curve.u_values.at(index);
@@ -877,13 +878,13 @@ const double Planner::updateCurvePos(const RampTrajectory& traj, const ros::Dura
   // Else, u_0 > 0, simply add to u_0
   else 
   {
-    ////ROS_INFO("Else curve.u_0 > 0: %f curve.u_dot_0: %f", curve.u_0, curve.u_dot_0);
+    ////////ROS_INFO("Else curve.u_0 > 0: %f curve.u_dot_0: %f", curve.u_0, curve.u_dot_0);
     result += curve.u_dot_0 * d.toSec();
   }
 
   if(log_enter_exit_)
   {
-    ////ROS_INFO("Exiting Planner::updateCurvePos");
+    ////////ROS_INFO("Exiting Planner::updateCurvePos");
   }
 
   return result;
@@ -896,9 +897,9 @@ void Planner::adaptCurves(const MotionState& ms, const ros::Duration& d, std::ve
 {
   if(log_enter_exit_)
   {
-    //ROS_INFO("In Planner::adaptCurves");
-    //ROS_INFO("d: %f", d.toSec());
-    //ROS_INFO("ms: %s", ms.toString().c_str());
+    //////ROS_INFO("In Planner::adaptCurves");
+    //////ROS_INFO("d: %f", d.toSec());
+    //////ROS_INFO("ms: %s", ms.toString().c_str());
   }
 
   ramp_msgs::BezierCurve blank;
@@ -906,28 +907,28 @@ void Planner::adaptCurves(const MotionState& ms, const ros::Duration& d, std::ve
   // Go through each trajectory 
   for(uint16_t i=0;i<population_.size();i++) 
   {
-    //ROS_INFO("Trajectory %i", (int)i);
+    //////ROS_INFO("Trajectory %i", (int)i);
     
     // If the trajectory has a curve
     // Don't check for best trajec here b/c we want to push on the same curve if we haven't moved on it, not a blank 
     // curve
     if(population_.get(i).msg_.curves.size() > 0) 
     {
-      //ROS_INFO("In if trajectory has curve");
+      //////ROS_INFO("In if trajectory has curve");
 
       // Set curve
       // If a trajectory has two curves, go straight to the second curve because the first is just a transition
       ramp_msgs::BezierCurve curve = population_.get(i).msg_.curves.size() > 1 ? population_.get(i).msg_.curves.at(1) :
                                                                         population_.get(i).msg_.curves.at(0) ;
-      ////ROS_INFO("Set curve to: %s", utility_.toString(curve).c_str());
+      ////////ROS_INFO("Set curve to: %s", utility_.toString(curve).c_str());
 
-      //////////////ROS_INFO("population_.getBestIndex: %i", (int)population_.calcBestIndex());
+      //////////////////ROS_INFO("population_.getBestIndex: %i", (int)population_.calcBestIndex());
       // If moving on this curve, update u
       if( i == population_.calcBestIndex() && 
             (curve.u_0 > 0. ||
              estimateIfOnCurve(ms, curve) == 2))
       {
-        //ROS_INFO("Moving on this curve");
+        //////ROS_INFO("Moving on this curve");
 
         // Get the new u_0 value
         curve.u_0 = updateCurvePos(population_.get(i), d);
@@ -937,12 +938,12 @@ void Planner::adaptCurves(const MotionState& ms, const ros::Duration& d, std::ve
       }  //end if moving on curve
       else if(i != population_.calcBestIndex())
       {
-        //ROS_INFO("Not moving on curve, erase it and start with new segment points");
+        //////ROS_INFO("Not moving on curve, erase it and start with new segment points");
         curve = blank;
       }
       else
       {
-        //////////ROS_INFO("Curve is for best trajectory, but not yet moving on curve");
+        //////////////ROS_INFO("Curve is for best trajectory, but not yet moving on curve");
       }
 
 
@@ -951,29 +952,29 @@ void Planner::adaptCurves(const MotionState& ms, const ros::Duration& d, std::ve
       // Check if done with current curve
       if( i == population_.calcBestIndex() && (curve.u_0 > curve.u_target || estimateIfOnCurve(ms, curve) == 3) )
       {
-        //ROS_INFO("Done with curve, u_0: %f", curve.u_0);
+        //////ROS_INFO("Done with curve, u_0: %f", curve.u_0);
         curve = handleCurveEnd(population_.get(i));
       } // end if done with 1st curve
       else
       {
-        //ROS_INFO("Not done with curve");
+        //////ROS_INFO("Not done with curve");
       }
 
-      ////ROS_INFO("Curve after adapting: %s", utility_.toString(curve).c_str());
+      ////////ROS_INFO("Curve after adapting: %s", utility_.toString(curve).c_str());
       result.push_back(curve);
     } // end if trajectory has curve
 
     // Else if there is no curve, push on a blank one
     else 
     {
-      //////////ROS_INFO("No curve");
+      //////////////ROS_INFO("No curve");
       result.push_back(blank);
     } // end else no curve
   } // end for
 
   if(log_enter_exit_)
   {
-    ////ROS_INFO("Exiting Planner::adaptCurves");
+    ////////ROS_INFO("Exiting Planner::adaptCurves");
   }
 } // End adaptCurves
 
@@ -985,8 +986,8 @@ void Planner::adaptPopulation(const MotionState& ms, const ros::Duration& d)
 {
   if(log_enter_exit_)
   {
-    ////ROS_INFO("In adaptPopulation");
-    ////ROS_INFO("d: %f", d.toSec());
+    ////////ROS_INFO("In adaptPopulation");
+    ////////ROS_INFO("d: %f", d.toSec());
   }
 
   //std::vector<Path> paths = adaptPaths(population_, ms, d);
@@ -1001,11 +1002,11 @@ void Planner::adaptPopulation(const MotionState& ms, const ros::Duration& d)
   // Create the vector to hold updated trajectories
   std::vector<ramp_msgs::TrajectoryRequest> tr_reqs;
   
-  ////////ROS_INFO("paths.size(): %i curves.size(): %i", (int)paths.size(), (int)curves.size());
+  ////////////ROS_INFO("paths.size(): %i curves.size(): %i", (int)paths.size(), (int)curves.size());
   // For each path, get a trajectory request
   for(uint16_t i=0;i<population_.size();i++) 
   {
-    ////////ROS_INFO("In 1st for, i: %i", (int)i);
+    ////////////ROS_INFO("In 1st for, i: %i", (int)i);
       
     // Add on the curve if necessary
     std::vector<ramp_msgs::BezierCurve> c;
@@ -1020,17 +1021,17 @@ void Planner::adaptPopulation(const MotionState& ms, const ros::Duration& d)
 
     tr_reqs.push_back(tr);
   }
-  //////ROS_INFO("tr_reqs.size(): %i", (int)tr_reqs.size());
+  //////////ROS_INFO("tr_reqs.size(): %i", (int)tr_reqs.size());
   
   // Get the new trajectories
   std::vector<RampTrajectory> updatedTrajecs;
   requestTrajectory(tr_reqs, updatedTrajecs);
 
-  //////ROS_INFO("updatedTrajecs.size(): %i", (int)updatedTrajecs.size());
+  //////////ROS_INFO("updatedTrajecs.size(): %i", (int)updatedTrajecs.size());
 
   for(uint16_t i=0;i<updatedTrajecs.size();i++)
   {
-    ////////ROS_INFO("In 2nd for, i: %i", (int)i);
+    ////////////ROS_INFO("In 2nd for, i: %i", (int)i);
       // Set temporary evaluation results - need to actually call requestEvaluation to get actual fitness
     updatedTrajecs.at(i).msg_.fitness   = population_.get(i).msg_.fitness;
     updatedTrajecs.at(i).msg_.feasible  = population_.get(i).msg_.feasible;
@@ -1038,15 +1039,15 @@ void Planner::adaptPopulation(const MotionState& ms, const ros::Duration& d)
     updatedTrajecs.at(i).msg_.t_start   = ros::Duration(t_fixed_cc_);
   } // end for
   
-  ////////////ROS_INFO("updatedTrajecs size: %i", (int)updatedTrajecs.size());
+  ////////////////ROS_INFO("updatedTrajecs size: %i", (int)updatedTrajecs.size());
   // Replace the population's trajectories_ with the updated trajectories
   population_.replaceAll(updatedTrajecs);
   
-  ////////////ROS_INFO("Done adapting, pop now: %s", population_.toString().c_str());
+  ////////////////ROS_INFO("Done adapting, pop now: %s", population_.toString().c_str());
   
   if(log_enter_exit_)
   {
-    //////ROS_INFO("Exiting adaptPopulation");
+    //////////ROS_INFO("Exiting adaptPopulation");
   }
 }
 
@@ -1084,14 +1085,14 @@ void Planner::buildTrajectoryRequest(const Path path, const std::vector<ramp_msg
   // If path size > 2, assign a curve
   if(path.size() > 2) 
   {
-    //////////ROS_INFO("In if path.size() > 2)");
+    //////////////ROS_INFO("In if path.size() > 2)");
 
     // If it's the first time getting a curve 
     if(curves.size() == 0 || curves.at(0).segmentPoints.size() == 0) 
     {
       if(path.size() > 2) 
       {
-        //////////ROS_INFO("In temp curve");
+        //////////////ROS_INFO("In temp curve");
         ramp_msgs::BezierCurve temp;
         
         temp.segmentPoints.push_back( path.msg_.points.at(0).motionState );
@@ -1103,14 +1104,14 @@ void Planner::buildTrajectoryRequest(const Path path, const std::vector<ramp_msg
     }
     else 
     {
-      //////////ROS_INFO("In else if path.size < 3");
+      //////////////ROS_INFO("In else if path.size < 3");
       result.bezierCurves = curves;
     } // end else
   } // end if
 
 
-  //////////ROS_INFO("result.path: %s", utility_.toString(result.path).c_str());
-  //////////ROS_INFO("Exiting Planner::buildTrajectoryRequest");
+  //////////////ROS_INFO("result.path: %s", utility_.toString(result.path).c_str());
+  //////////////ROS_INFO("Exiting Planner::buildTrajectoryRequest");
 }
 
 // Build a request for 1 trajectory with 0 curves
@@ -1140,19 +1141,19 @@ void Planner::buildEvaluationSrv(const RampTrajectory& trajec, ramp_msgs::Evalua
 
 void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::EvaluationRequest& result, bool full) const
 {
-  ////ROS_INFO("In Planner::buildEvaluationRequest(const RampTrajectory&, EvaluationRequest&, bool)");
-  ////ROS_INFO("trajec: %s", trajec.toString().c_str());
-  ////////ROS_INFO("full: %s", full ? "True" : "False");
+  ////////ROS_INFO("In Planner::buildEvaluationRequest(const RampTrajectory&, EvaluationRequest&, bool)");
+  ////////ROS_INFO("trajec: %s", trajec.toString().c_str());
+  ////////////ROS_INFO("full: %s", full ? "True" : "False");
   
-  ////ROS_INFO("latestUpdate_.msg_.positions.size(): %i", (int)latestUpdate_.msg_.positions.size());
-  ////ROS_INFO("latestUpdate_.msg_.velocities.size(): %i", (int)latestUpdate_.msg_.velocities.size());
+  ////////ROS_INFO("latestUpdate_.msg_.positions.size(): %i", (int)latestUpdate_.msg_.positions.size());
+  ////////ROS_INFO("latestUpdate_.msg_.velocities.size(): %i", (int)latestUpdate_.msg_.velocities.size());
 
   result.robot_radius = robot_radius_;
 
   result.trajectory   = trajec.msg_;
   result.currentTheta = latestUpdate_.msg_.positions[2]; 
 
-  ////ROS_INFO("movingOn_.msg_.trajectory.points.size(): %i", (int)movingOn_.msg_.trajectory.points.size());
+  ////////ROS_INFO("movingOn_.msg_.trajectory.points.size(): %i", (int)movingOn_.msg_.trajectory.points.size());
   if(movingOn_.msg_.trajectory.points.size() > 0)
   {
     result.theta_cc = 
@@ -1169,7 +1170,7 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
     result.obstacle_cir_groups.push_back(obs_[i].cirGroup);
   }
 
-  //////////ROS_INFO("imminent_collision: %s", imminent_collision_ ? "True" : "False");
+  //////////////ROS_INFO("imminent_collision: %s", imminent_collision_ ? "True" : "False");
   
   /*if(!imminent_collision_ && (ros::Time::now() - t_IC_) < d_IC_)
   {
@@ -1180,7 +1181,7 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
    * Set imminent collision
    */
   result.imminent_collision = imminent_collision_;
-  ////ROS_INFO("imminent_collision_: %s", imminent_collision_ ? "True" : "False");
+  ////////ROS_INFO("imminent_collision_: %s", imminent_collision_ ? "True" : "False");
 
   //******************************************************
   // Setting imminent collision to true HERE!
@@ -1198,16 +1199,16 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
   // consider_trans for trajs including switches if we're moving the robot
   result.consider_trans = moving_robot_;
 
-  ////ROS_INFO("Setting nec_theta, end, etc.");
-  ////ROS_INFO("trajec.msg_.trajectory.size(): %i trajec.msg_.i_knotPoints.size(): %i", (int)trajec.msg_.trajectory.points.size(), (int)trajec.msg_.i_knotPoints.size());
+  ////////ROS_INFO("Setting nec_theta, end, etc.");
+  ////////ROS_INFO("trajec.msg_.trajectory.size(): %i trajec.msg_.i_knotPoints.size(): %i", (int)trajec.msg_.trajectory.points.size(), (int)trajec.msg_.i_knotPoints.size());
   double nec_theta = utility_.findAngleFromAToB(trajec.msg_.trajectory.points[0].positions, trajec.msg_.trajectory.points[ trajec.msg_.i_knotPoints[1] ].positions);
 
   double end = movingOn_.msg_.trajectory.points.size() > 0 ? movingOn_.msg_.trajectory.points[ movingOn_.msg_.trajectory.points.size()-1 ].positions[2] : latestUpdate_.msg_.positions[2];
 
   double diff = fabs(utility_.findDistanceBetweenAngles(nec_theta, end));
   
-  ////ROS_INFO("nec_theta: %f end: %f diff: %f", nec_theta, end, diff);
-  ////ROS_INFO("trajec.transitionTraj_.trajectory.points.size(): %i trajec.stopRotateInFirstSec(): %s", (int)trajec.transitionTraj_.trajectory.points.size(), trajec.stopRotateInFirstSec() ? "True" : "False");
+  ////////ROS_INFO("nec_theta: %f end: %f diff: %f", nec_theta, end, diff);
+  ////////ROS_INFO("trajec.transitionTraj_.trajectory.points.size(): %i trajec.stopRotateInFirstSec(): %s", (int)trajec.transitionTraj_.trajectory.points.size(), trajec.stopRotateInFirstSec() ? "True" : "False");
 
   //result.trans_possible = trajec.transitionTraj_.trajectory.points.size() > 0 || diff < 0.31;
   result.trans_possible = trajec.transitionTraj_.trajectory.points.size() > 0 || !trajec.stopRotateInFirstSec();
@@ -1218,8 +1219,8 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
     result.offset = sqrt( diff_.msg_.positions[0]*diff_.msg_.positions[0] + diff_.msg_.positions[1]*diff_.msg_.positions[1] );
   }
 
-  ////////ROS_INFO("transitionTraj: %s", utility_.toString(trajec.transitionTraj_).c_str());
-  ////ROS_INFO("Exiting Planner::buildEvaluationRequest(const RampTrajectory&, EvaluationRequest&, bool)");
+  ////////////ROS_INFO("transitionTraj: %s", utility_.toString(trajec.transitionTraj_).c_str());
+  ////////ROS_INFO("Exiting Planner::buildEvaluationRequest(const RampTrajectory&, EvaluationRequest&, bool)");
 }
 
 
@@ -1231,7 +1232,7 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
 
 void Planner::requestTrajectory(ramp_msgs::TrajectorySrv& tr, std::vector<RampTrajectory>& result, const int id)
 {
-  //////////ROS_INFO("In Planner::requestTrajectory(ramp_msgs::TrajectorySrv)");
+  //////////////ROS_INFO("In Planner::requestTrajectory(ramp_msgs::TrajectorySrv)");
   //std::cout<<"\nid: "<<id;
   
   // Record number of trajectories to generate
@@ -1244,8 +1245,8 @@ void Planner::requestTrajectory(ramp_msgs::TrajectorySrv& tr, std::vector<RampTr
     duration<double> time_span = duration_cast<microseconds>(tEnd - tStart);
     trajec_durs_.push_back(time_span.count());
     
-    //////ROS_INFO("tr.request.reqs.size(): %i", (int)tr.request.reqs.size());
-    //////ROS_INFO("tr.resps.size(): %i", (int)tr.response.resps.size());
+    //////////ROS_INFO("tr.request.reqs.size(): %i", (int)tr.request.reqs.size());
+    //////////ROS_INFO("tr.resps.size(): %i", (int)tr.response.resps.size());
     for(uint8_t i=0;i<tr.response.resps.size();i++)
     {
       RampTrajectory temp;
@@ -1274,10 +1275,10 @@ void Planner::requestTrajectory(ramp_msgs::TrajectorySrv& tr, std::vector<RampTr
   } // end if
   else 
   {
-    ////////ROS_ERROR("An error occurred when requesting a trajectory");
+    ////////////ROS_ERROR("An error occurred when requesting a trajectory");
   }
 
-  //////////ROS_INFO("Exiting Planner::requestTrajectory, t_start: %f", result.msg_.t_start.toSec());
+  //////////////ROS_INFO("Exiting Planner::requestTrajectory, t_start: %f", result.msg_.t_start.toSec());
 }
 
 
@@ -1285,7 +1286,7 @@ void Planner::requestTrajectory(ramp_msgs::TrajectorySrv& tr, std::vector<RampTr
 
 void Planner::requestTrajectory(std::vector<ramp_msgs::TrajectoryRequest>& trs, std::vector<RampTrajectory>& result)
 {
-  //////////ROS_INFO("In Planner::requestTrajectory(vector<ramp_msgs::TrajectoryRequest>)");
+  //////////////ROS_INFO("In Planner::requestTrajectory(vector<ramp_msgs::TrajectoryRequest>)");
   ramp_msgs::TrajectorySrv srv;
 
   for(uint8_t i=0;i<trs.size();i++)
@@ -1339,11 +1340,12 @@ void Planner::setT_base_w(std::vector<double> base_pos)
 const unsigned int Planner::getIRT() { return i_rt++; }
 
 
+// Used to stop obstacles during experiments when being controlled by obstacle movement node in ramp_planner
 void Planner::obICCallback(const ros::TimerEvent& e)
 {
-  ////////ROS_INFO("Time since last obICCallback: %f", (ros::Time::now() - t_prevObIC_).toSec());
+  ////////////ROS_INFO("Time since last obICCallback: %f", (ros::Time::now() - t_prevObIC_).toSec());
   t_prevObIC_ = ros::Time::now();
-  //////////ROS_INFO("In Planner::obICCallback");
+  //ROS_INFO("In Planner::obICCallback");
   double dist_theshold = 0.4f;
   std_msgs::Bool ob_ic;
 
@@ -1354,7 +1356,7 @@ void Planner::obICCallback(const ros::TimerEvent& e)
   for(uint8_t i=0;i<ob_trajectory_.size();i++)
   {
     double dist = utility_.positionDistance(ob_trajectory_.at(i).msg_.trajectory.points.at(0).positions, latestUpdate_.msg_.positions);
-    ////////ROS_INFO("ob %i dist: %f", (int)i, dist);
+    ////////////ROS_INFO("ob %i dist: %f", (int)i, dist);
     
     if(i < ob_dists_.size())
     {
@@ -1367,12 +1369,12 @@ void Planner::obICCallback(const ros::TimerEvent& e)
 
     if(fabs(ob_dists_.at(i)) < dist_theshold)
     {
-      //////////ROS_INFO("Ob IC: True");
+      //////////////ROS_INFO("Ob IC: True");
       ob_ic.data = true;
     }
     else
     {
-      //////////ROS_INFO("Ob IC: False");
+      //////////////ROS_INFO("Ob IC: False");
       ob_ic.data = false;
     }
 
@@ -1409,7 +1411,7 @@ void Planner::obICCallback(const ros::TimerEvent& e)
     i_COLL_DISTS_ = 1;
   }
   
-  //////////ROS_INFO("Exiting Planner::obICCallback");
+  //ROS_INFO("Exiting Planner::obICCallback");
 }
 
 
@@ -1417,12 +1419,12 @@ void Planner::obICCallback(const ros::TimerEvent& e)
 void Planner::resetStart() 
 {
 
-  ////ROS_INFO("In Planner::resetStart");
-  ////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
-  //////ROS_INFO("Pop: %s", population_.toString().c_str());
+  ////////ROS_INFO("In Planner::resetStart");
+  ////////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
+  //////////ROS_INFO("Pop: %s", population_.toString().c_str());
   startPlanning_ = latestUpdate_;
   adaptPopulation(startPlanning_, ros::Duration(0.0001));
-  ////ROS_INFO("After reset, Pop: %s", population_.toString().c_str());
+  ////////ROS_INFO("After reset, Pop: %s", population_.toString().c_str());
   reset_ = true;
 
 }
@@ -1433,24 +1435,24 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
 {
   ros::Duration d = ros::Time::now() - t_prevIC_;
   t_prevIC_ = ros::Time::now();
-  ////ROS_INFO("In imminentCollisionCallback");
-  ////ROS_INFO("Time since last: %f", d.toSec());
+  //ROS_INFO("In imminentCollisionCallback");
+  ////////ROS_INFO("Time since last: %f", d.toSec());
 
   std_msgs::Bool ic;
 
   double time_threshold = controlCycle_.toSec();
 
-  ////ROS_INFO("movingOn: %s", movingOn_.toString().c_str());
+  ////////ROS_INFO("movingOn: %s", movingOn_.toString().c_str());
     
   for(int o=0;o<ob_trajectory_.size();o++)
   {
-    ////ROS_INFO("Ob %i: %f", o, utility_.positionDistance(latestUpdate_.msg_.positions, ob_trajectory_[o].msg_.trajectory.points[0].positions));
+    ////////ROS_INFO("Ob %i: %f", o, utility_.positionDistance(latestUpdate_.msg_.positions, ob_trajectory_[o].msg_.trajectory.points[0].positions));
   }
 
   if(ob_trajectory_.size() > 0 && moving_on_coll_ && (movingOn_.msg_.t_firstCollision.toSec() < time_threshold
     || (movingOn_.msg_.t_firstCollision.toSec() - (ros::Time::now().toSec()-t_prevCC_ros_.toSec())) < time_threshold))
   {
-    ////ROS_WARN("IC: moving_on_coll_: %s t_firstCollision: %f Elapsed time: %f", moving_on_coll_ ? "True" : "False", movingOn_.msg_.t_firstCollision.toSec(), (ros::Time::now().toSec()-t_prevCC_.toSec()));
+    ////////ROS_WARN("IC: moving_on_coll_: %s t_firstCollision: %f Elapsed time: %f", moving_on_coll_ ? "True" : "False", movingOn_.msg_.t_firstCollision.toSec(), (ros::Time::now().toSec()-t_prevCC_.toSec()));
     
     // Check if IC was previously false
     if(!imminent_collision_)
@@ -1472,7 +1474,7 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
   // Do not set any imminent collision values
   else 
   {
-    ////ROS_INFO("No imminent collision, t_firstCollision: %f", movingOn_.msg_.t_firstCollision.toSec());
+    ////////ROS_INFO("No imminent collision, t_firstCollision: %f", movingOn_.msg_.t_firstCollision.toSec());
     imminent_collision_ = false;
   }
 
@@ -1483,7 +1485,7 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
 
   h_control_->sendIC(ic);
 
-  ////ROS_INFO("Exiting Planner::imminentCollisionCallback");
+  //ROS_INFO("Exiting Planner::imminentCollisionCallback");
 }
 
 
@@ -1498,22 +1500,22 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
 {
   t_prev_update_ = ros::Time::now();
   //ROS_INFO("In Planner::updateCbControlNode");
-  ////////ROS_INFO("Time since last: %f", (ros::Time::now()-t_prev_update_).toSec());
+  ////////////ROS_INFO("Time since last: %f", (ros::Time::now()-t_prev_update_).toSec());
 
  
   if(msg.positions.size() < 3 ||
      msg.velocities.size() < 3 ||
      msg.accelerations.size() < 3 )
   { 
-    ////////ROS_ERROR("Odometry message from ramp_control does not have all DOFs: %s", utility_.toString(msg).c_str());
+    ////////////ROS_ERROR("Odometry message from ramp_control does not have all DOFs: %s", utility_.toString(msg).c_str());
   }
   else 
   {
-    //ROS_INFO("odom msg: (%f, %f)", msg.velocities[0], msg.velocities[1]);
+    //////ROS_INFO("odom msg: (%f, %f)", msg.velocities[0], msg.velocities[1]);
 
     if(update_topic_ == "odom")
     {
-      //ROS_INFO("update_topic_ == \"odom\"");
+      //////ROS_INFO("update_topic_ == \"odom\"");
       latestUpdate_ = msg;
       latestUpdate_.transformBase(T_w_odom_);
     }
@@ -1533,7 +1535,7 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
     latestUpdate_.msg_.accelerations.at(1) = msg.accelerations.at(0) * 
                                              sin(latestUpdate_.msg_.positions.at(2));
 
-    ////ROS_INFO("New latestUpdate_ relative to odom: %s", latestUpdate_.toString().c_str());
+    ////////ROS_INFO("New latestUpdate_ relative to odom: %s", latestUpdate_.toString().c_str());
 
     // Motion information is relative to odom
     // so transform the velocity and acceleration values
@@ -1550,12 +1552,12 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
       latestUpdate_.msg_.accelerations[1] = a_tf.getY();
     }
 
-    //ROS_INFO("New latestUpdate_: %s", latestUpdate_.toString().c_str());
+    //////ROS_INFO("New latestUpdate_: %s", latestUpdate_.toString().c_str());
     h_control_->sendLatestState(latestUpdate_.msg_);
   } // end else
 
   
-  ////////ROS_INFO("Exiting Planner::updateCallback");
+  //ROS_INFO("Exiting Planner::updateCallback");
 } // End updateCallback
 
 
@@ -1563,14 +1565,14 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
 void Planner::updateCbPose(const geometry_msgs::PoseWithCovarianceStamped msg)
 {
   t_prev_update_ = ros::Time::now();
-  ////ROS_INFO("In updateCbPose");
+  ////////ROS_INFO("In updateCbPose");
   
   latestUpdate_.msg_.positions.clear();
 
   // Transform the pose if we need to
   if(msg.header.frame_id != global_frame_)
   {
-    //////ROS_INFO("Transforming pose");
+    //////////ROS_INFO("Transforming pose");
     
     // Create a Vector3, transform it, set values back in Pose
     tf::Vector3 v(msg.pose.pose.position.x, msg.pose.pose.position.y, 0.0);
@@ -1585,13 +1587,13 @@ void Planner::updateCbPose(const geometry_msgs::PoseWithCovarianceStamped msg)
   }
   else
   {
-    ////ROS_INFO("In else");
+    ////////ROS_INFO("In else");
     latestUpdate_.msg_.positions.push_back(msg.pose.pose.position.x);
     latestUpdate_.msg_.positions.push_back(msg.pose.pose.position.y);
     latestUpdate_.msg_.positions.push_back(msg.pose.pose.position.z);
   }
   
-  ////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
+  ////////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
 }
 
 
@@ -1664,9 +1666,9 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int gens_before_cc, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int gens_before_cc, const bool sensingBeforeCC, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
 {
-  ////ROS_INFO("In Planner::init");
+  ////////ROS_INFO("In Planner::init");
 
   // Set ID
   id_ = i;
@@ -1708,8 +1710,8 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   // Initialize the start and goal
   initStartGoal(s, g);
 
-  //////ROS_INFO("Start_: %s", start_.toString().c_str());
-  //////ROS_INFO("Goal_: %s", goal_.toString().c_str());
+  //////////ROS_INFO("Start_: %s", start_.toString().c_str());
+  //////////ROS_INFO("Goal_: %s", goal_.toString().c_str());
   // Set the base transformation
   setT_base_w(start_.msg_.positions);
 
@@ -1720,6 +1722,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   update_topic_         = update_topic;
   pop_type_             = pop_type;
   generationsBeforeCC_  = gens_before_cc;
+  sensingBeforeCC_      = sensingBeforeCC;
   t_fixed_cc_           = t_fixed_cc;
   only_sensing_         = only_sensing;
   moving_robot_         = moving_robot;
@@ -1734,7 +1737,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   num_switches_ = 0;
   pop_size_ = populationSize_;
 
-  ////ROS_INFO("Exiting Planner::init");
+  ////////ROS_INFO("Exiting Planner::init");
 } // End init
 
 
@@ -1828,7 +1831,7 @@ void Planner::sendPopulationCb(const ros::TimerEvent& e)
  */
 void Planner::seedPopulation()
 {
-  //////ROS_INFO("In seedPopulation");
+  //////////ROS_INFO("In seedPopulation");
 
   /**** Create the Paths ****/
   ramp_msgs::KnotPoint kp;
@@ -1914,12 +1917,12 @@ void Planner::seedPopulation()
     RampTrajectory trajec;
     requestTrajectory(paths.at(i), trajec);
     evaluateTrajectory(trajec);
-    //////ROS_INFO("Seeded trajec: %s", trajec.toString().c_str());
+    //////////ROS_INFO("Seeded trajec: %s", trajec.toString().c_str());
     population_.replace(0, trajec);
     //int index = population_.add(trajec); 
     /*if(index > -1)
     {
-      //////ROS_INFO("Seeded trajectory added at index %i", index);
+      //////////ROS_INFO("Seeded trajectory added at index %i", index);
     }*/
   
   } // end for
@@ -1993,8 +1996,8 @@ void Planner::seedPopulationTwo() {
 
 const std::vector<MotionState> Planner::setMi(const RampTrajectory& trj_current) const 
 {
-  //////////ROS_INFO("In Planner::setMi");
-  //////////ROS_INFO("trj_current: %s", trj_current.toString().c_str());
+  //////////////ROS_INFO("In Planner::setMi");
+  //////////////ROS_INFO("trj_current: %s", trj_current.toString().c_str());
   std::vector<MotionState> result;
   
  
@@ -2006,11 +2009,11 @@ const std::vector<MotionState> Planner::setMi(const RampTrajectory& trj_current)
     
     result.push_back(temp);
 
-    //////////ROS_INFO("m_i[%i]: %s", i, temp.toString().c_str());
+    //////////////ROS_INFO("m_i[%i]: %s", i, temp.toString().c_str());
   } // end for
 
 
-  //////////ROS_INFO("Exiting Planner::setMi");
+  //////////////ROS_INFO("Exiting Planner::setMi");
   return result;
 } // End setMi
 
@@ -2020,7 +2023,7 @@ const std::vector<MotionState> Planner::setMi(const RampTrajectory& trj_current)
 /** Pass in entire RampTrajectory because we need the path info */
 const ramp_msgs::BezierCurve Planner::replanCurve(const RampTrajectory trajec, const MotionState ms_start) const 
 {
-  //////////ROS_INFO("In Planner::replanCurve");
+  //////////////ROS_INFO("In Planner::replanCurve");
   ramp_msgs::BezierCurve result = trajec.msg_.curves.at(0);
 
   // Get length of original curve's first segment
@@ -2033,7 +2036,7 @@ const ramp_msgs::BezierCurve Planner::replanCurve(const RampTrajectory trajec, c
   double x = result.segmentPoints.at(0).positions.at(0) + l*cos(theta);
   double y = result.segmentPoints.at(0).positions.at(1) + l*sin(theta);
 
-  //////////ROS_INFO("delta_x: %f delta_y: %f l: %f theta: %f x: %f y: %f", delta_x, delta_y, l, theta, x, y);
+  //////////////ROS_INFO("delta_x: %f delta_y: %f l: %f theta: %f x: %f y: %f", delta_x, delta_y, l, theta, x, y);
   result.segmentPoints.at(1).positions.at(0) = x;
   result.segmentPoints.at(1).positions.at(1) = y;
   result.controlPoints.clear();
@@ -2054,26 +2057,26 @@ const ramp_msgs::BezierCurve Planner::replanCurve(const RampTrajectory trajec, c
 
 /*const RampTrajectory Planner::replanTrajec(const RampTrajectory trajec, const MotionState ms_start) 
 {
-  //////////ROS_INFO("In Planner::replanTrajec");
+  //////////////ROS_INFO("In Planner::replanTrajec");
 
   RampTrajectory result = trajec;
-  //////////ROS_INFO("After setting result");
-  //////////ROS_INFO("Test my ID: pop best ID: %i", population_.getBest().msg_.id);
-  //////////ROS_INFO("result: %s", result.toString().c_str());
-  //////////ROS_INFO("result.curves.size: %i", (int)result.msg_.curves.size());
+  //////////////ROS_INFO("After setting result");
+  //////////////ROS_INFO("Test my ID: pop best ID: %i", population_.getBest().msg_.id);
+  //////////////ROS_INFO("result: %s", result.toString().c_str());
+  //////////////ROS_INFO("result.curves.size: %i", (int)result.msg_.curves.size());
   
   ramp_msgs::KnotPoint kp_start;
   kp_start.motionState = ms_start.msg_;
 
   result.msg_.holonomic_path.start_ = kp_start;
-  //////////ROS_INFO("ms_start: %s", ms_start.toString().c_str());
+  //////////////ROS_INFO("ms_start: %s", ms_start.toString().c_str());
 
   result.msg_.holonomic_path.points.erase(   result.msg_.holonomic_path.points.begin() );
   result.msg_.holonomic_path.points.insert(  result.msg_.holonomic_path.points.begin(), kp_start);
 
   double v = sqrt(  pow( ms_start.msg_.velocities.at(0), 2) + 
                     pow( ms_start.msg_.velocities.at(1), 2) );
-  //////////ROS_INFO("v: %f", v);
+  //////////////ROS_INFO("v: %f", v);
 
   // Replan the curve if it's the best trajectory
   if( trajec.equals(population_.getBest())  && 
@@ -2090,11 +2093,11 @@ const ramp_msgs::BezierCurve Planner::replanCurve(const RampTrajectory trajec, c
   }
   else 
   {
-    //////////ROS_INFO("Not replanning curve for trajec id: %i", trajec.msg_.id);
-    //////////ROS_INFO("v: %f curves.size(): %i", v, (int)result.msg_.curves.size());
+    //////////////ROS_INFO("Not replanning curve for trajec id: %i", trajec.msg_.id);
+    //////////////ROS_INFO("v: %f curves.size(): %i", v, (int)result.msg_.curves.size());
     if(result.msg_.curves.size() > 0) 
     {
-      //////////ROS_INFO("curve.u_0: %f", result.msg_.curves.at(0).u_0);
+      //////////////ROS_INFO("curve.u_0: %f", result.msg_.curves.at(0).u_0);
     }
   }
 
@@ -2103,9 +2106,9 @@ const ramp_msgs::BezierCurve Planner::replanCurve(const RampTrajectory trajec, c
   //result = requestTrajectory(tr, result.msg_.id);
   result = requestTrajectory(tr);
 
-  //////////ROS_INFO("Replanned Trajec: %s", result.toString().c_str());
+  //////////////ROS_INFO("Replanned Trajec: %s", result.toString().c_str());
 
-  //////////ROS_INFO("Exiting Planner::replanTrajec");
+  //////////////ROS_INFO("Exiting Planner::replanTrajec");
   return result;
 }*/
 
@@ -2113,16 +2116,16 @@ const ramp_msgs::BezierCurve Planner::replanCurve(const RampTrajectory trajec, c
 
 
 /*const std::vector<RampTrajectory> Planner::replanTrajecs(const std::vector<RampTrajectory> trajecs, const MotionState ms_start) {
-  //////////ROS_INFO("In Planner::replanTrajecs");
+  //////////////ROS_INFO("In Planner::replanTrajecs");
   std::vector<RampTrajectory> result;
 
   for(uint8_t i=0;i<trajecs.size();i++) {
-    //////////ROS_INFO("i: %i trajecs.size(): %i", (int)i, (int)trajecs.size());
+    //////////////ROS_INFO("i: %i trajecs.size(): %i", (int)i, (int)trajecs.size());
     RampTrajectory temp = replanTrajec(trajecs.at(i), ms_start);
     result.push_back(temp);
   }
 
-  //////////ROS_INFO("Exiting Planner::replanTrajecs");
+  //////////////ROS_INFO("Exiting Planner::replanTrajecs");
   return result;
 }*/
 
@@ -2130,7 +2133,7 @@ const ramp_msgs::BezierCurve Planner::replanCurve(const RampTrajectory trajec, c
 /** This method will return a vector of trajectoies for the vector of paths */
 const std::vector<RampTrajectory> Planner::getTrajectories(const std::vector<Path>& p) 
 {
-  ////////ROS_INFO("In Planner::getTrajectories");
+  ////////////ROS_INFO("In Planner::getTrajectories");
 
   std::vector<RampTrajectory> result;
 
@@ -2139,28 +2142,28 @@ const std::vector<RampTrajectory> Planner::getTrajectories(const std::vector<Pat
   // For each path
   for(unsigned int i=0;i<p.size();i++) 
   {
-   // ////ROS_INFO("i: %i p.size(): %i", (int)i, (int)p.size());
+   // ////////ROS_INFO("i: %i p.size(): %i", (int)i, (int)p.size());
     // Get a trajectory
     //RampTrajectory temp = requestTrajectory(p.at(i));
     //result.push_back(temp);
  
     ramp_msgs::TrajectoryRequest tr;
     buildTrajectoryRequest(p.at(i), tr);
-    ////////ROS_INFO("Trajec Request path: %s", utility_.toString(tr.path).c_str());
+    ////////////ROS_INFO("Trajec Request path: %s", utility_.toString(tr.path).c_str());
     tr_srv.request.reqs.push_back(tr);
   } // end for
-  ////////ROS_INFO("Outside of for-loop");
+  ////////////ROS_INFO("Outside of for-loop");
 
   //requestTrajectory(tr_srv, result);
 
   requestTrajectory(tr_srv, result);
-  ////////ROS_INFO("Done with requestTrajectory");
+  ////////////ROS_INFO("Done with requestTrajectory");
   /*for(uint8_t i=0;i<result.size();i++)
   {
-    ////////ROS_INFO("Path %i: %s", i, utility_.toString(result.at(i).msg_.holonomic_path).c_str());
+    ////////////ROS_INFO("Path %i: %s", i, utility_.toString(result.at(i).msg_.holonomic_path).c_str());
   }*/
 
-  ////////ROS_INFO("Exiting Planner::getTrajectories");
+  ////////////ROS_INFO("Exiting Planner::getTrajectories");
   return result;
 } // End getTrajectories
 
@@ -2195,30 +2198,30 @@ const std::vector<RampTrajectory> Planner::getTrajectories(std::vector<ramp_msgs
  **/
 void Planner::initPopulation() 
 { 
-  ////ROS_INFO("In Planner::initPopulation");
+  ////////ROS_INFO("In Planner::initPopulation");
 
   population_ = getPopulation(latestUpdate_, goal_, false);
 
-  ////ROS_INFO("Pop paths_ size: %i", (int)population_.paths_.size());
+  ////////ROS_INFO("Pop paths_ size: %i", (int)population_.paths_.size());
   for(uint8_t i=0;i<population_.paths_.size();i++)
   {
-    ////ROS_INFO("Path %i: %s", i, population_.paths_.at(i).toString().c_str());
+    ////////ROS_INFO("Path %i: %s", i, population_.paths_.at(i).toString().c_str());
   }
-  ////ROS_INFO("Exiting Planner::initPopulation");
+  ////////ROS_INFO("Exiting Planner::initPopulation");
 } // End init_population
 
 
 
 
 const bool Planner::checkIfSwitchCurveNecessary(const RampTrajectory from, const RampTrajectory to) const {
-  //////////ROS_INFO("In Planner::CheckIfSwitchCurveNecessary");
+  //////////////ROS_INFO("In Planner::CheckIfSwitchCurveNecessary");
   // TODO: lastestUpdate or from's first theta?
   double thetaToSwitch, thetaCurrent = latestUpdate_.msg_.positions.at(2);
 
-  ////////////ROS_INFO("to.msg.trajectory.points.size(): %i", (int)to.msg_.trajectory.points.size());
-  ////////////ROS_INFO("to.msg.i_knotPoints.size(): %i", (int)to.msg_.i_knotPoints.size());
+  ////////////////ROS_INFO("to.msg.trajectory.points.size(): %i", (int)to.msg_.trajectory.points.size());
+  ////////////////ROS_INFO("to.msg.i_knotPoints.size(): %i", (int)to.msg_.i_knotPoints.size());
   //if(to.msg_.i_knotPoints.size() > 1) {
-    ////////////ROS_INFO("to.msg.i_knotPoints.at(1): %i", (int)to.msg_.i_knotPoints.at(1));
+    ////////////////ROS_INFO("to.msg.i_knotPoints.at(1): %i", (int)to.msg_.i_knotPoints.at(1));
   //}
 
   int kp = 1; 
@@ -2230,11 +2233,11 @@ const bool Planner::checkIfSwitchCurveNecessary(const RampTrajectory from, const
                                             to.msg_.trajectory.points.at(
                                             to.msg_.i_knotPoints.at(kp)).positions)) < 0.0001)
   {
-    ////////////ROS_INFO("In if positions are the same");
+    ////////////////ROS_INFO("In if positions are the same");
     thetaToSwitch = to.msg_.trajectory.points.at( to.msg_.i_knotPoints.at(1) ).positions.at(2);
   }
   else if( to.msg_.i_knotPoints.size() > 1) {
-    ////////////ROS_INFO("In else positions are not the same");
+    ////////////////ROS_INFO("In else positions are not the same");
     thetaToSwitch = utility_.findAngleFromAToB(
                           to.msg_.trajectory.points.at(0), 
                           to.msg_.trajectory.points.at(
@@ -2242,22 +2245,22 @@ const bool Planner::checkIfSwitchCurveNecessary(const RampTrajectory from, const
   }
   else 
   {
-    //////////ROS_INFO("to trajec: %s", to.toString().c_str());
+    //////////////ROS_INFO("to trajec: %s", to.toString().c_str());
     thetaToSwitch = to.msg_.trajectory.points.at(0).positions.at(2);
   }
 
 
-  //////////ROS_INFO("thetaCurrent: %f thetaToSwitch: %f", thetaCurrent, thetaToSwitch);
-  //////////ROS_INFO("fabs(utility_.findDistanceBetweenAngles(thetaCurrent, thetaToSwitch)): %f", fabs(utility_.findDistanceBetweenAngles(thetaCurrent, thetaToSwitch)));
+  //////////////ROS_INFO("thetaCurrent: %f thetaToSwitch: %f", thetaCurrent, thetaToSwitch);
+  //////////////ROS_INFO("fabs(utility_.findDistanceBetweenAngles(thetaCurrent, thetaToSwitch)): %f", fabs(utility_.findDistanceBetweenAngles(thetaCurrent, thetaToSwitch)));
 
 
   // If a difference of 1 degree, compute a curve
   if(fabs(utility_.findDistanceBetweenAngles(thetaCurrent, thetaToSwitch)) > 0.017) {
-    ////////////ROS_INFO("Exiting Planner::CheckIfSwitchCurveNecessary, returning true");
+    ////////////////ROS_INFO("Exiting Planner::CheckIfSwitchCurveNecessary, returning true");
     return true;
   }
 
-  //////////ROS_INFO("Exiting Planner::CheckIfSwitchCurveNecessary, returning false");
+  //////////////ROS_INFO("Exiting Planner::CheckIfSwitchCurveNecessary, returning false");
   return false;
 }
 
@@ -2272,13 +2275,13 @@ bool Planner::predictTransition(const RampTrajectory& from, const RampTrajectory
 {
   if(log_enter_exit_)
   {
-    //////ROS_INFO("In Planner::predictTransition, t: %f", t);
+    //////////ROS_INFO("In Planner::predictTransition, t: %f", t);
   }
 
   if(to.msg_.trajectory.points.size() == 0)
   {
-    ////////ROS_WARN("to.msg_.trajectory.points.size() == 0");
-    ////////ROS_WARN("Returning false");
+    ////////////ROS_WARN("to.msg_.trajectory.points.size() == 0");
+    ////////////ROS_WARN("Returning false");
     return false;
   }
 
@@ -2287,8 +2290,8 @@ bool Planner::predictTransition(const RampTrajectory& from, const RampTrajectory
   MotionState ms_endOfMovingOn = to.msg_.trajectory.points.size() > 0 ? 
     to.msg_.trajectory.points.at(0) : 
     from.msg_.trajectory.points.at(from.msg_.trajectory.points.size()-1);
-  //////ROS_INFO("ms_startTrans: %s", ms_startTrans.toString().c_str());
-  //////ROS_INFO("ms_endOfMovingOn: %s", ms_endOfMovingOn.toString().c_str());
+  //////////ROS_INFO("ms_startTrans: %s", ms_startTrans.toString().c_str());
+  //////////ROS_INFO("ms_endOfMovingOn: %s", ms_endOfMovingOn.toString().c_str());
 
  
   /*
@@ -2299,8 +2302,8 @@ bool Planner::predictTransition(const RampTrajectory& from, const RampTrajectory
   if(fabs(utility_.findDistanceBetweenAngles( 
         ms_startTrans.msg_.positions.at(2), ms_endOfMovingOn.msg_.positions.at(2))) > 0.12 ) 
   {
-    //////ROS_WARN("Incorrect orientation to move on first segment, cannot plan a transition curve!");
-    ////////ROS_WARN("startTrans: %s\nendOfMovingOn: %s", ms_startTrans.toString().c_str(), ms_endOfMovingOn.toString().c_str());
+    //////////ROS_WARN("Incorrect orientation to move on first segment, cannot plan a transition curve!");
+    ////////////ROS_WARN("startTrans: %s\nendOfMovingOn: %s", ms_startTrans.toString().c_str(), ms_endOfMovingOn.toString().c_str());
     return false;
   }
 
@@ -2328,7 +2331,7 @@ bool Planner::predictTransition(const RampTrajectory& from, const RampTrajectory
   // 2) the 2nd segment will be much longer 
   MotionState g(to.msg_.trajectory.points.at(to.msg_.i_knotPoints.at(i_goal)));
 
-  //////////ROS_INFO("g: %s", g.toString().c_str());
+  //////////////ROS_INFO("g: %s", g.toString().c_str());
 
   segmentPoints.push_back(g);
 
@@ -2340,15 +2343,15 @@ bool Planner::predictTransition(const RampTrajectory& from, const RampTrajectory
   if(fabs(utility_.findDistanceBetweenAngles( 
         ms_startTrans.msg_.positions.at(2), ms_endOfMovingOn.msg_.positions.at(2))) > 0.12 ) 
   {
-    ////////ROS_WARN("Cannot plan a transition curve!");
-    ////////ROS_WARN("startTrans: %s\nendOfMovingOn: %s", ms_startTrans.toString().c_str(), ms_endOfMovingOn.toString().c_str());
+    ////////////ROS_WARN("Cannot plan a transition curve!");
+    ////////////ROS_WARN("startTrans: %s\nendOfMovingOn: %s", ms_startTrans.toString().c_str(), ms_endOfMovingOn.toString().c_str());
     return false;
   }
 
-  //////ROS_INFO("Segment Points:");
+  //////////ROS_INFO("Segment Points:");
   for(uint8_t i=0;i<segmentPoints.size();i++)
   {
-    //////ROS_INFO("Segment Point %i: %s", i, segmentPoints.at(i).toString().c_str());
+    //////////ROS_INFO("Segment Point %i: %s", i, segmentPoints.at(i).toString().c_str());
   }
 
   /*
@@ -2359,10 +2362,10 @@ bool Planner::predictTransition(const RampTrajectory& from, const RampTrajectory
                                               segmentPoints.at(1).msg_.positions);
   double thetaS2 = utility_.findAngleFromAToB(segmentPoints.at(1).msg_.positions, 
                                               segmentPoints.at(2).msg_.positions);
-  //////////ROS_INFO("Theta 1: %f Theta 2: %f", thetaS1, thetaS2);
+  //////////////ROS_INFO("Theta 1: %f Theta 2: %f", thetaS1, thetaS2);
   if( fabs(utility_.findDistanceBetweenAngles(thetaS1, thetaS2)) < 0.13 )
   {
-    //////////ROS_WARN("Segments have the same orientation - no need to plan a transition curve, use a straight-line trajectory");
+    //////////////ROS_WARN("Segments have the same orientation - no need to plan a transition curve, use a straight-line trajectory");
     return true;
   }
 
@@ -2376,14 +2379,14 @@ bool Planner::predictTransition(const RampTrajectory& from, const RampTrajectory
     // Check duplicate
     if(utility_.positionDistance(a.msg_.positions, b.msg_.positions) < 0.1)
     {
-      //////ROS_WARN("Will not plan a transition curve because there are duplicate segment points");
-      ////////ROS_WARN("%s\n%s", a.toString().c_str(), b.toString().c_str());
+      //////////ROS_WARN("Will not plan a transition curve because there are duplicate segment points");
+      ////////////ROS_WARN("%s\n%s", a.toString().c_str(), b.toString().c_str());
       return false;
     }
   } // end for
 
 
-  //////////ROS_INFO("Done checking segments");
+  //////////////ROS_INFO("Done checking segments");
  
 
 
@@ -2394,17 +2397,17 @@ bool Planner::predictTransition(const RampTrajectory& from, const RampTrajectory
   BezierCurve curve;
   for(float lambda=0.1;lambda < 0.85;lambda+=0.1f)
   {
-    //////////ROS_INFO("lambda: %f", lambda);
+    //////////////ROS_INFO("lambda: %f", lambda);
     curve.init(segmentPoints, lambda, ms_startTrans);
     if(curve.verify())
     {
-      //////ROS_INFO("Curve formed for prediction: %s", utility_.toString(curve.getMsg()).c_str());
-      //////////ROS_INFO("Exiting Planner::predictTransition");
+      //////////ROS_INFO("Curve formed for prediction: %s", utility_.toString(curve.getMsg()).c_str());
+      //////////////ROS_INFO("Exiting Planner::predictTransition");
       return true;
     }
   }
 
-  //////ROS_WARN("No possible curve could be planned");
+  //////////ROS_WARN("No possible curve could be planned");
   return false;
 }
 
@@ -2417,11 +2420,11 @@ void Planner::getTransitionTrajectory(const RampTrajectory& trj_movingOn, const 
 {
   if(log_enter_exit_)
   {
-    ////ROS_INFO("In Planner::getTransitionTrajectory");
+    ////////ROS_INFO("In Planner::getTransitionTrajectory");
   }
-  ////ROS_INFO("t: %f", t);
-  ////////ROS_INFO("trj_movingOn: %s", trj_movingOn.toString().c_str());
-  ////////ROS_INFO("trj_target: %s", trj_target.toString().c_str());*/
+  ////////ROS_INFO("t: %f", t);
+  ////////////ROS_INFO("trj_movingOn: %s", trj_movingOn.toString().c_str());
+  ////////////ROS_INFO("trj_target: %s", trj_target.toString().c_str());*/
 
   /* 
    * The segment points for a transition are
@@ -2440,8 +2443,8 @@ void Planner::getTransitionTrajectory(const RampTrajectory& trj_movingOn, const 
 
   if(log_switching_)
   {
-    ////ROS_INFO("ms_startTrans: %s", ms_startTrans.toString().c_str());
-    ////ROS_INFO("ms_endOfMovingOn: %s", ms_endOfMovingOn.toString().c_str());
+    ////////ROS_INFO("ms_startTrans: %s", ms_startTrans.toString().c_str());
+    ////////ROS_INFO("ms_endOfMovingOn: %s", ms_endOfMovingOn.toString().c_str());
   }
 
   bool no_curve=false;
@@ -2455,7 +2458,7 @@ void Planner::getTransitionTrajectory(const RampTrajectory& trj_movingOn, const 
   if(fabs(utility_.findDistanceBetweenAngles( ms_startTrans.msg_.positions.at(2), nec_theta)) > 0.25 ) {
     if(log_switching_)
     {
-      ////ROS_WARN("Robot does not have correct orientation to move on first segment of a transition curve");
+      ////////ROS_WARN("Robot does not have correct orientation to move on first segment of a transition curve");
     }
     no_curve = true;
   }
@@ -2491,10 +2494,10 @@ void Planner::getTransitionTrajectory(const RampTrajectory& trj_movingOn, const 
 
   if(log_switching_)
   {
-    ////ROS_INFO("Segment points:");
+    ////////ROS_INFO("Segment points:");
     for(int i=0;i<segmentPoints.size();i++)
     {
-      ////ROS_INFO("Segment point [%i]: %s", i, segmentPoints.at(i).toString().c_str());
+      ////////ROS_INFO("Segment point [%i]: %s", i, segmentPoints.at(i).toString().c_str());
     }
   }
 
@@ -2514,15 +2517,15 @@ void Planner::getTransitionTrajectory(const RampTrajectory& trj_movingOn, const 
   {
     if(log_switching_)
     {
-      ////ROS_WARN("Segments have the same orientation (%f, %f) - no need to plan a transition curve, use a straight-line trajectory", thetaS1, thetaS2);
-      ////ROS_WARN("Removing the following point at index 1 of the Path: %s", p.at(1).toString().c_str());
+      ////////ROS_WARN("Segments have the same orientation (%f, %f) - no need to plan a transition curve, use a straight-line trajectory", thetaS1, thetaS2);
+      ////////ROS_WARN("Removing the following point at index 1 of the Path: %s", p.at(1).toString().c_str());
     }
     no_curve = true;
   }
 
   /*if(fabs(ms_endOfMovingOn.msg_.velocities[2]) > 0.1 && fabs(g.msg_.velocities[2]) > 0.1)
   {
-    ////ROS_WARN("Segment 2 is actually a curve, stopping transition trajectory at first segment");
+    ////////ROS_WARN("Segment 2 is actually a curve, stopping transition trajectory at first segment");
     //p.msg_.points.erase(p.msg_.points.begin()+1);
     RampTrajectory blank;
     result = blank;
@@ -2542,7 +2545,7 @@ void Planner::getTransitionTrajectory(const RampTrajectory& trj_movingOn, const 
     {
       if(log_switching_)
       {
-        ////ROS_WARN("Will not plan a transition curve because there are duplicate segment points");
+        ////////ROS_WARN("Will not plan a transition curve because there are duplicate segment points");
       }
 
       // Only continue if 1st and 3rd can be connected with straight line
@@ -2587,10 +2590,10 @@ void Planner::getTransitionTrajectory(const RampTrajectory& trj_movingOn, const 
     switch_t_size_.push_back(trj_target.msg_.trajectory.points.size());
   }
   
-  ////////ROS_INFO("trj_transition: %s", result.toString().c_str());
+  ////////////ROS_INFO("trj_transition: %s", result.toString().c_str());
   if(log_enter_exit_)
   {
-    ////ROS_INFO("Exiting Planner::getTransitionTrajectory");
+    ////////ROS_INFO("Exiting Planner::getTransitionTrajectory");
   }
 }
 
@@ -2607,9 +2610,9 @@ const std::vector<Path> Planner::modifyPath()
 { 
   if(log_enter_exit_)
   {
-    ////ROS_INFO("In modifyPath");
+    ////////ROS_INFO("In modifyPath");
   }
-  //////ROS_INFO("About to modify a path, pop is: %s\n%s", population_.get(0).toString().c_str(), population_.get(1).toString().c_str());
+  //////////ROS_INFO("About to modify a path, pop is: %s\n%s", population_.get(0).toString().c_str(), population_.get(1).toString().c_str());
   return modifier_->perform(population_, imminent_collision_);
 }
 
@@ -2619,7 +2622,7 @@ void Planner::modifyTrajec(std::vector<RampTrajectory>& result)
 {
   if(log_enter_exit_)
   {
-    ////ROS_INFO("In Planner::modifyTrajec");
+    ////////ROS_INFO("In Planner::modifyTrajec");
   }
 
   // The process begins by modifying one or more paths
@@ -2634,7 +2637,7 @@ void Planner::modifyTrajec(std::vector<RampTrajectory>& result)
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tNow);
   mod_durs_.push_back( time_span.count() );
 
-  ////ROS_INFO("Number of modified paths: %i", (int)modded_paths.size());
+  ////////ROS_INFO("Number of modified paths: %i", (int)modded_paths.size());
 
 
   ros::Time t_for = ros::Time::now();
@@ -2649,12 +2652,12 @@ void Planner::modifyTrajec(std::vector<RampTrajectory>& result)
     requestTrajectory(modded_paths[i], traj);
     result.push_back(traj);
     ros::Time t_a = ros::Time::now();
-    ////////ROS_INFO("t_mod_oop: %f", (t_a-t_for).toSec());
+    ////////////ROS_INFO("t_mod_oop: %f", (t_a-t_for).toSec());
   } // end for
   
   if(log_enter_exit_)
   {
-    ////ROS_INFO("Exiting Planner::modifyTrajec");
+    ////////ROS_INFO("Exiting Planner::modifyTrajec");
   }
 }
 
@@ -2668,7 +2671,7 @@ void Planner::modification()
   ros::Time t_m = ros::Time::now();
   if(log_enter_exit_)
   {
-    ////ROS_INFO("In Planner::modification()");
+    ////////ROS_INFO("In Planner::modification()");
   }
   ModificationResult result;
 
@@ -2686,8 +2689,8 @@ void Planner::modification()
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tNow);
   mod_traj_durs_.push_back( time_span.count() );
 
-  ////////ROS_INFO("t_p: %f", (t_p-now).toSec());
-  //ROS_INFO("Modification trajectories obtained: %i", (int)mod_trajec.size());
+  ////////////ROS_INFO("t_p: %f", (t_p-now).toSec());
+  //////ROS_INFO("Modification trajectories obtained: %i", (int)mod_trajec.size());
   
   // Set boolean to signal more than 1 trajec was modified
   modded_two = mod_trajec.size() > 1;
@@ -2697,10 +2700,10 @@ void Planner::modification()
   // and update the planner and the modifier on the new paths
   for(unsigned int i=0;i<mod_trajec.size();i++) 
   {
-    //////ROS_INFO("i: %i", i);
-    //ROS_INFO("Modified trajectory: %s", mod_trajec.at(i).toString().c_str());
-    ////ROS_INFO("controlCycle_.toSec(): %f", controlCycle_.toSec());
-    //////////ROS_INFO("Path size: %i", (int)mod_trajec[i].msg_.holonomic_path.points.size());
+    //////////ROS_INFO("i: %i", i);
+    //////ROS_INFO("Modified trajectory: %s", mod_trajec.at(i).toString().c_str());
+    ////////ROS_INFO("controlCycle_.toSec(): %f", controlCycle_.toSec());
+    //////////////ROS_INFO("Path size: %i", (int)mod_trajec[i].msg_.holonomic_path.points.size());
     //std::cout<<"\nramp_planner: Evaluating trajectory "<<(int)i<<"\n";
 
     // Compute full switch (method evaluates the trajectory)
@@ -2714,20 +2717,20 @@ void Planner::modification()
       evaluateTrajectory(traj_final);
     }
 
-    //ROS_INFO("Final mod: %s", traj_final.toString().c_str());
+    //////ROS_INFO("Final mod: %s", traj_final.toString().c_str());
 
     // Add the new trajectory to the population
     // Index is where the trajectory was added in the population (may replace another)
     // If it was successfully added, push its index onto the result
     ros::Time t_start = ros::Time::now();
-    //ROS_INFO("Adding to pop");
+    //////ROS_INFO("Adding to pop");
     int index = population_.add(traj_final);
-    ////ROS_INFO("Done adding");
+    ////////ROS_INFO("Done adding");
     
     // No longer need to reset CC time because trajs should have same t_start
     if(index > -1)
     {
-      ////ROS_INFO("Adding trajectory at index %i \n%s", index, traj_final.toString().c_str());
+      ////////ROS_INFO("Adding trajectory at index %i \n%s", index, traj_final.toString().c_str());
       mod_worked=true;
       num_succ_mods_++;
     }
@@ -2743,10 +2746,10 @@ void Planner::modification()
   } // end for
 
   num_mods_++;
-  ////////////ROS_INFO("After modification, pop now: %s", result.popNew_.toString().c_str());
+  ////////////////ROS_INFO("After modification, pop now: %s", result.popNew_.toString().c_str());
   if(log_enter_exit_)
   {
-    ////ROS_INFO("Exiting Planner::modification");
+    ////////ROS_INFO("Exiting Planner::modification");
   }
 } // End modification
 
@@ -2789,7 +2792,7 @@ void Planner::pause()
  * */
 void Planner::updatePathsStart(const MotionState s) 
 {
-  //////////ROS_INFO("In Planner::updatePathsStart");
+  //////////////ROS_INFO("In Planner::updatePathsStart");
   
   KnotPoint kp_s(s);
 
@@ -2800,7 +2803,7 @@ void Planner::updatePathsStart(const MotionState s)
     population_.paths_.at(i).msg_.points.insert(population_.paths_.at(i).msg_.points.begin(), kp_s.buildKnotPointMsg());
   }
 
-  //////////ROS_INFO("Exiting Planner::updatePathsStart");
+  //////////////ROS_INFO("Exiting Planner::updatePathsStart");
 } // End updatePathsStart
 
 
@@ -2824,31 +2827,31 @@ void Planner::offsetPopulation(const MotionState& diff)
 
 const MotionState Planner::errorCorrection()  
 {
-  //////////ROS_INFO("In Planner::errorCorrection");
+  //////////////ROS_INFO("In Planner::errorCorrection");
   MotionState result;
 
-  //////////ROS_INFO("c_pc: %i", (int)c_pc_);
-  //////////ROS_INFO("m_i.size(): %i", (int)m_i_.size());
+  //////////////ROS_INFO("c_pc: %i", (int)c_pc_);
+  //////////////ROS_INFO("m_i.size(): %i", (int)m_i_.size());
  
-  //////////ROS_INFO("m_i[%i]: %s", c_pc_, m_i_.at(c_pc_).toString().c_str());
-  //////////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
+  //////////////ROS_INFO("m_i[%i]: %s", c_pc_, m_i_.at(c_pc_).toString().c_str());
+  //////////////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
   
   // Get the difference between robot's state and what state it should be at
   ros::Duration t_since_cc = ros::Time::now() - t_prevCC_ros_;
   //MotionState diff = m_i_.at(t_since_cc.toSec()).subtractPosition(latestUpdate_, true);
   MotionState diff = movingOnCC_.getPointAtTime(t_since_cc.toSec());
-  //////////ROS_INFO("Diff before subtract: %s", diff.toString().c_str());
+  //////////////ROS_INFO("Diff before subtract: %s", diff.toString().c_str());
   diff = diff.subtractPosition(latestUpdate_, true);
   MotionState temp = diff_.subtractPosition(diff);
-  //////////ROS_INFO("Diff after subtract: %s", diff.toString().c_str());
+  //////////////ROS_INFO("Diff after subtract: %s", diff.toString().c_str());
   
   error_correct_val_pos_.push_back( sqrt( pow(temp.msg_.positions.at(0), 2) + pow(temp.msg_.positions.at(1),2) ) );
   error_correct_val_or_.push_back(temp.msg_.positions.at(2));
  
-  //////////ROS_INFO("m_cc: %s\ndiff: %s", m_cc_.toString().c_str(), diff.toString().c_str());
+  //////////////ROS_INFO("m_cc: %s\ndiff: %s", m_cc_.toString().c_str(), diff.toString().c_str());
 
-  ////////ROS_INFO("temp: %s", temp.toString().c_str());
-  ////////ROS_INFO("m_cc_: %s", m_cc_.toString().c_str());
+  ////////////ROS_INFO("temp: %s", temp.toString().c_str());
+  ////////////ROS_INFO("m_cc_: %s", m_cc_.toString().c_str());
   // subtractPosition that difference from startPlanning
   result = m_cc_.subtractPosition(temp, true);
 
@@ -2856,8 +2859,8 @@ const MotionState Planner::errorCorrection()
   result.msg_.positions.at(2) = latestUpdate_.msg_.positions.at(2);
 
 
-  //////////ROS_INFO("result: %s", result.toString().c_str());
-  //////////ROS_INFO("Exiting Planner::errorCorrection");
+  //////////////ROS_INFO("result: %s", result.toString().c_str());
+  //////////////ROS_INFO("Exiting Planner::errorCorrection");
   return result;
 }
 
@@ -2876,13 +2879,13 @@ void Planner::planningCycleCallback()
   // Set new previous PC time
   t_prevPC_ = tStart;
 
-  ////ROS_INFO("*************************************************");
-  ////ROS_INFO("Planning cycle occurring, generation %i", generation_);
-  //////////ROS_INFO("  e.last_expected: %f\n  e.last_real: %f\n  current_expected: %f\n  current_real: %f\n  profile.last_duration: %f", e.last_expected.toSec(), e.last_real.toSec(), e.current_expected.toSec(), e.current_real.toSec(), e.profile.last_duration.toSec());
-  //////ROS_INFO("Time since last: %f", (e.current_real - e.last_real).toSec());
-  ////ROS_INFO("*************************************************");
+  ////////ROS_INFO("*************************************************");
+  //ROS_INFO("Planning cycle occurring, generation %i", generation_);
+  //////////////ROS_INFO("  e.last_expected: %f\n  e.last_real: %f\n  current_expected: %f\n  current_real: %f\n  profile.last_duration: %f", e.last_expected.toSec(), e.last_real.toSec(), e.current_expected.toSec(), e.current_real.toSec(), e.profile.last_duration.toSec());
+  //////////ROS_INFO("Time since last: %f", (e.current_real - e.last_real).toSec());
+  ////////ROS_INFO("*************************************************");
  
-  //////////ROS_INFO("Time since last CC: %f", (ros::Time::now()-t_prevCC_).toSec());
+  //////////////ROS_INFO("Time since last CC: %f", (ros::Time::now()-t_prevCC_).toSec());
 
   EC=false; mod_worked=false; modded_two=false;
  
@@ -2910,8 +2913,8 @@ void Planner::planningCycleCallback()
     // Get the difference in position based on trajectory point at that time
     diff = movingOnCC_.getPointAtTime(t_since_cc.toSec());
     
-    ////ROS_INFO("movingOnCC_ at t_since_cc: %s", diff.toString().c_str());
-    ////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
+    ////////ROS_INFO("movingOnCC_ at t_since_cc: %s", diff.toString().c_str());
+    ////////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
 
     // Find offset for this PC
     diff = diff.subtractPosition(latestUpdate_, true);
@@ -2919,16 +2922,16 @@ void Planner::planningCycleCallback()
     
     // diff_ is the overall offset of pop since last CC
     diff_ = diff_.subtractPosition(temp);
-    ////ROS_INFO("diff_: %s diff: %s temp: %s", diff_.toString().c_str(), diff.toString().c_str(), temp.toString().c_str());
+    ////////ROS_INFO("diff_: %s diff: %s temp: %s", diff_.toString().c_str(), diff.toString().c_str(), temp.toString().c_str());
 
-    ////ROS_INFO("m_cc_: %s", m_cc_.toString().c_str());
+    ////////ROS_INFO("m_cc_: %s", m_cc_.toString().c_str());
     startPlanning_ = m_cc_.add(temp);
 
-    ////ROS_INFO("Adjusting movingOn");
+    ////////ROS_INFO("Adjusting movingOn");
     movingOn_.offsetPositions(temp);
 
-    ////ROS_INFO("Corrected startPlanning_: %s", startPlanning_.toString().c_str());
-    ////ROS_INFO("Corrected movingOn_: %s", movingOn_.toString().c_str());
+    ////////ROS_INFO("Corrected startPlanning_: %s", startPlanning_.toString().c_str());
+    ////////ROS_INFO("Corrected movingOn_: %s", movingOn_.toString().c_str());
 
     offsetPopulation(temp);
     
@@ -2951,20 +2954,20 @@ void Planner::planningCycleCallback()
     error_correct_durs_eval_.push_back( time_span.count() );
 
 
-    ////ROS_INFO("Pop after adjustment: %s", population_.toString().c_str());
+    ////////ROS_INFO("Pop after adjustment: %s", population_.toString().c_str());
 
     EC=true;
 
-    ////ROS_INFO("Done with Adjustment");
+    ////////ROS_INFO("Done with Adjustment");
   } // end if doing error correction 
   
   else
   {
-    ////ROS_INFO("Not doing error correction");
-    ////ROS_INFO("cc_started_: %s generation_: %i errorReduction_: %s \nlatestUpdate: %s", cc_started_ ? "True" : "False", generation_, errorReduction_ ? "True" : "False", latestUpdate_.toString().c_str());
+    ////////ROS_INFO("Not doing error correction");
+    ////////ROS_INFO("cc_started_: %s generation_: %i errorReduction_: %s \nlatestUpdate: %s", cc_started_ ? "True" : "False", generation_, errorReduction_ ? "True" : "False", latestUpdate_.toString().c_str());
   }
 
-  //////////ROS_INFO("Done with error correction!");
+  //////////////ROS_INFO("Done with error correction!");
 
 
   /*
@@ -2972,14 +2975,14 @@ void Planner::planningCycleCallback()
    */
   if(modifications_) 
   {
-    //////////ROS_INFO("*****************************");
-    ////ROS_INFO("Performing modification");
+    //////////////ROS_INFO("*****************************");
+    ////////ROS_INFO("Performing modification");
     high_resolution_clock::time_point t = high_resolution_clock::now();
     modification();
     time_span = duration_cast<microseconds>(t - tStart);
     mutate_durs_.push_back( time_span.count() );
-    ////ROS_INFO("Done with modification");
-    //////////ROS_INFO("*****************************");
+    ////////ROS_INFO("Done with modification");
+    //////////////ROS_INFO("*****************************");
   } // end if modifications
 
 
@@ -2996,9 +2999,9 @@ void Planner::planningCycleCallback()
   time_span = duration_cast<microseconds>(tEnd - tStart);
   pc_durs_.push_back(time_span.count());
 
-  //////////ROS_INFO("Pop: %s", population_.toString().c_str());
-  /*//////////ROS_INFO("Exiting PC at time: %f", ros::Time::now().toSec());
-  //////////ROS_INFO("Time spent in PC: %f", (ros::Time::now() - t).toSec());*/
+  //////////////ROS_INFO("Pop: %s", population_.toString().c_str());
+  /*//////////////ROS_INFO("Exiting PC at time: %f", ros::Time::now().toSec());
+  //////////////ROS_INFO("Time spent in PC: %f", (ros::Time::now() - t).toSec());*/
 
   Population copy = population_; 
   for(int i=0;i<ob_trajectory_.size();i++)
@@ -3010,10 +3013,10 @@ void Planner::planningCycleCallback()
 
   //sendPopulation();
   
-  ////////ROS_INFO("d: %f EC: %s mod_worked: %s modded_two: %s", d.toSec(), EC ? "True" : "False", mod_worked ? "True" : "False", modded_two ? "True" : "False");
-  //////////ROS_INFO("********************************************************************");
-  ////ROS_INFO("Generation %i completed, time elapse: %f", (generation_-1), (ros::Time::now() - t_start).toSec());
-  //////////ROS_INFO("********************************************************************");
+  ////////////ROS_INFO("d: %f EC: %s mod_worked: %s modded_two: %s", d.toSec(), EC ? "True" : "False", mod_worked ? "True" : "False", modded_two ? "True" : "False");
+  //////////////ROS_INFO("********************************************************************");
+  //ROS_INFO("Generation %i completed, time elapse: %f", (generation_-1), time_span.count());
+  //////////////ROS_INFO("********************************************************************");
 } // End planningCycleCallback
 
 
@@ -3023,8 +3026,8 @@ void Planner::planningCycleCallback()
 
 double Planner::getEarliestStartTime(const RampTrajectory& from)
 {
-  ////ROS_INFO("In Planner::getEarliestStartTime");
-  ////ROS_INFO("From: %s", from.toString().c_str());
+  ////////ROS_INFO("In Planner::getEarliestStartTime");
+  ////////ROS_INFO("From: %s", from.toString().c_str());
   double result;
 
   std::vector<double> times;
@@ -3066,7 +3069,7 @@ double Planner::getEarliestStartTime(const RampTrajectory& from)
     } // end for
   } // end else
 
-  ////ROS_INFO("Exiting Planner::getEarliestStartTime");
+  ////////ROS_INFO("Exiting Planner::getEarliestStartTime");
   return result;
 } // End getEarliestStartTime
 
@@ -3076,33 +3079,33 @@ void Planner::computeFullSwitch(const RampTrajectory& from, const RampTrajectory
 {
   if(log_enter_exit_)
   {
-    ////ROS_INFO("In Planner::computeFullSwitch(from, to, t_start, result)");
-    ////ROS_INFO("t_start: %f", t_start);
+    ////////ROS_INFO("In Planner::computeFullSwitch(from, to, t_start, result)");
+    ////////ROS_INFO("t_start: %f", t_start);
   }
-  //////////ROS_INFO("to: %s", to.toString().c_str());
+  //////////////ROS_INFO("to: %s", to.toString().c_str());
 
   // Get transition trajectory
   ros::Time tt = ros::Time::now();
   RampTrajectory trajec;
   switchTrajectory(from, to, t_start, trajec);
-  ////////////ROS_INFO("Time spent getting switch trajectory: %f", (ros::Time::now()-tt).toSec());
+  ////////////////ROS_INFO("Time spent getting switch trajectory: %f", (ros::Time::now()-tt).toSec());
  
   if(log_switching_)
   {
-    ////ROS_INFO("trajec.size(): %i", (int)trajec.msg_.trajectory.points.size());
+    ////////ROS_INFO("trajec.size(): %i", (int)trajec.msg_.trajectory.points.size());
   }
 
   // If a switch was possible
   if(trajec.transitionTraj_.trajectory.points.size() > 0)
   {
-    ////ROS_INFO("Switch was possible");
+    ////////ROS_INFO("Switch was possible");
 
     // Set result
     //result                  = trajec;
 
     if(log_switching_)
     {
-      ////ROS_INFO("result: %s", result.toString().c_str());
+      ////////ROS_INFO("result: %s", result.toString().c_str());
     }
   } // end if
 
@@ -3112,12 +3115,12 @@ void Planner::computeFullSwitch(const RampTrajectory& from, const RampTrajectory
   {
     if(log_switching_)
     {
-      ////ROS_WARN("A switch was not possible, returning \"to\" trajectory: %s", to.toString().c_str());
+      ////////ROS_WARN("A switch was not possible, returning \"to\" trajectory: %s", to.toString().c_str());
     }
     trajec = to;
   }
     
-  ////ROS_INFO("trajec: %s", trajec.toString().c_str());
+  ////////ROS_INFO("trajec: %s", trajec.toString().c_str());
 
   result = trajec;
 
@@ -3125,7 +3128,7 @@ void Planner::computeFullSwitch(const RampTrajectory& from, const RampTrajectory
 
   if(log_enter_exit_)
   {
-    ////ROS_INFO("Exiting Planner::computeFullSwitch");
+    ////////ROS_INFO("Exiting Planner::computeFullSwitch");
   }
 } // End computeFullSwitch
 
@@ -3138,8 +3141,8 @@ void Planner::switchTrajectory(const RampTrajectory& from, const RampTrajectory&
 {
   if(log_enter_exit_)
   {
-    ////ROS_INFO("In Planner::switchTrajectory(from, to, t_start, result)");
-    ////ROS_INFO("from: %s\n to%s", from.toString().c_str(), to.toString().c_str());
+    ////////ROS_INFO("In Planner::switchTrajectory(from, to, t_start, result)");
+    ////////ROS_INFO("from: %s\n to%s", from.toString().c_str(), to.toString().c_str());
   }
 
   /*
@@ -3152,13 +3155,13 @@ void Planner::switchTrajectory(const RampTrajectory& from, const RampTrajectory&
 
   if(log_switching_ && switching.msg_.trajectory.points.size() > 0)
   {
-    ////ROS_INFO("Switching trajectory: %s", switching.toString().c_str());
-    ////ROS_INFO("full.msg_.i_knotpoints.size(): %i", (int)full.msg_.i_knotPoints.size());
+    ////////ROS_INFO("Switching trajectory: %s", switching.toString().c_str());
+    ////////ROS_INFO("full.msg_.i_knotpoints.size(): %i", (int)full.msg_.i_knotPoints.size());
   }
   else if(log_switching_)
   {
-    ////ROS_INFO("No switch possible");
-    ////ROS_INFO("full.msg_.i_knotpoints.size(): %i", (int)full.msg_.i_knotPoints.size());
+    ////////ROS_INFO("No switch possible");
+    ////////ROS_INFO("full.msg_.i_knotpoints.size(): %i", (int)full.msg_.i_knotPoints.size());
   }
 
   // If robot is at goal, full should only be 1 point,
@@ -3171,8 +3174,8 @@ void Planner::switchTrajectory(const RampTrajectory& from, const RampTrajectory&
 
     if(log_switching_)
     {
-      //////ROS_INFO("c_kp: %i", c_kp);
-      ////ROS_INFO("c_kp: %i i_knotPoints.size(): %i", c_kp, (int)to.msg_.i_knotPoints.size());
+      //////////ROS_INFO("c_kp: %i", c_kp);
+      ////////ROS_INFO("c_kp: %i i_knotPoints.size(): %i", c_kp, (int)to.msg_.i_knotPoints.size());
     }
 
     // Set full as the concatenating of switching and to
@@ -3188,11 +3191,11 @@ void Planner::switchTrajectory(const RampTrajectory& from, const RampTrajectory&
     double delta_theta = utility_.findDistanceBetweenAngles(result.msg_.trajectory.points[0].positions[2], 
         result.msg_.trajectory.points[result.msg_.i_knotPoints[1]].positions[2]);
 
-    ////ROS_INFO("delta_theta: %f", delta_theta);
-    ////ROS_INFO("full.transitionTraj_.curves.size(): %i", (int)full.transitionTraj_.curves.size());
+    ////////ROS_INFO("delta_theta: %f", delta_theta);
+    ////////ROS_INFO("full.transitionTraj_.curves.size(): %i", (int)full.transitionTraj_.curves.size());
 
     
-    ////ROS_INFO("switching.msg_.curves.size(): %i switching.msg_.holonomic_path.points.size(): %i", (int)switching.msg_.curves.size(), (int)switching.msg_.holonomic_path.points.size());
+    ////////ROS_INFO("switching.msg_.curves.size(): %i switching.msg_.holonomic_path.points.size(): %i", (int)switching.msg_.curves.size(), (int)switching.msg_.holonomic_path.points.size());
     // Check that the switching trajectory is a curve or straight line, if true then set the transition trajectory
     // Results from getTransitionTrajectory will be one of the following:
     // 1) Have a smooth curve (successful transition)
@@ -3202,19 +3205,19 @@ void Planner::switchTrajectory(const RampTrajectory& from, const RampTrajectory&
     if(switching.msg_.curves.size() > 0 || (switching.msg_.holonomic_path.points.size() == 2 && fabs(delta_theta) < 
           0.25))
     {
-      ////ROS_INFO("Setting transition trajectory");
+      ////////ROS_INFO("Setting transition trajectory");
       result.transitionTraj_ = switching.msg_;
     }
   } // end if size > 1
   else if(log_switching_)
   {
-    ////ROS_INFO("No switching trajectory");
+    ////////ROS_INFO("No switching trajectory");
   }
  
 
   if(log_enter_exit_)
   {
-    ////ROS_INFO("Exiting Planner::switchTrajectory");
+    ////////ROS_INFO("Exiting Planner::switchTrajectory");
   }
 }
 
@@ -3222,8 +3225,8 @@ void Planner::switchTrajectory(const RampTrajectory& from, const RampTrajectory&
 
 void Planner::getTransPop(const Population& pop, const RampTrajectory& movingOn, const double& t_start, Population& result)
 {
-  ////////ROS_INFO("In Planner::getTransPop");
-  ////////////ROS_INFO("pop: %s", pop.toString().c_str());
+  ////////////ROS_INFO("In Planner::getTransPop");
+  ////////////////ROS_INFO("pop: %s", pop.toString().c_str());
   result = pop;
 
   if(result.type_ != HOLONOMIC)
@@ -3233,15 +3236,15 @@ void Planner::getTransPop(const Population& pop, const RampTrajectory& movingOn,
     // 2) transition trajectory
     for(uint8_t i=0;i<pop.size();i++)
     {
-      //////////ROS_INFO("i: %i", i);
+      //////////////ROS_INFO("i: %i", i);
       RampTrajectory temp;
       computeFullSwitch(movingOn_, pop.get(i), t_start, temp);
       result.replace(i, temp);
     }
   }
-  ////////////ROS_INFO("Trans pop full: %s", result.toString().c_str());
+  ////////////////ROS_INFO("Trans pop full: %s", result.toString().c_str());
 
-  ////////ROS_INFO("Exiting Planner::getTransPop");
+  ////////////ROS_INFO("Exiting Planner::getTransPop");
 }
 
 
@@ -3251,10 +3254,10 @@ void Planner::getTransPop(const Population& pop, const RampTrajectory& movingOn,
 /** This methed runs the tasks needed to do a control cycle */
 void Planner::doControlCycle() 
 {
-  ////////ROS_WARN("Control Cycle %i occurring at Time: %f", num_cc_, ros::Time::now().toSec());
+  ////////////ROS_WARN("Control Cycle %i occurring at Time: %f", num_cc_, ros::Time::now().toSec());
   //ROS_INFO("controlCycle_: %f", controlCycle_.toSec());
-  //////ROS_INFO("Time between control cycles: %f", (ros::Time::now() - t_prevCC_).toSec());
-  ////////ROS_INFO("Number of planning cycles that occurred between CC's: %i", c_pc_);
+  //////////ROS_INFO("Time between control cycles: %f", (ros::Time::now() - t_prevCC_).toSec());
+  ////////////ROS_INFO("Number of planning cycles that occurred between CC's: %i", c_pc_);
   
   // If 1st CC, then use start of runtime as the frequency
   // Only use this value for visualization in charts b/c
@@ -3265,7 +3268,7 @@ void Planner::doControlCycle()
 
   t_prevCC_ = high_resolution_clock::now();
   t_prevCC_ros_ = ros::Time::now();
-  //////////ROS_INFO("Number of planning cycles that occurred between CC's: %i", c_pc_);
+  //////////////ROS_INFO("Number of planning cycles that occurred between CC's: %i", c_pc_);
 
   // Set all of the trajectory t_start values to 0 b/c they would be starting now
   /*for(int i=0;i<population_.size();i++)
@@ -3284,11 +3287,11 @@ void Planner::doControlCycle()
   }
   i_prevBest_ = i_best;
 
-  //////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
+  //////////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
 
   // Send the best trajectory and set movingOn
-  //////////ROS_INFO("Sending best");
-  //ROS_INFO("bestT: %s", bestT.toString().c_str());
+  //////////////ROS_INFO("Sending best");
+  //////ROS_INFO("bestT: %s", bestT.toString().c_str());
   sendBest();
  
   // Set t_lastFeasible on first CC because we haven't done a sensing cycle yet
@@ -3296,10 +3299,10 @@ void Planner::doControlCycle()
   {
     t_lastFeasible_ = ros::Time::now();
   }
-  ////////////ROS_INFO("After sendBest");
+  ////////////////ROS_INFO("After sendBest");
 
 
-  ////////////ROS_INFO("Setting movingOn_");
+  ////////////////ROS_INFO("Setting movingOn_");
   movingOnCC_             = bestT.getSubTrajectory(t_fixed_cc_);
   movingOnCC_.msg_.curves = bestT.msg_.curves;
   movingOnCC_.msg_.t_start  = ros::Duration(0);
@@ -3312,25 +3315,25 @@ void Planner::doControlCycle()
   
   movingOn_               = movingOnCC_;
   moving_on_coll_         = !movingOn_.msg_.feasible;
-  ////////ROS_INFO("movingOn: %s", movingOn_.toString().c_str());
+  ////////////ROS_INFO("movingOn: %s", movingOn_.toString().c_str());
   
-  //////ROS_INFO("movingOn_.t_firstCollision: %f", movingOn_.msg_.t_firstCollision.toSec());
+  //////////ROS_INFO("movingOn_.t_firstCollision: %f", movingOn_.msg_.t_firstCollision.toSec());
   if(!(ob_trajectory_.size() > 0 && moving_on_coll_ && (movingOn_.msg_.t_firstCollision.toSec() < controlCycle_.toSec()
     || (movingOn_.msg_.t_firstCollision.toSec() - (ros::Time::now().toSec()-t_prevCC_ros_.toSec())) < controlCycle_.toSec())))
   {
-    //////ROS_INFO("No IC");
+    //////////ROS_INFO("No IC");
     imminent_collision_ = false;
   }
   else
   {
-    //////ROS_INFO("IC Detected in CC Callback");
+    //////////ROS_INFO("IC Detected in CC Callback");
   }
 
 
   // The motion state that we should reach by the next control cycle
   if(imminent_collision_)
   {
-    ////ROS_INFO("imminent_collision_: True");
+    ////////ROS_INFO("imminent_collision_: True");
     m_cc_ = latestUpdate_;
     startPlanning_ = m_cc_;
     controlCycle_ = ros::Duration(t_fixed_cc_);
@@ -3342,12 +3345,12 @@ void Planner::doControlCycle()
     {
       population_.trajectories_[i].msg_.t_start = ros::Duration(t_fixed_cc_);
     }
-    ////////ROS_INFO("population_: %s", population_.toString().c_str());
+    ////////////ROS_INFO("population_: %s", population_.toString().c_str());
   }
   // If no imminent collision, then adapt the population
   else
   {
-    ////ROS_INFO("Setting ic.data = false and imminent_collision = false");
+    ////////ROS_INFO("Setting ic.data = false and imminent_collision = false");
     std_msgs::Bool ic;
     ic.data = false;
     h_control_->sendIC(ic);
@@ -3359,10 +3362,10 @@ void Planner::doControlCycle()
     // At CC, startPlanning is assumed to be perfect (no motion error accounted for yet)
     startPlanning_ = m_cc_;
 
-    ////ROS_INFO("Before adaptation and evaluation, pop size: %i", population_.size());
+    ////////ROS_INFO("Before adaptation and evaluation, pop size: %i", population_.size());
     for(uint8_t i=0;i<populationSize_;i++)
     {
-      ////ROS_INFO("Trajectory %i: %s", i, population_.get(i).toString().c_str());
+      ////////ROS_INFO("Trajectory %i: %s", i, population_.get(i).toString().c_str());
     }
 
     diff_.zero();
@@ -3372,16 +3375,16 @@ void Planner::doControlCycle()
     /*
      * Adapt the population
      */
-    ////ROS_INFO("bestT.getT(): %f t_fixed_cc_: %f", bestT.getT(), t_fixed_cc_);
+    ////////ROS_INFO("bestT.getT(): %f t_fixed_cc_: %f", bestT.getT(), t_fixed_cc_);
     // Check if bestT time reaches t_fixed_cc
     if(bestT.getT() <= t_fixed_cc_)
     {
-      ////ROS_INFO("Adapting Pop with t_fixed_cc");
+      ////////ROS_INFO("Adapting Pop with t_fixed_cc");
       adaptPopulation(startPlanning_, ros::Duration(bestT.getT()));
     }
     else
     {
-      ////ROS_INFO("Adapting Pop with bestT.getT()");
+      ////////ROS_INFO("Adapting Pop with bestT.getT()");
       adaptPopulation(startPlanning_, ros::Duration(t_fixed_cc_));
     }
 
@@ -3393,13 +3396,13 @@ void Planner::doControlCycle()
     adapt_durs_.push_back(d_adapt);
 
     
-    ////ROS_INFO("After adaptation:");
-    //////ROS_INFO("Pop earliest time: %f", population_.getEarliestStartTime().toSec());
+    ////////ROS_INFO("After adaptation:");
+    //////////ROS_INFO("Pop earliest time: %f", population_.getEarliestStartTime().toSec());
     for(int i=0;i<population_.size();i++)
     {
-      ////ROS_INFO("%s", population_.get(i).toString().c_str());
+      ////////ROS_INFO("%s", population_.get(i).toString().c_str());
     }
-    ////////////ROS_INFO("Time spent adapting: %f", d_adapt.toSec());
+    ////////////////ROS_INFO("Time spent adapting: %f", d_adapt.toSec());
    
    
 
@@ -3412,7 +3415,7 @@ void Planner::doControlCycle()
 
     // Get future time to start switching trajectories at 
     double t_start = getEarliestStartTime(movingOn_);
-    ////ROS_INFO("t_start: %f", t_start);
+    ////////ROS_INFO("t_start: %f", t_start);
 
     // Check that we were able to switch to any of them
     if(t_start < t_fixed_cc_-0.0001)
@@ -3425,7 +3428,7 @@ void Planner::doControlCycle()
     }
     else
     {
-      ////ROS_INFO("Could not switch to any trajectories, not computing transition trajectories!");
+      ////////ROS_INFO("Could not switch to any trajectories, not computing transition trajectories!");
     }
 
     // Get data for trajec size
@@ -3455,14 +3458,14 @@ void Planner::doControlCycle()
   controlCycle_         = population_.getEarliestStartTime();
   controlCycleTimer_.setPeriod(controlCycle_, false);
 
-  ////ROS_INFO("Next CC Time: %f", controlCycle_.toSec());
+  ////////ROS_INFO("Next CC Time: %f", controlCycle_.toSec());
 
   time_span = duration_cast<microseconds>(high_resolution_clock::now() - t_prevCC_);
   cc_durs_.push_back( time_span.count() );
  
   num_cc_++;
-  //////////ROS_INFO("Time spent in CC: %f", d_cc.toSec());
-  //////////ROS_INFO("Exiting Planner::doControlCycle");
+  //////////////ROS_INFO("Time spent in CC: %f", d_cc.toSec());
+  //ROS_INFO("Exiting Planner::doControlCycle");
 } // End doControlCycle
 
 
@@ -3475,14 +3478,14 @@ void Planner::doControlCycle()
 void Planner::controlCycleCallback(const ros::TimerEvent& e) 
 {
   
-  /*////////ROS_INFO("*************************************************");
-  ////////ROS_INFO("  Control cycle timer event happening  ");
-  ////////ROS_INFO("  e.last_expected: %f\n  e.last_real: %f\n  current_expected: %f\n  current_real: %f\n  profile.last_duration: %f",
+  /*////////////ROS_INFO("*************************************************");
+  ////////////ROS_INFO("  Control cycle timer event happening  ");
+  ////////////ROS_INFO("  e.last_expected: %f\n  e.last_real: %f\n  current_expected: %f\n  current_real: %f\n  profile.last_duration: %f",
       e.last_expected.toSec(), e.last_real.toSec(), e.current_expected.toSec(), e.current_real.toSec(), e.profile.last_duration.toSec());
-  ////////ROS_INFO("Time since last: %f", (e.current_real - e.last_real).toSec());
-  ////////ROS_INFO("*************************************************");*/
+  ////////////ROS_INFO("Time since last: %f", (e.current_real - e.last_real).toSec());
+  ////////////ROS_INFO("*************************************************");*/
   
-  //////////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
+  //////////////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
   
   // Do the control cycle
   doControlCycle();
@@ -3495,7 +3498,7 @@ void Planner::controlCycleCallback(const ros::TimerEvent& e)
   }
     
   num_ccs_++;
-  //////////ROS_INFO("Leaving Control Cycle, period: %f", controlCycle_.toSec());
+  //////////////ROS_INFO("Leaving Control Cycle, period: %f", controlCycle_.toSec());
 } // End controlCycleCallback
 
 
@@ -3503,7 +3506,7 @@ void Planner::controlCycleCallback(const ros::TimerEvent& e)
 
 void Planner::pubMapOdomCb(const ros::TimerEvent& e)
 {
-  ////ROS_INFO("In pubMapOdomCb");
+  ////////ROS_INFO("In pubMapOdomCb");
 
   // Broadcast a tf for base_link to the global frame
   static tf::TransformBroadcaster br;
@@ -3524,7 +3527,7 @@ void Planner::pubMapOdomCb(const ros::TimerEvent& e)
 
 /** Send the fittest feasible trajectory to the robot package */
 void Planner::sendBest() {
-  ////////////ROS_INFO("Sending best trajectory: %s", population_.get(population_.calcBestIndex()).toString().c_str());
+  ////////////////ROS_INFO("Sending best trajectory: %s", population_.get(population_.calcBestIndex()).toString().c_str());
 
   //if(!stop_) {
     RampTrajectory best = population_.getBest();
@@ -3537,14 +3540,14 @@ void Planner::sendBest() {
       //std::cout<<"\nCollision within 3 seconds! Stopping robot!\n";
     }
     else if(!best.msg_.feasible) {
-      //////////ROS_INFO("Best trajectory is not feasible! Time until collision: %f", best.msg_.t_firstCollision.toSec());
+      //////////////ROS_INFO("Best trajectory is not feasible! Time until collision: %f", best.msg_.t_firstCollision.toSec());
     }*/
     
     best.msg_.header.stamp = ros::Time::now();
     h_control_->send(best.msg_);
   //} // end if not stopped
   /*else {
-    //////////ROS_INFO("Sending blank!");
+    //////////////ROS_INFO("Sending blank!");
     RampTrajectory blank;
     h_control_->send(blank.msg_);
   }*/
@@ -3559,8 +3562,8 @@ void Planner::sendBest() {
 /** Send the whole population of trajectories to the trajectory viewer */
 void Planner::sendPopulation()
 {
-  ////ROS_INFO("In Planner::sendPopulation");
-  ////ROS_INFO("Time since last sendPopulation(): %f", (ros::Time::now() - t_prevSendPop_).toSec());
+  //ROS_INFO("In Planner::sendPopulation");
+  ////////ROS_INFO("Time since last sendPopulation(): %f", (ros::Time::now() - t_prevSendPop_).toSec());
 
   /*
    * Send to trajectory_visualization node
@@ -3591,6 +3594,8 @@ void Planner::sendPopulation()
   }
   h_rviz_->sendMarkerArray(ma);
   t_prevSendPop_ = ros::Time::now();
+
+  //ROS_INFO("Exiting sendPopulation");
 }
 
 void Planner::displayTrajectory(const ramp_msgs::RampTrajectory traj) const 
@@ -3604,7 +3609,7 @@ void Planner::displayTrajectory(const ramp_msgs::RampTrajectory traj) const
 
 void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_msgs::Marker& result) const
 {
-  ROS_INFO("buildLineList id: %i", id);
+  //ROS_INFO("buildLineList id: %i", id);
   result.id = id;
   result.header.stamp = ros::Time::now();
   result.header.frame_id = global_frame_;
@@ -3637,7 +3642,7 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
   // Push on all the trajectory points
   for(int i=0;i<trajec.msg_.trajectory.points.size();i++)
   {
-    //////ROS_INFO("Point %i: (%f,%f,%f)", i, trajec.msg_.trajectory.points[i].positions[0], trajec.msg_.trajectory.points[i].positions[1], trajec.msg_.trajectory.points[i].positions[2]);
+    //////////ROS_INFO("Point %i: (%f,%f,%f)", i, trajec.msg_.trajectory.points[i].positions[0], trajec.msg_.trajectory.points[i].positions[1], trajec.msg_.trajectory.points[i].positions[2]);
     geometry_msgs::Point p;
     p.x = trajec.msg_.trajectory.points[i].positions[0];
     p.y = trajec.msg_.trajectory.points[i].positions[1];
@@ -3646,10 +3651,11 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
     result.points.push_back(p);
   }
   // Planning cycles are usually 20Hz, but put a little padding on there so rviz looks smoother and doesn't start blinking if there are any delays
-  result.lifetime = ros::Duration(0.2);
+  result.lifetime = ros::Duration(0.20);
 
   // Width of the lines
   result.scale.x = 0.01;
+  //ROS_INFO("Exiting buildLineList");
 }
 
 
@@ -3677,14 +3683,14 @@ void Planner::requestEvaluation(std::vector<RampTrajectory>& trajecs)
   }
   else
   {
-    ////ROS_ERROR("An error occurred when evaluating a trajectory");
+    ////////ROS_ERROR("An error occurred when evaluating a trajectory");
   }
 }
 
 
 void Planner::requestEvaluation(ramp_msgs::EvaluationRequest& request) 
 {
-  ////////ROS_INFO("In Planner::requestEvaluation(EvaluationRequest&)");
+  ////////////ROS_INFO("In Planner::requestEvaluation(EvaluationRequest&)");
   ramp_msgs::EvaluationSrv srv;
   srv.request.reqs.push_back(request);
 
@@ -3695,24 +3701,24 @@ void Planner::requestEvaluation(ramp_msgs::EvaluationRequest& request)
   {
     duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now() - tStart);
     eval_durs_.push_back( time_span.count() );
-    ////////ROS_INFO("Setting fitness: %f", srv.response.resps[0].fitness);
+    ////////////ROS_INFO("Setting fitness: %f", srv.response.resps[0].fitness);
     request.trajectory.fitness          = srv.response.resps[0].fitness;
     request.trajectory.feasible         = srv.response.resps[0].feasible;
     request.trajectory.t_firstCollision = srv.response.resps[0].t_firstCollision;
   }
   else
   {
-    ////ROS_ERROR("An error occurred when evaluating a trajectory");
+    ////////ROS_ERROR("An error occurred when evaluating a trajectory");
   }
-  ////////ROS_INFO("Exiting Planner::requestEvaluation(EvaluationRequest&)");
+  ////////////ROS_INFO("Exiting Planner::requestEvaluation(EvaluationRequest&)");
 }
 
 
 
 void Planner::requestEvaluation(RampTrajectory& trajec, bool full)
 {
-  ////////ROS_INFO("In Planner::requestEvaluation(RampTrajectory&, bool)");
-  ////////ROS_INFO("full: %s", full ? "True" : "False");
+  ////////////ROS_INFO("In Planner::requestEvaluation(RampTrajectory&, bool)");
+  ////////////ROS_INFO("full: %s", full ? "True" : "False");
   ramp_msgs::EvaluationRequest req;
   
   buildEvaluationRequest(trajec, req, full);
@@ -3721,8 +3727,8 @@ void Planner::requestEvaluation(RampTrajectory& trajec, bool full)
   trajec.msg_.fitness           = req.trajectory.fitness;
   trajec.msg_.feasible          = req.trajectory.feasible;
   trajec.msg_.t_firstCollision  = req.trajectory.t_firstCollision;
-  ////////ROS_INFO("trajec.fitness: %f", trajec.msg_.fitness);
-  ////////ROS_INFO("Exiting Planner::requestEvaluation(RampTrajectory&, bool)");
+  ////////////ROS_INFO("trajec.fitness: %f", trajec.msg_.fitness);
+  ////////////ROS_INFO("Exiting Planner::requestEvaluation(RampTrajectory&, bool)");
 }
 
 
@@ -3781,78 +3787,78 @@ const MotionState Planner::findAverageDiff() {
 
 void Planner::printGeneralData() const
 {
-  //ROS_INFO("*************************************************************");
-  //ROS_INFO("                        General data                         ");
-  //ROS_INFO("*************************************************************");
+  //////ROS_INFO("*************************************************************");
+  //////ROS_INFO("                        General data                         ");
+  //////ROS_INFO("*************************************************************");
 
-  //ROS_INFO("Runtime: %f", d_runtime_.toSec());
-  //ROS_INFO("# of planning cycles: %i", num_pcs_);
-  //ROS_INFO("# of sensing cycles:  %i", num_scs_);
-  //ROS_INFO("# of control cycles:  %i", num_ccs_);
-  //ROS_INFO("Population size: %i", pop_size_);
+  //////ROS_INFO("Runtime: %f", d_runtime_.toSec());
+  //////ROS_INFO("# of planning cycles: %i", num_pcs_);
+  //////ROS_INFO("# of sensing cycles:  %i", num_scs_);
+  //////ROS_INFO("# of control cycles:  %i", num_ccs_);
+  //////ROS_INFO("Population size: %i", pop_size_);
 
   // Time to compute switching trajectories
-  //ROS_INFO("Time to compute switching trajectories:");
+  //////ROS_INFO("Time to compute switching trajectories:");
   double compute_switch_t_avg = 0;
   for(int i=0;i<d_compute_switch_all_ts_.size();i++)
   {
-    //ROS_INFO("d_compute_switch_all_ts_[%i]: %f", i, d_compute_switch_all_ts_[i].toSec());
+    //////ROS_INFO("d_compute_switch_all_ts_[%i]: %f", i, d_compute_switch_all_ts_[i].toSec());
     compute_switch_t_avg += d_compute_switch_all_ts_[i].toSec();
   }
   compute_switch_t_avg /= d_compute_switch_all_ts_.size();
-  //ROS_INFO("Average: %f", compute_switch_t_avg);
+  //////ROS_INFO("Average: %f", compute_switch_t_avg);
 
   // Size of switching trajectories
-  //ROS_INFO("Switching trajectory sizes:");
+  //////ROS_INFO("Switching trajectory sizes:");
   int switch_t_size_avg = 0;
   for(int i=0;i<switch_t_size_.size();i++)
   {
-    //ROS_INFO("switch_t_size_[%i]: %i", i, switch_t_size_[i]);
+    //////ROS_INFO("switch_t_size_[%i]: %i", i, switch_t_size_[i]);
     switch_t_size_avg += switch_t_size_[i];
   }
   switch_t_size_avg /= switch_t_size_.size();
-  //ROS_INFO("Average: %i", switch_t_size_avg);
+  //////ROS_INFO("Average: %i", switch_t_size_avg);
 
   // Size of normal trajectories
-  //ROS_INFO("Normal trajectory sizes:");
+  //////ROS_INFO("Normal trajectory sizes:");
   int trajec_size_avg = 0;
   for(int i=0;i<trajec_size_.size();i++)
   {
-    //ROS_INFO("trajec_size_[%i]: %i", i, trajec_size_[i]);
+    //////ROS_INFO("trajec_size_[%i]: %i", i, trajec_size_[i]);
     trajec_size_avg += trajec_size_[i];
   }
   trajec_size_avg /= trajec_size_.size();
-  //ROS_INFO("Average: %i", trajec_size_avg);
+  //////ROS_INFO("Average: %i", trajec_size_avg);
 
   // Duration moving on feasible trajectory
-  //ROS_INFO("Time that the best trajectory is feasible: %f", d_best_is_feas_.toSec()); 
+  //////ROS_INFO("Time that the best trajectory is feasible: %f", d_best_is_feas_.toSec()); 
 
   // Duration spent in imminent collision
-  //ROS_INFO("Time spent in imminent collision: %f", d_time_in_ic_.toSec());
+  //////ROS_INFO("Time spent in imminent collision: %f", d_time_in_ic_.toSec());
 
   // Minimum distance from obstacles
-  //ROS_INFO("Minimum distance from obstacles");
+  //////ROS_INFO("Minimum distance from obstacles");
   double min_dist_obs_avg = 0;
   for(int i=0;i<min_dist_obs_.size();i++)
   {
-    //ROS_INFO("min_dist_obs_[%i]: %f", i, min_dist_obs_[i]);
+    //////ROS_INFO("min_dist_obs_[%i]: %f", i, min_dist_obs_[i]);
     min_dist_obs_avg += min_dist_obs_[i];
   }
   min_dist_obs_avg /= min_dist_obs_.size();
-  //ROS_INFO("Average: %f", min_dist_obs_avg);
+  //////ROS_INFO("Average: %f", min_dist_obs_avg);
 
   // Motion error amount
-  //ROS_INFO("Amount of motion error compensation");
+  //////ROS_INFO("Amount of motion error compensation");
   double motion_error_amount_avg = 0;
   for(int i=0;i<motion_error_amount_.size();i++)
   {
-    //ROS_INFO("motion_error_amount_[%i]: %f", i, motion_error_amount_[i]);
+    //////ROS_INFO("motion_error_amount_[%i]: %f", i, motion_error_amount_[i]);
     motion_error_amount_avg += motion_error_amount_[i];
   }
   motion_error_amount_avg /= motion_error_amount_.size();
-  //ROS_INFO("Average: %f", motion_error_amount_avg);
+  //////ROS_INFO("Average: %f", motion_error_amount_avg);
 
-  //ROS_INFO("Full trajectory: %s", full_trajectory_.toString().c_str());
+  //////ROS_INFO("Full trajectory: %s", full_trajectory_.toString().c_str());
 }
 
 void Planner::writeGeneralData()
@@ -3924,144 +3930,144 @@ void Planner::writeGeneralData()
 void Planner::printDurationData() const
 {
   // Planning cycle durations
-  //ROS_INFO("Planning cycle durations");
+  //////ROS_INFO("Planning cycle durations");
   double pc_durs_avg = 0; 
   for(uint16_t i=0;i<pc_durs_.size();i++)
   {
-    //ROS_INFO("pc_durs_[%i]: %f", i, pc_durs_.at(i));
+    //////ROS_INFO("pc_durs_[%i]: %f", i, pc_durs_.at(i));
     pc_durs_avg += pc_durs_.at(i);
   }
   pc_durs_avg /= pc_durs_.size();
-  //ROS_INFO("Average: %f", pc_durs_avg);
+  //////ROS_INFO("Average: %f", pc_durs_avg);
 
 
   // Planning cycle frequency
-  //ROS_INFO("Planning cycle frequencies");
+  //////ROS_INFO("Planning cycle frequencies");
   double pc_freqs_avg = 0;
   for(int i=0;i<pc_freqs_.size();i++)
   {
-    //ROS_INFO("pc_freqs_[%i]: %f", i, pc_freqs_[i]);
+    //////ROS_INFO("pc_freqs_[%i]: %f", i, pc_freqs_[i]);
     pc_freqs_avg += i > 0 ? pc_freqs_[i] : 0;
   }
   pc_freqs_avg /= pc_freqs_.size()-1; //-1 because first value is not an elapsed time
-  //ROS_INFO("Average: %f", pc_freqs_avg);
+  //////ROS_INFO("Average: %f", pc_freqs_avg);
 
 
   // Sensing cycle durations
-  //ROS_INFO("Sensing cycle durations");
+  //////ROS_INFO("Sensing cycle durations");
   double sc_durs_avg = 0; 
   for(uint16_t i=0;i<sc_durs_.size();i++)
   {
-    //ROS_INFO("sc_durs_[%i]: %f", i, sc_durs_.at(i));
+    //////ROS_INFO("sc_durs_[%i]: %f", i, sc_durs_.at(i));
     sc_durs_avg += sc_durs_.at(i);
   }
   sc_durs_avg /= sc_durs_.size();
-  //ROS_INFO("Average: %f", sc_durs_avg);
+  //////ROS_INFO("Average: %f", sc_durs_avg);
 
   // Sensing cycle frequency
-  //ROS_INFO("Sensing cycle frequency: %i", sc_freqs_);
+  //////ROS_INFO("Sensing cycle frequency: %i", sc_freqs_);
 
 
   // Control cycle durations
-  //ROS_INFO("Control cycle durations");
+  //////ROS_INFO("Control cycle durations");
   double cc_durs_avg = 0; 
   for(uint16_t i=0;i<cc_durs_.size();i++)
   {
-    //ROS_INFO("cc_durs_[%i]: %f", i, cc_durs_.at(i));
+    //////ROS_INFO("cc_durs_[%i]: %f", i, cc_durs_.at(i));
     cc_durs_avg += cc_durs_.at(i);
   }
   cc_durs_avg /= cc_durs_.size();
-  //ROS_INFO("Average: %f", cc_durs_avg);
+  //////ROS_INFO("Average: %f", cc_durs_avg);
 
 
   // Control cycle frequency
-  //ROS_INFO("Control cycle frequencies");
+  //////ROS_INFO("Control cycle frequencies");
   double cc_freqs_avg = 0;
   for(int i=0;i<cc_freqs_.size();i++)
   {
-    //ROS_INFO("cc_freqs_[%i]: %f", i, cc_freqs_[i]);
+    //////ROS_INFO("cc_freqs_[%i]: %f", i, cc_freqs_[i]);
     cc_freqs_avg += i > 0 ? cc_freqs_[i] : 0;
   }
   cc_freqs_avg /= cc_freqs_.size()-1; //-1 because first value is not an elapsed time
-  //ROS_INFO("Average: %f", cc_freqs_avg);
+  //////ROS_INFO("Average: %f", cc_freqs_avg);
 
 
   // Trajectory request durations
-  //ROS_INFO("Trajectory request durations");
+  //////ROS_INFO("Trajectory request durations");
   double trajec_dur_avg = 0;
   for(uint16_t i=0;i<trajec_durs_.size();i++)
   {
     if(i % 10 == 0)
     {
-      //ROS_INFO("trajec duration[%i]: %f", i, trajec_durs_.at(i));
+      //////ROS_INFO("trajec duration[%i]: %f", i, trajec_durs_.at(i));
     }
     trajec_dur_avg += trajec_durs_[i];
   }
   trajec_dur_avg /= trajec_durs_.size();
-  //ROS_INFO("Average: %f", trajec_dur_avg);
+  //////ROS_INFO("Average: %f", trajec_dur_avg);
 
   
   // Evaluation request durations
-  //ROS_INFO("Evaluation request durations");
+  //////ROS_INFO("Evaluation request durations");
   double eval_durs_avg = 0;
   for(uint16_t i=0;i<eval_durs_.size();i++)
   {
     if(i % 20 == 0)
     {
-      //ROS_INFO("eval duration[i]: %f", eval_durs_.at(i));
+      //////ROS_INFO("eval duration[i]: %f", eval_durs_.at(i));
     }
     eval_durs_avg += eval_durs_[i];
   }
   eval_durs_avg /= eval_durs_.size();
-  //ROS_INFO("Average: %f", eval_durs_avg);
+  //////ROS_INFO("Average: %f", eval_durs_avg);
 
   // Modification request durations
-  //ROS_INFO("Modification request durations");
+  //////ROS_INFO("Modification request durations");
   double mod_durs_avg = 0;
   for(int i=0;i<mod_durs_.size();i++)
   {
     if(i % 10 == 0)
     {
-      //ROS_INFO("mod_durs_[%i]: %f", i, mod_durs_[i]);
+      //////ROS_INFO("mod_durs_[%i]: %f", i, mod_durs_[i]);
     }
     mod_durs_avg += mod_durs_[i];
   }
   mod_durs_avg /= mod_durs_.size();
-  //ROS_INFO("Average: %f", mod_durs_avg);
+  //////ROS_INFO("Average: %f", mod_durs_avg);
   
   // Mutation durations
   double mutate_durs_avg = 0;
   for(uint16_t i=0;i<mutate_durs_.size();i++)
   {
-    //ROS_INFO("mutate_durs_[%i]: %f", i, mutate_durs_[i]);
+    //////ROS_INFO("mutate_durs_[%i]: %f", i, mutate_durs_[i]);
     mutate_durs_avg += mutate_durs_[i];
   }
   mutate_durs_avg /= mutate_durs_.size();
-  //ROS_INFO("Average: %f", mutate_durs_avg);
+  //////ROS_INFO("Average: %f", mutate_durs_avg);
 
 
   // Error correction durations (including evaluation)
-  //ROS_INFO("Error correction durations (including evaluation)");
+  //////ROS_INFO("Error correction durations (including evaluation)");
   double error_correct_durs_eval_avg = 0;
   for(uint16_t i=0;i<error_correct_durs_eval_.size();i++)
   {
-    //ROS_INFO("error correct duration[%i]: %f", i, error_correct_durs_eval_[i]);
+    //////ROS_INFO("error correct duration[%i]: %f", i, error_correct_durs_eval_[i]);
     error_correct_durs_eval_avg += error_correct_durs_eval_[i];
   }
   error_correct_durs_eval_avg /= error_correct_durs_eval_.size();
-  //ROS_INFO("Average: %f", error_correct_durs_eval_avg);
+  //////ROS_INFO("Average: %f", error_correct_durs_eval_avg);
 
 
   // Error correction durations (NOT including evaluation)
-  //ROS_INFO("Error correction durations (NOT including evaluation)");
+  //////ROS_INFO("Error correction durations (NOT including evaluation)");
   double error_correct_durs_no_eval_avg = 0;
   for(uint16_t i=0;i<error_correct_durs_no_eval_.size();i++)
   {
-    //ROS_INFO("error correct duration[%i]: %f", i, error_correct_durs_no_eval_[i]);
+    //////ROS_INFO("error correct duration[%i]: %f", i, error_correct_durs_no_eval_[i]);
     error_correct_durs_no_eval_avg += error_correct_durs_no_eval_[i];
   }
   error_correct_durs_no_eval_avg /= error_correct_durs_no_eval_.size();
-  //ROS_INFO("Average: %f", error_correct_durs_no_eval_avg);
+  //////ROS_INFO("Average: %f", error_correct_durs_no_eval_avg);
 
 }
 
@@ -4189,7 +4195,7 @@ trajectory_msgs::JointTrajectoryPoint Planner::prepareForTestCase()
   evaluatePopulation();
   //sendPopulation();
 
-  //////ROS_INFO("Population Initialized: %s", population_.toString().c_str());
+  //////////ROS_INFO("Population Initialized: %s", population_.toString().c_str());
 
   
   // Create sub-transPops if enabled
@@ -4206,15 +4212,15 @@ trajectory_msgs::JointTrajectoryPoint Planner::prepareForTestCase()
 
   // Get the time until next control cycle, t_{i+1}
   double t_next_cc = controlCycle_.toSec();
-  //////ROS_INFO("t_next_cc: %f", t_next_cc);
+  //////////ROS_INFO("t_next_cc: %f", t_next_cc);
 
   int i = t_next_cc*10;
-  //////ROS_INFO("i: %i", i);
+  //////////ROS_INFO("i: %i", i);
 
-  //////ROS_INFO("movingOn_: %s", movingOn_.toString().c_str());
+  //////////ROS_INFO("movingOn_: %s", movingOn_.toString().c_str());
   
   trajectory_msgs::JointTrajectoryPoint p_next_cc = movingOn_.msg_.trajectory.points.at(t_next_cc*10);
-  //////ROS_INFO("p_next_cc: %s", utility_.toString(p_next_cc).c_str());
+  //////////ROS_INFO("p_next_cc: %s", utility_.toString(p_next_cc).c_str());
 
   return p_next_cc;
 }
@@ -4229,7 +4235,7 @@ void Planner::planningCycles(int num)
 
 void Planner::goTest(float sec) 
 {
-  //////ROS_INFO("goTest Start: %s \nGoal: %s", start_.toString().c_str(), goal_.toString().c_str());
+  //////////ROS_INFO("goTest Start: %s \nGoal: %s", start_.toString().c_str(), goal_.toString().c_str());
 
   ros::Rate r(20);
 
@@ -4251,7 +4257,7 @@ void Planner::goTest(float sec)
   imminentCollisionTimer_.start();
 
 
-  ////////ROS_INFO("Sec > 0, %f", sec);
+  ////////////ROS_INFO("Sec > 0, %f", sec);
   ros::Time t_begin = ros::Time::now();
   while( (latestUpdate_.comparePosition(relative_goal, false) > goalThreshold_) && (ros::Time::now() - t_begin).toSec() 
       < sec && ros::ok())
@@ -4263,7 +4269,7 @@ void Planner::goTest(float sec)
 
 
   ros::Duration t_execution = ros::Time::now() - t_start;
-  //////ROS_INFO("Total execution time: %f", t_execution.toSec());
+  //////////ROS_INFO("Total execution time: %f", t_execution.toSec());
 
   // Stop timer
   controlCycleTimer_.stop();
@@ -4271,9 +4277,9 @@ void Planner::goTest(float sec)
   imminentCollisionTimer_.stop();
   ob_dists_timer_.stop();
 
-  //////////ROS_INFO("Total number of planning cycles: %i", generation_-1);
-  //////////ROS_INFO("Total number of control cycles:  %i", num_cc_);
-  //////ROS_INFO("Exiting Planner::goTest");
+  //////////////ROS_INFO("Total number of planning cycles: %i", generation_-1);
+  //////////////ROS_INFO("Total number of control cycles:  %i", num_cc_);
+  //////////ROS_INFO("Exiting Planner::goTest");
 } // End goTest
 
 
@@ -4287,9 +4293,9 @@ void Planner::go()
   
   // initialize population
   initPopulation();
-  //ROS_INFO("Population initialized");
+  //////ROS_INFO("Population initialized");
   evaluatePopulation();
-  //ROS_INFO("Initial population evaluated");
+  //////ROS_INFO("Initial population evaluated");
   //sendPopulation();
   //std::cin.get();
  
@@ -4309,7 +4315,7 @@ void Planner::go()
 
     // Set movingOn
     movingOn_ = population_.get(population_.calcBestIndex()).getSubTrajectory(controlCycle_.toSec());
-    //////////ROS_INFO("movingOn: %s", movingOn_.toString().c_str());
+    //////////////ROS_INFO("movingOn: %s", movingOn_.toString().c_str());
     
 
     //sendPopulation();
@@ -4337,18 +4343,26 @@ void Planner::go()
   {
     num_pc = 0;
   }
-  ////ROS_INFO("generationsBeforeCC_: %i generationsPerCC_: %i num_pc: %i", generationsBeforeCC_, generationsPerCC_, num_pc);
+  ////////ROS_INFO("generationsBeforeCC_: %i generationsPerCC_: %i num_pc: %i", generationsBeforeCC_, generationsPerCC_, num_pc);
 
   // Run # of planning cycles before control cycles start
-  //ROS_INFO("Starting pre planning cycles");
+  //////ROS_INFO("Starting pre planning cycles");
   ros::Rate r(20);
   // Wait for the specified number of generations before starting CC's
   while(generation_ < num_pc) 
   {
     planningCycleCallback(); 
+    sendPopulation();
+
+    // Spin to get obstacle info
+    if(sensingBeforeCC_)
+    {
+      ros::spinOnce();
+      r.sleep();
+    } 
   }
  
-  //ROS_INFO("Starting CCs at t: %f", ros::Time::now().toSec());
+  //////ROS_INFO("Starting CCs at t: %f", ros::Time::now().toSec());
 
   // Initialze diff_ for adjustment procedures
   diff_ = diff_.zero(3);
@@ -4358,8 +4372,8 @@ void Planner::go()
   {
     controlCycleTimer_.start();
     imminentCollisionTimer_.start();
-    ob_dists_timer_.start();
-    //ROS_INFO("CCs started");
+    //ob_dists_timer_.start();
+    //////ROS_INFO("CCs started");
   }
 
   // Start Timer to send population to rviz
@@ -4371,7 +4385,7 @@ void Planner::go()
                                   Main loop begins here
    *********************************************************************************************
    */
-  //ROS_INFO("Starting at time %f", ros::Time::now().toSec());
+  //////ROS_INFO("Starting at time %f", ros::Time::now().toSec());
 
   // Do planning until robot has reached goal
   // D = 0.4 if considering mobile base, 0.2 otherwise
@@ -4396,7 +4410,7 @@ void Planner::go()
 
 
   d_runtime_  = ros::Time::now() - t_startLoop;
-  //ROS_INFO("Done at time %f", ros::Time::now().toSec());
+  //////ROS_INFO("Done at time %f", ros::Time::now().toSec());
   num_pcs_    = generation_;
 
 
@@ -4410,8 +4424,8 @@ void Planner::go()
   // Close files opened for data writing
   closeFiles();
 
-  //ROS_INFO("Planning done!");
-  //////////ROS_INFO("latestUpdate_: %s\ngoal: %s", latestUpdate_.toString().c_str(), goal_.toString().c_str());
+  //////ROS_INFO("Planning done!");
+  //////////////ROS_INFO("latestUpdate_: %s\ngoal: %s", latestUpdate_.toString().c_str(), goal_.toString().c_str());
   
   // Stop timer
   controlCycleTimer_.stop();
@@ -4427,7 +4441,7 @@ void Planner::go()
   h_control_->send(empty);
  
  
-  //////////ROS_INFO("Total number of planning cycles: %i", generation_-1);
-  //////////ROS_INFO("Total number of control cycles:  %i", num_cc_);
-  //////////ROS_INFO("Exiting Planner::go");
+  //////////////ROS_INFO("Total number of planning cycles: %i", generation_-1);
+  //////////////ROS_INFO("Total number of control cycles:  %i", num_cc_);
+  //////////////ROS_INFO("Exiting Planner::go");
 } // End go

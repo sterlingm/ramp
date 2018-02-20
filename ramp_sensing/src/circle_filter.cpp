@@ -3,6 +3,8 @@
 
 CircleFilter::CircleFilter(uint8_t state_size, BFL::Gaussian* prior, BFL::LinearAnalyticConditionalGaussian* sys_pdf, BFL::LinearAnalyticConditionalGaussian* meas_pdf) : BFL::ExtendedKalmanFilter(prior)
 {
+  ////////ROS_INFO("Returning filter");
+  //ROS_INFO("In CircleFilter constructor, state_size: %i", state_size);
   state_size_ = state_size;
   sys_model   = new BFL::LinearAnalyticSystemModelGaussianUncertainty(sys_pdf);
   meas_model  = new BFL::LinearAnalyticMeasurementModelGaussianUncertainty(meas_pdf);
@@ -25,7 +27,7 @@ void CircleFilter::update(MatrixWrapper::ColumnVector y)
 
 void CircleFilter::update(MatrixWrapper::ColumnVector u, MatrixWrapper::ColumnVector y)
 {
-  //ROS_INFO("In CircleFilter::update");
+  //ROS_INFO("In CircleFilter::update, state_size_: %i", state_size_);
   if(u.rows() != state_size_)
   {
     ROS_ERROR("u.columns: %i state_size_: %i", u.rows(), state_size_);
@@ -36,9 +38,9 @@ void CircleFilter::update(MatrixWrapper::ColumnVector u, MatrixWrapper::ColumnVe
   }
   else
   {
-    //ROS_INFO("sys_model: %p meas_model: %p", (void*)sys_model, (void*)meas_model); 
-    //ROS_INFO("u: [%f, %f, %f, %f]", u[0], u[1], u[2], u[3]);
-    //ROS_INFO("y: [%f, %f, %f, %f]", y[0], y[1], y[2], y[3]);
+    /*ROS_INFO("sys_model: %p meas_model: %p", (void*)sys_model, (void*)meas_model); 
+    ROS_INFO("u: [%f, %f, %f, %f]", u[0], u[1], u[2], u[3]);
+    ROS_INFO("y: [%f, %f, %f, %f]", y[0], y[1], y[2], y[3]);*/
 
     // Call ExtendedKalmanFilter Update method
     Update(sys_model, u, meas_model, y);

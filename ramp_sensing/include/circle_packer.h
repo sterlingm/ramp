@@ -65,8 +65,8 @@ class CirclePacker
     void deleteCellsInCir(const std::vector<Cell>&, const Circle, std::vector<Cell>&);
     Circle                    fitCirOverContours(const std::vector<cv::Point> contours);
     std::vector<Circle>       packCirsIntoPoly(const Polygon p, const double min_r);
-    CircleGroup               getGroupForContours(std::vector<cv::Point> contours);
-    std::vector<CircleGroup>  getGroups();
+    CircleGroup               getGroupForContours(std::vector<cv::Point> contours, std::vector<CircleGroup>& largeObs);
+    std::vector<CircleGroup>  getGroups(std::vector<CircleGroup>& largeObs);
     
     visualization_msgs::Marker polygonMarker_;
     std::vector<visualization_msgs::Marker> pMarkers_;

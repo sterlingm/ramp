@@ -1768,39 +1768,61 @@ std::vector<Circle> CirclePacker::goMyBlobs(bool hmap)
 }
 
 
-CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours)
+CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, std::vector<CircleGroup>& largeObs)
 {
   Circle c = fitCirOverContours(contours);
 
-
-  // Manually transpose set of points
-  for(int i=0;i<contours.size();i++)
-  {
-    int swap = contours[i].x;
-    contours[i].x = contours[i].y;
-    contours[i].y = swap;
-  }
-  std::vector<cv::Point> hull;
-  cv::convexHull(cv::Mat(contours), hull);
-  
-  //Polygon p = getPolygonFromContours(hull);
-  Polygon p = getPolygonFromContours(contours);
-
-  /*std::vector<TPPLPoly> tris = triPolyPart(p);
-  ROS_INFO("tris.size(): %i", (int)tris.size());
-  std::vector<Polygon> ps;
-  for(int i=0;i<tris.size();i++)
-  {
-    ps.push_back(tpplToPoly(tris[i]));
-  }*/
-
-  std::vector<Polygon> ps;
-  ps.push_back(p);
+  // Circle packing result
   std::vector<Circle> cs;
-  for(int i=0;i<ps.size();i++)
+
+  bool needsAdded = false;
+
+
+  // Check c against largeObs
+  for(int i=0;i<largeObs.size();i++)
   {
-    std::vector<Circle> temp = packCirsIntoPoly(ps[i], 1);
-    cs.insert(std::end(cs), std::begin(temp), std::end(temp)); 
+    if(utility_.positionDistance(c.center.x, c.center.y, largeObs[i].fitCir.center.x, largeObs[i].fitCir.center.y) < 2 && fabs(c.radius - largeObs[i].fitCir.radius) < 2)
+    {
+      cs = largeObs[i].packedCirs; 
+      break;
+    }
+  }
+
+  // If it wasn't a large ob, then do circle packing
+  if(cs.size() == 0)
+  {
+    // Manually transpose set of points
+    for(int i=0;i<contours.size();i++)
+    {
+      int swap = contours[i].x;
+      contours[i].x = contours[i].y;
+      contours[i].y = swap;
+    }
+    // Get convex hull of points
+    std::vector<cv::Point> hull;
+    cv::convexHull(cv::Mat(contours), hull);
+    
+    //Polygon p = getPolygonFromContours(hull);
+    Polygon p = getPolygonFromContours(contours);
+
+    /*std::vector<TPPLPoly> tris = triPolyPart(p);
+    ROS_INFO("tris.size(): %i", (int)tris.size());
+    std::vector<Polygon> ps;
+    for(int i=0;i<tris.size();i++)
+    {
+      ps.push_back(tpplToPoly(tris[i]));
+    }*/
+
+    std::vector<Polygon> ps;
+    ps.push_back(p);
+    for(int i=0;i<ps.size();i++)
+    {
+      std::vector<Circle> temp = packCirsIntoPoly(ps[i], 1);
+      cs.insert(std::end(cs), std::begin(temp), std::end(temp)); 
+    }
+
+    // Check if we add to largeObs vector 
+    needsAdded = c.radius > 12;
   }
   //ROS_INFO("cs.size(): %i", (int)cs.size());
 
@@ -1811,6 +1833,11 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours)
   result.fitCir = c;
   result.packedCirs = cs;
 
+  if(needsAdded)
+  {
+    largeObs.push_back(result);
+  }
+
   return result;
 }
 
@@ -1819,7 +1846,7 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours)
  * Returns a vector of CircleGroup objects
  * One for each obstacle region in the src matrix
  */
-std::vector<CircleGroup> CirclePacker::getGroups()
+std::vector<CircleGroup> CirclePacker::getGroups(std::vector<CircleGroup>& largeObs)
 {
   std::vector<CircleGroup> result;
 
@@ -1853,7 +1880,7 @@ std::vector<CircleGroup> CirclePacker::getGroups()
       continue;
     }
 
-    CircleGroup cg = getGroupForContours(contours[i]);
+    CircleGroup cg = getGroupForContours(contours[i], largeObs);
     result.push_back(cg);
     //ROS_INFO("cg %i, packedCirs.size(): %i fitCir: (%f,%f)", i, (int)cg.packedCirs.size(), cg.fitCir.center.x, cg.fitCir.center.y);
   }
