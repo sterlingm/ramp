@@ -1006,52 +1006,78 @@ CircleOb* createCircleOb(CircleGroup temp)
 
 void transformCostmap(nav_msgs::OccupancyGrid& g)
 {
-  ////////ROS_INFO("In transformCostmap");
+  ROS_INFO("In transformCostmap");
   tf::Vector3 p(g.info.origin.position.x, g.info.origin.position.y, 0);
   float res = g.info.resolution;
   int w = g.info.width;
   int h = g.info.height;
-  ////////ROS_INFO("p: (%f,%f) w: %i h: %i", p.getX(), p.getY(), w, h);
+  ROS_INFO("p: (%f,%f) w: %i h: %i c_max (w): %f r_max (h): %f", p.getX(), p.getY(), w, h , global_costmap.info.resolution / w, global_costmap.info.resolution / h);
 
   tf::Vector3 p_global(global_costmap.info.origin.position.x, global_costmap.info.origin.position.y, 0);
-  ////////ROS_INFO("p_global: (%f,%f)", p_global.getX(), p_global.getY());
+  ROS_INFO("p_global: (%f,%f)", p_global.getX(), p_global.getY());
 
  
   float delta_x = g.info.origin.position.x - global_costmap.info.origin.position.x;
   float delta_y = g.info.origin.position.y - global_costmap.info.origin.position.y;
   int i_dx = delta_x / res;
   int i_dy = (delta_y / res) * global_costmap.info.width;
-  ////////ROS_INFO("delta_x: %f delta_y: %f i_dx: %i i_dy: %i", delta_x, delta_y, i_dx, i_dy);
+  ROS_INFO("delta_x: %f delta_y: %f i_dx: %i i_dy: %i", delta_x, delta_y, i_dx, i_dy);
 
+  float x_global_max = (global_costmap.info.width * global_costmap.info.resolution) + global_costmap.info.origin.position.x;
+  float y_global_max = (global_costmap.info.height * global_costmap.info.resolution) + global_costmap.info.origin.position.y;
+  float x_global_min = global_costmap.info.origin.position.x;
+  float y_global_min = global_costmap.info.origin.position.y;
+
+  ROS_INFO("x_global_max: %f y_global_max: %f", x_global_max, y_global_max);
+
+  // For each point on the new grid g, 
+  // Set the value on the corresponding cell in the global grid
   for(int i=0;i<g.data.size();i++)
   {
+    // Get row,column values for index i
     float r = (i / w) * res;
     float c = ((i % w)+1) * res;
-    ////////ROS_INFO("r: %f c: %f", r, c);
+    //ROS_INFO("r: %f c: %f", r, c);
 
+    // Convert to coordinates
     float x = c;
     float y = r;
-
-
-    // Convert to global
+    // Convert to coordinates relative to grid origin
     x += p.getX();
     y += p.getY();
 
+   
+
     // Get index on global costmap
-    int c_global = (i % g.info.width) % global_costmap.info.width;
+    int c_global = ((i % g.info.width) % global_costmap.info.width) + 1;
     // divide to get rid of remainder, then re-multiply by width
     int r_global = (i / g.info.width) * global_costmap.info.width;
-    //float x_gl = (c_global*res) + global_costmap.info.origin.position.x;
-    //float y_gl = (r_global*res) + global_costmap.info.origin.position.y;
-    ////////ROS_INFO("Before considering origin, c_global: %i r_global: %i", c_global, r_global);
+    
+    //ROS_INFO("Before considering origin, c_global: %i r_global: %i", c_global, r_global);
 
-    c_global += i_dx <= -(c/res) ? -(c/res) * global_costmap.info.width : i_dx;
+    c_global += i_dx ;//<= -(c/res) ? -(c/res) * global_costmap.info.width : i_dx;
     r_global += i_dy;
 
+    //int i_global = (c_global > -1 && c_global < 901 && r_global > -1 && r_global < 10001) ? r_global + c_global : -1;
     int i_global = r_global + c_global;
-    ////////ROS_INFO("x: %f y: %f c_global: %i r_global: %i i: %i i_global: %i global.size(): %i", x, y, c_global, r_global, i, i_global, (int)global_costmap.data.size());
+   
+    // Print info 
+    //ROS_INFO("x_global_min, max: (%f,%f) y_global_min, max: (%f,%f)", x_global_min, x_global_max, y_global_min, y_global_max);
+    //ROS_INFO("x: %f y: %f c_global: %i r_global: %i i: %i i_global: %i global.size(): %i", x, y, c_global, r_global, i, i_global, (int)global_costmap.data.size());
 
-    if(i_global > 0 && i_global < global_costmap.data.size())
+    if(x >= x_global_min && x < x_global_max && y >= y_global_min && y < y_global_max)
+    {
+      //ROS_INFO("Good");
+      i_global = r_global + c_global;
+    }
+    else
+    {
+      //ROS_INFO("Bad");
+      i_global = -1;
+    }
+
+
+    if(i_global > -1 && i_global < global_costmap.data.size())
     {
       global_costmap.data[i_global] = g.data[i];
     }
@@ -1062,9 +1088,9 @@ void transformCostmap(nav_msgs::OccupancyGrid& g)
 
 void accumulateCostmaps(const nav_msgs::OccupancyGrid& g1, const nav_msgs::OccupancyGrid& g2, nav_msgs::OccupancyGrid& result)
 {
-  /*//////ROS_INFO("In asscumulateCostmaps(OccupancyGrid, OccupancyGrid, OccupancyGrid)");
-  //////ROS_INFO("g1.data.size(): %i g2.data.size(): %i", (int)g1.data.size(), (int)g2.data.size());
-  //////ROS_INFO("g1.w: %i g1.h: %i g2.w: %i g2.h: %i", g1.info.width, g1.info.height, g2.info.width, g2.info.height);*/
+  ROS_INFO("In asscumulateCostmaps(OccupancyGrid, OccupancyGrid, OccupancyGrid)");
+  ROS_INFO("g1.data.size(): %i g2.data.size(): %i", (int)g1.data.size(), (int)g2.data.size());
+  ROS_INFO("g1.w: %i g1.h: %i g2.w: %i g2.h: %i", g1.info.width, g1.info.height, g2.info.width, g2.info.height);
   result = g1;
 
   /*float ox = g2.info.origin.position.x - g1.info.origin.position.x;
@@ -1573,8 +1599,10 @@ void initGlobalMap()
   {
     global_costmap.info.resolution = 0.05;
 
-    global_costmap.info.origin.position.x = ranges[0].min;
-    global_costmap.info.origin.position.y = ranges[1].min;
+    //global_costmap.info.origin.position.x = ranges[0].min;
+    //global_costmap.info.origin.position.y = ranges[1].min;
+    global_costmap.info.origin.position.x = -2;
+    global_costmap.info.origin.position.y = -2;
     global_costmap.info.width             = ((ranges[0].max - ranges[0].min) / global_costmap.info.resolution)+1;
     global_costmap.info.height            = ((ranges[1].max - ranges[1].min) / global_costmap.info.resolution)+1;
 
@@ -1962,13 +1990,13 @@ void computeVelocities(const std::vector<CircleMatch> cm, const ros::Duration d_
 
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
-  /*//ROS_INFO("**************************************************");
-  //ROS_INFO("In costmapCb");
-  //ROS_INFO("**************************************************");*/
+  ROS_INFO("**************************************************");
+  ROS_INFO("In costmapCb");
+  ROS_INFO("**************************************************");
   ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;
   t_last_costmap = ros::Time::now();
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
-  ////////ROS_INFO("grid (w,h): (%i,%i)", grid->info.width, grid->info.height);
+  ROS_INFO("grid (w,h): (%i,%i) origin: (%f,%f)", grid->info.width, grid->info.height, grid->info.origin.position.x, grid->info.origin.position.y);
 
   // Consolidate this occupancy grid with prev ones
   nav_msgs::OccupancyGrid accumulated_grid;
@@ -1989,7 +2017,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     double grid_resolution = grid->info.resolution; 
     
     global_grid = cropped;
-    ////////ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
+    ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
     
 
     ////////ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
@@ -2017,8 +2045,43 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   }
   else
   {
+    ROS_INFO("In else");
     accumulated_grid = *grid;
     global_grid = *grid;
+    
+    // ***
+    transformCostmap(global_grid);
+    pub_global_costmap.publish(global_costmap);
+
+    double grid_resolution = grid->info.resolution; 
+    
+    global_grid = *grid;
+    ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
+    
+
+    ////////ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
+    accumulateCostmaps(global_costmap, prev_grids, accumulated_grid);
+    
+    // Set global_grid 
+    global_grid = global_costmap;
+    ////////ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
+    ////////ROS_INFO("global costmap (w,h): (%i,%i)", global_costmap.info.width, global_costmap.info.height);
+    
+    ////////ROS_INFO("Finished getting consolidated_grid");
+    
+    // Push this grid onto prev_grids
+    //prev_grids.push_back(global_grid);
+    prev_grids.push_back(global_costmap);
+    if(prev_grids.size() > num_costmaps_accumulate)
+    {
+      prev_grids.erase(prev_grids.begin(), prev_grids.begin()+1);
+    }
+
+    // Publish the modified costmap(s)
+    //pub_half_costmap.publish(half);
+
+    // ***
+
     pub_cons_costmap.publish(accumulated_grid);
   }
 
@@ -2419,6 +2482,7 @@ int main(int argc, char** argv)
   init_measurement_model();
   init_prior_model();
 
+  ROS_INFO("In Duration");
   ros::Duration d(2.5);
 
   /*tf::TransformListener listener;
@@ -2434,20 +2498,21 @@ int main(int argc, char** argv)
   }*/
 
 
+  // Subscribers
   ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);
   //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/hilbert_map_grid", 1, &costmapCb);
   ros::Subscriber sub_robot_update = handle.subscribe<ramp_msgs::MotionState>("/updateAfterTf", 1, &robotUpdateCb);
   //ros::Subscriber sub_odom = handle.subscribe<nav_msgs::Odometry>("/odom", 1, &odomCb);
   //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/consolidated_costmap", 1, &costmapCb);
 
-  //Publishers
+  // Publishers
   pub_obj = handle.advertise<ramp_msgs::ObstacleList>("obstacles", 1);
   pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 2);
   pub_cons_costmap = handle.advertise<nav_msgs::OccupancyGrid>("accumulated_costmap", 2);
   pub_half_costmap = handle.advertise<nav_msgs::OccupancyGrid>("half_costmap", 2);
   pub_global_costmap = handle.advertise<nav_msgs::OccupancyGrid>("global_costmap", 2);
 
-  //Timers
+  // Timers
   ros::Timer timer = handle.createTimer(ros::Duration(1.f / rate), publishList);
   timer_markers = handle.createTimer(ros::Duration(1.f/10.f), publishMarkers);
 
