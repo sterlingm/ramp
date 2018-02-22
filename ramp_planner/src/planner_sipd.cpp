@@ -233,6 +233,9 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
 
   // Moving obstacle 1
   obs1x += step1;
+  double noise1 = 0.3 * rand() / double(RAND_MAX) - 0.15;
+  obs1x += noise1;
+  obs1x = boost::algorithm::clamp(obs1x, 0.0, x_max);
   obs1y = x_max - obs1x;
   ramp_msgs::Obstacle obs1;
   obs1.ob_ms.positions.push_back(obs1x);
@@ -251,6 +254,9 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
 
   // Moving obstacle 2
   obs2x += step2;
+  double noise2 = 0.15 * rand() / double(RAND_MAX) - 0.075;
+  obs2x += noise2;
+  obs2x = boost::algorithm::clamp(obs2x, 0.0, x2_max);
   obs2y = x2_max - obs2x;
   ramp_msgs::Obstacle obs2;
   obs2.ob_ms.positions.push_back(obs2x);
@@ -4778,12 +4784,12 @@ void Planner::go(const ros::NodeHandle& h)
   //ROS_INFO("Starting at time %f", ros::Time::now().toSec());
 
   double max_exe_time;
-  ros::param::param("/max_exe_time", max_exe_time, 45.0); // seconds
+  ros::param::param("/max_exe_time", max_exe_time, 120.0); // seconds
 
   // Do planning until robot has reached goal
   // D = 0.4 if considering mobile base, 0.2 otherwise
   ros::Rate r(20); // 20Hz
-  goalThreshold_ = 2.0;
+  goalThreshold_ = 0.4;
   int check_time_cnt = 0;
   ros::Duration t_elapse;
   ros::Time t_startLoop = ros::Time::now();

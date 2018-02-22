@@ -24,6 +24,7 @@
 #include <std_msgs/MultiArrayDimension.h>
 #include <type_traits>
 #include <tf/transform_broadcaster.h>
+#include <boost/algorithm/clamp.hpp>
 
 #define ENV_SRV_NAME "response2para_update"
 
