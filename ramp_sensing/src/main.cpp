@@ -167,6 +167,7 @@ BFL::Pdf<MatrixWrapper::ColumnVector>* posterior;
 int costmap_width, costmap_height;
 float costmap_origin_x, costmap_origin_y, costmap_res;
 
+std::vector<double> start;
 
 // Initializes a vector of Ranges that the Planner is initialized with
 // Must be called AFTER radius is set
@@ -203,7 +204,7 @@ void loadParameters(const ros::NodeHandle& handle)
     handle.getParam("costmap_node/costmap/height", costmap_height);
     handle.getParam("costmap_node/costmap/origin_x", costmap_origin_x);
     handle.getParam("costmap_node/costmap/origin_y", costmap_origin_y);
-    handle.getParam("costmap_node/costmap/resolution", costmap_res);
+    handle.param("costmap_node/costmap/resolution", costmap_res, 0.05f);
 
     ////////ROS_INFO("Got costmap parameters. w: %i h: %i x: %f y: %f res: %f", costmap_width, costmap_height, costmap_origin_x, costmap_origin_y, costmap_res);
   }
@@ -233,6 +234,18 @@ void loadParameters(const ros::NodeHandle& handle)
   {
     //////ROS_ERROR("Did not find parameters robot_info/DOF_min, robot_info/DOF_max");
   }
+
+  // Get the start and goal vectors
+  if(handle.hasParam("robot_info/start"))
+  {
+    handle.getParam("robot_info/start", start);
+  }
+  else 
+  {
+    ROS_ERROR("Did not find parameters robot_info/start, robot_info/goal");
+    exit(1);
+  }
+
 
   if(handle.hasParam("/ramp/global_frame"))
   {
@@ -1006,29 +1019,29 @@ CircleOb* createCircleOb(CircleGroup temp)
 
 void transformCostmap(nav_msgs::OccupancyGrid& g)
 {
-  ROS_INFO("In transformCostmap");
+  //ROS_INFO("In transformCostmap");
   tf::Vector3 p(g.info.origin.position.x, g.info.origin.position.y, 0);
   float res = g.info.resolution;
   int w = g.info.width;
   int h = g.info.height;
-  ROS_INFO("p: (%f,%f) w: %i h: %i c_max (w): %f r_max (h): %f", p.getX(), p.getY(), w, h , global_costmap.info.resolution / w, global_costmap.info.resolution / h);
+  //ROS_INFO("p: (%f,%f) w: %i h: %i c_max (w): %f r_max (h): %f", p.getX(), p.getY(), w, h , global_costmap.info.resolution / w, global_costmap.info.resolution / h);
 
   tf::Vector3 p_global(global_costmap.info.origin.position.x, global_costmap.info.origin.position.y, 0);
-  ROS_INFO("p_global: (%f,%f)", p_global.getX(), p_global.getY());
+  //ROS_INFO("p_global: (%f,%f)", p_global.getX(), p_global.getY());
 
  
   float delta_x = g.info.origin.position.x - global_costmap.info.origin.position.x;
   float delta_y = g.info.origin.position.y - global_costmap.info.origin.position.y;
   int i_dx = delta_x / res;
   int i_dy = (delta_y / res) * global_costmap.info.width;
-  ROS_INFO("delta_x: %f delta_y: %f i_dx: %i i_dy: %i", delta_x, delta_y, i_dx, i_dy);
+  //ROS_INFO("delta_x: %f delta_y: %f i_dx: %i i_dy: %i", delta_x, delta_y, i_dx, i_dy);
 
   float x_global_max = (global_costmap.info.width * global_costmap.info.resolution) + global_costmap.info.origin.position.x;
   float y_global_max = (global_costmap.info.height * global_costmap.info.resolution) + global_costmap.info.origin.position.y;
   float x_global_min = global_costmap.info.origin.position.x;
   float y_global_min = global_costmap.info.origin.position.y;
 
-  ROS_INFO("x_global_max: %f y_global_max: %f", x_global_max, y_global_max);
+  //ROS_INFO("x_global_max: %f y_global_max: %f", x_global_max, y_global_max);
 
   // For each point on the new grid g, 
   // Set the value on the corresponding cell in the global grid
@@ -1088,9 +1101,9 @@ void transformCostmap(nav_msgs::OccupancyGrid& g)
 
 void accumulateCostmaps(const nav_msgs::OccupancyGrid& g1, const nav_msgs::OccupancyGrid& g2, nav_msgs::OccupancyGrid& result)
 {
-  ROS_INFO("In asscumulateCostmaps(OccupancyGrid, OccupancyGrid, OccupancyGrid)");
-  ROS_INFO("g1.data.size(): %i g2.data.size(): %i", (int)g1.data.size(), (int)g2.data.size());
-  ROS_INFO("g1.w: %i g1.h: %i g2.w: %i g2.h: %i", g1.info.width, g1.info.height, g2.info.width, g2.info.height);
+  //ROS_INFO("In asscumulateCostmaps(OccupancyGrid, OccupancyGrid, OccupancyGrid)");
+  //ROS_INFO("g1.data.size(): %i g2.data.size(): %i", (int)g1.data.size(), (int)g2.data.size());
+  //ROS_INFO("g1.w: %i g1.h: %i g2.w: %i g2.h: %i", g1.info.width, g1.info.height, g2.info.width, g2.info.height);
   result = g1;
 
   /*float ox = g2.info.origin.position.x - g1.info.origin.position.x;
@@ -1449,6 +1462,11 @@ Point getGlobalCoords(const Circle& cir)
 }
 
 
+/*
+ * This crops out the costmap values behind the robot.
+ * This is useful for robots that cannot see behind them, such as the turtlebot
+ * or any other robot using an rgb-d camera
+ */ 
 void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::OccupancyGrid& result)
 {
   ////////ROS_INFO("In cropCostmap");
@@ -1597,12 +1615,12 @@ void initGlobalMap()
   ////////ROS_INFO("In initGlobalMap");
   if(ranges.size() > 1)
   {
-    global_costmap.info.resolution = 0.05;
+    ROS_INFO("costmap_res: %f", costmap_res);
+    global_costmap.info.resolution = costmap_res > 0 ? costmap_res : 0.05;
 
-    //global_costmap.info.origin.position.x = ranges[0].min;
-    //global_costmap.info.origin.position.y = ranges[1].min;
-    global_costmap.info.origin.position.x = -2;
-    global_costmap.info.origin.position.y = -2;
+    global_costmap.info.origin.position.x = 0;
+    global_costmap.info.origin.position.y = 0;
+
     global_costmap.info.width             = ((ranges[0].max - ranges[0].min) / global_costmap.info.resolution)+1;
     global_costmap.info.height            = ((ranges[1].max - ranges[1].min) / global_costmap.info.resolution)+1;
 
@@ -1625,8 +1643,8 @@ void initGlobalMap()
 
 void setRobotPos(const ramp_msgs::MotionState& ms)
 {
-  ////////ROS_INFO("In setRobotPos");
-  ////////ROS_INFO("ms: (%f,%f,%f)", ms.positions[0], ms.positions[1], ms.positions[2]);
+  ROS_INFO("In setRobotPos");
+  ROS_INFO("ms: (%f,%f,%f)", ms.positions[0], ms.positions[1], ms.positions[2]);
   robotState.positions.clear();
   
   // Set new position
@@ -1990,13 +2008,13 @@ void computeVelocities(const std::vector<CircleMatch> cm, const ros::Duration d_
 
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
-  ROS_INFO("**************************************************");
+  /*ROS_INFO("**************************************************");
   ROS_INFO("In costmapCb");
-  ROS_INFO("**************************************************");
+  ROS_INFO("**************************************************");*/
   ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;
   t_last_costmap = ros::Time::now();
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
-  ROS_INFO("grid (w,h): (%i,%i) origin: (%f,%f)", grid->info.width, grid->info.height, grid->info.origin.position.x, grid->info.origin.position.y);
+  //ROS_INFO("grid (w,h): (%i,%i) origin: (%f,%f)", grid->info.width, grid->info.height, grid->info.origin.position.x, grid->info.origin.position.y);
 
   // Consolidate this occupancy grid with prev ones
   nav_msgs::OccupancyGrid accumulated_grid;
@@ -2017,7 +2035,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     double grid_resolution = grid->info.resolution; 
     
     global_grid = cropped;
-    ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
+    //ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
     
 
     ////////ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
@@ -2045,7 +2063,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   }
   else
   {
-    ROS_INFO("In else");
+    //ROS_INFO("In else");
     accumulated_grid = *grid;
     global_grid = *grid;
     
@@ -2056,7 +2074,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     double grid_resolution = grid->info.resolution; 
     
     global_grid = *grid;
-    ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
+    //ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
     
 
     ////////ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
@@ -2524,10 +2542,11 @@ int main(int argc, char** argv)
   dd.sleep();
 
   // Set initial robot position
+  // start vector needs to be set (usually it is obtained from rosparam)
   ramp_msgs::MotionState ms;
-  ms.positions.push_back(0);
-  ms.positions.push_back(0);
-  ms.positions.push_back(PI/4.f);
+  ms.positions.push_back(start[0]);
+  ms.positions.push_back(start[1]);
+  ms.positions.push_back(start[2]);
   setRobotPos(ms);
 
   printf("\nSpinning\n");
