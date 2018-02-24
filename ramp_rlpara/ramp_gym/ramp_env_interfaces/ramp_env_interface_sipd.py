@@ -83,7 +83,7 @@ class RampEnvSipd(gym.Env):
         self.one_exe_info_sub = rospy.Subscriber("ramp_collection_ramp_ob_one_run", RampObservationOneRunning,
                                                  self.oneExeInfoCallback)
 
-        self.setState(0.15, 0.5)
+        self.setState(1.0, 0.45)
 
 
 

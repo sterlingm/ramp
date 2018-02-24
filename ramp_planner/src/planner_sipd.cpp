@@ -4778,12 +4778,12 @@ void Planner::go(const ros::NodeHandle& h)
   //ROS_INFO("Starting at time %f", ros::Time::now().toSec());
 
   double max_exe_time;
-  ros::param::param("/max_exe_time", max_exe_time, 45.0); // seconds
+  ros::param::param("/max_exe_time", max_exe_time, 60.0); // seconds
 
   // Do planning until robot has reached goal
   // D = 0.4 if considering mobile base, 0.2 otherwise
   ros::Rate r(20); // 20Hz
-  goalThreshold_ = 2.0;
+  goalThreshold_ = 0.3;
   int check_time_cnt = 0;
   ros::Duration t_elapse;
   ros::Time t_startLoop = ros::Time::now();

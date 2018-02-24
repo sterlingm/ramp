@@ -102,7 +102,7 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
 
 # Load weights if needed. Put this after compiling may be better.
-dqn.load_weights_sip("/home/kai/valid_data/sipd/2018-01-30_15:21:31/raw_data/15/" +
+dqn.load_weights_sip("/home/kai/data/ramp/ramp_rlpara/dqn_ramp_sipd/2018-02-17_14:05:42/raw_data/58/" +
                      "dqn_{}_weights.h5f".format(env.name))
 
 
