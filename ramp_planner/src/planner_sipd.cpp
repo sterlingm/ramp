@@ -252,6 +252,19 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     step1 = fabs(step1);
   }
 
+  // Moving obstacle 1_1
+  obs1_1x = obs1x + step1 * 4;
+  obs1_1y = x_max - obs1_1x;
+  ramp_msgs::Obstacle obs1_1;
+  obs1_1.ob_ms.positions.push_back(obs1_1x);
+  obs1_1.ob_ms.positions.push_back(obs1_1y);
+  obs1_1.ob_ms.positions.push_back(0.0);
+  obs1_1.ob_ms.velocities.push_back(0.0);
+  obs1_1.ob_ms.velocities.push_back(0.0);
+  obs1_1.ob_ms.velocities.push_back(0.0);
+  obs1_1.radius = obs1r / 1.5;
+  obs_msg.obstacles.push_back(obs1_1);
+
   // Moving obstacle 2
   obs2x += step2;
   double noise2 = 0.15 * rand() / double(RAND_MAX) - 0.075;
@@ -273,6 +286,19 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     step2 = fabs(step2);
   }
 
+  // Moving obstacle 2_1
+  obs2_1x = obs2x + step2 * 6;
+  obs2_1y = x2_max - obs2_1x;
+  ramp_msgs::Obstacle obs2_1;
+  obs2_1.ob_ms.positions.push_back(obs2_1x);
+  obs2_1.ob_ms.positions.push_back(obs2_1y);
+  obs2_1.ob_ms.positions.push_back(0.0);
+  obs2_1.ob_ms.velocities.push_back(0.0);
+  obs2_1.ob_ms.velocities.push_back(0.0);
+  obs2_1.ob_ms.velocities.push_back(0.0);
+  obs2_1.radius = obs2r / 1.5;
+  obs_msg.obstacles.push_back(obs2_1);
+
   // Moving obstacle 3
   ramp_msgs::Obstacle obs3;
   obs3.ob_ms.positions.push_back(obs2x + 3.0);
@@ -283,6 +309,17 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   obs3.ob_ms.velocities.push_back(0.0);
   obs3.radius = obs3r;
   obs_msg.obstacles.push_back(obs3);
+
+  // Moving obstacle 3_1
+  ramp_msgs::Obstacle obs3_1;
+  obs3_1.ob_ms.positions.push_back(obs2_1x + 3.0);
+  obs3_1.ob_ms.positions.push_back(obs2_1y + 3.0);
+  obs3_1.ob_ms.positions.push_back(0.0);
+  obs3_1.ob_ms.velocities.push_back(0.0);
+  obs3_1.ob_ms.velocities.push_back(0.0);
+  obs3_1.ob_ms.velocities.push_back(0.0);
+  obs3_1.radius = obs3r / 1.5;
+  obs_msg.obstacles.push_back(obs3_1);
 
   // ROS_INFO("%lf", obs_msg.obstacles[0].T_w_odom.translation.x);
   
@@ -3769,6 +3806,9 @@ void Planner::sendPopulation()
 
   for(int i=0;i<obs_msg.obstacles.size();i++)
   {
+    if (i % 2 == 1) {
+      continue;
+    }
     visualization_msgs::Marker ob;
     ob.header.stamp = ros::Time::now();
     ob.id = 3333 + i;
