@@ -24,6 +24,7 @@
 
 
 bool cropMap = false;
+bool remove_outside_fov;
 double rvizLifetime = 0.15;
 
 ramp_msgs::MotionState robotState;
@@ -295,8 +296,19 @@ void loadParameters(const ros::NodeHandle& handle)
   }
   else
   {
-    //////ROS_ERROR("Did not find rosparam /ramp/sensing_angle");
+    //////ROS_ERROR("Did not find rosparam /ramp/field_of_view_angle");
   }
+
+  if(handle.hasParam("/ramp/remove_outside_fov"))
+  {
+    handle.getParam("/ramp/remove_outside_fov", remove_outside_fov);
+    //////ROS_INFO("remove_outside_fov", remove_outside_fov);
+  }
+  else
+  {
+    //////ROS_ERROR("Did not find rosparam /ramp/remove_outside_fov");
+  }
+  
 }
 
 
@@ -1643,8 +1655,8 @@ void initGlobalMap()
 
 void setRobotPos(const ramp_msgs::MotionState& ms)
 {
-  ROS_INFO("In setRobotPos");
-  ROS_INFO("ms: (%f,%f,%f)", ms.positions[0], ms.positions[1], ms.positions[2]);
+  //ROS_INFO("In setRobotPos");
+  //ROS_INFO("ms: (%f,%f,%f)", ms.positions[0], ms.positions[1], ms.positions[2]);
   robotState.positions.clear();
   
   // Set new position
@@ -2159,9 +2171,9 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
    /*
     * Check if obstacles are in viewing angle
-    
-  //if(fovAngle > 1.5708f)
-  //{
+    */
+  if(remove_outside_fov)
+  {
     int i=0;
     while(i<cirGroups.size())
     {
@@ -2173,7 +2185,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
       i++;
     }
-  //}
+  }
   //////ROS_INFO("After checking viewing angle, cirGroups.size(): %i", (int)cirGroups.size());*/
  
 
@@ -2305,7 +2317,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   durs.push_back( time_span.count() );
 
 
-  ROS_INFO("Duration: %f", time_span.count());
+  //ROS_INFO("Duration: %f", time_span.count());
   num_costmaps++;
   ////////ROS_INFO("**************************************************");
   ////////ROS_INFO("Exiting costmapCb");

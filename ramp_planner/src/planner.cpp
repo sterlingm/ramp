@@ -3578,6 +3578,8 @@ void Planner::sendPopulation()
   /*
    * Send to rviz
    */
+
+  // Population trajectories
   visualization_msgs::MarkerArray ma;
   for(int i=0;i<population_.trajectories_.size();i++)
   {
@@ -3586,15 +3588,22 @@ void Planner::sendPopulation()
     buildLineList(population_.trajectories_[i], 300000+i, pop_trj);
     ma.markers.push_back(pop_trj);
   }
+
+  // Obstacle trajectories
   for(int i=0;i<ob_trajectory_.size();i++)
   {
     visualization_msgs::Marker ob_trj;
     buildLineList(ob_trajectory_[i], ++id_line_list_, ob_trj);
     ma.markers.push_back(ob_trj);
   }
-  h_rviz_->sendMarkerArray(ma);
-  t_prevSendPop_ = ros::Time::now();
+  // Current trajectory up to next control cycle
+  visualization_msgs::Marker movingOnMarker;
+  buildLineList(movingOn_, 299999, movingOnMarker);
+  ma.markers.push_back(movingOnMarker);
 
+  // Send MarkerArray
+  h_rviz_->sendMarkerArray(ma);
+  
   //ROS_INFO("Exiting sendPopulation");
 }
 
