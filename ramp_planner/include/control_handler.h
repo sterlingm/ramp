@@ -13,12 +13,14 @@ class ControlHandler {
     void sendPopulation(ramp_msgs::Population population);
     void sendIC(std_msgs::Bool value);
     void sendObIC(const int i, std_msgs::Bool value);
+    void sendLatestState(ramp_msgs::MotionState ms);
 
   private:
     ros::NodeHandle handle_;
     ros::Publisher pub_bestTrajec_;
     ros::Publisher pub_population_;
     ros::Publisher pub_imminent_collision_;
+    ros::Publisher pub_latestState_;
     std::vector<ros::Publisher> pub_ob_imminent_collision_;
 };
 

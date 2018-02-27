@@ -305,7 +305,7 @@ const std::string Utility::toString(const ramp_msgs::BezierCurve bi) const {
 }
 
 
-const std::string Utility::toString(const ramp_msgs::RampTrajectory traj) const {
+const std::string Utility::toString(const ramp_msgs::RampTrajectory traj, bool printKnotPoints) const {
   std::ostringstream result;
 
   result<<"\n Knot Points:";
@@ -315,22 +315,24 @@ const std::string Utility::toString(const ramp_msgs::RampTrajectory traj) const 
     ROS_WARN("Traj i_knotPoints size(): %i, not printing", (int)traj.i_knotPoints.size());
   }
 
-  for(unsigned int i=0;i<traj.i_knotPoints.size();i++) {
-    
-    result<<"\n   "<<i<<":";
-    
-    unsigned int index = traj.i_knotPoints.at(i);
-    if(index > traj.trajectory.points.size()-1) 
-    {
-      ROS_ERROR("Utility::toString(const ramp_msgs::RampTrajectory): index: %i, traj.points.size(): %i", 
-          (int)index, 
-          (int)traj.trajectory.points.size());
+  if(printKnotPoints)
+  {
+    for(unsigned int i=0;i<traj.i_knotPoints.size();i++) {
+      
+      result<<"\n   "<<i<<":";
+      
+      unsigned int index = traj.i_knotPoints.at(i);
+      if(index > traj.trajectory.points.size()-1) 
+      {
+        ROS_ERROR("Utility::toString(const ramp_msgs::RampTrajectory): index: %i, traj.points.size(): %i", 
+            (int)index, 
+            (int)traj.trajectory.points.size());
+      }
+      trajectory_msgs::JointTrajectoryPoint p = traj.trajectory.points.at(index);
+      
+      result<<"\n       "<<toString(p);
     }
-    trajectory_msgs::JointTrajectoryPoint p = traj.trajectory.points.at(index);
-    
-    result<<"\n       "<<toString(p);
   }
-
 
   result<<"\n Points:";
   //for(unsigned int i=15;i<27;i++) {
@@ -349,6 +351,7 @@ const std::string Utility::toString(const ramp_msgs::RampTrajectory traj) const 
     result<<"\n Curve "<<(int)i<<"\n"<<toString(traj.curves.at(i));
   }
 
+  
   result<<"\nt_start: "<<traj.t_start.toSec();
   result<<"\nFitness: "<<traj.fitness<<" t_firstCollision: "<<traj.t_firstCollision<<" Feasible: "<<(int)traj.feasible;
 
@@ -362,7 +365,6 @@ const std::string Utility::toString(const ramp_msgs::Obstacle ob) const
 
   result<<"Pose: ("<<ob.ob_ms.positions[0]<<", "<<ob.ob_ms.positions[1]<<", "<<ob.ob_ms.positions[2]<<")";
   result<<"Twist: ("<<ob.ob_ms.velocities[0]<<", "<<ob.ob_ms.velocities[1]<<", "<<ob.ob_ms.velocities[2]<<")";
-  result<<"Radius: "<<ob.radius;
 
   return result.str();
 }

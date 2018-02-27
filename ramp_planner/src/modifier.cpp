@@ -1,7 +1,7 @@
 #include "modifier.h"
 
 
-Modifier::Modifier(const ros::NodeHandle& h, const unsigned int n) : num_ops(n), move_dir_(0), move_dist_(101), move_ob_r_(0.5)
+Modifier::Modifier(const ros::NodeHandle& h, const unsigned int n) : num_ops(n), repair_dir_(0), repair_dist_(101), repair_ob_r_(0.5)
 {
   h_mod_req_ = new ModificationRequestHandler(h);
 }
@@ -110,7 +110,7 @@ void Modifier::buildModificationRequest(const Population& pop, bool imminent_col
   // Push the target paths onto the modification request
   std::vector<int> targets;
 
-  if(!imminent_collision || (move_dist_ > 100 && move_dir_ > 100))
+  if(!imminent_collision || (repair_dist_ > 100 && repair_dir_ > 100))
   {
     //////ROS_INFO("Modifier: No IC");
     result.request.op = getOperator();
@@ -133,11 +133,11 @@ void Modifier::buildModificationRequest(const Population& pop, bool imminent_col
         pop.paths_.at(targets.at(i)).buildPathMsg());
   }
 
-  //ROS_INFO("move_dir_: %f move_dist: %f move_ob_r_: %f", move_dir_, move_dist_, move_ob_r_);
+  //ROS_INFO("repair_dir_: %f repair_dist: %f repair_ob_r_: %f", repair_dir_, repair_dist_, repair_ob_r_);
 
-  result.request.move_dir   = move_dir_;
-  result.request.move_dist  = move_dist_;
-  result.request.move_ob_r  = move_ob_r_;
+  result.request.repair_dir   = repair_dir_;
+  result.request.repair_dist  = repair_dist_;
+  result.request.repair_ob_r  = repair_ob_r_;
 } // End buildModificationRequest
 
 

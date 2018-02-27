@@ -8,7 +8,7 @@
 </node>
 
 
-<!-- Start Gazebo simulation -->
+<!-- Start Gazebo simulation and missing tfs for the Turtlebot in Gazebo -->
 <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_empty.launch" />
 <node name="pub_tf_missing_turtlebot_gazebo"  pkg="ramp_sensing" type="pub_tf_missing_turtlebot_gazebo" />
 

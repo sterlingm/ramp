@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ramp_sensing)
 
-find_package(catkin REQUIRED COMPONENTS geometry_msgs map_msgs message_generation nav_msgs ramp_msgs roscpp tf)
+find_package(catkin REQUIRED COMPONENTS geometry_msgs map_msgs message_generation nav_msgs ramp_msgs roscpp roslib tf)
 find_package(OpenCV REQUIRED)
 find_package(PkgConfig)
 pkg_check_modules(BFL REQUIRED orocos-bfl)
@@ -29,7 +29,11 @@ link_directories(${BFL_LIBRARY_DIRS})
 set (CMAKE_CXX_FLAGS "-std=c++11 -g -O0")
 
 
+<<<<<<< HEAD
 add_executable(${PROJECT_NAME} src/circle_filter.cpp src/circle_packer.cpp src/GridMap2D.cpp src/main.cpp src/obstacle.cpp src/packed_obstacle.cpp src/utility.cpp)
+=======
+add_executable(${PROJECT_NAME} src/circle_filter.cpp src/circle_packer.cpp src/GridMap2D.cpp src/main.cpp src/obstacle.cpp src/polypartition.cpp src/utility.cpp)
+>>>>>>> devel
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBS} ${BFL_LIBRARIES})
 add_dependencies(${PROJECT_NAME} ramp_msgs_generate_messages_cpp)
 
@@ -37,7 +41,11 @@ add_executable(convert_hilbert_data src/main_convert_map_to_hilbert_data.cpp)
 target_link_libraries(convert_hilbert_data ${catkin_LIBRARIES} ${OpenCV_LIBS} ${BFL_LIBRARIES})
 add_dependencies(convert_hilbert_data ramp_msgs_generate_messages_cpp)
 
+<<<<<<< HEAD
 add_executable(process_hmap src/main_process_hmap.cpp src/circle_packer.cpp src/GridMap2D.cpp src/obstacle.cpp src/packed_obstacle.cpp src/utility.cpp)
+=======
+add_executable(process_hmap src/main_process_hmap.cpp src/circle_packer.cpp src/GridMap2D.cpp src/polypartition.cpp src/utility.cpp)
+>>>>>>> devel
 target_link_libraries(process_hmap ${catkin_LIBRARIES} ${OpenCV_LIBS} ${BFL_LIBRARIES})
 add_dependencies(process_hmap ramp_msgs_generate_messages_cpp)
 

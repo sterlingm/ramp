@@ -78,7 +78,6 @@ const double Utility::findAngleFromAToB(const std::vector<double> a, const std::
   return result;
 } // End findAngleFromAToB
 
-
 /** This method returns distance between orientations a1 and a2. The distance is in the range [-PI, PI]. */
 const double Utility::findDistanceBetweenAngles(const double a1, const double a2) const 
 {
@@ -156,3 +155,63 @@ const std::string Utility::toString(const ramp_msgs::Path path) const {
   return result.str();
 }
 
+
+const std::string Utility::toString(const ramp_msgs::MotionState mp) const {
+  std::ostringstream result;
+
+  result<<"\np: [ ";
+  for(unsigned int i=0;i<mp.positions.size();i++) {
+    result<<mp.positions.at(i)<<" ";
+  }
+  result<<"]";
+
+  result<<"\nv: [ ";
+  for(unsigned int i=0;i<mp.velocities.size();i++) {
+    result<<mp.velocities.at(i)<<" ";
+  }
+  result<<"]";
+
+  result<<"\na: [ ";
+  for(unsigned int i=0;i<mp.accelerations.size();i++) {
+    result<<mp.accelerations.at(i)<<" ";
+  }
+  result<<"]";
+
+  result<<"\nj: [ ";
+  for(unsigned int i=0;i<mp.jerks.size();i++) {
+    result<<mp.jerks.at(i)<<" ";
+  }
+  result<<"]";
+
+  result<<"\nTime from start: "<<mp.time;
+
+  return result.str();
+}
+
+const std::string Utility::toString(const CircleGroup cirGroup) const
+{
+  std::ostringstream result;
+
+  result<<"\nBounding Circle - center: ("<<cirGroup.fitCir.center.x<<","<<cirGroup.fitCir.center.y<<") radius: "<<cirGroup.fitCir.radius;
+  
+  for(int i=0;i<cirGroup.packedCirs.size();i++)
+  {
+    result<<"\n\tPacked Circle "<<i<<" - center: ("<<cirGroup.packedCirs[i].center.x<<","<<cirGroup.packedCirs[i].center.y<<") radius: "<<cirGroup.packedCirs[i].radius;
+  }
+
+  return result.str();
+}
+
+const std::string Utility::toString(const ramp_msgs::CircleGroup cirGroup) const
+{
+  std::ostringstream result;
+
+  result<<"\nBounding Circle - center: ("<<cirGroup.fitCir.center.x<<","<<cirGroup.fitCir.center.y<<") radius: "<<cirGroup.fitCir.radius;
+  
+  for(int i=0;i<cirGroup.packedCirs.size();i++)
+  {
+    result<<"\n\tPacked Circle "<<i<<" - center: ("<<cirGroup.packedCirs[i].center.x<<","<<cirGroup.packedCirs[i].center.y<<") radius: "<<cirGroup.packedCirs[i].radius;
+  }
+
+  return result.str();
+}

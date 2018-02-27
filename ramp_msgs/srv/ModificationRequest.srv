@@ -1,8 +1,8 @@
 Path[] paths
 string op
-float64 move_dist
-float64 move_dir
-float64 move_ob_r
+float64 repair_dist
+float64 repair_dir
+float64 repair_ob_r
 
 ---
 

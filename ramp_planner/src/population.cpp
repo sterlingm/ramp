@@ -108,20 +108,18 @@ const double Population::getMinFitness() const {
 
 const bool Population::contains(const RampTrajectory& rt) const 
 {
-  //ROS_INFO("In Population::contains");
-  
+  ////ROS_INFO("In Population::contains");
   for(uint8_t i=0;i<size();i++) 
   {
     ////ROS_INFO("i: %i size(): %i", i, size());
-    double thresh=0.2;
-    if(trajectories_.at(i).equals(rt, thresh))
+    if(trajectories_.at(i).equals(rt)) 
     {
-      //ROS_INFO("Population contains trajectory at index %i", (int)i);
+      ////ROS_INFO("Population contains trajectory at index %i", (int)i);
       return true;
     }
   }
 
-  //ROS_INFO("Population does not contain trajectory");
+  ////ROS_INFO("Population does not contain trajectory");
   return false;
 }
 
@@ -280,9 +278,9 @@ const bool Population::canReplace(const RampTrajectory& rt, const int& i) const
   if(subPopulations_.size() > 0) 
   {
     //std::cout<<"\nIn sub-pops are being used!";
-
+    
     //std::cout<<"\ntrajectories.size(): "<<trajectories_.size();
-    RampTrajectory temp = trajectories_[i];
+    RampTrajectory temp = trajectories_.at(i);
 
     //std::cout<<"\nsubPopulations.size(): "<<subPopulations_.size();
     //std::cout<<"\ntemp.i_subPopulation: "<<temp.msg_.i_subPopulation<<"\n";
@@ -378,10 +376,10 @@ const int Population::getReplacementID(const RampTrajectory& rt) const
  *  Returns the index that the trajectory is added at */
 const int Population::add(const RampTrajectory& rt, bool forceMin) 
 {
-  //ROS_INFO("In Population::add");
-  //ROS_INFO("Pop: %s", toString().c_str());
+  ////ROS_INFO("In Population::add");
+  /*//ROS_INFO("Pop: %s", toString().c_str());
   //ROS_INFO("rt: %s", rt.toString().c_str());
-  //ROS_INFO("Pop best id: %i", calcBestIndex());
+  //ROS_INFO("Pop best id: %i", calcBestIndex());*/
 
   /*if(subPopulations_.size() > 0) 
   {
@@ -439,7 +437,7 @@ const int Population::add(const RampTrajectory& rt, bool forceMin)
   ////ROS_INFO("%s", rt.toString().c_str());
   ////ROS_INFO("pop: %s", toString().c_str());*/
 
-  //ROS_INFO("Exiting Population::add");
+  //////ROS_INFO("Exiting Population::add");
   return -1;
 } //End add
 

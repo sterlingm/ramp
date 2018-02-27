@@ -243,9 +243,13 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
   //imshow("hmap_thresh", hmap_thresh);
   //cv::waitKey(0);
 
+<<<<<<< HEAD
   /*
    * Do circle packing on all hmap obstacles
    */
+=======
+  // Note that circle packing is only on hilbert_map branch for now
+>>>>>>> devel
   CirclePacker cp(hmap_thresh);
   std::vector< std::vector<Circle> > ob_cirs = cp.goCirclePacking(2.0f);
 
@@ -263,6 +267,7 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
   double sigma = sqrt( (1.f/2.f*gamma) );
   ROS_INFO("gamma: %f sigma: %f", gamma, sigma);
   ROS_INFO("x_origin: %f y_origin: %f", x_origin, y_origin);
+<<<<<<< HEAD
   Velocity v_zero;
   double theta = 0;
 
@@ -309,12 +314,33 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
     }
   }
   ROS_INFO("Done creating Obstacle objects");
+=======
+  for(int i=0;i<obs.size();i++)
+  {
+    ROS_INFO("Before Obstacle %i: Center - (%f,%f) Radius - %f", i, obs[i].center.x, obs[i].center.y, obs[i].radius);
+    resize(hmap_thresh, hmap_thresh, Size(hmap_thresh.cols*4, hmap_thresh.rows*4));
+    hmap_thresh.at<uchar>(obs[i].center.x, obs[i].center.y) = 128;
+    imshow("center", hmap_thresh);
+    waitKey(0);
+
+    obs[i].center.x = (obs[i].center.x * hmap.map.info.resolution) + hmap.map.info.origin.position.x;
+    obs[i].center.y = (obs[i].center.y * hmap.map.info.resolution) + hmap.map.info.origin.position.y;
+    obs[i].radius *= hmap.map.info.resolution;
+    ROS_INFO("After Obstacle %i: Center - (%f,%f) Radius - %f", i, obs[i].center.x, obs[i].center.y, obs[i].radius);
+    inner_radii.markers.push_back(getMarker(obs[i], i+obs.size()));
+
+    // Make radius bigger and get new circle
+    obs[i].radius += sigma;
+    outer_radii.markers.push_back(getMarker(obs[i], i));
+  }
+>>>>>>> devel
 
   for(int i=0;i<inner_radii.markers.size();i++)
   {
     inner_radii.markers[i].color.r = 255;
     inner_radii.markers[i].color.g = 0;
     inner_radii.markers[i].color.b = 0;
+<<<<<<< HEAD
     inner_radii.markers[i].color.a = 1;
     inner_radii.markers[i].pose.position.z += 0.1;
   }
@@ -325,6 +351,13 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
   pub_rviz.publish(outer_radii);
   pub_rviz.publish(inner_radii);
   pub_obs.publish(hmap_obs); 
+=======
+    inner_radii.markers[i].pose.position.z += 0.01;
+  }
+
+  pub_rviz.publish(outer_radii);
+  pub_rviz.publish(inner_radii);
+>>>>>>> devel
 }
 
 

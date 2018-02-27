@@ -15,6 +15,7 @@ double              max_speed_angular;
 int                 population_size;
 int                 num_ppcs;
 int                 gensBeforeCC;
+bool                sensingBeforeCC;
 bool                sub_populations;
 bool                modifications;
 bool                evaluations;
@@ -25,7 +26,7 @@ bool                moving_robot;
 bool                shrink_ranges;
 bool                stop_after_ppcs;
 double              t_cc_rate;
-double              t_pc_rate;
+double              t_sc_rate;
 int                 pop_type;
 TrajectoryType      pt;
 std::vector<std::string> ob_topics;
@@ -42,7 +43,7 @@ bool use_hilbert_map;
 
 // Initializes a vector of Ranges that the Planner is initialized with
 // Must be called AFTER radius is set
-void initDOF(const std::vector<double> dof_min, const std::vector<double> dof_max) 
+void initDOF(const std::vector<double> dof_min, const std::vector<double> dof_max)
 {
   for(unsigned int i=0;i<dof_min.size();i++) 
   {
@@ -300,11 +301,23 @@ void loadParameters(const ros::NodeHandle handle)
     handle.getParam("ramp/gens_before_control_cycle", gensBeforeCC);
     std::cout<<"\ngens_before_control_cycle: "<<gensBeforeCC;
   }
+
+if(handle.hasParam("ramp/sensing_before_control_cycle"))
+  {
+    handle.getParam("ramp/sensing_before_control_cycle", sensingBeforeCC);
+    ROS_INFO("sensingBeforeCC: %s", sensingBeforeCC ? "True" : "False");
+  }
   
   if(handle.hasParam("ramp/fixed_control_cycle_rate")) 
   {
     handle.getParam("ramp/fixed_control_cycle_rate", t_cc_rate);
     //ROS_INFO("t_cc_rate: %f", t_cc_rate);
+  }
+  
+  if(handle.hasParam("ramp/sensing_cycle_rate")) 
+  {
+    handle.getParam("ramp/sensing_cycle_rate", t_sc_rate);
+    //ROS_INFO("t_sc_rate: %f", t_sc_rate);
   }
   
   if(handle.hasParam("ramp/pop_traj_type")) 
@@ -509,7 +522,7 @@ int main(int argc, char** argv)
    */
  
   // Initialize the planner
-  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, global_frame, update_topic, pt, num_ppcs, stop_after_ppcs, gensBeforeCC, t_pc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
+  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, global_frame, update_topic, pt, num_ppcs, stop_after_ppcs, gensBeforeCC, sensingBeforeCC, t_sc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
   my_planner.modifications_   = modifications;
   my_planner.evaluations_     = evaluations;
   my_planner.seedPopulation_  = seedPopulation;

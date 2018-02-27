@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(trajectory_evaluation)
 
 ### Find catkin macros and libraries
-find_package(catkin REQUIRED COMPONENTS message_generation ramp_msgs roscpp)
+find_package(catkin REQUIRED COMPONENTS message_generation ramp_msgs roscpp roslib)
 
 ########################################
 ### Declare ROS messages and services ##
@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS message_generation ramp_msgs roscpp)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp
+  CATKIN_DEPENDS roscpp roslib
   DEPENDS 
 )
 

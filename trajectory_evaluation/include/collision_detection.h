@@ -44,11 +44,15 @@ class CollisionDetection
     /***** Methods *****/ 
     void                        init();
     void                        perform(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, QueryResult& result); 
+<<<<<<< HEAD
     void                        performNum(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const double& robot_radius, const std::vector<double> obstacle_radii, QueryResult& result); 
 
 
     void performPackedObs(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::PackedObstacle>& packed_obs, const double& robot_radius, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result);
     void queryPacked(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const ramp_msgs::PackedObstacle& ob, const double& traj_start, const double& robot_r, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result) const;
+=======
+    void                        performNum(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const double& robot_radius, const std::vector<ramp_msgs::CircleGroup> ob_cir_groups, QueryResult& result); 
+>>>>>>> devel
     
 
     /**
@@ -56,9 +60,13 @@ class CollisionDetection
      */
     void           query(const ramp_msgs::RampTrajectory& trajectory, const ramp_msgs::RampTrajectory& ob_trajectory, QueryResult& result) const;
     void           query(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, std::vector< std::vector<double> >& points_of_collision) const;
+<<<<<<< HEAD
     double         query(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, const double& traj_start, const double& robot_r, const double& ob_r, QueryResult& result) const;
 
     void          queryPackedOb(const ramp_msgs::RampTrajectory& traj, const ramp_msgs::PackedObstacle ob, const double& traj_start, const double& robot_r, QueryResult& result) const;
+=======
+    double           query(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, const double& traj_start, const double& robot_r, const ramp_msgs::CircleGroup& cirGroup, QueryResult& result) const;
+>>>>>>> devel
 
 
     /**
@@ -147,6 +155,8 @@ class CollisionDetection
   private:
 
     /***** Methods *****/
+    std::vector< std::vector<geometry_msgs::Vector3> > getCirOffsets(const std::vector<ramp_msgs::CircleGroup>& cirGroups) const;
+    std::vector<geometry_msgs::Vector3> getCirOffsets(const ramp_msgs::CircleGroup& cirGroup) const;
 
     /***** Data Members *****/
     Utility                   utility_;

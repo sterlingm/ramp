@@ -3,7 +3,7 @@ float64 robot_radius
 float64 currentTheta
 float64 theta_cc
 RampTrajectory[] obstacle_trjs
-float64[] obstacle_radii
+CircleGroup[] obstacle_cir_groups
 bool imminent_collision
 float64 offset
 bool full_eval

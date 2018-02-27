@@ -12,7 +12,11 @@ def main():
     # Setup paths
     rospack = rospkg.RosPack()
     ros_pkg_path = rospack.get_path('ramp_sensing')
+<<<<<<< HEAD
     fname = 'hilbert_maps/hilbert_map_diag.csv'
+=======
+    fname = 'hilbert_map_diag.csv'
+>>>>>>> devel
 
     p = os.path.join(ros_pkg_path, fname)
     print p
@@ -74,7 +78,7 @@ def main():
     hmap.map = grid
     hmap.gamma = gamma
 
-    v = raw_input("Press Enter to publish grid")
+    raw_input("Press Enter to publish grid")
 
     pub.publish(hmap)
     pubRviz.publish(hmap.map)

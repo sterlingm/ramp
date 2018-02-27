@@ -400,6 +400,9 @@ const std::string Utility::toString(const ramp_msgs::TrajectoryRequest tr) const
   }
 
   result<<"\nSegments: "<<(int)tr.segments;
+
+  result<<"\nMax speed linear: "<<tr.max_speed_linear;
+  result<<"\nMax speed angular: "<<tr.max_speed_angular;
   
   result<<"\n";
 

@@ -204,7 +204,6 @@ tf::Vector3 MotionState::transformBasePosition(const tf::Transform t)
 {
   //ROS_INFO("In MotionState::transformBasePosition");
   //ROS_INFO("t: (%f, %f) yaw: %f", t.getOrigin().getX(), t.getOrigin().getY(), tf::getYaw(t.getRotation()));
-
   //ROS_INFO("msg: %s", toString().c_str());
 
   tf::Vector3 p(msg_.positions.at(0), msg_.positions.at(1), 0);
@@ -228,7 +227,9 @@ void MotionState::transformBase(const tf::Transform t)
   msg_.positions.at(1) = p.getY();
   
   // Get the new orientation
+  //ROS_INFO("msg_.positions[2]: %f t.getRotation: %f", msg_.positions.at(2), tf::getYaw(t.getRotation()));
   msg_.positions.at(2) = utility_.displaceAngle(msg_.positions.at(2), tf::getYaw(t.getRotation()));
+  //ROS_INFO("Final msg_.positions[2]: %f", msg_.positions[2]);
 } //End transformBase
 
 

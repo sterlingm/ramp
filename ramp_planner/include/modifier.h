@@ -17,9 +17,9 @@ class Modifier {
 
     // Data members
     unsigned int num_ops;
-    double move_dir_;
-    double move_dist_;
-    double move_ob_r_;
+    double repair_dir_;
+    double repair_dist_;
+    double repair_ob_r_;
 
   private:
     const std::string getOperator() const;
