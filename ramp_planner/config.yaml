@@ -1,7 +1,7 @@
 # RAMP misc parameters #
 population_size: 10
 
-sub_populations: false 
+sub_populations: true
 
 modifications: true
 
@@ -61,7 +61,7 @@ update_topic: "odom"
 
 shrink_ranges: false
 
-use_start_param: true
+use_start_param: false
 
 use_hilbert_map: true
 

@@ -302,7 +302,8 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   if(cc_started_)
   {
     ////////ROS_INFO("Evaluating movingOn_ in SC");
-    evaluateTrajectory(movingOn_, false);
+    //Previously this was (movingOn_, false) to skip fitness computation
+    evaluateTrajectory(movingOn_);
     moving_on_coll_ = !movingOn_.msg_.feasible;
   } // end if evaluating movingOn
 
@@ -1136,7 +1137,7 @@ void Planner::buildEvaluationSrv(const RampTrajectory& trajec, ramp_msgs::Evalua
   buildEvaluationSrv(t, result);
 }
 
-void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::EvaluationRequest& result, bool full) const
+void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::EvaluationRequest& result, bool hmap) const
 {
   //ROS_INFO("In Planner::buildEvaluationRequest(const RampTrajectory&, EvaluationRequest&, bool)");
   //ROS_INFO("trajec: %s", trajec.toString().c_str());
@@ -1194,7 +1195,21 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
   }
 
   // full_eval is for predicting segments that are not generated
-  result.full_eval = full;
+  // Used to have param for this, but it was only used for movingOn_
+  // so it was replaced with hmap param
+  result.full_eval = true;
+  result.hmap_eval = hmap;
+
+  // Set hmap obs
+  if(hmap)
+  {
+    result.obstacle_trjs.clear();
+    result.obstacle_cir_groups.clear();
+    for(int i=0;i<obsHmap_.size();i++)
+    {
+      result.obstacle_cir_groups.push_back(obsHmap_[i].cirGroup);
+    }
+  }
 
   // consider_trans for trajs including switches if we're moving the robot
   result.consider_trans = moving_robot_;
@@ -1730,8 +1745,9 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   num_ppcs_ = num_ppcs;
   stop_after_ppcs_ = stop_after_ppcs;
 
-  forceMinMod = false;
-  evalHMap = false;
+  // These are set to true in hilbertMapObsCb
+  forceMinMod_ = false;
+  evalHMap_ = false;
 
   // Data to collect
   num_pcs_  = 0;
@@ -2725,7 +2741,8 @@ void Planner::modification()
     }
     else
     {
-      evaluateTrajectory(traj_final);
+      //ROS_INFO("evalHMap_: %s", evalHMap_ ? "True" : "False");
+      evaluateTrajectory(traj_final, evalHMap_);
     }
 
     //ROS_INFO("Final mod: %s", traj_final.toString().c_str());
@@ -2734,9 +2751,9 @@ void Planner::modification()
     // Index is where the trajectory was added in the population (may replace another)
     // If it was successfully added, push its index onto the result
     ros::Time t_start = ros::Time::now();
-    ROS_INFO("Adding to pop");
+    //ROS_INFO("Adding to pop");
     // Make sure forceMinMod is set properly
-    int index = population_.add(traj_final, forceMinMod);
+    int index = population_.add(traj_final, forceMinMod_);
     //ROS_INFO("Done adding");
     
     // No longer need to reset CC time because trajs should have same t_start
@@ -3324,7 +3341,8 @@ void Planner::doControlCycle()
   full_trajectory_.concatenateForce(movingOnCC_);
 
   // Evaluate movingOnCC
-  evaluateTrajectory(movingOnCC_, false);
+  // Previously this was movingOnCC_, false) to skip fitness computation
+  evaluateTrajectory(movingOnCC_);
   
   movingOn_               = movingOnCC_;
   moving_on_coll_         = !movingOn_.msg_.feasible;
@@ -3675,7 +3693,7 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
     result.points.push_back(p);
   }
   // Planning cycles are usually 20Hz, but put a little padding on there so rviz looks smoother and doesn't start blinking if there are any delays
-  result.lifetime = ros::Duration(0.2);
+  result.lifetime = ros::Duration(5);
 
   // Width of the lines
   result.scale.x = 0.01;
@@ -3739,13 +3757,13 @@ void Planner::requestEvaluation(ramp_msgs::EvaluationRequest& request)
 
 
 
-void Planner::requestEvaluation(RampTrajectory& trajec, bool full)
+void Planner::requestEvaluation(RampTrajectory& trajec, bool hmap)
 {
   //////ROS_INFO("In Planner::requestEvaluation(RampTrajectory&, bool)");
   //////ROS_INFO("full: %s", full ? "True" : "False");
   ramp_msgs::EvaluationRequest req;
   
-  buildEvaluationRequest(trajec, req, full);
+  buildEvaluationRequest(trajec, req, hmap);
   requestEvaluation(req);
   
   trajec.msg_.fitness           = req.trajectory.fitness;
@@ -3781,10 +3799,11 @@ void Planner::hilbertMapObsCb(const ramp_msgs::ObstacleList& hmapObs)
  		
 		
   // Set obstacles		
-  //obs_packed_ = hmapObs.packed_obs;		
+  obsHmap_ = hmapObs.obstacles;
   //evaluatePopulation(true);		
   		
-  evalHMap = true;		
+  evalHMap_ = true;		
+  forceMinMod_ = true;
   		
   ROS_INFO("Exiting Planner::hilbertMapObsCb");		
 }
@@ -4333,10 +4352,10 @@ void Planner::go()
   // initialize population
   initPopulation();
   //////ROS_INFO("Population initialized");
-  evaluatePopulation();
-  //////ROS_INFO("Initial population evaluated");
-  //sendPopulation();
-  //std::cin.get();
+  evaluatePopulation(evalHMap_);
+  ROS_INFO("Initial population evaluated");
+  sendPopulation();
+  std::cin.get();
  
 
   // Seed the population
@@ -4350,7 +4369,7 @@ void Planner::go()
     std::cout<<"\n** transPop **:"<<population_.toString();
 
     // Evaluate after seeding
-    evaluatePopulation();
+    evaluatePopulation(evalHMap_);
 
     // Set movingOn
     movingOn_ = population_.get(population_.calcBestIndex()).getSubTrajectory(controlCycle_.toSec());
@@ -4388,7 +4407,7 @@ void Planner::go()
   ROS_INFO("Starting pre planning cycles");
   ros::Rate r(20);
   // Wait for the specified number of generations before starting CC's
-  while(generation_ < num_pc) 
+  while(generation_ < num_ppcs_) 
   {
     planningCycleCallback(); 
     sendPopulation();
@@ -4400,6 +4419,15 @@ void Planner::go()
       r.sleep();
     } 
   }
+
+  if(stop_after_ppcs_)
+  {
+    exit(1);
+  }
+
+  // Stop evaluating with hilbert map and forcing the min. fit. traj to be replaced
+  evalHMap_ = false;
+  forceMinMod_ = false;
  
   ROS_INFO("Starting CCs at t: %f", ros::Time::now().toSec());
 

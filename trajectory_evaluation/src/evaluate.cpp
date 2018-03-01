@@ -30,18 +30,21 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   if(req.hmap_eval)
   {
     performFeasibilityHmap(req);
-    ROS_INFO("qr.packed_.innerColl_: %s", qrPacked_.innerColl_ ? "True" : "False");
+    //ROS_INFO("qr.packed_.innerColl_: %s", qrPacked_.innerColl_ ? "True" : "False");
+    res.feasible = !qrPacked_.innerColl_;
+    req.trajectory.feasible = res.feasible;
   }
   else
   {
     performFeasibility(req);
+    
+    // Set response members
+    res.feasible = (!qr_.collision_ && !orientation_infeasible_) && !qrPacked_.innerColl_;
+    req.trajectory.feasible = res.feasible;
+    //ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
+    //////ROS_INFO("performFeasibility: %f", (ros::Time::now()-t_start).toSec());
   }
 
-  // Set response members
-  res.feasible = (!qr_.collision_ && !orientation_infeasible_) && !qrPacked_.innerColl_;
-  req.trajectory.feasible = res.feasible;
-  //ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
-  //////ROS_INFO("performFeasibility: %f", (ros::Time::now()-t_start).toSec());
 
   if(qr_.collision_)
   {
@@ -55,6 +58,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   }
 
 
+  //ROS_INFO("Done computing feasibility");
 
 
 
@@ -78,15 +82,17 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
     performFitness(req.trajectory, req.offset, req.hmap_eval, res.fitness);
   }
 
-    ////ROS_INFO("Requesting fitness!");
-    //performFitness(req.trajectory, req.offset, res.fitness);
-    //////ROS_INFO("performFitness: %f", (ros::Time::now()-t_start).toSec());
+  ////ROS_INFO("Requesting fitness!");
+  //performFitness(req.trajectory, req.offset, res.fitness);
+  //////ROS_INFO("performFitness: %f", (ros::Time::now()-t_start).toSec());
+  //ROS_INFO("Exiting Evaluate::perform()");
 }
 
 
 void Evaluate::getBoundaryCost(ramp_msgs::RampTrajectory& trj, double& result) const
 {
   double d_min = 100;
+  
   // Go through the knot points and check distance to environment bounds
   for(int i=1;i<trj.holonomic_path.points.size()-1;i++)
   {
@@ -113,7 +119,7 @@ void Evaluate::getBoundaryCost(ramp_msgs::RampTrajectory& trj, double& result) c
       d_min = dist_y_max;
     }
   } // end for
-  ROS_INFO("d_min: %f", d_min);
+  //ROS_INFO("d_min: %f", d_min);
 
   if(d_min < 0.0001)
   {
@@ -127,7 +133,7 @@ void Evaluate::getBoundaryCost(ramp_msgs::RampTrajectory& trj, double& result) c
 // Modifies the trajectory member of EvaluationRequest&
 void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er) 
 {
-  ROS_INFO("In Evaluate::performFeasibility");
+  //ROS_INFO("In Evaluate::performFeasibility");
   ros::Time t_start = ros::Time::now();
 
   // Check collision
@@ -154,7 +160,7 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
     //ROS_INFO("er.imminent_collision: %s er.consider_trans: %s er.trans_possible: %s", er.imminent_collision ? "True" : "False", er.consider_trans ? "True" : "False", er.trans_possible ? "True" : "False");
   }
   
-  ROS_INFO("performFeasibility time: %f", (ros::Time::now() - t_start).toSec());
+  //ROS_INFO("performFeasibility time: %f", (ros::Time::now() - t_start).toSec());
 }
 
 
@@ -167,8 +173,8 @@ void Evaluate::performFeasibilityHmap(ramp_msgs::EvaluationRequest& er)
              PackedObstacle does not include inner radii circles for Hilbert map obstacles 
    ****************************************************************************************************
    */
-  //std::vector<ramp_msgs::PackedObstacle> obs = er.packed_obs;
-  //cd_.performPackedObs(er.trajectory, obs, er.robot_radius, hmap_, qrPacked_);
+  std::vector<ramp_msgs::CircleGroup> obs = er.obstacle_cir_groups;
+  cd_.performHmap(er.trajectory, obs, er.robot_radius, hmap_, qrPacked_);
 
 
   //ROS_INFO("Exiting Evaluate::performFeasibilityHmap");
@@ -187,16 +193,16 @@ void Evaluate::performFitnessHmap(ramp_msgs::RampTrajectory& trj, const Collisio
   // Check feasibility
   if(trj.feasible)
   {
-    ROS_INFO("In trj.feasible");
+    //ROS_INFO("In trj.feasible");
     // Set cost. Scale the collision penalty with the max probability of the traj being in collision
     cost = 1.0 - perc;
-    ROS_INFO("cost: %f", (1.0-perc));
+    //ROS_INFO("cost: %f", (1.0-perc));
   }
   else
   {
-    ROS_INFO("In else");
+    //ROS_INFO("In else");
     cost = (perc * Q_coll_);
-    ROS_INFO("cost: %f", perc*Q_coll_);
+    //ROS_INFO("cost: %f", perc*Q_coll_);
   }
 
   // Get boundary cost and normalize it
@@ -205,7 +211,7 @@ void Evaluate::performFitnessHmap(ramp_msgs::RampTrajectory& trj, const Collisio
   bcost /= 4.94975;
   double bcost_cost = 1.0/bcost;
   bcost_cost *= 0.1;
-  ROS_INFO("bcost: %f bcost_cost: %f", bcost, bcost_cost);
+  //ROS_INFO("bcost: %f bcost_cost: %f", bcost, bcost_cost);
 
   // Add boundary cost to the full cost. Do the inverse of boundary cost b/c it's a distance
   cost += bcost_cost; 

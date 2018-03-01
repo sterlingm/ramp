@@ -553,13 +553,16 @@ int main(int argc, char** argv)
   ROS_INFO("Starting Planner!");
 
 
+  ros::Rate r(20);
+
   if(use_hilbert_map)
   {
     ROS_INFO("Waiting to get hilbert map obstacles on topic /hmap_obstacles");
     // Wait until we get the hilbert map
-    while(!my_planner.evalHMap)
+    while(!my_planner.evalHMap_ && ros::ok())
     {
       ros::spinOnce();
+      r.sleep();
     }
     ROS_INFO("Got hilbert map!");
   }

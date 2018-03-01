@@ -150,7 +150,12 @@ class Planner {
     void buildLineList(const RampTrajectory& trajec, int id, visualization_msgs::Marker& result) const;
 
     // Evaluate the population 
-    void evaluateTrajectory(RampTrajectory& t, bool full=true);
+    void evaluateTrajectory(RampTrajectory& t, bool hmap=false);
+
+    // full=false specifies that the fitness should be skipped when evaluating
+    // This was used for evaluating movingOn, but I'm not sure why
+    //void evaluateTrajectory(RampTrajectory& t, bool full=true);
+    
     void evaluatePopulation(bool hmap=false);
     
     // Modify trajectory or path
@@ -181,7 +186,7 @@ class Planner {
 
     void buildEvaluationSrv(std::vector<RampTrajectory>& trajecs, ramp_msgs::EvaluationSrv& result, bool hmap=false) const;
     void buildEvaluationSrv(const RampTrajectory& trajec, ramp_msgs::EvaluationSrv& result) const;
-    void buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::EvaluationRequest& result, bool full=true) const;
+    void buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::EvaluationRequest& result, bool hmap=false) const;
 
 
     // Request information from other packages
@@ -230,6 +235,7 @@ class Planner {
 
     std::vector<RampTrajectory> ob_trajectory_;
     std::vector<ramp_msgs::Obstacle> obs_;
+    std::vector<ramp_msgs::Obstacle> obsHmap_;
 
 
     const MotionType findMotionType(const ramp_msgs::Obstacle ob) const;
@@ -545,8 +551,8 @@ class Planner {
     int num_ppcs_;
     bool stop_after_ppcs_;
 
-    bool forceMinMod;
-    bool evalHMap;
+    bool forceMinMod_;
+    bool evalHMap_;
 
     /*
      * General data
