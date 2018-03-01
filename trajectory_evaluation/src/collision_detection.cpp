@@ -15,17 +15,10 @@ void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory,
   min_dist_ = 100;
   for(uint8_t i=0;i<obstacle_trjs.size() && !result.collision_;i++)
   {
-<<<<<<< HEAD
-    ROS_INFO("Ob radius: %f", obstacle_radii[i]);
-    ROS_INFO("Ob traj: %s", utility_.toString(obstacle_trjs[i]).c_str());
-    double d_min = query(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), robot_radius, obstacle_radii[i], result);
-    ROS_INFO("d_min: %f", d_min);
-=======
     ////ROS_INFO("Ob radius: %f", obstacle_radii[i]);
     ////ROS_INFO("Ob traj: %s", utility_.toString(obstacle_trjs[i]).c_str());
     double d_min = query(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), robot_radius, ob_cir_groups[i], result);
     ////ROS_INFO("d_min: %f", d_min);
->>>>>>> devel
 
     if(d_min < min_dist_)
     {
@@ -35,7 +28,7 @@ void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory,
 }
 
 
-void CollisionDetection::performPackedObs(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::PackedObstacle>& obs, const double& robot_r, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result)
+/*void CollisionDetection::performPackedObs(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::PackedObstacle>& obs, const double& robot_r, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result)
 {
   for(uint8_t i=0;i<obs.size();i++)
   {
@@ -124,7 +117,7 @@ void CollisionDetection::queryPacked(const std::vector<trajectory_msgs::JointTra
 
   //ROS_INFO("p_values.size(): %i result.p_max_: %i", (int)p_values.size(), result.p_max_);
   //ROS_INFO("Exiting CollisionDetection::queryPacked");
-}
+}*/
 
 
 
@@ -1793,15 +1786,10 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
   // Initialize to -1 because all dist values are >= 0
   double d_min=100;
 
-<<<<<<< HEAD
-  for(i=0;i<segment.size();i++)
-  //for(i=0;i<49;i++) 
-=======
   /*
    * Start collision checks
    */
   for(i=0;i<segment.size();i++) 
->>>>>>> devel
   {
     // Set obstacle index. If i+offset > trajectory size, set j to the last point on the obstacle trajectory
     j = (i+j_offset) >= ob_trajectory.size() ? ob_trajectory.size()-1 : i+j_offset;

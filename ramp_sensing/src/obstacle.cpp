@@ -2,6 +2,23 @@
 
 Obstacle::Obstacle() {}
 
+Obstacle::Obstacle(CircleGroup& cg)
+{
+  msg_.cirGroup.fitCir.center.x = cg.fitCir.center.x;
+  msg_.cirGroup.fitCir.center.y = cg.fitCir.center.y;
+  msg_.cirGroup.fitCir.radius = cg.fitCir.radius;
+  
+  for(int i=0;i<cg.packedCirs.size();i++)
+  {
+    ramp_msgs::Circle pc;
+    pc.center.x = cg.packedCirs[i].center.x;
+    pc.center.y = cg.packedCirs[i].center.y;
+    pc.radius   = cg.packedCirs[i].radius;
+
+    msg_.cirGroup.packedCirs.push_back(pc);
+  }
+}
+
 Obstacle::~Obstacle() {}
 
 

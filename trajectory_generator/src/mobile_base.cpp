@@ -108,11 +108,7 @@ void MobileBase::init(const ramp_msgs::TrajectoryRequest req)
   // Set trajectory type
   //////ROS_INFO("req.type: %i", req.type);
   type_ = (TrajectoryType)req.type;
-<<<<<<< HEAD
-  ROS_INFO("type_: %i", type_);
-=======
   //////ROS_INFO("type_: %i", type_);
->>>>>>> devel
 
   // Set segments
   segments_ = req_.segments;
@@ -1391,13 +1387,8 @@ bool MobileBase::checkSpeed(const ramp_msgs::Path p, const std::vector<uint8_t> 
 // Service callback, the input is a path and the output a trajectory
 bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs::TrajectoryResponse& res) 
 {
-<<<<<<< HEAD
-  //ROS_INFO("In MobileBase::trajectoryRequest");
-  //ROS_INFO("type_: %i HOLONOMIC: %i", req.type, HOLONOMIC); 
-=======
   //////ROS_INFO("In MobileBase::trajectoryRequest");
   //////ROS_INFO("type_: %i HOLONOMIC: %i", req.type, HOLONOMIC); 
->>>>>>> devel
 
   // If there's less than 3 points, make it have straight segments
   // if req_.segments == 1
@@ -1552,12 +1543,7 @@ bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
   }
 
 
-<<<<<<< HEAD
-  ////ROS_INFO("About to start generating points, segments_: %i", segments_);
-=======
- 
   //////ROS_INFO("About to start generating points, segments_: %i", segments_);
->>>>>>> devel
   uint8_t c=0;
   // Go through every knotpoint in the path
   // (or until timeCutoff has been reached)
@@ -1633,13 +1619,8 @@ bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
     //std::cout<<"\ncurves.size(): "<<curves.size()<<"\n";
     if(type_ != HOLONOMIC && (c < i_cs.size() && path_.points.size() > 2 && i_kp_ == i_cs.at(c)+1))
     {
-<<<<<<< HEAD
-      //ROS_INFO("At Bezier Curve %i", c);
-      //////////////////////ROS_INFO("timeFromStart_: %f", timeFromStart_.toSec());
-=======
       //////ROS_INFO("At Bezier Curve %i", c);
       ////////////////////////ROS_INFO("timeFromStart_: %f", timeFromStart_.toSec());
->>>>>>> devel
       //std::cout<<"\ncurves.at("<<(int)c<<").size(): "<<curves.at(c).points_.size();
 
       // Insert all points on the curves into the trajectory

@@ -11,4 +11,3 @@ bool full_eval
 bool consider_trans
 bool trans_possible
 bool hmap_eval
-PackedObstacle[] packed_obs

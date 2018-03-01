@@ -1118,7 +1118,7 @@ void Planner::buildTrajectoryRequest(const Path path, ramp_msgs::TrajectoryReque
 }
 
 
-void Planner::buildEvaluationSrv(std::vector<RampTrajectory>& trajecs, ramp_msgs::EvaluationSrv& srv) const
+void Planner::buildEvaluationSrv(std::vector<RampTrajectory>& trajecs, ramp_msgs::EvaluationSrv& srv, bool hmap) const
 {
   for(uint16_t i=0;i<trajecs.size();i++)
   {
@@ -1450,7 +1450,7 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
   }
 
   if(ob_trajectory_.size() > 0 && moving_on_coll_ && (movingOn_.msg_.t_firstCollision.toSec() < time_threshold
-    || (movingOn_.msg_.t_firstCollision.toSec() - (ros::Time::now().toSec()-t_prevCC_.toSec())) < time_threshold))
+    || (movingOn_.msg_.t_firstCollision.toSec() - (ros::Time::now().toSec()-t_prevCC_ros_.toSec())) < time_threshold))
   {
     //ROS_WARN("IC: moving_on_coll_: %s t_firstCollision: %f Elapsed time: %f", moving_on_coll_ ? "True" : "False", movingOn_.msg_.t_firstCollision.toSec(), (ros::Time::now().toSec()-t_prevCC_.toSec()));
     
@@ -1664,7 +1664,7 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int gens_before_cc, const bool sensingBeforeCC, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int num_ppcs, bool stop_after_ppcs, const int gens_before_cc, const bool sensingBeforeCC, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
 {
   //ROS_INFO("In Planner::init");
 
@@ -2849,7 +2849,7 @@ const MotionState Planner::errorCorrection()
   ////////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
   
   // Get the difference between robot's state and what state it should be at
-  ros::Duration t_since_cc = ros::Time::now() - t_prevCC_;
+  ros::Duration t_since_cc = ros::Time::now() - t_prevCC_ros_;
   //MotionState diff = m_i_.at(t_since_cc.toSec()).subtractPosition(latestUpdate_, true);
   MotionState diff = movingOnCC_.getPointAtTime(t_since_cc.toSec());
   ////////ROS_INFO("Diff before subtract: %s", diff.toString().c_str());
@@ -3685,10 +3685,10 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
 
 
 
-void Planner::requestEvaluation(std::vector<RampTrajectory>& trajecs) 
+void Planner::requestEvaluation(std::vector<RampTrajectory>& trajecs, bool hmap)
 {
   ramp_msgs::EvaluationSrv srv;
-  buildEvaluationSrv(trajecs, srv);
+  buildEvaluationSrv(trajecs, srv, hmap);
 
   // Record number of trajectories to evaluate
   num_trajecs_eval_.push_back(trajecs.size());
@@ -3765,14 +3765,29 @@ void Planner::evaluateTrajectory(RampTrajectory& t, bool full)
 }
 
 
-void Planner::evaluatePopulation()
+void Planner::evaluatePopulation(bool hmap)
 {
-  requestEvaluation(population_.trajectories_);
+  requestEvaluation(population_.trajectories_, hmap);
 }
 
 
 
 
+
+		  
+void Planner::hilbertMapObsCb(const ramp_msgs::ObstacleList& hmapObs)		
+{		
+  ROS_INFO("In Planner::hilbertMapObsCb");		
+ 		
+		
+  // Set obstacles		
+  //obs_packed_ = hmapObs.packed_obs;		
+  //evaluatePopulation(true);		
+  		
+  evalHMap = true;		
+  		
+  ROS_INFO("Exiting Planner::hilbertMapObsCb");		
+}
 
 
 

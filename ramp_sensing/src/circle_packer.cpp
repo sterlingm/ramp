@@ -8,9 +8,10 @@ CirclePacker::CirclePacker(nav_msgs::OccupancyGridConstPtr g)
   convertOGtoMat(g);
 }
 
-CirclePacker::CirclePacker(cv::Mat grid)
+CirclePacker::CirclePacker(cv::Mat grid, const nav_msgs::OccupancyGrid& g)
 {
   grid.copyTo(src);
+  grid_ = g;
 }
 
 CirclePacker::~CirclePacker() 
@@ -96,246 +97,7 @@ Normal CirclePacker::computeNormal(Edge e)
   return result;
 }
 
-<<<<<<< HEAD
 
-
-bool CirclePacker::cellInPoly(const Polygon& poly, const cv::Point& cell) const
-=======
-Polygon CirclePacker::tpplToPoly(TPPLPoly p)
->>>>>>> devel
-{
-  // Convert to Polygon object
-  Polygon result;
-  
-  for(int j=0;j<p.GetNumPoints();j++)
-  {
-    Edge e;
-    e.start.x = p.GetPoint(j).x;
-    e.start.y = p.GetPoint(j).y;
-    
-    if(j == p.GetNumPoints()-1)
-    {
-      e.end.x = p.GetPoint(0).x;
-      e.end.y = p.GetPoint(0).y;
-    }
-    else
-    {
-      e.end.x = p.GetPoint(j+1).x;
-      e.end.y = p.GetPoint(j+1).y;
-    }
-
-    Normal n = computeNormal(e);
-    result.edges.push_back(e);
-    result.normals.push_back(n);
-  }
-
-  return result;
-}
-
-<<<<<<< HEAD
-std::vector<Cell> CirclePacker::getCellsInPolygon(const Polygon& poly) const
-{
-  std::vector<Cell> result;
-  
-  /*
-   *  Get all vertices of polygon
-   */
-  std::vector<cv::Point> vertices;
-  for(int i=0;i<poly.edges.size();i++)
-  {
-    vertices.push_back(poly.edges[i].start);
-  }
-  
-  /*
-   *  Find minimum and maximum x and y
-   */
-  double MAX_LENGTH= vertices[0].y;
-  double MAX_WIDTH = vertices[0].x;
-  double MIN_LENGTH= vertices[0].y;
-  double MIN_WIDTH = vertices[0].x;
-  for(int i=0;i<vertices.size();i++)
-=======
-TPPLPoly CirclePacker::polyToTPPL(Polygon p)
-{
-  TPPLPoly result;
-  
-  result.Init(p.edges.size());
-  result.SetHole(false);
-  result.SetOrientation(TPPL_CCW);
-
-  for(int i=0;i<p.edges.size();i++)
->>>>>>> devel
-  {
-    result.GetPoints()[i].x = p.edges[i].start.x;
-    result.GetPoints()[i].y = p.edges[i].start.y;
-  }
-
-  return result;
-}
-
-
-std::vector<TPPLPoly> CirclePacker::triPolyPart(const Polygon& p)
-{
-  ROS_INFO("In CirclePacker::triPolyPart");
-
-<<<<<<< HEAD
-  /*
-   * Check each cell in bounds
-   */ 
-  for(int i=0;i<width_count;i++)
-  {
-    for(int j=0;j<length_count;j++)
-    {
-      //std::cout<<"\ni: "<<i<<" j: "<<j<<" round: "<<round;
-      double x = start_x + (round * (i)); 
-      double y = start_y + (round * (j));
-      Cell temp;
-      temp.p.x = x;
-      temp.p.y = y;
-    
-      //std::cout<<"\n("<<temp.p.x<<", "<<temp.p.y<<")";
-
-      if(cellInPoly(poly, temp.p))
-      {
-        result.push_back(temp);
-      }
-    }
-=======
-  // Create the polygon object
-  TPPLPoly tppoly;
-  tppoly.Init(p.edges.size());
-
-  // Push on the points
-  for(int i=0;i<p.edges.size();i++)
-  {
-    tppoly.GetPoints()[i].x = p.edges[i].start.x;
-    tppoly.GetPoints()[i].y = p.edges[i].start.y;
->>>>>>> devel
-  }
-
-  return result;
-}
-
-
-std::vector<Circle> CirclePacker::getCirclesFromPoly(Polygon poly, double min_r)
-{
-  //std::cout<<"\n# of edges: "<<poly.edges.size();
-  std::vector<Circle> result;
-
-  /*
-   * Create cells inside the polygon
-   */
-  std::vector<Cell> cells = getCellsInPolygon(poly);
-  
-  ROS_INFO("cells.size(): %i", (int)cells.size());
-  
-  // Polygons won't have holes
-  tppoly.SetHole(false);
-
-  // Opencv generates contour points in ccw order
-  tppoly.SetOrientation(TPPL_CCW);
-
-  std::list<TPPLPoly> tris;
-
-<<<<<<< HEAD
-  /*
-   * Main algorithm loop
-   */
-  while(cells.size() > 0)
-  {
-    //std::cout<<"\nIn while cells.size(): "<<cells.size()<<" result.size(): "<<result.size();
-    cells = reduced_cells;
-
-    std::priority_queue<Cell, std::vector<Cell>, CompareDist> updated_pq;
-
-
-    /*
-     *  Delete all cells whose centers lie in the largest circle
-     */
-    if(result.size() > 0)
-    {
-      // Exit if we are at minimum radius threshold
-      if(result[ result.size()-1 ].radius < min_r)
-      {
-        break;
-      }
-
-      // Otherwise, remove cells that overlap with most recently added circle
-      reduced_cells.clear();
-      deleteCellsInCir(cells, result[result.size()-1], reduced_cells);
-    }
-    //ROS_INFO("reduced_cells.size(): %i", (int)reduced_cells.size());
-
-    /*
-     *  Recalculate the distance, include existing circles!
-     */
-    for(int i=0;i<reduced_cells.size();i++)
-    {
-      Cell& cell = reduced_cells[i];
-
-      //ROS_INFO("Cell %i: (%i,%i)", i, cell.p.x, cell.p.y);
-
-      // Get min distance to polygon edges and set of circles already created
-      double min_d=getMinDistToPoly(poly, cell);
-      double min_cir=getMinDistToCirs(result, cell);
-
-      //ROS_INFO("min_d: %f min_cir: %f", min_d, min_cir);
-
-      // Set new distance value
-      if(min_d < min_cir || min_cir < 0)
-      {
-        cell.dist = min_d;
-      }
-      else
-      {
-        cell.dist = min_cir;
-      }
-=======
-  TPPLPartition part;
-  if(part.Triangulate_OPT(&tppoly, &tris) == 0)
-  {
-    ROS_INFO("TRIANGULATION FAILED");
-  }
-  ROS_INFO("TRI LIST SIZE: %i", (int)tris.size());
->>>>>>> devel
-
-  std::vector<TPPLPoly> triVec;
-  while(tris.size() > 0)
-  {
-    triVec.push_back(tris.front());
-    tris.pop_front();
-  }
-
-<<<<<<< HEAD
-    /*
-     * If cells remain in priority queue
-     * Create a new circle from that cell
-     */
-    if(!updated_pq.empty())
-    {
-      Cell c = updated_pq.top();
-
-      Circle temp;
-
-      temp.center.x = c.p.x;
-      temp.center.y = c.p.y;
-      temp.radius = c.dist;
-
-      result.push_back(temp);
-=======
-  for(int i=0;i<triVec.size();i++)
-  {
-    ROS_INFO("Tri %i", i);
-    for(int j=0;j<triVec[i].GetNumPoints();j++)
-    {
-      ROS_INFO("  (%f,%f)", triVec[i].GetPoint(j).x, triVec[i].GetPoint(j).y);
->>>>>>> devel
-    }
-  } // end while
-  
-  ROS_INFO("Exiting CirclePacker::triPolyPart");
-  return triVec;
-}
 
 
 std::vector<Triangle> CirclePacker::triangulatePolygon(const Polygon& poly)
@@ -956,137 +718,8 @@ std::vector<Circle> CirclePacker::goMinEncCir()
   return result;
 }
 
-<<<<<<< HEAD
-std::vector<Polygon> CirclePacker::getPolygonsFromContours(std::vector< std::vector<cv::Point> > contours) const
-{
-  std::vector<Polygon> result;
-
-  // Set the edges for each polygon
-  for(int i=0;i<contours.size();i++)
-  {
-    Polygon p;
-
-    // Get edges
-    for(int j=0;j<contours[i].size();j++)
-    {
-      Edge e;
-      
-      e.start = contours[i][j];
-      if(j == contours[i].size()-1)
-      {
-        e.end = contours[i][0];
-      }
-      else
-      {
-        e.end   = contours[i][j+1];
-      }
-      p.edges.push_back(e);
-    }
-
-    // Get normals
-    for(int j=0;j<p.edges.size();j++)
-    {
-      Normal n;
-      
-      n.a = p.edges[j].end.y - p.edges[j].start.y;
-      n.b = p.edges[j].start.x - p.edges[j].end.x;
-      n.c = -n.a*p.edges[j].start.x - n.b*p.edges[j].start.y;
-
-      p.normals.push_back(n);
-    }
-
-    result.push_back(p);
-  }
-
-  
-  return result;
-}
 
 
-
-/*
- * Returns a vector of Circle objects that are packed into each obstacle
- */
-std::vector< std::vector<Circle> > CirclePacker::goCirclePacking(double min_r)
-{
-  ////ROS_INFO("In CirclePacker::goMyBlobs()");
-  std::vector< std::vector<Circle> > result;
-
-  // Create a matrix of the same size and type as src
-  dst.create( src.size(), src.type() );
-  
-  cv::Mat srcCopy;
-  src.copyTo(srcCopy);
-
-  /*
-   * Detect contours
-   */
-  std::vector< std::vector<cv::Point> > contours;
-  std::vector<cv::Vec4i> hierarchy;
-
-  // ***** findContours modifies src! *****
-  findContours( srcCopy, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
-
-
-  /*
-   * Get convex hull for each contour
-   */
-  std::vector< std::vector<cv::Point> > hull(contours.size());
-  for(int i=0;i<contours.size();i++)
-  {
-    cv::convexHull(cv::Mat(contours[i]), hull[i], false);
-  }
-
-  /*
-   * Get list of Polygon objects that represent each convex hull
-   */
-  std::vector<Polygon> ps = getPolygonsFromContours(hull);
-
-  /*
-   * For each polygon, pack it with circles
-   */
-  for(int i=0;i<ps.size();i++)
-  {
-    // Print polygon information
-    ROS_INFO("Polygon %i", i);
-    for(int j=0;j<ps[i].edges.size();j++)
-    {
-      ROS_INFO("  Edge %i - Start: (%i,%i) End: (%i,%i)", j, ps[i].edges[j].start.x, ps[i].edges[j].start.y, ps[i].edges[j].end.x, ps[i].edges[j].end.y);
-    }
-
-    // Get circles inside polygon
-    std::vector<Circle> cs = getCirclesFromPoly(ps[i], min_r);   
-    result.push_back(cs);
-  }
- 
-  // Print results
-  /*for(int i=0;i<result.size();i++)
-  {
-    ROS_INFO("Polygon %i circles:", i);
-    for(int j=0;j<result[i].size();j++)
-    {
-      ROS_INFO("  Circle %i: (%f,%f) r=%f", j, result[i][j].center.x, result[i][j].center.y, result[i][j].radius);
-    }
-  }*/
-
-  /*
-   * Draw contours and hulls
-   */
-  cv::Mat drawing = cv::Mat::zeros( src.size(), CV_8UC3 );
-  for( int j = 0; j< contours.size(); j++ )
-  {
-    cv::Scalar color = cv::Scalar( 0, 0, 255 );
-    cv::Scalar colorHull = cv::Scalar( 0, 255, 0 );
-    drawContours( drawing, contours, j, color, 2, 8, hierarchy, 0, cv::Point() );
-    drawContours( drawing, hull, j, colorHull, 2, 8, hierarchy, 0, cv::Point() );
-  }
-
-  /// Show in a window
-  //imshow( "Contours", drawing );
-  //cv::waitKey(0);
-
-  return result;
-}
 
 
 
@@ -1094,44 +727,13 @@ std::vector< std::vector<Circle> > CirclePacker::goCirclePacking(double min_r)
  * Return a vector of Circle objects that bound each obstacle in the grid
  * hmap = true if finding hilbert map obstacles
  */
-std::vector<Circle> CirclePacker::goMyBlobs(bool hmap)
-=======
 Polygon CirclePacker::getPolygonFromContours(const std::vector<cv::Point> contours)
->>>>>>> devel
 {
   Polygon result;
 
   double translate = 0.5;
 
-<<<<<<< HEAD
-  // ***** findContours modifies src! *****
-  findContours( srcCopy, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
-
-
-  ////////ROS_INFO("contours.size(): %i", (int)contours.size());
-  
-  /*
-   * Draw contours
-   
-  cv::Mat drawing = cv::Mat::zeros( src.size(), CV_8UC3 );
-  for( int j = 0; j< contours.size(); j++ )
-  {
-    cv::Scalar color = cv::Scalar( 0, 0, 255 );
-    drawContours( drawing, contours, j, color, 2, 8, hierarchy, 0, cv::Point() );
-  }
-
-  /// Show in a window
-  imshow( "Contours", drawing );
-  cv::waitKey(0);*/
-
-
-  /*
-   * Find circle for each set of contour points
-   */
-  // Go through each set of contour points
-=======
   /*Point midpoint;
->>>>>>> devel
   for(int i=0;i<contours.size();i++)
   {
     midpoint.x += contours[i].x;
@@ -1141,12 +743,6 @@ Polygon CirclePacker::getPolygonFromContours(const std::vector<cv::Point> contou
   midpoint.y /= contours.size();*/
   //ROS_INFO("Midpoint: (%f,%f)", midpoint.x, midpoint.y);
 
-<<<<<<< HEAD
-    // Check that there are at least a min number of contour points
-    // This is because we usually get massive circles (radius>1000) when there
-    // are only a few points
-    if(contours[i].size() < 10 && !hmap)
-=======
   // Get edges
   for(int j=0;j<contours.size();j++)
   {
@@ -1182,7 +778,6 @@ Polygon CirclePacker::getPolygonFromContours(const std::vector<cv::Point> contou
     int k = j < result.edges.size()-1 ? j : 0;
     double d = n.a * (result.edges[k].end.x - result.edges[k].start.x) + n.b * (result.edges[k].end.y - result.edges[k].start.y);
     if(d > 0)
->>>>>>> devel
     {
       n.a = -n.a;
       n.b = -n.b;
@@ -1583,20 +1178,22 @@ void CirclePacker::deleteCellsInCir(const std::vector<Cell>& cells, const Circle
 std::vector<Circle> CirclePacker::packCirsIntoPoly(Polygon poly, double min_r)
 {
   //ROS_INFO("In packCirsIntoPoly");
-  std::vector<Circle> result;
-
-  // Print polygon information
-  /*ROS_INFO("Polygon");
+  /*// Print polygon information
+  ROS_INFO("Polygon");
   for(int j=0;j<poly.edges.size();j++)
   {
     ROS_INFO("  Edge %i - Start: (%f,%f) End: (%f,%f)", j, poly.edges[j].start.x, poly.edges[j].start.y, poly.edges[j].end.x, poly.edges[j].end.y);
   }*/
+
+  std::vector<Circle> result;
+
 
   /*
    * Create cells inside the polygon
    */
   std::vector<Cell> cells = getCellsInPolygon(poly);
   //cMarkers_ = drawCells(cells);
+  
   /*ROS_INFO("cells.size(): %i", (int)cells.size());
   ROS_INFO("IN CIRCLEPACKERS");
   for(int i=0;i<cMarkers_.size();i++)
@@ -1862,40 +1459,6 @@ std::vector<visualization_msgs::Marker> CirclePacker::drawCells(std::vector<Cell
   return result;
 }
 
-std::vector<visualization_msgs::Marker> CirclePacker::drawPolygons(std::vector<TPPLPoly> polys)
-{
-  std::vector<visualization_msgs::Marker> result;
-  for(int i=0;i<polys.size();i++)
-  {
-    // Convert to Polygon object
-    Polygon p;
-    
-    for(int j=0;j<polys[i].GetNumPoints();j++)
-    {
-      Edge e;
-      e.start.x = polys[i].GetPoint(j).x;
-      e.start.y = polys[i].GetPoint(j).y;
-      
-      if(j == polys[i].GetNumPoints()-1)
-      {
-        e.end.x = polys[i].GetPoint(0).x;
-        e.end.y = polys[i].GetPoint(0).y;
-      }
-      else
-      {
-        e.end.x = polys[i].GetPoint(j+1).x;
-        e.end.y = polys[i].GetPoint(j+1).y;
-      }
-
-      p.edges.push_back(e);
-    }
-
-    result.push_back(drawPolygon(p, 50000+i)); 
-  } // end outer for
-
-  return result;
-}
- 
 visualization_msgs::Marker CirclePacker::drawPolygon(const Polygon& poly, const int id)
 {
   //ROS_INFO("In CirclePacker::drawPolygon");
@@ -2087,9 +1650,13 @@ std::vector<Circle> CirclePacker::goMyBlobs(bool hmap)
 }
 
 
-CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, std::vector<CircleGroup>& largeObs)
+CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, std::vector<CircleGroup>& largeObs, bool usingHMap)
 {
-  Circle c = fitCirOverContours(contours);
+  Circle blank;
+
+  // If we are not using a hilbert map grid, find the circle to fit over to contours
+  // otherwise, just set this to a blank circle (0 radius)
+  Circle c = usingHMap ? blank : fitCirOverContours(contours);
 
   // Circle packing result
   std::vector<Circle> cs;
@@ -2124,16 +1691,10 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, s
     //Polygon p = getPolygonFromContours(hull);
     Polygon p = getPolygonFromContours(contours);
 
-    /*std::vector<TPPLPoly> tris = triPolyPart(p);
-    ROS_INFO("tris.size(): %i", (int)tris.size());
-    std::vector<Polygon> ps;
-    for(int i=0;i<tris.size();i++)
-    {
-      ps.push_back(tpplToPoly(tris[i]));
-    }*/
 
     std::vector<Polygon> ps;
     ps.push_back(p);
+  
     for(int i=0;i<ps.size();i++)
     {
       std::vector<Circle> temp = packCirsIntoPoly(ps[i], 1);
@@ -2143,10 +1704,8 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, s
     // Check if we add to largeObs vector 
     needsAdded = c.radius > 12;
   }
-  //ROS_INFO("cs.size(): %i", (int)cs.size());
+  ROS_INFO("cs.size(): %i", (int)cs.size());
 
-  // Draw polygons
-  //pMarkers_ = drawPolygons(tris);
 
   CircleGroup result;
   result.fitCir = c;
@@ -2165,7 +1724,7 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, s
  * Returns a vector of CircleGroup objects
  * One for each obstacle region in the src matrix
  */
-std::vector<CircleGroup> CirclePacker::getGroups(std::vector<CircleGroup>& largeObs)
+std::vector<CircleGroup> CirclePacker::getGroups(std::vector<CircleGroup>& largeObs, bool usingHMap)
 {
   std::vector<CircleGroup> result;
 
@@ -2199,7 +1758,7 @@ std::vector<CircleGroup> CirclePacker::getGroups(std::vector<CircleGroup>& large
       continue;
     }
 
-    CircleGroup cg = getGroupForContours(contours[i], largeObs);
+    CircleGroup cg = getGroupForContours(contours[i], largeObs, usingHMap);
     result.push_back(cg);
     //ROS_INFO("cg %i, packedCirs.size(): %i fitCir: (%f,%f)", i, (int)cg.packedCirs.size(), cg.fitCir.center.x, cg.fitCir.center.y);
   }

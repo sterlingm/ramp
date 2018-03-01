@@ -13,6 +13,7 @@ class Obstacle
 {
   public:
     Obstacle();
+    Obstacle(CircleGroup& cg);
     ~Obstacle(); 
 
     /** Data Members */
@@ -32,18 +33,6 @@ class Obstacle
 
     float radius_;
   private:
-<<<<<<< HEAD
-    int costmap_width_;
-    int costmap_height_;
-    float costmap_origin_x_;
-    float costmap_origin_y_;
-    float costmap_res_;
-    float x_translate_costmap_;
-    float y_translate_costmap_;
-    float global_grid_origin_x_;
-    float global_grid_origin_y_;
-=======
->>>>>>> devel
 
     Utility utility_;
 };

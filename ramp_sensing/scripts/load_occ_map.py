@@ -2,6 +2,8 @@
 import rospy
 import os
 import rospkg
+import sys
+import time
 from nav_msgs.msg import OccupancyGrid
 from ramp_msgs.msg import HilbertMap
 
@@ -12,11 +14,7 @@ def main():
     # Setup paths
     rospack = rospkg.RosPack()
     ros_pkg_path = rospack.get_path('ramp_sensing')
-<<<<<<< HEAD
-    fname = 'hilbert_maps/hilbert_map_diag.csv'
-=======
-    fname = 'hilbert_map_diag.csv'
->>>>>>> devel
+    fname = 'hilbert_map.csv'
 
     p = os.path.join(ros_pkg_path, fname)
     print p
@@ -78,7 +76,11 @@ def main():
     hmap.map = grid
     hmap.gamma = gamma
 
-    raw_input("Press Enter to publish grid")
+    #sys.stdin.flush()
+    #sys.stdout.flush()
+    #v = raw_input("Press Enter to publish grid")
+
+    time.sleep(1)
 
     pub.publish(hmap)
     pubRviz.publish(hmap.map)

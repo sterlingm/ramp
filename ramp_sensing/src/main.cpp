@@ -49,7 +49,7 @@ nav_msgs::OccupancyGrid global_costmap;
 Utility util;
 double rate;
 ros::Publisher pub_obj, pub_rviz, pub_cons_costmap, pub_half_costmap, pub_global_costmap;
-std::vector< Obstacle> obs;
+std::vector<Obstacle> obs;
 ramp_msgs::ObstacleList list;
 std::vector< std::string > ob_odoms;
 std::map< std::string, uint8_t > topic_index_map;

@@ -17,8 +17,7 @@ class CirclePacker
 {
   public:
     CirclePacker(nav_msgs::OccupancyGridConstPtr);
-    CirclePacker(nav_msgs::OccupancyGrid);
-    CirclePacker(cv::Mat grid);
+    CirclePacker(cv::Mat grid, const nav_msgs::OccupancyGrid& g);
     ~CirclePacker();
 
     void setNewGrid(nav_msgs::OccupancyGridConstPtr);
@@ -29,35 +28,20 @@ class CirclePacker
     void CannyThreshold(int, void*);
 
     Normal computeNormal(Edge);
-<<<<<<< HEAD
-    bool cellInPoly(const Polygon&, const cv::Point&) const;
-=======
->>>>>>> devel
 
     void detectAttachedCircles(const std::vector<CircleOb*>& cir_obs, std::vector<Attachment>& result) const;
     void combineTwoCircles(const Circle a, const Circle b, Circle& result) const;
     void combineOverlappingCircles(std::vector<Circle> cs, std::vector<Circle>& result) const;
 
-    std::vector<Polygon> getPolygonsFromContours(std::vector< std::vector<cv::Point> > contour_points) const;
 
     Point findCenterOfPixels(const std::vector<cv::Point> pixels) const;
     std::vector<double> getWeights(const std::vector<cv::Point> pixels, const Point center) const;
     
-<<<<<<< HEAD
-
-
-    std::vector<Cell> getCellsInPolygon(const Polygon& p) const; 
-
-    std::vector<Circle> getCirclesFromPoly(Polygon, double min_r=0);
-=======
-    
->>>>>>> devel
     std::vector<Circle> getCirclesFromEdgeSets(const std::vector< std::vector<Edge> > edge_sets);
     std::vector<Circle> getCirclesFromEdges(const std::vector<Edge> edges, const cv::Point robot_cen);
     
 
     std::vector<Triangle> triangulatePolygon(const Polygon&);
-    std::vector<TPPLPoly> triPolyPart(const Polygon& p);
 
     Circle getCircleFromKeypoint(const cv::KeyPoint k) const;
     std::vector<Circle> go();
@@ -78,8 +62,8 @@ class CirclePacker
     void deleteCellsInCir(const std::vector<Cell>&, const Circle, std::vector<Cell>&);
     Circle                    fitCirOverContours(const std::vector<cv::Point> contours);
     std::vector<Circle>       packCirsIntoPoly(const Polygon p, const double min_r);
-    CircleGroup               getGroupForContours(std::vector<cv::Point> contours, std::vector<CircleGroup>& largeObs);
-    std::vector<CircleGroup>  getGroups(std::vector<CircleGroup>& largeObs);
+    CircleGroup               getGroupForContours(std::vector<cv::Point> contours, std::vector<CircleGroup>& largeObs, bool usingHMap=false);
+    std::vector<CircleGroup>  getGroups(std::vector<CircleGroup>& largeObs, bool usingHMap=false);
     
     visualization_msgs::Marker polygonMarker_;
     std::vector<visualization_msgs::Marker> pMarkers_;
@@ -89,12 +73,9 @@ class CirclePacker
 
   private:
 
-    Polygon tpplToPoly(TPPLPoly p);
-    TPPLPoly polyToTPPL(Polygon p);
     void drawContourPoints(std::vector< std::vector< cv::Point> > contours, std::vector<cv::Vec4i> hierarchy);
     visualization_msgs::Marker drawLines(const std::vector<Point>& points, const int id=50000);
     visualization_msgs::Marker drawPolygon(const Polygon& poly, const int id=50000);
-    std::vector<visualization_msgs::Marker> drawPolygons(std::vector<TPPLPoly> polys);
 
     std::vector<visualization_msgs::Marker> drawCells(std::vector<Cell> cells);
 

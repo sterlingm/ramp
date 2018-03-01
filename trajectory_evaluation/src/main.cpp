@@ -68,22 +68,11 @@ bool handleRequest(ramp_msgs::EvaluationSrv::Request& reqs,
     resps.resps.push_back(res);
     
   }
-<<<<<<< HEAD
-  t_elapsed = ros::Time::now() - t_start;
-  t_data.push_back(t_elapsed);
-  if(t_elapsed.toSec() > 0.01)
-  {
-    //////ROS_INFO("Long Eval Trajec (total: %i)", (int)reqs.reqs.size());
-  }
-  
-  //ROS_INFO("t_elapsed: %f", t_elapsed.toSec());
-=======
 
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now() - tStart);
   durs.push_back( time_span.count() );
   
   //////ROS_INFO("t_elapsed: %f", t_elapsed.toSec());
->>>>>>> devel
   return true;
 } //End handleRequest
 

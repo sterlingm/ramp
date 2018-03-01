@@ -548,9 +548,6 @@ class Planner {
     bool forceMinMod;
     bool evalHMap;
 
-    bool forceMinMod;
-    bool evalHMap;
-
     /*
      * General data
      */

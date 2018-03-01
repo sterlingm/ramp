@@ -4,11 +4,7 @@ Evaluate::Evaluate() : Q_coll_(10000.f), Q_kine_(100000.f), orientation_infeasib
 
 void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res)
 {
-<<<<<<< HEAD
-  ROS_INFO("In Evaluate::perform()");
-=======
   //ROS_INFO("In Evaluate::perform()");
->>>>>>> devel
   //ros::Time t_start = ros::Time::now();
   
   /*
@@ -42,11 +38,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   }
 
   // Set response members
-<<<<<<< HEAD
   res.feasible = (!qr_.collision_ && !orientation_infeasible_) && !qrPacked_.innerColl_;
-=======
-  res.feasible            = !qr_.collision_ && !orientation_infeasible_;
->>>>>>> devel
   req.trajectory.feasible = res.feasible;
   //ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
   //////ROS_INFO("performFeasibility: %f", (ros::Time::now()-t_start).toSec());
@@ -82,20 +74,13 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   }
   else if(req.full_eval)
   {
-<<<<<<< HEAD
     //ROS_INFO("Requesting fitness!");
     performFitness(req.trajectory, req.offset, req.hmap_eval, res.fitness);
   }
 
-
-  
-  ////ROS_INFO("performFitness: %f", (ros::Time::now()-t_start).toSec());
-=======
     ////ROS_INFO("Requesting fitness!");
-    performFitness(req.trajectory, req.offset, res.fitness);
-  }
-  //////ROS_INFO("performFitness: %f", (ros::Time::now()-t_start).toSec());
->>>>>>> devel
+    //performFitness(req.trajectory, req.offset, res.fitness);
+    //////ROS_INFO("performFitness: %f", (ros::Time::now()-t_start).toSec());
 }
 
 
@@ -151,23 +136,6 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
   ros::Duration d_numeric   = ros::Time::now() - t_numeric_start;
   t_numeric_.push_back(d_numeric);
 
-<<<<<<< HEAD
-  ROS_INFO("result.collision: %s", qr_.collision_ ? "True" : "False");
-
-  // Set feasibility due to collision
-  //////ROS_INFO("feasible: %s", er.trajectory.feasible ? "True" : "False");
-  er.trajectory.feasible            = !qr_.collision_;
-  er.trajectory.t_firstCollision    = ros::Duration(qr_.t_firstCollision_);
-
-  // Set infeasibility due to orientation
-  if(!er.imminent_collision && er.consider_trans && !er.trans_possible)
-=======
-  ////ROS_INFO("result.collision: %s", qr_.collision_ ? "True" : "False");
-  /*ros::Time t_analy_start = ros::Time::now();
-  cd_.perform(er.trajectory, er.obstacle_trjs, qr_);
-  ros::Duration d_analy = ros::Time::now() - t_analy_start;
-  t_analy_.push_back(d_analy);*/
-
   //ROS_INFO("feasible: %s", er.trajectory.feasible ? "True" : "False");
   er.trajectory.feasible            = !qr_.collision_;
   er.trajectory.t_firstCollision    = ros::Duration(qr_.t_firstCollision_);
@@ -177,7 +145,6 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
   //ROS_INFO("orientation_.getDeltaTheta(*trj): %f", orientation_.getDeltaTheta(*trj));
   if((!er.imminent_collision && er.consider_trans && !er.trans_possible) ||
       orientation_.getDeltaTheta(*trj) > 1.5708)
->>>>>>> devel
   {
     //ROS_INFO("In final if statement");
     orientation_infeasible_ = true;
@@ -187,7 +154,6 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
     //ROS_INFO("er.imminent_collision: %s er.consider_trans: %s er.trans_possible: %s", er.imminent_collision ? "True" : "False", er.consider_trans ? "True" : "False", er.trans_possible ? "True" : "False");
   }
   
-<<<<<<< HEAD
   ROS_INFO("performFeasibility time: %f", (ros::Time::now() - t_start).toSec());
 }
 
@@ -201,8 +167,8 @@ void Evaluate::performFeasibilityHmap(ramp_msgs::EvaluationRequest& er)
              PackedObstacle does not include inner radii circles for Hilbert map obstacles 
    ****************************************************************************************************
    */
-  std::vector<ramp_msgs::PackedObstacle> obs = er.packed_obs;
-  cd_.performPackedObs(er.trajectory, obs, er.robot_radius, hmap_, qrPacked_);
+  //std::vector<ramp_msgs::PackedObstacle> obs = er.packed_obs;
+  //cd_.performPackedObs(er.trajectory, obs, er.robot_radius, hmap_, qrPacked_);
 
 
   //ROS_INFO("Exiting Evaluate::performFeasibilityHmap");
@@ -313,9 +279,7 @@ void Evaluate::getEstimatedRemainingTime(ramp_msgs::RampTrajectory& trj, const d
    * Set cost variables
    */
   result = estimated_linear + estimated_rotation;
-=======
   ////////////ROS_INFO("performFeasibility time: %f", (ros::Time::now() - t_start).toSec());
->>>>>>> devel
 }
 
 
@@ -344,11 +308,6 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
      * Trajectory point generation ends at the end of the non-holonomic segment
      * For the remaining segments, estimate the time and orientation change needed to execute them
      */
-<<<<<<< HEAD
-    double estimatedRemaining;
-    getEstimatedRemainingTime(trj, offset, estimatedRemaining);
-    T += estimatedRemaining;
-=======
 
     // p = last non-holonomic point on trajectory
     trajectory_msgs::JointTrajectoryPoint p = trj.trajectory.points.at(trj.trajectory.points.size()-1);
@@ -404,7 +363,6 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     //////ROS_INFO("estimated_linear: %f estimated_rotation: %f", estimated_linear, estimated_rotation);
 
     T += (estimated_linear + estimated_rotation);
->>>>>>> devel
 
     // Orientation
     double A = orientation_.perform(trj);
@@ -434,11 +392,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     T *= T_weight_;
     A *= A_weight_;
     D *= D_weight_;
-<<<<<<< HEAD
-
-=======
- 
->>>>>>> devel
+    
     //ROS_INFO("Weighted terms T: %f A: %f D: %f", T, A, D);
 
     // Compute overall cost
@@ -449,15 +403,11 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
   {
     //ROS_INFO("In else(infeasible)"); 
     
-<<<<<<< HEAD
-    // Add the Penalty for being infeasible due to collision, at some point i was limiting the time to 10s, but I don't know why
-=======
     // penalties += orientation_.getPenalty();
     
     ////////////ROS_INFO("trj.t_firstColl: %f", trj.t_firstCollision.toSec());
 
     // Add the Penalty for being infeasible due to collision, at some point i was limiting the time to 10s, but i don't know why
->>>>>>> devel
     if(trj.t_firstCollision.toSec() > 0 && trj.t_firstCollision.toSec() < 9998)
     {
       ////ROS_INFO("In if t_firstCollision: %f", trj.t_firstCollision.toSec());
