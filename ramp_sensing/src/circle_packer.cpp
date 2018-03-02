@@ -1704,7 +1704,7 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, s
     // Check if we add to largeObs vector 
     needsAdded = c.radius > 12;
   }
-  ROS_INFO("cs.size(): %i", (int)cs.size());
+  //ROS_INFO("cs.size(): %i", (int)cs.size());
 
 
   CircleGroup result;
