@@ -429,7 +429,9 @@ void pubStartGoalMarkers()
   result.markers.push_back(start_marker);
   result.markers.push_back(goal_marker);
 
+  ROS_INFO("Waiting for rviz to start...");
   while(pub_rviz.getNumSubscribers() == 0) {}
+  ROS_INFO("Rviz started");
   //ROS_INFO("# of subscribers: %i", (int)pub_rviz.getNumSubscribers());
 
   pub_rviz.publish(result);
@@ -499,7 +501,7 @@ int main(int argc, char** argv)
   tf::TransformListener listen;
   listen.waitForTransform(global_frame, "odom", ros::Time(0), ros::Duration(2.0));
   listen.lookupTransform(global_frame, "odom", ros::Time(0), my_planner.tf_global_odom_);
-  //ROS_INFO("Odom tf: translate: (%f, %f) rotation: %f", my_planner.tf_global_odom_.getOrigin().getX(), my_planner.tf_global_odom_.getOrigin().getX(), my_planner.tf_global_odom_.getRotation().getAngle());
+  ROS_INFO("Odom tf: translate: (%f, %f) rotation: %f", my_planner.tf_global_odom_.getOrigin().getX(), my_planner.tf_global_odom_.getOrigin().getX(), my_planner.tf_global_odom_.getRotation().getAngle());
   
   my_planner.tf_global_odom_rot_ = my_planner.tf_global_odom_;
   my_planner.tf_global_odom_rot_.setOrigin( tf::Vector3(0, 0, 0) );
@@ -531,7 +533,7 @@ int main(int argc, char** argv)
   std::cout<<"\nGoal: "<<my_planner.goal_.toString();
 
   pubStartGoalMarkers();
-  ////ROS_INFO("Done with pubStartGoalMarkers");
+  ROS_INFO("Done with pubStartGoalMarkers");
  
  
   /******* Start the planner *******/
@@ -547,7 +549,7 @@ int main(int argc, char** argv)
   }
   else
   {
-    std::cout<<"\nPress Enter to start the planner\n";
+    ROS_INFO("Press Enter to start the planner");
     std::cin.get(); 
   }
   ROS_INFO("Starting Planner!");
@@ -568,6 +570,7 @@ int main(int argc, char** argv)
   }
   else
   {
+    ROS_INFO("Not using hilbert map, starting planner");
   }
  
   my_planner.go();

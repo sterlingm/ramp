@@ -4,7 +4,7 @@ Evaluate::Evaluate() : Q_coll_(10000.f), Q_kine_(100000.f), orientation_infeasib
 
 void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res)
 {
-  //ROS_INFO("In Evaluate::perform()");
+  ROS_INFO("In Evaluate::perform()");
   //ros::Time t_start = ros::Time::now();
   
   /*
@@ -58,7 +58,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   }
 
 
-  //ROS_INFO("Done computing feasibility");
+  ROS_INFO("Done computing feasibility");
 
 
 
@@ -78,12 +78,10 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   }
   else if(req.full_eval)
   {
-    //ROS_INFO("Requesting fitness!");
+    ROS_INFO("Requesting fitness!");
     performFitness(req.trajectory, req.offset, req.hmap_eval, res.fitness);
   }
 
-  ////ROS_INFO("Requesting fitness!");
-  //performFitness(req.trajectory, req.offset, res.fitness);
   //////ROS_INFO("performFitness: %f", (ros::Time::now()-t_start).toSec());
   //ROS_INFO("Exiting Evaluate::perform()");
 }
@@ -301,7 +299,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
 
   if(trj.feasible)
   {
-    //ROS_INFO("In if(feasible)");
+    ROS_INFO("In if(feasible)");
     
     /*
      * Set cost variables
@@ -309,6 +307,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
 
     // Get total time to execute trajectory
     double T = trj.trajectory.points.at(trj.trajectory.points.size()-1).time_from_start.toSec();
+    ROS_INFO("After T");
 
     /*
      * Trajectory point generation ends at the end of the non-holonomic segment
@@ -317,13 +316,13 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
 
     // p = last non-holonomic point on trajectory
     trajectory_msgs::JointTrajectoryPoint p = trj.trajectory.points.at(trj.trajectory.points.size()-1);
-    //////////ROS_INFO("p: %s", utility_.toString(p).c_str());
+    ROS_INFO("p: %s", utility_.toString(p).c_str());
 
     // Find knot point index on holonomic path where non-holonomic segment ends
-    uint16_t i_end=0;
-    for(uint16_t i=0;i<trj.holonomic_path.points.size();i++)
+    int i_end=0;
+    for(int i=0;i<trj.holonomic_path.points.size();i++)
     {
-      //////////ROS_INFO("i: %i trj.holonomic_path.points.size(): %i", (int)i, (int)trj.holonomic_path.points.size());
+      ROS_INFO("i: %i trj.holonomic_path.points.size(): %i", (int)i, (int)trj.holonomic_path.points.size());
       double dist = utility_.positionDistance(trj.holonomic_path.points[i].motionState.positions, p.positions);
 
       ////ROS_INFO("trj.holonomic_path[%i]: %s", (int)i, utility_.toString(trj.holonomic_path.points[i].motionState).c_str());
@@ -338,17 +337,17 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
       }
     } // end for
     
-    //////ROS_INFO("i_end: %i", (int)i_end);
-    //////ROS_INFO("trj.holonomic_path.points.size(): %i", (int)trj.holonomic_path.points.size());
+    ROS_INFO("i_end: %i", (int)i_end);
+    ROS_INFO("trj.holonomic_path.points.size(): %i", (int)trj.holonomic_path.points.size());
 
     // For each segment in remaining holonomic path,
     // accumulate the distance and orientation change needed for remaining segment
     double dist=0;
     double delta_theta=0;
     double last_theta = p.positions[2];
-    for(uint8_t i=i_end;i<trj.holonomic_path.points.size()-1;i++)
+    for(int i=i_end;i<(int)trj.holonomic_path.points.size()-1;i++)
     {
-      //////////ROS_INFO("i: %i", (int)i);
+      ROS_INFO("i: %i trj.holonomic_path.points.size()-1: %i i<that: %s", (int)i, trj.holonomic_path.points.size()-1, i < trj.holonomic_path.points.size()-1 ? "True" : "False");
       dist += utility_.positionDistance(trj.holonomic_path.points[i].motionState.positions, trj.holonomic_path.points[i+1].motionState.positions);
       
       double theta = utility_.findAngleFromAToB(trj.holonomic_path.points[i].motionState.positions, trj.holonomic_path.points[i+1].motionState.positions);
@@ -357,7 +356,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
       
       last_theta = theta;
     }
-    //////ROS_INFO("dist: %f delta_theta: %f", dist, delta_theta);
+    ROS_INFO("dist: %f delta_theta: %f", dist, delta_theta);
 
     double max_v=0.25/2;
     double max_w=PI/8.f;
@@ -379,7 +378,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     // Minimum distance to any obstacle
     double D = cd_.min_dist_;
 
-    ROS_INFO("T: %f A: %f D: %f", T, A, D);
+    //ROS_INFO("T: %f A: %f D: %f", T, A, D);
 
     // Update normalization for Time if necessary
     if(T > T_norm_)

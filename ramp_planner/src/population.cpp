@@ -168,7 +168,7 @@ const bool Population::infeasibleExists() const
 /** This method checks if a trajectory can replace an existing trajectory in the population */
 const bool Population::replacementPossible(const RampTrajectory& rt) const 
 {
-  ////ROS_INFO("In Population::replacementPossible");
+  ROS_INFO("In Population::replacementPossible");
   ////////ROS_INFO("rt: %s", rt.toString().c_str());
   ////ROS_INFO("rt.fitness: %f feasible: %s t_coll: %f", rt.msg_.fitness, rt.msg_.feasible ? "True" : "False", rt.msg_.t_firstCollision.toSec());
   ////////ROS_INFO("pop: %s", toString().c_str());
@@ -195,6 +195,7 @@ const bool Population::replacementPossible(const RampTrajectory& rt) const
   }
 
   /** IF subpopulations are being used */
+  // Need to calculate new trajectory's i_subPop to check stuff about that 1 subPop
   if(subPopulations_.size() > 0) 
   {
     //std::cout<<"\nIn sub-pops\n";
@@ -211,7 +212,7 @@ const bool Population::replacementPossible(const RampTrajectory& rt) const
     /*std::vector<uint8_t> i_validSubpops;
     for(uint8_t i=0;i<subPopulations_.size();i++) 
     {
-      if(subPopulations_.at(i).size() > 1 && rt.msg_.fitness > subPopulations_.at(i).getMinFitness()) 
+      if(subPopulations_.at(i).size() > 1) 
       {
         i_validSubpops.push_back(i);
       }
@@ -238,11 +239,17 @@ const bool Population::replacementPossible(const RampTrajectory& rt) const
       /*bool valid=false;
       for(uint8_t i=0;i<i_validSubpops.size();i++) 
       {
-        //////ROS_INFO("i: %i", i);
-        if(subPopulations_.at(i_validSubpops.at(i)).infeasibleExists() &&
-            rt.msg_.fitness > subPopulations_.at(i_validSubpops.at(i)).getMinFitness())
+        ROS_INFO("i: %i subpop[%i].calcBestIndex: %i", i, i_validSubpops[i], subPopulations_.at(i_validSubpops[i]).calcBestIndex());
+
+        for(int j=0;j<subPopulations_.at(i_validSubpops[i]).trajectories_.size();j++)
         {
-          valid = true;
+          ROS_INFO("j: %i feasible: %s", j, subPopulations_.at(i_validSubpops[i]).trajectories_[j].msg_.feasible ? "True" : "False");
+          if(subPopulations_.at(i_validSubpops[i]).calcBestIndex() != j &&
+              !subPopulations_.at(i_validSubpops[i]).trajectories_[j].msg_.feasible)
+          {
+          ROS_INFO("j is valid");
+            valid = true;
+          }
         }
       }
 
@@ -267,18 +274,18 @@ const bool Population::replacementPossible(const RampTrajectory& rt) const
 /** This method returns true if rt can replace the trajectory at index i */
 const bool Population::canReplace(const RampTrajectory& rt, const int& i) const 
 {
-  //ROS_INFO("In Population::canReplace");
-  //ROS_INFO("i: %i feasible: %s", i, trajectories_.at(i).msg_.feasible ? "True" : "False");
+  ROS_INFO("In Population::canReplace");
+  ROS_INFO("i: %i feasible: %s", i, trajectories_.at(i).msg_.feasible ? "True" : "False");
   
   if(i == calcBestIndex()) 
   {
-    //ROS_INFO("i == i_best, returning false");
+    ROS_INFO("i == i_best, returning false");
     return false;
   }
 
   if(!rt.msg_.feasible && trajectories_.at(i).msg_.feasible) 
   {
-    //ROS_INFO("rt infeasible, i feasible, returning false");
+    ROS_INFO("rt infeasible, i feasible, returning false");
     return false;
   }
 
@@ -296,9 +303,11 @@ const bool Population::canReplace(const RampTrajectory& rt, const int& i) const
     
     // Get the sub-population that trajectory i belongs to
     Population p = subPopulations_.at(temp.msg_.i_subPopulation);
+    ROS_INFO("temp.msg_.i_subPopulation: %i", temp.msg_.i_subPopulation);
 
     if(p.trajectories_.size() < 2) 
     {
+      ROS_INFO("Sub-pop size < 2, returning false");
       //std::cout<<"\nSub-Population size < 2, returning false\n";
       return false;
     }
@@ -414,7 +423,8 @@ const int Population::getSubPopIndex(const RampTrajectory& traj) const
  *  Returns the index that the trajectory is added at */
 const int Population::add(const RampTrajectory& rt, bool forceMin) 
 {
-  ////ROS_INFO("In Population::add");
+  ROS_INFO("In Population::add");
+  ROS_INFO("forceMin: %s", forceMin ? "True" : "False");
   /*//ROS_INFO("Pop: %s", toString().c_str());
   //ROS_INFO("rt: %s", rt.toString().c_str());
   //ROS_INFO("Pop best id: %i", calcBestIndex());*/

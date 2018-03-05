@@ -207,7 +207,7 @@ class Planner {
 
     // One trajectory
     void requestEvaluation(ramp_msgs::EvaluationRequest& request);
-    void requestEvaluation(RampTrajectory& t, bool full=true);
+    void requestEvaluation(RampTrajectory& t, bool hmap=false);
 
 
 

@@ -215,7 +215,7 @@ visualization_msgs::Marker getMarker(Circle cir, int id, bool red, bool longTime
   return result;
 }
 
-visualization_msgs::Marker getMarker(ramp_msgs::Circle cir, int id, bool red=false, bool longTime=true)
+visualization_msgs::Marker getMarker(ramp_msgs::Circle cir, int id, bool red=false, bool longTime=false)
 {
   Circle c;
   c.center.x = cir.center.x;

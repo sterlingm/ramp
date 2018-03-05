@@ -221,7 +221,7 @@ const ramp_msgs::Path Planner::getObstaclePath(const ramp_msgs::Obstacle ob, con
 
 void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
 {
-  //ROS_INFO("In sensingCycleCallback");
+  ROS_INFO("In sensingCycleCallback");
   ////////ROS_INFO("msg.obstacles.size(): %i", (int) msg.obstacles.size());
   ////////ROS_INFO("msg: %s", utility_.toString(msg).c_str());
   
@@ -301,7 +301,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
    */
   if(cc_started_)
   {
-    ////////ROS_INFO("Evaluating movingOn_ in SC");
+    ROS_INFO("Evaluating movingOn_ in SC");
     //Previously this was (movingOn_, false) to skip fitness computation
     evaluateTrajectory(movingOn_);
     moving_on_coll_ = !movingOn_.msg_.feasible;
@@ -1039,6 +1039,10 @@ void Planner::adaptPopulation(const MotionState& ms, const ros::Duration& d)
   //////////ROS_INFO("updatedTrajecs size: %i", (int)updatedTrajecs.size());
   // Replace the population's trajectories_ with the updated trajectories
   population_.replaceAll(updatedTrajecs);
+  if(subPopulations_)
+  {
+    population_.createSubPopulations();
+  }
   
   //////////ROS_INFO("Done adapting, pop now: %s", population_.toString().c_str());
   
@@ -1203,6 +1207,7 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
   // Set hmap obs
   if(hmap)
   {
+    ROS_INFO("hmap=true! hmap: %s", hmap ? "True" : "False");
     result.obstacle_trjs.clear();
     result.obstacle_cir_groups.clear();
     for(int i=0;i<obsHmap_.size();i++)
@@ -2698,7 +2703,7 @@ void Planner::modification()
   ros::Time t_m = ros::Time::now();
   if(log_enter_exit_)
   {
-    //ROS_INFO("In Planner::modification()");
+    ROS_INFO("In Planner::modification()");
   }
   ModificationResult result;
 
@@ -2741,7 +2746,7 @@ void Planner::modification()
     }
     else
     {
-      //ROS_INFO("evalHMap_: %s", evalHMap_ ? "True" : "False");
+      ROS_INFO("evalHMap_: %s", evalHMap_ ? "True" : "False");
       evaluateTrajectory(traj_final, evalHMap_);
     }
 
@@ -2778,7 +2783,7 @@ void Planner::modification()
   //////////ROS_INFO("After modification, pop now: %s", result.popNew_.toString().c_str());
   if(log_enter_exit_)
   {
-    //ROS_INFO("Exiting Planner::modification");
+    ROS_INFO("Exiting Planner::modification");
   }
 } // End modification
 
@@ -3154,6 +3159,7 @@ void Planner::computeFullSwitch(const RampTrajectory& from, const RampTrajectory
 
   result = trajec;
 
+  ROS_INFO("In computeFullSwitch");
   requestEvaluation(result);
 
   if(log_enter_exit_)
@@ -3342,6 +3348,7 @@ void Planner::doControlCycle()
 
   // Evaluate movingOnCC
   // Previously this was movingOnCC_, false) to skip fitness computation
+  ROS_INFO("In doControlCycle");
   evaluateTrajectory(movingOnCC_);
   
   movingOn_               = movingOnCC_;
@@ -3759,8 +3766,8 @@ void Planner::requestEvaluation(ramp_msgs::EvaluationRequest& request)
 
 void Planner::requestEvaluation(RampTrajectory& trajec, bool hmap)
 {
-  //////ROS_INFO("In Planner::requestEvaluation(RampTrajectory&, bool)");
-  //////ROS_INFO("full: %s", full ? "True" : "False");
+  ROS_INFO("In Planner::requestEvaluation(RampTrajectory&, bool)");
+  ROS_INFO("hmap: %s", hmap ? "True" : "False");
   ramp_msgs::EvaluationRequest req;
   
   buildEvaluationRequest(trajec, req, hmap);
@@ -3777,14 +3784,16 @@ void Planner::requestEvaluation(RampTrajectory& trajec, bool hmap)
 
 
 
-void Planner::evaluateTrajectory(RampTrajectory& t, bool full)
+void Planner::evaluateTrajectory(RampTrajectory& t, bool hmap)
 {
-  requestEvaluation(t, full);
+  ROS_INFO("In evaluateTrajectory");
+  requestEvaluation(t, hmap);
 }
 
 
 void Planner::evaluatePopulation(bool hmap)
 {
+  ROS_INFO("In evaluatePopulation");
   requestEvaluation(population_.trajectories_, hmap);
 }
 
@@ -4355,7 +4364,7 @@ void Planner::go()
   evaluatePopulation(evalHMap_);
   ROS_INFO("Initial population evaluated");
   sendPopulation();
-  std::cin.get();
+  //std::cin.get();
  
 
   // Seed the population
@@ -4420,7 +4429,10 @@ void Planner::go()
     } 
   }
 
-  if(stop_after_ppcs_)
+  ROS_INFO("Finished pre-planning cycles!");
+
+  // If we are stopping here (would only do this when using hmap obs), exit
+  if(evalHMap_ && stop_after_ppcs_)
   {
     exit(1);
   }
