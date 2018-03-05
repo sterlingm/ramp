@@ -199,9 +199,16 @@ const bool Population::replacementPossible(const RampTrajectory& rt) const
   {
     //std::cout<<"\nIn sub-pops\n";
     
+    // Get the sub-pop that this traj belongs to
+    int iSP = getSubPopIndex(rt);
+    if(subPopulations_.at(iSP).size() == 1 || rt.msg_.fitness < subPopulations_.at(iSP).getMinFitness()) 
+    {
+      return false;
+    }
+    
     // If each subpopulation has <= 1 trajectory,
     // no trajectories can be replaced
-    std::vector<uint8_t> i_validSubpops;
+    /*std::vector<uint8_t> i_validSubpops;
     for(uint8_t i=0;i<subPopulations_.size();i++) 
     {
       if(subPopulations_.at(i).size() > 1 && rt.msg_.fitness > subPopulations_.at(i).getMinFitness()) 
@@ -217,16 +224,18 @@ const bool Population::replacementPossible(const RampTrajectory& rt) const
     else 
     {
       //std::cout<<"\ni_validSubPops.size(): "<<i_validSubpops.size()<<"\n";
-    }
+    }*/
   
     // If the valid sub-populations have only feasible trajectories
     // no trajectories can be replaced
     // or if rt's fitness is lower than the min fitness of sub-population
-    if(!rt.msg_.feasible) 
+    if(rt.msg_.feasible == false && subPopulations_[iSP].infeasibleExists() == false) 
     {
+      return false;
+      
       //////ROS_INFO("In !feasible");
       //////ROS_INFO("i_validSubpops.size: %i", (int)i_validSubpops.size());
-      bool valid=false;
+      /*bool valid=false;
       for(uint8_t i=0;i<i_validSubpops.size();i++) 
       {
         //////ROS_INFO("i: %i", i);
@@ -241,7 +250,7 @@ const bool Population::replacementPossible(const RampTrajectory& rt) const
       {
         //////ROS_INFO("Not valid, returning false");
         return false;
-      }
+      }*/
     } // end if rt is infeasible
   } // end if sub-populations are used
 
@@ -368,7 +377,36 @@ const int Population::getReplacementID(const RampTrajectory& rt) const
 
 
 
+/*
+ * Returns the index of the sub-population
+ */
+const int Population::getSubPopIndex(const RampTrajectory& traj) const
+{
+  int result = -1;
 
+  // Get direction and Convert to [0,2PI]
+  double departure_direction = traj.getDirection();
+  if(departure_direction < 0)
+  {
+    departure_direction += (2*PI);
+  }
+
+  int num = ceil((PI/2.f) / deltaThetaSubPops_);
+
+  // Find the sub-pop it belongs to
+  // and add it to that sub-pop
+  for(uint8_t sp=0;sp<num;sp++) 
+  {
+    if(departure_direction < deltaThetaSubPops_*(sp+1)) 
+    {
+      //traj.msg_.i_subPopulation = sp;
+      result = num;
+      break;
+    }
+  } // end inner loop
+
+  return result;
+}
 
 
 /** This method adds a trajectory to the population. 
@@ -562,6 +600,7 @@ const std::vector<RampTrajectory> Population::getBestFromSubPops() const
 const std::vector<Population> Population::createSubPopulations(const double delta_theta) 
 {
   subPopulations_.clear();
+  deltaThetaSubPops_ = delta_theta;
 
 
   // Get the number of sub-pops for delta_theta

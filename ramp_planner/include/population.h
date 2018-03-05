@@ -38,6 +38,7 @@ class Population {
     void setStartTime(double t_start);
    
     const std::vector<RampTrajectory> getBestFromSubPops() const;
+    const int getSubPopIndex(const RampTrajectory& traj) const;
     const std::vector<Population> createSubPopulations(const double delta_theta=PI/18.f);
 
 
@@ -51,6 +52,7 @@ class Population {
     unsigned int                maxSize_;
 
     double                      t_start_;
+    double                      deltaThetaSubPops_;
     
     std::vector<RampTrajectory> trajectories_;
     
