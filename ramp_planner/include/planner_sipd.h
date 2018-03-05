@@ -73,7 +73,7 @@ class Planner {
     double step1 = 0.06;
 
     double x2_max = 3.0;
-    double obs2x = 3.0;
+    double obs2x = 0.0;
     double obs2y;
     double obs2_1x = 3.0;
     double obs2_1y;

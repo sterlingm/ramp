@@ -8,7 +8,9 @@
         "type_traits": "cpp",
         "hash_map": "cpp",
         "hash_set": "cpp",
-        "initializer_list": "cpp"
+        "initializer_list": "cpp",
+        "slist": "cpp",
+        "functional": "cpp"
     },
     "python.linting.enabled": false
 }

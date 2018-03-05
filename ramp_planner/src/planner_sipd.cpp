@@ -231,39 +231,39 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
 
   obs_msg = msg;
 
-  // Moving obstacle 1
-  obs1x += step1;
-  double noise1 = 0.3 * rand() / double(RAND_MAX) - 0.15;
-  obs1x += noise1;
-  obs1x = boost::algorithm::clamp(obs1x, 0.0, x_max);
-  obs1y = x_max - obs1x;
-  ramp_msgs::Obstacle obs1;
-  obs1.ob_ms.positions.push_back(obs1x);
-  obs1.ob_ms.positions.push_back(obs1y);
-  obs1.ob_ms.positions.push_back(0.0);
-  obs1.ob_ms.velocities.push_back(0.0);
-  obs1.ob_ms.velocities.push_back(0.0);
-  obs1.ob_ms.velocities.push_back(0.0);
-  obs1.radius = obs1r;
-  obs_msg.obstacles.push_back(obs1);
-  if (obs1x >= x_max) {
-    step1 = -fabs(step1);
-  } else if (obs1x <= 0.0) {
-    step1 = fabs(step1);
-  }
+  // // Moving obstacle 1
+  // obs1x += step1;
+  // double noise1 = 0.3 * rand() / double(RAND_MAX) - 0.15;
+  // obs1x += noise1;
+  // obs1x = boost::algorithm::clamp(obs1x, 0.0, x_max);
+  // obs1y = x_max - obs1x;
+  // ramp_msgs::Obstacle obs1;
+  // obs1.ob_ms.positions.push_back(obs1x);
+  // obs1.ob_ms.positions.push_back(obs1y);
+  // obs1.ob_ms.positions.push_back(0.0);
+  // obs1.ob_ms.velocities.push_back(0.0);
+  // obs1.ob_ms.velocities.push_back(0.0);
+  // obs1.ob_ms.velocities.push_back(0.0);
+  // obs1.radius = obs1r;
+  // obs_msg.obstacles.push_back(obs1);
+  // if (obs1x >= x_max) {
+  //   step1 = -fabs(step1);
+  // } else if (obs1x <= 0.0) {
+  //   step1 = fabs(step1);
+  // }
 
-  // Moving obstacle 1_1
-  obs1_1x = obs1x + step1 * 4;
-  obs1_1y = x_max - obs1_1x;
-  ramp_msgs::Obstacle obs1_1;
-  obs1_1.ob_ms.positions.push_back(obs1_1x);
-  obs1_1.ob_ms.positions.push_back(obs1_1y);
-  obs1_1.ob_ms.positions.push_back(0.0);
-  obs1_1.ob_ms.velocities.push_back(0.0);
-  obs1_1.ob_ms.velocities.push_back(0.0);
-  obs1_1.ob_ms.velocities.push_back(0.0);
-  obs1_1.radius = obs1r / 1.5;
-  obs_msg.obstacles.push_back(obs1_1);
+  // // Moving obstacle 1_1
+  // obs1_1x = obs1x + step1 * 4;
+  // obs1_1y = x_max - obs1_1x;
+  // ramp_msgs::Obstacle obs1_1;
+  // obs1_1.ob_ms.positions.push_back(obs1_1x);
+  // obs1_1.ob_ms.positions.push_back(obs1_1y);
+  // obs1_1.ob_ms.positions.push_back(0.0);
+  // obs1_1.ob_ms.velocities.push_back(0.0);
+  // obs1_1.ob_ms.velocities.push_back(0.0);
+  // obs1_1.ob_ms.velocities.push_back(0.0);
+  // obs1_1.radius = obs1r / 1.5;
+  // obs_msg.obstacles.push_back(obs1_1);
 
   // Moving obstacle 2
   obs2x += step2;
@@ -286,23 +286,45 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
     step2 = fabs(step2);
   }
 
-  // Moving obstacle 2_1
-  obs2_1x = obs2x + step2 * 6;
-  obs2_1y = x2_max - obs2_1x;
-  ramp_msgs::Obstacle obs2_1;
-  obs2_1.ob_ms.positions.push_back(obs2_1x);
-  obs2_1.ob_ms.positions.push_back(obs2_1y);
-  obs2_1.ob_ms.positions.push_back(0.0);
-  obs2_1.ob_ms.velocities.push_back(0.0);
-  obs2_1.ob_ms.velocities.push_back(0.0);
-  obs2_1.ob_ms.velocities.push_back(0.0);
-  obs2_1.radius = obs2r / 1.5;
-  obs_msg.obstacles.push_back(obs2_1);
+  // // Moving obstacle 2_1
+  // obs2_1x = obs2x + step2 * 6;
+  // obs2_1y = x2_max - obs2_1x;
+  // ramp_msgs::Obstacle obs2_1;
+  // obs2_1.ob_ms.positions.push_back(obs2_1x);
+  // obs2_1.ob_ms.positions.push_back(obs2_1y);
+  // obs2_1.ob_ms.positions.push_back(0.0);
+  // obs2_1.ob_ms.velocities.push_back(0.0);
+  // obs2_1.ob_ms.velocities.push_back(0.0);
+  // obs2_1.ob_ms.velocities.push_back(0.0);
+  // obs2_1.radius = obs2r / 1.5;
+  // obs_msg.obstacles.push_back(obs2_1);
+
+  // // Moving obstacle 3
+  // ramp_msgs::Obstacle obs3;
+  // obs3.ob_ms.positions.push_back(obs2x + 3.0);
+  // obs3.ob_ms.positions.push_back(obs2y + 3.0);
+  // obs3.ob_ms.positions.push_back(0.0);
+  // obs3.ob_ms.velocities.push_back(0.0);
+  // obs3.ob_ms.velocities.push_back(0.0);
+  // obs3.ob_ms.velocities.push_back(0.0);
+  // obs3.radius = obs3r;
+  // obs_msg.obstacles.push_back(obs3);
+
+  // // Moving obstacle 3_1
+  // ramp_msgs::Obstacle obs3_1;
+  // obs3_1.ob_ms.positions.push_back(obs2_1x + 3.0);
+  // obs3_1.ob_ms.positions.push_back(obs2_1y + 3.0);
+  // obs3_1.ob_ms.positions.push_back(0.0);
+  // obs3_1.ob_ms.velocities.push_back(0.0);
+  // obs3_1.ob_ms.velocities.push_back(0.0);
+  // obs3_1.ob_ms.velocities.push_back(0.0);
+  // obs3_1.radius = obs3r / 1.5;
+  // obs_msg.obstacles.push_back(obs3_1);
 
   // Moving obstacle 3
   ramp_msgs::Obstacle obs3;
-  obs3.ob_ms.positions.push_back(obs2x + 3.0);
-  obs3.ob_ms.positions.push_back(obs2y + 3.0);
+  obs3.ob_ms.positions.push_back(6.0 - obs2x);
+  obs3.ob_ms.positions.push_back(6.0 - obs2y);
   obs3.ob_ms.positions.push_back(0.0);
   obs3.ob_ms.velocities.push_back(0.0);
   obs3.ob_ms.velocities.push_back(0.0);
@@ -310,16 +332,38 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   obs3.radius = obs3r;
   obs_msg.obstacles.push_back(obs3);
 
-  // Moving obstacle 3_1
-  ramp_msgs::Obstacle obs3_1;
-  obs3_1.ob_ms.positions.push_back(obs2_1x + 3.0);
-  obs3_1.ob_ms.positions.push_back(obs2_1y + 3.0);
-  obs3_1.ob_ms.positions.push_back(0.0);
-  obs3_1.ob_ms.velocities.push_back(0.0);
-  obs3_1.ob_ms.velocities.push_back(0.0);
-  obs3_1.ob_ms.velocities.push_back(0.0);
-  obs3_1.radius = obs3r / 1.5;
-  obs_msg.obstacles.push_back(obs3_1);
+  // // Moving obstacle 3_1
+  // ramp_msgs::Obstacle obs3_1;
+  // obs3_1.ob_ms.positions.push_back(6.0 - obs2_1x);
+  // obs3_1.ob_ms.positions.push_back(6.0 - obs2_1y);
+  // obs3_1.ob_ms.positions.push_back(0.0);
+  // obs3_1.ob_ms.velocities.push_back(0.0);
+  // obs3_1.ob_ms.velocities.push_back(0.0);
+  // obs3_1.ob_ms.velocities.push_back(0.0);
+  // obs3_1.radius = obs3r / 1.5;
+  // obs_msg.obstacles.push_back(obs3_1);
+
+  // Moving obstacle 4
+  ramp_msgs::Obstacle obs4;
+  obs4.ob_ms.positions.push_back(obs2x + 2.0);
+  obs4.ob_ms.positions.push_back(6.0 - obs2y - 2.0);
+  obs4.ob_ms.positions.push_back(0.0);
+  obs4.ob_ms.velocities.push_back(0.0);
+  obs4.ob_ms.velocities.push_back(0.0);
+  obs4.ob_ms.velocities.push_back(0.0);
+  obs4.radius = 0.5;
+  obs_msg.obstacles.push_back(obs4);
+
+  // Moving obstacle 5
+  ramp_msgs::Obstacle obs5;
+  obs5.ob_ms.positions.push_back(6.0 - obs2x - 2.0);
+  obs5.ob_ms.positions.push_back(obs2y + 2.0);
+  obs5.ob_ms.positions.push_back(0.0);
+  obs5.ob_ms.velocities.push_back(0.0);
+  obs5.ob_ms.velocities.push_back(0.0);
+  obs5.ob_ms.velocities.push_back(0.0);
+  obs5.radius = 0.5;
+  obs_msg.obstacles.push_back(obs5);
 
   // ROS_INFO("%lf", obs_msg.obstacles[0].T_w_odom.translation.x);
   
@@ -3771,15 +3815,11 @@ void Planner::sendBest() {
 
 
 
-
-
-
-
 /** Send the whole population of trajectories to the trajectory viewer */
 void Planner::sendPopulation()
 {
-  ////ROS_INFO("In Planner::sendPopulation");
-  ////ROS_INFO("Time since last sendPopulation(): %f", (ros::Time::now() - t_prevSendPop_).toSec());
+  //ROS_INFO("In Planner::sendPopulation");
+  ////////ROS_INFO("Time since last sendPopulation(): %f", (ros::Time::now() - t_prevSendPop_).toSec());
 
   /*
    * Send to trajectory_visualization node
@@ -3794,21 +3834,34 @@ void Planner::sendPopulation()
   /*
    * Send to rviz
    */
-  visualization_msgs::MarkerArray ma;
 
+  // Population trajectories
+  visualization_msgs::MarkerArray ma;
   for(int i=0;i<population_.trajectories_.size();i++)
   {
     visualization_msgs::Marker pop_trj;
     //buildLineList(population_.trajectories_[i], ++id_line_list_, pop_trj);
-    buildLineList(population_.trajectories_[i], i, pop_trj);
+    buildLineList(population_.trajectories_[i], 300000+i, pop_trj);
     ma.markers.push_back(pop_trj);
   }
 
+  // Obstacle trajectories
+  // for(int i=0;i<ob_trajectory_.size();i++)
+  // {
+  //   visualization_msgs::Marker ob_trj;
+  //   buildLineList(ob_trajectory_[i], ++id_line_list_, ob_trj);
+  //   ma.markers.push_back(ob_trj);
+  // }
+  // Current trajectory up to next control cycle
+  visualization_msgs::Marker movingOnMarker;
+  buildLineList(movingOn_, 299999, movingOnMarker);
+  ma.markers.push_back(movingOnMarker);
+
   for(int i=0;i<obs_msg.obstacles.size();i++)
   {
-    if (i % 2 == 1) {
-      continue;
-    }
+    // if (i % 2 == 1) {
+    //   continue;
+    // }
     visualization_msgs::Marker ob;
     ob.header.stamp = ros::Time::now();
     ob.id = 3333 + i;
@@ -3851,9 +3904,94 @@ void Planner::sendPopulation()
     ma.markers.push_back(ob);
   }
 
+  // Send MarkerArray
   h_rviz_->sendMarkerArray(ma);
   t_prevSendPop_ = ros::Time::now();
+  
+  //ROS_INFO("Exiting sendPopulation");
 }
+
+
+
+// /** Send the whole population of trajectories to the trajectory viewer */
+// void Planner::sendPopulation()
+// {
+//   ////ROS_INFO("In Planner::sendPopulation");
+//   ////ROS_INFO("Time since last sendPopulation(): %f", (ros::Time::now() - t_prevSendPop_).toSec());
+
+//   /*
+//    * Send to trajectory_visualization node
+//    */
+//   /*ramp_msgs::Population msg = population_.populationMsg();
+//   msg.robot_id = id_;
+
+//   msg.population.push_back(movingOn_.msg_);
+//   h_control_->sendPopulation(msg);*/
+    
+    
+//   /*
+//    * Send to rviz
+//    */
+//   visualization_msgs::MarkerArray ma;
+
+//   for(int i=0;i<population_.trajectories_.size();i++)
+//   {
+//     visualization_msgs::Marker pop_trj;
+//     //buildLineList(population_.trajectories_[i], ++id_line_list_, pop_trj);
+//     buildLineList(population_.trajectories_[i], i, pop_trj);
+//     ma.markers.push_back(pop_trj);
+//   }
+
+//   for(int i=0;i<obs_msg.obstacles.size();i++)
+//   {
+//     if (i % 2 == 1) {
+//       continue;
+//     }
+//     visualization_msgs::Marker ob;
+//     ob.header.stamp = ros::Time::now();
+//     ob.id = 3333 + i;
+//     ob.header.frame_id = global_frame_;
+//     ob.ns = "basic_shapes";
+
+//     ob.type = visualization_msgs::Marker::SPHERE;
+
+//     ob.action = visualization_msgs::Marker::ADD;
+    
+//     // Set positions
+//     ob.pose.position.x = obs_msg.obstacles[i].ob_ms.positions[0];
+//     ob.pose.position.y = obs_msg.obstacles[i].ob_ms.positions[1];
+//     ob.pose.position.z = 0.01;
+    
+
+//     // Set orientations
+//     ob.pose.orientation.x = 0.0;
+//     ob.pose.orientation.y = 0.0;
+//     ob.pose.orientation.z = 0.0;
+//     ob.pose.orientation.w = 1.0;
+  
+
+//     // Set radii
+//     ob.scale.x = obs_msg.obstacles[i].radius;
+//     ob.scale.y = obs_msg.obstacles[i].radius;
+//     ob.scale.z = 0.1;
+  
+
+//     // Set colors
+//     ob.color.r = 0;
+//     ob.color.g = 1;
+//     ob.color.b = 0;
+//     ob.color.a = 1;
+  
+
+//     // Set lifetimes
+//     ob.lifetime = ros::Duration(10.0);
+
+//     ma.markers.push_back(ob);
+//   }
+
+//   h_rviz_->sendMarkerArray(ma);
+//   t_prevSendPop_ = ros::Time::now();
+// }
 
 void Planner::displayTrajectory(const ramp_msgs::RampTrajectory traj) const 
 {
@@ -3890,7 +4028,7 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
   }
   // trajec may be an obstacle trajectory which has no points in the path member
   // if(trajec.msg_.holonomic_path.points.size() > 0 && trajec.equals(population_.getBest()))
-  if(trajec.msg_.holonomic_path.points.size() > 0 && id == population_.calcBestIndex())
+  if(trajec.msg_.holonomic_path.points.size() > 0 && id-300000 == population_.calcBestIndex())
   {
     result.color.r = 0;
     result.color.g = 1;
