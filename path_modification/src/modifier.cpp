@@ -53,7 +53,7 @@ const std::vector<ramp_msgs::Path> Modifier::perform()
     result = cross_.perform();
   }
 
-  else if(mod_req.op == "move")
+  /*else if(mod_req.op == "move")
   {
     repair_.path_ = mod_req.paths[0];
     repair_.dir_  = mod_req.repair_dir;
@@ -61,7 +61,7 @@ const std::vector<ramp_msgs::Path> Modifier::perform()
     repair_.r_    = mod_req.repair_ob_r;
 
     result.push_back(repair_.perform());
-  }
+  }*/
 
   /*ROS_INFO("Modifier returning: %s", u.toString(result.at(0)).c_str());
   

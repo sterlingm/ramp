@@ -91,7 +91,12 @@ const int Population::getNumSubPops() const
 
 
 /** This method returns the minimum fitness of the population */
-const double Population::getMinFitness() const {
+const double Population::getMinFitness() const 
+{
+  if(trajectories_.size() == 0)
+  {
+    return 0;
+  }
   double result = trajectories_.at(0).msg_.fitness;
 
   for(uint8_t i=1;i<trajectories_.size();i++) {
@@ -198,11 +203,13 @@ const bool Population::replacementPossible(const RampTrajectory& rt) const
   // Need to calculate new trajectory's i_subPop to check stuff about that 1 subPop
   if(subPopulations_.size() > 0) 
   {
-    //std::cout<<"\nIn sub-pops\n";
+    ROS_INFO("In sub-pops");
     
     // Get the sub-pop that this traj belongs to
     int iSP = getSubPopIndex(rt);
-    if(subPopulations_.at(iSP).size() == 1 || rt.msg_.fitness < subPopulations_.at(iSP).getMinFitness()) 
+
+    ROS_INFO("isp: %i subPopulations_.size(): %i", iSP, (int)subPopulations_.size());
+    if(subPopulations_.at(iSP).size() < 2 || rt.msg_.fitness < subPopulations_.at(iSP).getMinFitness()) 
     {
       return false;
     }
@@ -305,7 +312,7 @@ const bool Population::canReplace(const RampTrajectory& rt, const int& i) const
     Population p = subPopulations_.at(temp.msg_.i_subPopulation);
     ROS_INFO("temp.msg_.i_subPopulation: %i", temp.msg_.i_subPopulation);
 
-    if(p.trajectories_.size() < 2) 
+    if(p.trajectories_.size() < 2)
     {
       ROS_INFO("Sub-pop size < 2, returning false");
       //std::cout<<"\nSub-Population size < 2, returning false\n";
@@ -391,16 +398,22 @@ const int Population::getReplacementID(const RampTrajectory& rt) const
  */
 const int Population::getSubPopIndex(const RampTrajectory& traj) const
 {
+  ROS_INFO("In getSubPopIndex");
   int result = -1;
+
 
   // Get direction and Convert to [0,2PI]
   double departure_direction = traj.getDirection();
+  ROS_INFO("departure_direction: %f", departure_direction);
+
   if(departure_direction < 0)
   {
     departure_direction += (2*PI);
   }
 
-  int num = ceil((PI/2.f) / deltaThetaSubPops_);
+  int num = ceil((2.0*PI) / deltaThetaSubPops_);
+  
+  ROS_INFO("departure_direction: %f deltaThetaSubPops_: %f num: %i", departure_direction, deltaThetaSubPops_, num);
 
   // Find the sub-pop it belongs to
   // and add it to that sub-pop
@@ -409,7 +422,7 @@ const int Population::getSubPopIndex(const RampTrajectory& traj) const
     if(departure_direction < deltaThetaSubPops_*(sp+1)) 
     {
       //traj.msg_.i_subPopulation = sp;
-      result = num;
+      result = sp;
       break;
     }
   } // end inner loop
@@ -463,7 +476,7 @@ const int Population::add(const RampTrajectory& rt, bool forceMin)
   // If full, replace a trajectory
   else if(!contains(rt) && replacementPossible(rt)) 
   {
-    //ROS_INFO("In !contains(rt) && replacementPossible(rt)");
+    ROS_INFO("In !contains(rt) && replacementPossible(rt)");
     int i = getReplacementID(rt);
     //ROS_INFO("i: %i", i);
 
@@ -615,7 +628,7 @@ const std::vector<Population> Population::createSubPopulations(const double delt
 
   // Get the number of sub-pops for delta_theta
   //int num = ceil((2*PI) / delta_theta);
-  int num = ceil((PI/2.f) / delta_theta);
+  int num = ceil((PI*2.f) / delta_theta);
   //////ROS_INFO("num: %i", num);
  
   // Create the sub-populations

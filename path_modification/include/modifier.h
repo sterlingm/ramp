@@ -6,7 +6,7 @@
 #include "change.h"
 #include "crossover.h"
 #include "swap.h"
-#include "repair.h"
+//#include "repair.h"
 
 
 class Modifier {
@@ -20,7 +20,7 @@ class Modifier {
     Change chg_;
     Crossover cross_;
     Swap swap_; 
-    Repair repair_;
+    //Repair repair_;
 
     ramp_msgs::ModificationRequest::Request mod_req;
     const std::vector<ramp_msgs::Path> perform();

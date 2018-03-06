@@ -4430,10 +4430,14 @@ void Planner::go()
   }
 
   ROS_INFO("Finished pre-planning cycles!");
+  sendPopulation();
 
   // If we are stopping here (would only do this when using hmap obs), exit
   if(evalHMap_ && stop_after_ppcs_)
   {
+    ROS_INFO("Pop: %s", population_.toString().c_str());
+    ROS_INFO("Best: %s", population_.getBest().toString().c_str());
+    ROS_INFO("Index: %i", population_.calcBestIndex());
     exit(1);
   }
 

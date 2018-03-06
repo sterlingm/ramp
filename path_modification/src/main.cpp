@@ -39,7 +39,7 @@ bool handleRequest(ramp_msgs::ModificationRequest::Request& req,
   // do this in a better way eventually...
   mod.in_.utility_ = u; 
   mod.chg_.utility_ = u;
-  mod.repair_.utility_ = u;
+  //mod.repair_.utility_ = u;
   
   /*ROS_INFO("Path modification ranges: ");
   for(int i=0;i<u.standardRanges_.size();i++)
@@ -197,14 +197,14 @@ int main(int argc, char** argv)
   //change.perform();
   //Swap swap(p1);
   //swap.perform();
-  Repair m(p1);
+  /*Repair m(p1);
   m.utility_ = u;
   m.dir_ = PI/3.;
   m.dist_ = 1.2;
   m.r_ = 0.5;
-  m.perform();
+  m.perform();*/
 
-  ROS_INFO("Path after modification: %s", u.toString(m.path_).c_str());
+  //ROS_INFO("Path after modification: %s", u.toString(m.path_).c_str());
 
 /*  ramp_msgs::Path p2;
   for(unsigned int i=5;i>0;i--) {
