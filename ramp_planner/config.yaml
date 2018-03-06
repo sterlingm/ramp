@@ -27,9 +27,9 @@ gens_before_control_cycle: 200
 
 use_start_param: false
 
-use_hilbert_map: false
+use_hilbert_map: true
 
-stop_after_ppcs: false
+stop_after_ppcs: true
 
 # Sensing parameters #
 
