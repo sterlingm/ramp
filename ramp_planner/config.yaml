@@ -29,7 +29,7 @@ use_start_param: false
 
 use_hilbert_map: true
 
-stop_after_ppcs: true
+stop_after_ppcs: false
 
 # Sensing parameters #
 
@@ -47,13 +47,13 @@ fixed_control_cycle_rate: 1.2
 
 sensing_cycle_rate: 15
 
-eval_weight_T: 1.75
+eval_weight_T: 0.59
 
 # As D weight increases, overall contribution of D to the cost decreases
 # This is because high values of D are good so we add 1/D to the fitness cost
-eval_weight_D: 10
+eval_weight_D: 0.44
 
-eval_weight_A: 0.01
+eval_weight_A: 1
 
 
 

@@ -3624,7 +3624,6 @@ void Planner::sendPopulation()
   for(int i=0;i<population_.trajectories_.size();i++)
   {
     visualization_msgs::Marker pop_trj;
-    //buildLineList(population_.trajectories_[i], ++id_line_list_, pop_trj);
     buildLineList(population_.trajectories_[i], 300000+i, pop_trj);
     ma.markers.push_back(pop_trj);
   }

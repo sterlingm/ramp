@@ -39,9 +39,9 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
     performFeasibility(req);
     
     // Set response members
-    res.feasible = (!qr_.collision_ && !orientation_infeasible_) && !qrPacked_.innerColl_;
+    res.feasible = !qr_.collision_ && !orientation_infeasible_;
     req.trajectory.feasible = res.feasible;
-    //ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
+    ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
     //////ROS_INFO("performFeasibility: %f", (ros::Time::now()-t_start).toSec());
   }
 
