@@ -1,13 +1,17 @@
+<<<<<<< HEAD
+population_size: 15
+=======
 # RAMP misc parameters #
 population_size: 10
+>>>>>>> devel
 
-sub_populations: true
+sub_populations: true 
 
 modifications: true
 
 evaluations: true
 
-seed_population: false 
+seed_population: false
 
 error_reduction: true
 
@@ -15,28 +19,25 @@ error_reduction: true
 only_sensing: false
 
 # If false, control cycles are cut off
-moving_robot: true
+moving_robot: false
 
-preplanning_cycles: 200
+preplanning_cycles: 750
 
-sensing_before_control_cycle: false
-
-pop_traj_type: 1 #0=holonomic, 1=hybrid
+stop_after_ppcs: true
 
 gens_before_control_cycle: 200
 
-use_start_param: false
+sensing_before_control_cycle: true
 
-use_hilbert_map: true
+pop_traj_type: 1 #0=holonomic, 1=hybrid
 
-stop_after_ppcs: false
 
 # Sensing parameters #
 
 # Horizontal FOV
 field_of_view_angle: 1.25
 
-remove_outside_fov: false
+remove_outside_fov: true
 
 
 
@@ -45,15 +46,15 @@ remove_outside_fov: false
 
 fixed_control_cycle_rate: 1.2
 
-sensing_cycle_rate: 15
+sensing_cycle_rate: 10
 
-eval_weight_T: 1.0
+eval_weight_T: 1.75
 
 # As D weight increases, overall contribution of D to the cost decreases
 # This is because high values of D are good so we add 1/D to the fitness cost
-eval_weight_D: 0.44
+eval_weight_D: 100
 
-eval_weight_A: 0.59
+eval_weight_A: 0.01
 
 
 
@@ -65,6 +66,10 @@ update_topic: "odom"
 
 shrink_ranges: false
 
+use_start_param: false
+
+use_hilbert_map: true
+
 
 
 # Experimental setup parameters #
@@ -73,8 +78,8 @@ shrink_ranges: false
 #obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom', '/obstacle_3/odom']
 #obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity', '/obstacle_2/mobile_base/commands/velocity', '/obstacle_3/mobile_base/commands/velocity']
 #obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom']
-obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity']
-obstacle_delays: [0]
+#obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity']
+#obstacle_delays: [0]
 
 # Stage simulator obstacle topics
 # No obstacles
@@ -88,5 +93,5 @@ obstacle_delays: [0]
 
 
 #gazebo_model_names: ['cardboard_box', 'cardboard_box_0']
-gazebo_model_names: []
+#gazebo_model_names: []
 
