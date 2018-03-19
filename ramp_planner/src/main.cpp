@@ -14,7 +14,6 @@ double              max_speed_linear;
 double              max_speed_angular;
 int                 population_size;
 int                 num_ppcs;
-int                 gensBeforeCC;
 bool                sensingBeforeCC;
 bool                sub_populations;
 bool                modifications;
@@ -296,13 +295,7 @@ void loadParameters(const ros::NodeHandle handle)
     std::cout<<"\nstop_after_ppcs: "<<stop_after_ppcs ? "True" : "False";
   }
 
-  if(handle.hasParam("ramp/gens_before_control_cycle")) 
-  {
-    handle.getParam("ramp/gens_before_control_cycle", gensBeforeCC);
-    std::cout<<"\ngens_before_control_cycle: "<<gensBeforeCC;
-  }
-
-if(handle.hasParam("ramp/sensing_before_control_cycle"))
+  if(handle.hasParam("ramp/sensing_before_control_cycle"))
   {
     handle.getParam("ramp/sensing_before_control_cycle", sensingBeforeCC);
     ROS_INFO("sensingBeforeCC: %s", sensingBeforeCC ? "True" : "False");
@@ -358,7 +351,7 @@ if(handle.hasParam("ramp/sensing_before_control_cycle"))
 
 void pubStartGoalMarkers()
 {
-  //ROS_INFO("In pubStartGoalMarkers");
+  ROS_INFO("In pubStartGoalMarkers");
   visualization_msgs::MarkerArray result;
 
   // Make Markers for both positions
@@ -430,14 +423,28 @@ void pubStartGoalMarkers()
   result.markers.push_back(goal_marker);
 
   ROS_INFO("Waiting for rviz to start...");
-  while(pub_rviz.getNumSubscribers() == 0) {}
-  ROS_INFO("Rviz started");
+  ros::Rate r(100);
+  ros::Time tStart = ros::Time::now();
+  ros::Duration dWait(10);
+  while(pub_rviz.getNumSubscribers() == 0 && (ros::Time::now() - tStart) < dWait)
+  {
+    ros::spinOnce();
+    r.sleep();
+  }
+  if(pub_rviz.getNumSubscribers() == 0)
+  {
+    ROS_WARN("Could not get subscriber for \"visualization_marker_array\"");
+  }
+  else
+  {
+    ROS_INFO("Rviz started");
+  }
   //ROS_INFO("# of subscribers: %i", (int)pub_rviz.getNumSubscribers());
 
   pub_rviz.publish(result);
   pub_rviz.publish(result);
   
-  //ROS_INFO("Exiting pubStartGoalMarkers");
+  ROS_INFO("Exiting pubStartGoalMarkers");
 }
 
 
@@ -454,6 +461,7 @@ int main(int argc, char** argv)
   
   // Load ros parameters
   loadParameters(handle);
+  ROS_INFO("Done loading rosparams");
 
   Planner my_planner; 
   
@@ -465,6 +473,7 @@ int main(int argc, char** argv)
   ros::Subscriber sub_updateVel_  = handle.subscribe("update", 1, &Planner::updateCbControlNode, &my_planner);
   ros::Subscriber sub_sc_         = handle.subscribe("obstacles", 1, &Planner::sensingCycleCallback, &my_planner);
   ros::Subscriber sub_hmap        = handle.subscribe("hmap_obstacles", 1, &Planner::hilbertMapObsCb, &my_planner);
+  ROS_INFO("Done initializing Subscribers");
 
   pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 10);
 
@@ -476,11 +485,13 @@ int main(int argc, char** argv)
   // Using the sleep in waitForTransform never works
   ros::Duration d(0.5);
   d.sleep();
+  ROS_INFO("Done sleeping");
 
   // Wait for Transform from map to the planner's global_frame
   // Since this is used to transform poses from amcl, how can I generalize this from "map"?
   if(global_frame != "map")
   {
+    ROS_INFO("Waiting to get tf from map to global_frame");
     tf::TransformListener listener_;
     if(listener_.waitForTransform(global_frame, "map", ros::Time(0), d))
     {
@@ -524,10 +535,12 @@ int main(int argc, char** argv)
    */
  
   // Initialize the planner
-  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, global_frame, update_topic, pt, num_ppcs, stop_after_ppcs, gensBeforeCC, sensingBeforeCC, t_sc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
+  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, global_frame, update_topic, pt, num_ppcs, stop_after_ppcs, sensingBeforeCC, t_sc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
   my_planner.modifications_   = modifications;
   my_planner.evaluations_     = evaluations;
   my_planner.seedPopulation_  = seedPopulation;
+
+  ROS_INFO("Planner object initialized");
 
   std::cout<<"\nStart: "<<my_planner.start_.toString();
   std::cout<<"\nGoal: "<<my_planner.goal_.toString();
@@ -536,6 +549,44 @@ int main(int argc, char** argv)
   ROS_INFO("Done with pubStartGoalMarkers");
  
  
+
+
+  ros::Rate r(20);
+
+  /*
+   * Wait for sensing module to be ready
+   */
+  ROS_INFO("Planner is waiting for sensing module to be ready");
+  bool sensingReady = false;
+  while(sensingReady == false && ros::ok())
+  {
+    handle.param("/ramp/sensing_ready", sensingReady, false);
+    ros::spinOnce();
+    r.sleep();
+  }
+  ROS_INFO("Sensing module is ready!");
+
+
+
+
+  if(use_hilbert_map)
+  {
+    ROS_INFO("Waiting to get hilbert map obstacles on topic /hmap_obstacles");
+    // Wait until we get the hilbert map
+    while(!my_planner.evalHMap_ && ros::ok())
+    {
+      ros::spinOnce();
+      r.sleep();
+    }
+    ROS_INFO("Got hilbert map!");
+  }
+  else
+  {
+    ROS_INFO("Not using hilbert map, starting planner");
+  }
+  
+  
+  
   /******* Start the planner *******/
   if(use_start_param)
   {
@@ -553,35 +604,12 @@ int main(int argc, char** argv)
     std::cin.get(); 
   }
   ROS_INFO("Starting Planner!");
-
-
-  ros::Rate r(20);
-
-  if(use_hilbert_map)
-  {
-    ROS_INFO("Waiting to get hilbert map obstacles on topic /hmap_obstacles");
-    // Wait until we get the hilbert map
-    while(!my_planner.evalHMap_ && ros::ok())
-    {
-      ros::spinOnce();
-      r.sleep();
-    }
-    ROS_INFO("Got hilbert map!");
-  }
-  else
-  {
-    ROS_INFO("Not using hilbert map, starting planner");
-  }
  
   my_planner.go();
 
-
- 
-  //****MotionState exp_results = my_planner.findAverageDiff();
-  //****std::cout<<"\n\nAverage Difference: "<<exp_results.toString();
   
   
-  std::cout<<"\n\nExiting Normally\n";
+  printf("\n\nExiting Normally\n");
   ros::shutdown();
   return 0;
 }

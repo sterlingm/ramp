@@ -1669,7 +1669,11 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, s
   {
     if(utility_.positionDistance(c.center.x, c.center.y, largeObs[i].fitCir.center.x, largeObs[i].fitCir.center.y) < 2 && fabs(c.radius - largeObs[i].fitCir.radius) < 2)
     {
-      cs = largeObs[i].packedCirs; 
+      cs = largeObs[i].packedCirs;
+
+      // Translate circles
+      //double delta_x = c.center.x - largeObs[i].fitCir.center.x;
+      //double delta_y = c.center.y - largeObs[i].fitCir.center.y;
       break;
     }
   }

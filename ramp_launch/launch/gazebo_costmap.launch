@@ -15,7 +15,7 @@
 
 <!-- Filter laser data to set a custom MAX_RANGE value for clearing obstacles from the costmap -->
 <!-- Change max_range value in laser_filters/include/laser_filters/range_filter.h -->
-<!-- <include file="$(find laser_filters)/launch/range_filter.launch" /> -->
+<include file="$(find laser_filters)/launch/range_filter.launch" />
 
 
 </launch>

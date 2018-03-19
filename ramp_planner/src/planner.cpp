@@ -7,7 +7,7 @@
 
 Planner::Planner() : resolutionRate_(1.f / 10.f), ob_dists_timer_dur_(0.1), generation_(0), i_rt(1), goalThreshold_(0.4), num_ops_(6), D_(1.5f), 
   cc_started_(false), c_pc_(0), transThreshold_(1./50.), num_cc_(0), L_(0.33), h_traj_req_(0), h_eval_req_(0), h_control_(0), h_rviz_(0), modifier_(0), 
- delta_t_switch_(0.1), stop_(false), imminent_collision_(false), moving_on_coll_(false), log_enter_exit_(true), log_switching_(true), only_sensing_(0), id_line_list_(200000)
+ delta_t_switch_(0.1), stop_(false), imminent_collision_(false), moving_on_coll_(false), log_enter_exit_(false), log_switching_(false), only_sensing_(0), id_line_list_(200000)
 {
   imminentCollisionCycle_ = ros::Duration(1.f / 10.f);
   generationsPerCC_       = controlCycle_.toSec() / planningCycle_.toSec();
@@ -221,7 +221,7 @@ const ramp_msgs::Path Planner::getObstaclePath(const ramp_msgs::Obstacle ob, con
 
 void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
 {
-  ROS_INFO("In sensingCycleCallback");
+  //ROS_INFO("In sensingCycleCallback");
   ////////ROS_INFO("msg.obstacles.size(): %i", (int) msg.obstacles.size());
   ////////ROS_INFO("msg: %s", utility_.toString(msg).c_str());
   
@@ -301,7 +301,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
    */
   if(cc_started_)
   {
-    ROS_INFO("Evaluating movingOn_ in SC");
+    //ROS_INFO("Evaluating movingOn_ in SC");
     //Previously this was (movingOn_, false) to skip fitness computation
     evaluateTrajectory(movingOn_);
     moving_on_coll_ = !movingOn_.msg_.feasible;
@@ -1572,6 +1572,7 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
       latestUpdate_.msg_.accelerations[1] = a_tf.getY();
     }
 
+    h_control_->sendLatestState(latestUpdate_.msg_);    
     //ROS_INFO("New latestUpdate_: %s", latestUpdate_.toString().c_str());
   } // end else
   
@@ -1684,7 +1685,7 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int num_ppcs, bool stop_after_ppcs, const int gens_before_cc, const bool sensingBeforeCC, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int num_ppcs, bool stop_after_ppcs, const bool sensingBeforeCC, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
 {
   //ROS_INFO("In Planner::init");
 
@@ -1739,7 +1740,6 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   global_frame_         = global_frame;
   update_topic_         = update_topic;
   pop_type_             = pop_type;
-  generationsBeforeCC_  = gens_before_cc;
   sensingBeforeCC_      = sensingBeforeCC;
   t_fixed_cc_           = t_fixed_cc;
   only_sensing_         = only_sensing;
@@ -2746,7 +2746,7 @@ void Planner::modification()
     }
     else
     {
-      ROS_INFO("evalHMap_: %s", evalHMap_ ? "True" : "False");
+      //ROS_INFO("evalHMap_: %s", evalHMap_ ? "True" : "False");
       evaluateTrajectory(traj_final, evalHMap_);
     }
 
@@ -3159,7 +3159,6 @@ void Planner::computeFullSwitch(const RampTrajectory& from, const RampTrajectory
 
   result = trajec;
 
-  ROS_INFO("In computeFullSwitch");
   requestEvaluation(result);
 
   if(log_enter_exit_)
@@ -3348,7 +3347,7 @@ void Planner::doControlCycle()
 
   // Evaluate movingOnCC
   // Previously this was movingOnCC_, false) to skip fitness computation
-  ROS_INFO("In doControlCycle");
+  //ROS_INFO("In doControlCycle");
   evaluateTrajectory(movingOnCC_);
   
   movingOn_               = movingOnCC_;
@@ -3566,7 +3565,8 @@ void Planner::pubMapOdomCb(const ros::TimerEvent& e)
 
 
 /** Send the fittest feasible trajectory to the robot package */
-void Planner::sendBest() {
+void Planner::sendBest() 
+{
   //////////ROS_INFO("Sending best trajectory: %s", population_.get(population_.calcBestIndex()).toString().c_str());
 
   //if(!stop_) {
@@ -3765,8 +3765,8 @@ void Planner::requestEvaluation(ramp_msgs::EvaluationRequest& request)
 
 void Planner::requestEvaluation(RampTrajectory& trajec, bool hmap)
 {
-  ROS_INFO("In Planner::requestEvaluation(RampTrajectory&, bool)");
-  ROS_INFO("hmap: %s", hmap ? "True" : "False");
+  //ROS_INFO("In Planner::requestEvaluation(RampTrajectory&, bool)");
+  //ROS_INFO("hmap: %s", hmap ? "True" : "False");
   ramp_msgs::EvaluationRequest req;
   
   buildEvaluationRequest(trajec, req, hmap);
@@ -3785,14 +3785,14 @@ void Planner::requestEvaluation(RampTrajectory& trajec, bool hmap)
 
 void Planner::evaluateTrajectory(RampTrajectory& t, bool hmap)
 {
-  ROS_INFO("In evaluateTrajectory");
+  //ROS_INFO("In evaluateTrajectory");
   requestEvaluation(t, hmap);
 }
 
 
 void Planner::evaluatePopulation(bool hmap)
 {
-  ROS_INFO("In evaluatePopulation");
+  //ROS_INFO("In evaluatePopulation");
   requestEvaluation(population_.trajectories_, hmap);
 }
 
@@ -4404,12 +4404,6 @@ void Planner::go()
   h_parameters_.setCCStarted(false); 
 
 
-  int num_pc = generationsBeforeCC_; 
-  if(num_pc < 0)
-  {
-    num_pc = 0;
-  }
-  //ROS_INFO("generationsBeforeCC_: %i generationsPerCC_: %i num_pc: %i", generationsBeforeCC_, generationsPerCC_, num_pc);
 
   // Run # of planning cycles before control cycles start
   ROS_INFO("Starting pre planning cycles");

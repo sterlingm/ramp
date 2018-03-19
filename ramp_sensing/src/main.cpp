@@ -23,6 +23,10 @@
 #include <bfl/pdf/analyticconditionalgaussian.h>
 
 
+bool persistGrid = false;
+bool gotPersistent = false;
+
+
 bool cropMap = false;
 bool remove_outside_fov;
 double rvizLifetime = 0.15;
@@ -307,6 +311,15 @@ void loadParameters(const ros::NodeHandle& handle)
   else
   {
     //////ROS_ERROR("Did not find rosparam /ramp/remove_outside_fov");
+  }
+  
+  if(handle.hasParam("/ramp/use_persistent_grid"))
+  {
+    handle.getParam("/ramp/use_persistent_grid", persistGrid);
+  }
+  else
+  {
+    //////ROS_ERROR("Did not find rosparam /ramp/use_persistent_grid");
   }
   
 }
@@ -1000,7 +1013,7 @@ std::vector<double> predictTheta()
 
 CircleOb* createCircleOb(CircleGroup temp)
 {
-  ROS_INFO("In createCircleOb, STATE_SIZE: %i", STATE_SIZE);
+  //ROS_INFO("In createCircleOb, STATE_SIZE: %i", STATE_SIZE);
 
   CircleOb* result = new CircleOb;
   result->cirGroup = temp;
@@ -1021,7 +1034,7 @@ CircleOb* createCircleOb(CircleGroup temp)
   CircleFilter* cir_filter = new CircleFilter(STATE_SIZE, prior, sys_pdf, meas_pdf);
   result->kf = cir_filter;
 
-  ROS_INFO("Exiting createCircleOb");
+  //ROS_INFO("Exiting createCircleOb");
   return result;
 }
 
@@ -1818,7 +1831,7 @@ void odomCb(const nav_msgs::OdometryConstPtr msg)
 
 void robotUpdateCb(const ramp_msgs::MotionStateConstPtr ms)
 {
-  //////ROS_INFO("In robotUpdateCb");
+  //ROS_INFO("In robotUpdateCb");
   ////////ROS_INFO("ms: %s", util.toString(*ms).c_str());
   setRobotPos(*ms);
   //////ROS_INFO("Exiting robotUpdateCb");
@@ -2017,6 +2030,24 @@ void computeVelocities(const std::vector<CircleMatch> cm, const ros::Duration d_
   //ROS_INFO("Exiting computeVelocities");
 }
 
+
+void persistGridCb(const nav_msgs::OccupancyGridConstPtr grid)
+{
+  ROS_INFO("In persistGridCb");
+  ros::Time tStart = ros::Time::now();
+  CirclePacker c(grid); // (If using modified costmap)
+  
+  c.getGroups(largeObs);
+
+  ros::Duration d = ros::Time::now() - tStart;
+  for(int i=0;i<largeObs.size();i++)
+  {
+    ROS_INFO("Large ob %i - Center: (%f,%f) Radius: %f", i, largeObs[i].fitCir.center.x, largeObs[i].fitCir.center.y, largeObs[i].fitCir.radius);
+  }
+  ROS_INFO("Elapsed time: %f", d.toSec());
+
+  gotPersistent = true;
+}
 
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
@@ -2315,6 +2346,11 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   // Record duration data
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tStart);
   durs.push_back( time_span.count() );
+  
+  if(persistGrid == true && gotPersistent == false)
+  {
+    gotPersistent = true;
+  }
 
 
   //ROS_INFO("Duration: %f", time_span.count());
@@ -2449,6 +2485,26 @@ void reportPredictedVelocity(int sig)
 }
 
 
+// Make this node load data rather than load_occ_map so that it doesn't have to wait
+// Waiting can take a while and if we put them in a launch file we can't control the launch order
+// so it may miss the load_occ_map publish entirely
+void loadPersistentGrid()
+{
+  std::string filename = "persistent_grid.txt";
+  std::fstream fgrid;
+
+  fgrid.open(filename, std::ios::in);
+  if(fgrid.is_open() == false)
+  {
+    ROS_ERROR("Cannot open persistent grid file");
+  }
+  else
+  {
+    
+  }
+}
+
+
 int main(int argc, char** argv) 
 {
   ros::init(argc, argv, "ramp_sensing");
@@ -2526,6 +2582,22 @@ int main(int argc, char** argv)
   {
     //////ROS_ERROR("Could not find global tf");
   }*/
+
+  // Before instantiating Subscribers, check if we are using a persistent grid
+  if(persistGrid)
+  {
+    handle.setParam("/ramp/sensing_ready", false);
+    ROS_INFO("Rosparam persistGrid is true so this node will wait until a nav_msgs/OccupancyGrid is published on '/persistent_grid'");
+    ros::Subscriber sub_persistentGrid = handle.subscribe<nav_msgs::OccupancyGrid>("/persistent_grid", 1, &persistGridCb);
+
+    ros::Rate r(100);
+    while(ros::ok() && gotPersistent == false) {ros::spinOnce(); r.sleep();}
+    
+    ROS_INFO("Got grid!");
+  }
+
+  
+  handle.setParam("/ramp/sensing_ready", true);
 
 
   // Subscribers
