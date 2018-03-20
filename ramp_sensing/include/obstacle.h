@@ -30,6 +30,7 @@ class Obstacle
     /** Methods */
 
     void update(const CircleGroup& c, const Velocity& v, const double theta);
+    void update(const nav_msgs::Odometry& o);
 
     float radius_;
   private:

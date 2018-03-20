@@ -14,7 +14,7 @@ pkg_check_modules(BFL REQUIRED orocos-bfl)
 catkin_package(
   INCLUDE_DIRS include 
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp ramp_msgs
+  CATKIN_DEPENDS nav_msgs roscpp ramp_msgs
 #  DEPENDS system_lib
 )
 

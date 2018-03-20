@@ -12,7 +12,7 @@ seed_population: false
 error_reduction: true
 
 # If true, planning and control cycles are cut off
-only_sensing: false
+only_sensing: true
 
 # If false, control cycles are cut off
 moving_robot: true
@@ -29,13 +29,17 @@ use_hilbert_map: false
 
 stop_after_ppcs: false
 
+
+
 # Sensing parameters #
 
 field_of_view_angle: 1.25
 
 remove_outside_fov: false
 
-use_persistent_grid: true
+use_persistent_grid: false
+
+use_odom_topics: true
 
 
 
@@ -69,11 +73,12 @@ shrink_ranges: false
 # Experimental setup parameters #
 #
 # Turtlebot obstacle topics
-#obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom', '/obstacle_3/odom']
 #obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity', '/obstacle_2/mobile_base/commands/velocity', '/obstacle_3/mobile_base/commands/velocity']
 #obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom']
-obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity']
-obstacle_delays: [0]
+obstacle_odoms: ['/obstacle_1/odom','/obstacle_2/odom']
+obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity','/obstacle_2/mobile_base/commands/velocity']
+obstacle_delays: [0,0]
+obstacle_radii: [0.2,0.2]
 
 # Stage simulator obstacle topics
 # No obstacles

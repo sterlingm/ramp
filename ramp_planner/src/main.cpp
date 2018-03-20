@@ -38,6 +38,7 @@ ros::Publisher pub_rviz;
 bool use_start_param;
 bool start_planner;
 bool use_hilbert_map;
+bool use_odom_topics;
 
 
 // Initializes a vector of Ranges that the Planner is initialized with
@@ -151,6 +152,13 @@ void loadParameters(const ros::NodeHandle handle)
     handle.getParam("ramp/use_hilbert_map", use_hilbert_map);
     std::cout<<"\nuse_hilbert_map: "<<use_hilbert_map;
   }
+
+  if(handle.hasParam("ramp/use_odom_topics"))
+  {
+    handle.getParam("ramp/use_odom_topics", use_odom_topics);
+    std::cout<<"\nuse_odom_topics: "<<use_odom_topics;
+  }
+
 
 
   // Get the dofs

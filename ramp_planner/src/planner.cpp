@@ -62,6 +62,7 @@ Planner::~Planner()
 /** This method determines what type of motion an obstacle has */
 const MotionType Planner::findMotionType(const ramp_msgs::Obstacle ob) const 
 {
+  //ROS_INFO("In Planner::findMotionType");
   MotionType result;
 
   // Find the linear and angular velocities
@@ -75,6 +76,7 @@ const MotionType Planner::findMotionType(const ramp_msgs::Obstacle ob) const
   //float mag_linear_t  = sqrt( tf::tfDot(v_linear, v_linear)   );
   //float mag_angular_t = sqrt( tf::tfDot(v_angular, v_angular) );
 
+  //ROS_INFO("ob_ms.velocities.size(): %i", (int)ob.ob_ms.velocities.size());
   double mag_linear_t = sqrt( pow(ob.ob_ms.velocities[0], 2) + pow(ob.ob_ms.velocities[1], 2) );
   double mag_angular_t = ob.ob_ms.velocities[2];
 
@@ -108,6 +110,7 @@ const MotionType Planner::findMotionType(const ramp_msgs::Obstacle ob) const
     result = MT_NONE;
   }
 
+  //ROS_INFO("Exiting Planner::findMotionType");
   return result;
 } // End findMotionType
 
@@ -118,6 +121,7 @@ const MotionType Planner::findMotionType(const ramp_msgs::Obstacle ob) const
  * TODO: Remove Duration parameter and make the predicted trajectory be computed until robot reaches bounds of environment */
 const ramp_msgs::RampTrajectory Planner::getPredictedTrajectory(const ramp_msgs::Obstacle ob) const 
 {
+  //ROS_INFO("In Planner::getPredictedTrajectory");
   ramp_msgs::RampTrajectory result;
 
   // First, identify which type of trajectory it is
@@ -139,6 +143,7 @@ const ramp_msgs::RampTrajectory Planner::getPredictedTrajectory(const ramp_msgs:
     result = tr_srv.response.resps.at(0).trajectory;
   }
 
+  //ROS_INFO("Exiting Planner::getPredictedTrajectory");
   return result;
 } // End getPredictedTrajectory
 
@@ -178,14 +183,19 @@ const ramp_msgs::Path Planner::getObstaclePath(const ramp_msgs::Obstacle ob, con
     ramp_msgs::KnotPoint goal;
 
     double v = sqrt( pow(start.motionState.velocities[0], 2) + pow(start.motionState.velocities[1], 2) );
+    
+    // Get direction of velocity
+    double theta_v = atan2(start.motionState.velocities[1], start.motionState.velocities[0]);
 
     double theta = start.motionState.positions[2];
     double phi = start.motionState.positions[2];
     //double delta_x = cos(phi)*ob.odom_t.twist.twist.linear.x;
     //double delta_y = sin(phi)*ob.odom_t.twist.twist.linear.x;
-    double delta_x = cos(phi)*v;
-    double delta_y = sin(phi)*v;
-    ////////ROS_INFO("phi: %f theta: %f delta_x: %f delta_y: %f", phi, theta, delta_x, delta_y);
+    //double delta_x = cos(phi)*v;
+    //double delta_y = sin(phi)*v;
+    double delta_x = cos(theta_v)*v;
+    double delta_y = sin(theta_v)*v;
+    //ROS_INFO("v_x: %f v_y: %f phi: %f theta_v: %f delta_x: %f delta_y: %f", start.motionState.velocities[0], start.motionState.velocities[1], phi, theta_v, delta_x, delta_y);
    
 
     ros::Duration predictionTime_(12.0f);
@@ -201,7 +211,7 @@ const ramp_msgs::Path Planner::getObstaclePath(const ramp_msgs::Obstacle ob, con
     goal.motionState.velocities.push_back(start.motionState.velocities.at(1));
     goal.motionState.velocities.push_back(start.motionState.velocities.at(2));
 
-    ////////ROS_INFO("goal: %s", utility_.toString(goal.motionState).c_str());
+    //ROS_INFO("goal: %s", utility_.toString(goal.motionState).c_str());
 
 
     // Push goal onto the path
@@ -245,17 +255,21 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   {
     obs_.push_back(msg.obstacles[i]);
 
-    RampTrajectory ob_temp_trj = getPredictedTrajectory(msg.obstacles.at(i));
-    if(ob_trajectory_.size() < i+1)
+    if(msg.obstacles[i].ob_ms.velocities.size() > 0)
     {
-      ob_trajectory_.push_back(ob_temp_trj);
-    }
-    else
-    {
-      ob_trajectory_.at(i) = ob_temp_trj;
-    }
+      RampTrajectory ob_temp_trj = getPredictedTrajectory(msg.obstacles.at(i));
+      if(ob_trajectory_.size() < i+1)
+      {
+        ob_trajectory_.push_back(ob_temp_trj);
+      }
+      else
+      {
+        ob_trajectory_.at(i) = ob_temp_trj;
+      }
+      //ROS_INFO("ob_temp_trj %i: %s", i, ob_temp_trj.toString().c_str());
 
-    copy.trajectories_.push_back(ob_temp_trj);
+      copy.trajectories_.push_back(ob_temp_trj);
+    }
     ////////ROS_INFO("Time to get obstacle trajectory: %f", (ros::Time::now() - start).toSec());
     ////ROS_INFO("ob_trajectory_: %s", ob_temp_trj.toString().c_str());
   } // end for
@@ -313,8 +327,8 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   if(ob_trajectory_.size() > 0)
   {
     uint8_t i_closest=0;
-    ////ROS_INFO("ob_trajectory_.size(): %i msg.obstacles.size(): %i", (int)ob_trajectory_.size(), (int)msg.obstacles.size());
-    for(uint8_t i=1;i<msg.obstacles.size();i++)
+    //ROS_INFO("ob_trajectory_.size(): %i msg.obstacles.size(): %i", (int)ob_trajectory_.size(), (int)msg.obstacles.size());
+    for(uint8_t i=1;i<ob_trajectory_.size();i++)
     {
       if(fabs(utility_.positionDistance(latestUpdate_.msg_.positions, ob_trajectory_.at(i).msg_.trajectory.points.at(0).positions)) < fabs(utility_.positionDistance(latestUpdate_.msg_.positions, ob_trajectory_.at(i_closest).msg_.trajectory.points.at(0).positions)))
       {
@@ -359,7 +373,11 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
 
   num_scs_++;
   
-  //sendPopulation();
+  // If only sensing, then call sendPopulation to publish obstacle trajs to rviz
+  if(only_sensing_)
+  {
+    sendPopulation();
+  }
   
   /*//////////ROS_INFO("Pausing in Sensing Cycle");
   ros::Duration d(1);
@@ -3632,7 +3650,7 @@ void Planner::sendPopulation()
   for(int i=0;i<ob_trajectory_.size();i++)
   {
     visualization_msgs::Marker ob_trj;
-    buildLineList(ob_trajectory_[i], ++id_line_list_, ob_trj);
+    buildLineList(ob_trajectory_[i], 400000+i, ob_trj);
     ma.markers.push_back(ob_trj);
   }
   // Current trajectory up to next control cycle
@@ -3699,7 +3717,7 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
     result.points.push_back(p);
   }
   // Planning cycles are usually 20Hz, but put a little padding on there so rviz looks smoother and doesn't start blinking if there are any delays
-  result.lifetime = ros::Duration(5);
+  result.lifetime = ros::Duration(1);
 
   // Width of the lines
   result.scale.x = 0.01;
@@ -3815,7 +3833,7 @@ void Planner::hilbertMapObsCb(const ramp_msgs::ObstacleList& hmapObs)
   		
   ROS_INFO("Exiting Planner::hilbertMapObsCb");		
 }
-
+ 
 
 
 
