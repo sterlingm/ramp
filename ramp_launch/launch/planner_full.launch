@@ -6,6 +6,8 @@
 <rosparam file="$(find ramp_launch)/launch/config/robot_0.yaml" command="load" ns="robot_info/" />
 
 
+<!-- Reset odometry -->
+<node name="reset_odom" pkg="ramp_control" type="reset_odom.py" output="log" />
 
 <!-- Trajectory Generator -->
 <node name="trajectory_generator" pkg="trajectory_generator" type="trajectory_generator" />
@@ -25,6 +27,8 @@
 <!-- Planner -->
 <node name="ramp_planner" pkg="ramp_planner" type="ramp_planner" output="screen" /> 
 
+<!-- map->odom transform -->
+<node name="pub_map_odom" pkg="ramp_planner" type="pub_map_odom" output="screen" />
 
 
 </launch>

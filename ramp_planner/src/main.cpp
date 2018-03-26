@@ -153,13 +153,6 @@ void loadParameters(const ros::NodeHandle handle)
     std::cout<<"\nuse_hilbert_map: "<<use_hilbert_map;
   }
 
-  if(handle.hasParam("ramp/use_odom_topics"))
-  {
-    handle.getParam("ramp/use_odom_topics", use_odom_topics);
-    std::cout<<"\nuse_odom_topics: "<<use_odom_topics;
-  }
-
-
 
   // Get the dofs
   if(handle.hasParam("robot_info/DOF_min") && 

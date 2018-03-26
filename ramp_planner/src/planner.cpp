@@ -1210,11 +1210,12 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
   // Setting imminent collision to true HERE!
   //******************************************************
   // If control cycles are happening, but the robot is stopped, toggle imminent collision for the evalution so that it does not consider the turning angle for the trajectory
-  double v = sqrt( pow(latestUpdate_.msg_.velocities[0], 2) + pow(latestUpdate_.msg_.velocities[1],2) );
+  /* Temporarily out for RL experiments
+   * double v = sqrt( pow(latestUpdate_.msg_.velocities[0], 2) + pow(latestUpdate_.msg_.velocities[1],2) );
   if(moving_robot_ && v < 0.01)
   {
     result.imminent_collision = true;
-  }
+  }*/
 
   // full_eval is for predicting segments that are not generated
   // Used to have param for this, but it was only used for movingOn_
