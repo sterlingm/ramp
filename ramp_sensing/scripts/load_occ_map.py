@@ -21,7 +21,7 @@ def main():
     rospack = rospkg.RosPack()
     ros_pkg_path = rospack.get_path('ramp_sensing')
 
-    # If a filenams was passed in then set it to that, otherwise set to hilbert map filename
+    # If a filename was passed in then set it to that, otherwise set to hilbert map filename
     fname = sys.argv[1] if len(sys.argv) > 2 else 'hilbert_map.csv'
     p = os.path.join(ros_pkg_path, fname)
     print p
@@ -80,7 +80,7 @@ def main():
     #grid.info.height = len(lines
 
     # Set topic name for occupancy grid
-    gridTopicName = sys.argv[2] if len(sys.argv) > 2 else 'hilbert_map'
+    gridTopicName = sys.argv[2] if len(sys.argv) > 2 else 'hilbert_map_grid'
 
     # Create Publisher 
     pub = rospy.Publisher('hilbert_map', HilbertMap, queue_size=1)

@@ -39,7 +39,7 @@ class Population {
    
     const std::vector<RampTrajectory> getBestFromSubPops() const;
     const int getSubPopIndex(const RampTrajectory& traj) const;
-    const std::vector<Population> createSubPopulations(const double delta_theta=PI/18.f);
+    const std::vector<Population> createSubPopulations(const double delta_theta=PI/6.f);
 
 
     const std::string     fitnessFeasibleToString() const;

@@ -210,6 +210,7 @@ visualization_msgs::Marker getMarker(Circle cir, int id, bool red, bool longTime
   result.color.b = 0;
   result.color.a = 0.5;
   result.lifetime = longTime ? ros::Duration(120) : ros::Duration(5);
+  ROS_INFO("result.lifetime: %f", result.lifetime.toSec());
 
 
   return result;
@@ -226,7 +227,7 @@ visualization_msgs::Marker getMarker(ramp_msgs::Circle cir, int id, bool red=fal
 
 void hmapCb(const ramp_msgs::HilbertMap& hmap)
 {
-  printf("\nIn hmapCb\n");
+  ROS_INFO("\nIn hmapCb\n");
 
   gridmap_2d::GridMap2D hmap_gmap(hmap.map, false); 
   
@@ -300,7 +301,7 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
     for(int j=0;j<N;j++)
     {
       //ROS_INFO("i: %i j: %i 100+j+i+N: %i 200+N+i+j: %i", i, j, 100+((j*(i+1))+j)+N, 200+N+i+j);
-      inner_radii.markers.push_back(getMarker(hmap_obs.obstacles[i].cirGroup.packedCirs[j], ++id, true, false));
+      inner_radii.markers.push_back(getMarker(hmap_obs.obstacles[i].cirGroup.packedCirs[j], ++id, true, true));
       
       // Increase radius for outer circle
       ramp_msgs::Circle inflated = hmap_obs.obstacles[i].cirGroup.packedCirs[j];
@@ -309,7 +310,7 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
       // Push that circle onto PackedOb vector
       hmap_obs.obstacles[i].cirGroup.packedCirs.push_back(inflated);
       
-      outer_radii.markers.push_back(getMarker(inflated, ++id, false));
+      outer_radii.markers.push_back(getMarker(inflated, ++id, false, true));
     }
   }
   //ROS_INFO("Done creating Obstacle objects");

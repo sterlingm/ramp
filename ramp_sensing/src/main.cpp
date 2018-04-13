@@ -26,6 +26,9 @@
 bool persistGrid = false;
 bool gotPersistent = false;
 bool use_odom_topics = false;
+bool use_hilbert_map = false;
+bool planner_started = false;
+
 
 
 bool cropMap = false;
@@ -329,6 +332,11 @@ void loadParameters(const ros::NodeHandle& handle)
     handle.getParam("ramp/use_odom_topics", use_odom_topics);
   }
 
+  if(handle.hasParam("ramp/use_hilbert_map"))
+  {
+    handle.getParam("ramp/use_hilbert_map", use_hilbert_map);
+  }
+
 
   
 }
@@ -498,6 +506,8 @@ void updateOtherRobotCb(const nav_msgs::Odometry::ConstPtr& o, const std::string
   //ROS_INFO("topic: %s", topic.c_str());
   int index = topic_index_map[topic];
   //ROS_INFO("index: %i", index);
+  
+  //ROS_INFO("obs.size(): %i", (int)obs.size());
 
   if(obs.size() < index+1)
   {
@@ -889,15 +899,15 @@ double getDistToFOV(Point p, double angle)
 
 std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const ros::Duration d_elapsed)
 {
-  //////ROS_INFO("In predictVelocities, d_elapsed: %f", d_elapsed.toSec());
-  //////ROS_INFO("cir_obs.size(): %i cm.size(): %i", (int)cir_obs.size(), (int)cm.size());
+  //ROS_INFO("In predictVelocities, d_elapsed: %f", d_elapsed.toSec());
+  //ROS_INFO("cir_obs.size(): %i cm.size(): %i", (int)cir_obs.size(), (int)cm.size());
 
   std::vector<Velocity> result;
   
   // For each circle obstacle,
   for(int i=0;i<cir_obs.size();i++)
   {
-    //////ROS_INFO("CircleOb %i prevCirs.size(): %i", i, (int)cir_obs[i]->prevCirs.size());
+    //ROS_INFO("CircleOb %i prevCirs.size(): %i", i, (int)cir_obs[i]->prevCirs.size());
     //////ROS_INFO("Current: (%f, %f)", cir_obs[i]->cir.center.x, cir_obs[i]->cir.center.y);
 
     Velocity temp;
@@ -907,20 +917,18 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
     {
       // Prev needs to be based on the global x,y
       int i_prev = cir_obs[i]->prevCirs.size()-1;
-      //////ROS_INFO("i_prev: %i", i_prev);
+      //ROS_INFO("i_prev: %i", i_prev);
       //////ROS_INFO("Prev: (%f, %f)", cir_obs[i]->prevCirs[i_prev].center.x, cir_obs[i]->prevCirs[i_prev].center.y);
       double x_dist = cir_obs[i]->cirGroup.fitCir.center.x - cir_obs[i]->prevCirs[i_prev].center.x;
       double y_dist = cir_obs[i]->cirGroup.fitCir.center.y - cir_obs[i]->prevCirs[i_prev].center.y;
       //double dist = sqrt( pow(x_dist,2) + pow(y_dist,2) );
 
       double dist = util.positionDistance(cir_obs[i]->prevCirs[i_prev].center.x, cir_obs[i]->prevCirs[i_prev].center.y, cir_obs[i]->cirGroup.fitCir.center.x, cir_obs[i]->cirGroup.fitCir.center.y);
-      //////ROS_INFO("dist: %f", dist);
 
       //////ROS_INFO("cir_obs.size(): %i i: %i", (int)cir_obs.size(), i);
       std::vector<double> obPos;
       obPos.push_back(cir_obs[i]->cirGroup.fitCir.center.x);
       obPos.push_back(cir_obs[i]->cirGroup.fitCir.center.y);
-      //////ROS_INFO("After obPos");
       
 
       double theta = atan2(y_dist, x_dist);
@@ -932,7 +940,6 @@ std::vector<Velocity> predictVelocities(const std::vector<CircleMatch> cm, const
         // Get cm for ob
         for(int j=0;j<cm.size();j++)
         {
-          //////ROS_INFO("j: %i cm.size(): %i", j, (int)cm.size());
           if(cm[j].i_cir == i)
           {
             //////////ROS_INFO("dist: %f delta_r: %f", dist, cm[j].delta_r);
@@ -1991,14 +1998,14 @@ void populateObstacleList(const std::vector<Velocity>& velocities)
  */
 void computeVelocities(const std::vector<CircleMatch> cm, const ros::Duration d_elapsed, std::vector<Velocity>& result)
 {
-  ////ROS_INFO("In computeVelocities");
+  //ROS_INFO("In computeVelocities");
   result = predictVelocities(cm, d_elapsed);
 
   // Average the velocities
   for(int i=0;i<cir_obs.size();i++)
   {
-    //////ROS_INFO("i: %i cir_obs.size(): %i", i, (int)cir_obs.size());
-    //////ROS_INFO("result.size(): %i cir_obs[%i]->prevTheta.size(): %i", (int)result.size(), i, (int)cir_obs.size());
+    //ROS_INFO("i: %i cir_obs.size(): %i", i, (int)cir_obs.size());
+    //ROS_INFO("result.size(): %i cir_obs[%i]->prevTheta.size(): %i", (int)result.size(), i, (int)cir_obs.size());
 
     cir_obs[i]->vels.push_back(result[i]);
     if(cir_obs[i]->vels.size() > num_velocity_count)
@@ -2074,9 +2081,9 @@ void persistGridCb(const nav_msgs::OccupancyGridConstPtr grid)
 
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
-  /*//ROS_INFO("**************************************************");
-  //ROS_INFO("In costmapCb");
-  //ROS_INFO("**************************************************");*/
+  /*ROS_INFO("**************************************************");
+  ROS_INFO("In costmapCb");
+  ROS_INFO("**************************************************");*/
   ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;
   t_last_costmap = ros::Time::now();
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
@@ -2194,6 +2201,8 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   polygonLines = c.polygonMarker_;
   pLines = c.pMarkers_;
   cLines = c.cMarkers_;
+
+  //ROS_INFO("Finished getting Circle Groups");
   
 
   //////ROS_INFO("cirGroups.size(): %i", (int)cirGroups.size());
@@ -2240,7 +2249,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
       i++;
     }
   }
-  ////////ROS_INFO("After checking viewing angle, cirGroups.size(): %i", (int)cirGroups.size());*/
+  //ROS_INFO("After checking viewing angle, cirGroups.size(): %i", (int)cirGroups.size());
  
 
   /*
@@ -2250,7 +2259,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    * 2) the measurement for each cir_ob is correct before doing update
    */
   std::vector<CircleMatch> cm = dataAssociation(cirGroups);
-  //////ROS_INFO("Done checking data association");
+  //ROS_INFO("Done checking data association");
 
 
   
@@ -2258,7 +2267,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    * Call the Kalman filter
    */
    std::vector<CircleGroup> circles_current = updateKalmanFilters(cirGroups, cm);
-   //////ROS_INFO("After updateKalmanFilters");
+   //ROS_INFO("After updateKalmanFilters");
 
   
 
@@ -2274,7 +2283,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     * Predict orientations
     */
    computeOrientations();
-   //////ROS_INFO("After computeOrientations");
+   //ROS_INFO("After computeOrientations");
   
   
   /*
@@ -2283,7 +2292,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    std::vector<Velocity> velocities;
    computeVelocities(cm, d_elapsed, velocities);
    prev_velocities.push_back(velocities);
-   //////ROS_INFO("After computeVelocities");
+   //ROS_INFO("After computeVelocities");
 
 
 
@@ -2379,7 +2388,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   ////ROS_INFO("Duration: %f", time_span.count());
   num_costmaps++;
   //////////ROS_INFO("**************************************************");
-  //////////ROS_INFO("Exiting costmapCb");
+  //ROS_INFO("Exiting costmapCb");
   //////////ROS_INFO("**************************************************");
 }
 
@@ -2549,7 +2558,7 @@ int main(int argc, char** argv)
 
   if(use_odom_topics)
   {
-    //ROS_INFO("In use_odom_topics");
+    ROS_INFO("In use_odom_topics");
 
     // Get the rosparam value
     if(handle.hasParam("/ramp/obstacle_odoms"))
@@ -2611,7 +2620,7 @@ int main(int argc, char** argv)
     if(persistGrid)
     {
       handle.setParam("/ramp/sensing_ready", false);
-      //ROS_INFO("Rosparam persistGrid is true so this node will wait until a nav_msgs/OccupancyGrid is published on '/persistent_grid'");
+      ROS_INFO("Rosparam persistGrid is true so this node will wait until a nav_msgs/OccupancyGrid is published on '/persistent_grid'");
       ros::Subscriber sub_persistentGrid = handle.subscribe<nav_msgs::OccupancyGrid>("/persistent_grid", 1, &persistGridCb);
 
       ros::Rate r(100);
@@ -2621,8 +2630,20 @@ int main(int argc, char** argv)
     }
   }
   
+  ROS_INFO("Sensing module setting /ramp/sensing_ready to true");
   handle.setParam("/ramp/sensing_ready", true);
 
+  if(use_hilbert_map)
+  {
+    ROS_INFO("Sensing module is waiting for planner to start...");
+    ros::Rate rWaiting(1000);
+    while(planner_started == false)
+    {
+      handle.getParam("ramp/preplanning_cycles_done", planner_started);
+      ros::spinOnce();
+      rWaiting.sleep();
+    }
+  }
 
   // Subscribers
   ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);

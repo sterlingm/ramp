@@ -561,6 +561,7 @@ int main(int argc, char** argv)
   bool sensingReady = false;
   while(sensingReady == false && ros::ok())
   {
+    ROS_INFO("In while");
     handle.param("/ramp/sensing_ready", sensingReady, false);
     ros::spinOnce();
     r.sleep();

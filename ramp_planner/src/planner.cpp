@@ -13,7 +13,7 @@ Planner::Planner() : resolutionRate_(1.f / 10.f), ob_dists_timer_dur_(0.1), gene
   generationsPerCC_       = controlCycle_.toSec() / planningCycle_.toSec();
 
   COLL_DISTS.push_back(0.42);
-  COLL_DISTS.push_back(0.25);
+  COLL_DISTS.push_back(0.23);
 
   i_COLL_DISTS_ = 0;
 
@@ -30,7 +30,7 @@ Planner::~Planner()
   }
 
 
-  if(h_control_) 
+  if(h_control_)
   {
     delete h_control_;
     h_control_ = 0;
@@ -232,7 +232,7 @@ const ramp_msgs::Path Planner::getObstaclePath(const ramp_msgs::Obstacle ob, con
 void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
 {
   //ROS_INFO("In sensingCycleCallback");
-  ////////ROS_INFO("msg.obstacles.size(): %i", (int) msg.obstacles.size());
+  //ROS_INFO("msg.obstacles.size(): %i", (int) msg.obstacles.size());
   ////////ROS_INFO("msg: %s", utility_.toString(msg).c_str());
   
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now() - t_prevSC_);
@@ -251,7 +251,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   /*
    * Predict obstacle trajectories
    */
-  for(uint8_t i=0;i<msg.obstacles.size();i++)
+  for(int i=0;i<msg.obstacles.size();i++)
   {
     obs_.push_back(msg.obstacles[i]);
 
@@ -326,9 +326,8 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
    */  
   if(ob_trajectory_.size() > 0)
   {
-    uint8_t i_closest=0;
-    //ROS_INFO("ob_trajectory_.size(): %i msg.obstacles.size(): %i", (int)ob_trajectory_.size(), (int)msg.obstacles.size());
-    for(uint8_t i=1;i<ob_trajectory_.size();i++)
+    int i_closest=0;
+    for(int i=1;i<ob_trajectory_.size();i++)
     {
       if(fabs(utility_.positionDistance(latestUpdate_.msg_.positions, ob_trajectory_.at(i).msg_.trajectory.points.at(0).positions)) < fabs(utility_.positionDistance(latestUpdate_.msg_.positions, ob_trajectory_.at(i_closest).msg_.trajectory.points.at(0).positions)))
       {
@@ -1382,7 +1381,7 @@ const unsigned int Planner::getIRT() { return i_rt++; }
 // Used to stop obstacles during experiments when being controlled by obstacle movement node in ramp_planner
 void Planner::obICCallback(const ros::TimerEvent& e)
 {
-  //////ROS_INFO("Time since last obICCallback: %f", (ros::Time::now() - t_prevObIC_).toSec());
+  //ROS_INFO("Time since last obICCallback: %f", (ros::Time::now() - t_prevObIC_).toSec());
   t_prevObIC_ = ros::Time::now();
   ////////ROS_INFO("In Planner::obICCallback");
   double dist_theshold = 0.4f;
@@ -1392,7 +1391,7 @@ void Planner::obICCallback(const ros::TimerEvent& e)
   if(ob_trajectory_.size() > 0)
     min_dist = utility_.positionDistance(ob_trajectory_.at(0).msg_.trajectory.points.at(0).positions, latestUpdate_.msg_.positions);
  
-  for(uint8_t i=0;i<ob_trajectory_.size();i++)
+  for(int i=0;i<ob_trajectory_.size();i++)
   {
     double dist = utility_.positionDistance(ob_trajectory_.at(i).msg_.trajectory.points.at(0).positions, latestUpdate_.msg_.positions);
     //////ROS_INFO("ob %i dist: %f", (int)i, dist);
@@ -1450,7 +1449,7 @@ void Planner::obICCallback(const ros::TimerEvent& e)
     i_COLL_DISTS_ = 1;
   }
   
-  ////////ROS_INFO("Exiting Planner::obICCallback");
+  //ROS_INFO("Exiting Planner::obICCallback");
 }
 
 
@@ -1483,10 +1482,10 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
 
   //ROS_INFO("movingOn: %s", movingOn_.toString().c_str());
     
-  for(int o=0;o<ob_trajectory_.size();o++)
-  {
+  //for(int o=0;o<ob_trajectory_.size();o++)
+  //{
     //ROS_INFO("Ob %i: %f", o, utility_.positionDistance(latestUpdate_.msg_.positions, ob_trajectory_[o].msg_.trajectory.points[0].positions));
-  }
+  //}
 
   if(ob_trajectory_.size() > 0 && moving_on_coll_ && (movingOn_.msg_.t_firstCollision.toSec() < time_threshold
     || (movingOn_.msg_.t_firstCollision.toSec() - (ros::Time::now().toSec()-t_prevCC_ros_.toSec())) < time_threshold))
@@ -1730,8 +1729,8 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
                                           &Planner::imminentCollisionCallback, this);
   imminentCollisionTimer_.stop();
 
-  ob_dists_timer_ = h.createTimer(ob_dists_timer_dur_, &Planner::obICCallback, this);
-  ob_dists_timer_.stop();
+  //ob_dists_timer_ = h.createTimer(ob_dists_timer_dur_, &Planner::obICCallback, this);
+  //ob_dists_timer_.stop();
 
 
   sendPop_ = ros::Duration(0.05);
@@ -2791,7 +2790,7 @@ void Planner::modification()
     // If sub-populations are being used and
     // the trajectory was added to the population, update the sub-populations 
     // (can result in infinite loop if not updated but re-evaluated)
-    if(subPopulations_ && index >= 0) 
+    if(subPopulations_ && index >= 0)
     {
       population_.createSubPopulations();
       //trans_popCopy.createSubPopulations();
@@ -3523,7 +3522,7 @@ void Planner::doControlCycle()
  
   num_cc_++;
   ////////ROS_INFO("Time spent in CC: %f", d_cc.toSec());
-  ////////ROS_INFO("Exiting Planner::doControlCycle");
+  //ROS_INFO("Exiting Planner::doControlCycle");
 } // End doControlCycle
 
 
@@ -3646,6 +3645,38 @@ void Planner::sendPopulation()
     buildLineList(population_.trajectories_[i], 300000+i, pop_trj);
     ma.markers.push_back(pop_trj);
   }
+
+
+
+  /*
+   * Create a text element to show the generation number
+   */
+  visualization_msgs::Marker text;
+
+  text.header.stamp     = ros::Time::now();
+  text.id               = 57000;
+  text.header.frame_id  = global_frame_;
+
+  text.ns       = "basic_shapes";
+  text.type     = visualization_msgs::Marker::TEXT_VIEW_FACING;
+  text.action   = visualization_msgs::Marker::ADD;
+
+  std::ostringstream genStr;
+  genStr<<"Generation: "<<generation_<<"/"<<num_ppcs_;
+  text.text = genStr.str();
+
+  text.pose.position.x = -1.05;
+  text.pose.position.y = 2.1;
+  text.pose.position.z = 0.1;
+  text.color.r = 1;
+  text.color.g = 1;
+  text.color.b = 1;
+  text.color.a = 1;
+  text.scale.z = 0.25;
+  text.lifetime = ros::Duration(5);
+
+  ma.markers.push_back(text);
+
 
   // Obstacle trajectories
   for(int i=0;i<ob_trajectory_.size();i++)
@@ -4421,10 +4452,13 @@ void Planner::go()
 
   
   h_parameters_.setCCStarted(false); 
+  h_parameters_.setPPCDone(false);
 
 
+  // Evaluate before 
+  evaluatePopulation(evalHMap_);
 
-  // Run # of planning cycles before control cycles start
+  // Run # of pre planning cycles before control cycles start
   ROS_INFO("Starting pre planning cycles");
   ros::Rate r(20);
   // Wait for the specified number of generations before starting CC's
@@ -4443,6 +4477,7 @@ void Planner::go()
 
   ROS_INFO("Finished pre-planning cycles!");
   sendPopulation();
+  h_parameters_.setPPCDone(true);
 
   // If we are stopping here (would only do this when using hmap obs), exit
   if(evalHMap_ && stop_after_ppcs_)
@@ -4467,7 +4502,7 @@ void Planner::go()
   {
     controlCycleTimer_.start();
     imminentCollisionTimer_.start();
-    ob_dists_timer_.start();
+    //ob_dists_timer_.start();
     ROS_INFO("CCs started");
   }
 
@@ -4545,6 +4580,10 @@ void Planner::go()
   h_control_->send(empty);
  
  
+  // Reset some params
+  h_parameters_.setCCStarted(false); 
+  h_parameters_.setPPCDone(false);
+
   ////////ROS_INFO("Total number of planning cycles: %i", generation_-1);
   ////////ROS_INFO("Total number of control cycles:  %i", num_cc_);
   ////////ROS_INFO("Exiting Planner::go");

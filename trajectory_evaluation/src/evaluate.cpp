@@ -358,7 +358,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     }
     //ROS_INFO("dist: %f delta_theta: %f", dist, delta_theta);
 
-    double max_v=0.25/2;
+    double max_v=0.33/2;
     double max_w=PI/8.f;
 
     // Estimate how long to execute positional and angular displacements based on max velocity
@@ -397,11 +397,24 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     T *= T_weight_;
     A *= A_weight_;
     D *= D_weight_;
+
+    double Tterm = T * T_weight_;
+    double Aterm = A * A_weight_;
+    double Dterm = D * D_weight_;
+
+    if(fabs(Dterm) < 0.01)
+    {
+      Dterm = 0;
+    }
+    else
+    {
+      Dterm = 1.0 / Dterm;
+    }
     
     ////ROS_INFO("Weighted terms T: %f A: %f D: %f", T, A, D);
 
     // Compute overall cost
-    cost = T + A + (1.f/D);
+    cost = Tterm + Aterm + Dterm;
   }
 
   else

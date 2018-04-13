@@ -243,7 +243,7 @@ const bool Population::canReplace(const RampTrajectory& rt, const int& i) const
   // If sub-populations are used,
   if(subPopulations_.size() > 0) 
   {
-    //std::cout<<"\nIn sub-pops are being used!";
+    ROS_INFO("SubPopulations are being used");
     
     //std::cout<<"\ntrajectories.size(): "<<trajectories_.size();
     RampTrajectory temp = trajectories_.at(i);
@@ -350,8 +350,8 @@ const int Population::getSubPopIndex(const RampTrajectory& traj) const
  *  Returns the index that the trajectory is added at */
 const int Population::add(const RampTrajectory& rt, bool forceMin) 
 {
-  //ROS_INFO("In Population::add");
-  //ROS_INFO("forceMin: %s", forceMin ? "True" : "False");
+  ROS_INFO("In Population::add");
+  ROS_INFO("forceMin: %s", forceMin ? "True" : "False");
   /*//ROS_INFO("Pop: %s", toString().c_str());
   //ROS_INFO("rt: %s", rt.toString().c_str());
   //ROS_INFO("Pop best id: %i", calcBestIndex());*/
@@ -370,7 +370,7 @@ const int Population::add(const RampTrajectory& rt, bool forceMin)
   // If it's not full, simply push back
   if(isSubPopulation_ || trajectories_.size() < maxSize_) 
   {
-    //ROS_INFO("In isSubPopulation_ || trajectories_.size() < maxSize_");
+    ROS_INFO("In isSubPopulation_ || trajectories_.size() < maxSize_");
     trajectories_.push_back (rt);  
     paths_.push_back        (rt.msg_.holonomic_path);
     
@@ -383,8 +383,16 @@ const int Population::add(const RampTrajectory& rt, bool forceMin)
   else if(!contains(rt) && forceMin)
   {
     int i_min = calcWorstIndex();
-    //ROS_INFO("Trajectory to replace: %s", trajectories_[i_min].toString().c_str());
-    replace(i_min, rt);
+
+    // Check the sub-pop for i_min
+    if(subPopulations_.size() > 0)
+    {
+      if( subPopulations_[trajectories_[i_min].msg_.i_subPopulation].size() > 1)
+      {
+        //ROS_INFO("Trajectory to replace: %s", trajectories_[i_min].toString().c_str());
+        replace(i_min, rt);
+      }
+    }
   }
 
   // If full, replace a trajectory

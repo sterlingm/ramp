@@ -1682,11 +1682,14 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, s
   if(cs.size() == 0)
   {
     // Manually transpose set of points
-    for(int i=0;i<contours.size();i++)
+    if(usingHMap == false)
     {
-      int swap = contours[i].x;
-      contours[i].x = contours[i].y;
-      contours[i].y = swap;
+      for(int i=0;i<contours.size();i++)
+      {
+        int swap = contours[i].x;
+        contours[i].x = contours[i].y;
+        contours[i].y = swap;
+      }
     }
     // Get convex hull of points
     std::vector<cv::Point> hull;

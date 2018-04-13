@@ -13,7 +13,7 @@
 <!-- Evaluation -->
 <node name="trajectory_evaluation" pkg="trajectory_evaluation" type="trajectory_evaluation" output="screen" />
 
-<!-- Parse hmap file and publish it
+<!-- Parse hmap file and publish it (DO THIS MANUALLY)
 <node name="load_occ_data" pkg="ramp_sensing" type="load_occ_map.py" output="screen" /> -->
 
 <!-- Get hmap, and publish hmap obstacles -->
@@ -27,6 +27,10 @@
 
 <!-- Planner -->
 <node name="ramp_planner" pkg="ramp_planner" type="ramp_planner" output="screen" />
+
+
+<!-- Sensing -->
+<param name="/ramp/sensing_ready" value="True" />
 
 
 </launch>
