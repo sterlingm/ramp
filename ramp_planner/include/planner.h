@@ -134,7 +134,8 @@ class Planner {
               const double              t_fixed_cc=2.,
               const bool                only_sensing=0,
               const bool                moving_robot=1,
-              const bool                errorReduction=0);
+              const bool                errorReduction=0,
+              bool                      show_full_traj=0);
     
     // Send the best trajectory to the control package
     void sendBest();
@@ -533,6 +534,7 @@ class Planner {
     int i_prevBest_;
     
     
+    bool show_full_traj_;
     
     /*
      * Vectors to hold recorded data

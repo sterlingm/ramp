@@ -23,6 +23,8 @@ sensing_before_control_cycle: false
 
 pop_traj_type: 1 #0=holonomic, 1=hybrid
 
+show_full_traj: true
+
 use_start_param: false
 
 use_hilbert_map: true

@@ -1703,7 +1703,7 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int num_ppcs, bool stop_after_ppcs, const bool sensingBeforeCC, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction) 
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int num_ppcs, bool stop_after_ppcs, const bool sensingBeforeCC, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction, bool show_full_traj)
 {
   //ROS_INFO("In Planner::init");
 
@@ -1763,6 +1763,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   only_sensing_         = only_sensing;
   moving_robot_         = moving_robot;
   errorReduction_       = errorReduction;
+  show_full_traj_       = show_full_traj;
   generationsPerCC_     = controlCycle_.toSec() / planningCycle_.toSec();
 
   num_ppcs_ = num_ppcs;
@@ -3748,6 +3749,48 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
 
     result.points.push_back(p);
   }
+
+  // Check if we want to display the full trajectory
+  if(show_full_traj_ && trajec.msg_.trajectory.points.size() > 0)
+  {
+    ROS_INFO("In if show_full_traj, trajec.msg_.trajectory.points.size(): %i", (int)trajec.msg_.trajectory.points.size());
+    // p = last non-holonomic point on trajectory
+    trajectory_msgs::JointTrajectoryPoint p = trajec.msg_.trajectory.points.at(trajec.msg_.trajectory.points.size()-1);
+    ROS_INFO("p: %s", utility_.toString(p).c_str());
+
+    // Find knot point index on holonomic path where non-holonomic segment ends
+    int i_end=0;
+    for(int i=0;i<trajec.msg_.holonomic_path.points.size();i++)
+    {
+      ROS_INFO("i: %i trajec.holonomic_path.points.size(): %i", (int)i, (int)trajec.msg_.holonomic_path.points.size());
+      double dist = utility_.positionDistance(trajec.msg_.holonomic_path.points[i].motionState.positions, p.positions);
+
+      ////ROS_INFO("trajec.holonomic_path[%i]: %s", (int)i, utility_.toString(trajec.holonomic_path.points[i].motionState).c_str());
+      ROS_INFO("dist: %f", dist);
+      ////ROS_INFO("offset: %f", offset);
+
+      // Account for some offset
+      if( dist*dist < 0.2 )
+      {
+        i_end = i; 
+        break;
+      }
+    } // end for
+   
+    ROS_INFO("i_end: %i", i_end);
+    for(int i=i_end;i<trajec.msg_.holonomic_path.points.size();i++)
+    {
+      geometry_msgs::Point p;
+      p.x = trajec.msg_.holonomic_path.points[i].motionState.positions[0];
+      p.y = trajec.msg_.holonomic_path.points[i].motionState.positions[1];
+      p.z = 0;
+
+      result.points.push_back(p);
+    }
+  } // end if show_full_traj
+
+
+
   // Planning cycles are usually 20Hz, but put a little padding on there so rviz looks smoother and doesn't start blinking if there are any delays
   result.lifetime = ros::Duration(1);
 

@@ -24,6 +24,7 @@ bool                only_sensing;
 bool                moving_robot;
 bool                shrink_ranges;
 bool                stop_after_ppcs;
+bool                show_full_traj;
 double              t_cc_rate;
 double              t_sc_rate;
 int                 pop_type;
@@ -328,7 +329,15 @@ void loadParameters(const ros::NodeHandle handle)
         break;
     }
   }
+
+  if(handle.hasParam("ramp/show_full_traj"))
+  {
+    handle.getParam("ramp/show_full_traj", show_full_traj);
+    ROS_INFO("show_full_traj: %s", show_full_traj ? "True" : "False");
+  }
   
+
+
   if(handle.hasParam("ramp/error_reduction")) 
   {
     handle.getParam("ramp/error_reduction", errorReduction);
@@ -536,7 +545,7 @@ int main(int argc, char** argv)
    */
  
   // Initialize the planner
-  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, global_frame, update_topic, pt, num_ppcs, stop_after_ppcs, sensingBeforeCC, t_sc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction); 
+  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, global_frame, update_topic, pt, num_ppcs, stop_after_ppcs, sensingBeforeCC, t_sc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction, show_full_traj);
   my_planner.modifications_   = modifications;
   my_planner.evaluations_     = evaluations;
   my_planner.seedPopulation_  = seedPopulation;
