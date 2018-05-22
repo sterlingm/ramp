@@ -188,7 +188,7 @@ visualization_msgs::Marker getMarker(Circle cir, int id, bool red, bool longTime
 
   result.pose.position.x = x;
   result.pose.position.y = y;
-  result.pose.position.z = 0;
+  result.pose.position.z = red ? 0.1 : 0;
   result.pose.orientation.x = 0.0;
   result.pose.orientation.y = 0.0;
   result.pose.orientation.z = 0.0;

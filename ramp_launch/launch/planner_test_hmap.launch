@@ -31,6 +31,9 @@
 
 <!-- Sensing -->
 <param name="/ramp/sensing_ready" value="True" />
+<param name="/ramp/use_hilbert_map" value="True" />
+<param name="/ramp/stop_after_ppcs" value="True" />
+<param name="/ramp/preplanning_cycles" value="500" />
 
 
 </launch>

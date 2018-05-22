@@ -1,7 +1,7 @@
 # RAMP misc parameters #
 population_size: 10
 
-sub_populations: true
+sub_populations: false
 
 modifications: true
 
@@ -17,19 +17,19 @@ only_sensing: false
 # If false, control cycles are cut off
 moving_robot: true
 
-preplanning_cycles: 750
+preplanning_cycles: 20
 
 sensing_before_control_cycle: false
 
 pop_traj_type: 1 #0=holonomic, 1=hybrid
 
-show_full_traj: true
+show_full_traj: false
 
 use_start_param: false
 
-use_hilbert_map: true
+use_hilbert_map: false
 
-stop_after_ppcs: true
+stop_after_ppcs: false
 
 
 
@@ -52,13 +52,13 @@ fixed_control_cycle_rate: 1.2
 
 sensing_cycle_rate: 15
 
-eval_weight_T: 1.0 #1 #1.75
+eval_weight_T: 1.75 #1 #1.75
 
 # As D weight increases, overall contribution of D to the cost decreases
 # This is because high values of D are good so we add 1/D to the fitness cost
-eval_weight_D: 0.13 #0.13 #5
+eval_weight_D: 0.2 #0.13 #5
 
-eval_weight_A: 0.48 #0.48 #0.01
+eval_weight_A: 0.01 #0.48 #0.01
 
 
 
@@ -76,9 +76,9 @@ shrink_ranges: false
 #
 # Turtlebot obstacle topics
 #obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity', '/obstacle_2/mobile_base/commands/velocity', '/obstacle_3/mobile_base/commands/velocity']
-#obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom']
+obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom']
 #obstacle_odoms: ['/obstacle_1/odom','/obstacle_2/odom']
-#obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity','/obstacle_2/mobile_base/commands/velocity']
+obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity','/obstacle_2/mobile_base/commands/velocity']
 #obstacle_delays: [0,0]
 #obstacle_radii: [0.2,0.2]
 

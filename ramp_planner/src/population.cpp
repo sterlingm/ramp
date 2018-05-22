@@ -243,7 +243,7 @@ const bool Population::canReplace(const RampTrajectory& rt, const int& i) const
   // If sub-populations are used,
   if(subPopulations_.size() > 0) 
   {
-    ROS_INFO("SubPopulations are being used");
+    //ROS_INFO("SubPopulations are being used");
     
     //std::cout<<"\ntrajectories.size(): "<<trajectories_.size();
     RampTrajectory temp = trajectories_.at(i);
@@ -350,8 +350,8 @@ const int Population::getSubPopIndex(const RampTrajectory& traj) const
  *  Returns the index that the trajectory is added at */
 const int Population::add(const RampTrajectory& rt, bool forceMin) 
 {
-  ROS_INFO("In Population::add");
-  ROS_INFO("forceMin: %s", forceMin ? "True" : "False");
+  //ROS_INFO("In Population::add");
+  //ROS_INFO("forceMin: %s", forceMin ? "True" : "False");
   /*//ROS_INFO("Pop: %s", toString().c_str());
   //ROS_INFO("rt: %s", rt.toString().c_str());
   //ROS_INFO("Pop best id: %i", calcBestIndex());*/
@@ -364,13 +364,12 @@ const int Population::add(const RampTrajectory& rt, bool forceMin)
       subPopulations_.at(i).calcBestIndex();
     }
   }*/
-
  
   // If it's a sub-population or
   // If it's not full, simply push back
   if(isSubPopulation_ || trajectories_.size() < maxSize_) 
   {
-    ROS_INFO("In isSubPopulation_ || trajectories_.size() < maxSize_");
+    //ROS_INFO("In isSubPopulation_ || trajectories_.size() < maxSize_");
     trajectories_.push_back (rt);  
     paths_.push_back        (rt.msg_.holonomic_path);
     
@@ -387,13 +386,23 @@ const int Population::add(const RampTrajectory& rt, bool forceMin)
     // Check the sub-pop for i_min
     if(subPopulations_.size() > 0)
     {
+      // Check if the worst trajec is not the only one in its sub-pops
       if( subPopulations_[trajectories_[i_min].msg_.i_subPopulation].size() > 1)
       {
         //ROS_INFO("Trajectory to replace: %s", trajectories_[i_min].toString().c_str());
         replace(i_min, rt);
+        return i_min;
       }
-    }
-  }
+      // Else, replace a random trajectory
+      else if(replacementPossible(rt))
+      {
+        //ROS_INFO("Using random");
+        int i = getReplacementID(rt);
+        replace(i, rt);
+        return i;
+      }
+    } // end if using sub-pops
+  } // end if forceMin
 
   // If full, replace a trajectory
   else if(!contains(rt) && replacementPossible(rt)) 

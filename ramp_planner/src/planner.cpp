@@ -516,7 +516,7 @@ const Population Planner::getPopulation( const MotionState init, const MotionSta
 
   // Set the size
   result.maxSize_ = populationSize_;
-  result.type_    = pop_type_;
+  result.type_    = evalHMap_ ? HOLONOMIC : pop_type_;
 
   // Get some random paths
   std::vector<Path> paths = random ?  getRandomPaths  (init, goal)  : 
@@ -1142,10 +1142,12 @@ void Planner::buildTrajectoryRequest(const Path path, ramp_msgs::TrajectoryReque
 
 void Planner::buildEvaluationSrv(std::vector<RampTrajectory>& trajecs, ramp_msgs::EvaluationSrv& srv, bool hmap) const
 {
+  //ROS_INFO("In buildEvaluationSrv");
+  //ROS_INFO("hmap: %s", hmap ? "True" : "False");
   for(uint16_t i=0;i<trajecs.size();i++)
   {
     ramp_msgs::EvaluationRequest req;
-    buildEvaluationRequest(trajecs[i], req);
+    buildEvaluationRequest(trajecs[i], req, hmap);
     req.hmap_eval = hmap;
     srv.request.reqs.push_back(req);
   }
@@ -1225,7 +1227,7 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
   // Set hmap obs
   if(hmap)
   {
-    ROS_INFO("hmap=true! hmap: %s", hmap ? "True" : "False");
+    //ROS_INFO("hmap=true! hmap: %s", hmap ? "True" : "False");
     result.obstacle_trjs.clear();
     result.obstacle_cir_groups.clear();
     for(int i=0;i<obsHmap_.size();i++)
@@ -1473,19 +1475,20 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
 {
   ros::Duration d = ros::Time::now() - t_prevIC_;
   t_prevIC_ = ros::Time::now();
-  //ROS_INFO("In imminentCollisionCallback");
-  //ROS_INFO("Time since last: %f", d.toSec());
+  ROS_INFO("In imminentCollisionCallback");
+  ROS_INFO("Time since last: %f", d.toSec());
 
   std_msgs::Bool ic;
 
   double time_threshold = controlCycle_.toSec();
 
-  //ROS_INFO("movingOn: %s", movingOn_.toString().c_str());
     
   //for(int o=0;o<ob_trajectory_.size();o++)
   //{
     //ROS_INFO("Ob %i: %f", o, utility_.positionDistance(latestUpdate_.msg_.positions, ob_trajectory_[o].msg_.trajectory.points[0].positions));
   //}
+  
+  ROS_INFO("moving_on_coll_: %s t_firstcoll: %f t_cc: %f t_prevCC_ros_: %f", moving_on_coll_ ? "True" : "False", movingOn_.msg_.t_firstCollision.toSec(), time_threshold, t_prevCC_ros_.toSec());
 
   if(ob_trajectory_.size() > 0 && moving_on_coll_ && (movingOn_.msg_.t_firstCollision.toSec() < time_threshold
     || (movingOn_.msg_.t_firstCollision.toSec() - (ros::Time::now().toSec()-t_prevCC_ros_.toSec())) < time_threshold))
@@ -1498,6 +1501,8 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
       t_IC_ = ros::Time::now();
     }
   
+    ROS_INFO("movingOn: %s", movingOn_.toString().c_str());
+    ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
 
     ic.data = true;
     imminent_collision_ = true;
@@ -2683,6 +2688,7 @@ void Planner::modifyTrajec(std::vector<RampTrajectory>& result)
 
   // Modify path
   std::vector<Path> modded_paths = modifyPath();
+  ROS_INFO("modded_paths.size(): %i", (int)modded_paths.size());
   
   // Save duration data
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tNow);
@@ -2735,6 +2741,7 @@ void Planner::modification()
   // Do modification
   std::vector<RampTrajectory> mod_trajec;
   modifyTrajec(mod_trajec);
+  ROS_INFO("mod_trajec.size(): %i", (int)mod_trajec.size());
 
   // Save duration data
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tNow);
@@ -2768,6 +2775,7 @@ void Planner::modification()
       //ROS_INFO("evalHMap_: %s", evalHMap_ ? "True" : "False");
       evaluateTrajectory(traj_final, evalHMap_);
     }
+    ROS_INFO("Mod trajec %i fit: %f feas: %s t_fc: %f", i, traj_final.msg_.fitness, traj_final.msg_.feasible ? "True" : "False", traj_final.msg_.t_firstCollision.toSec());
 
     //ROS_INFO("Final mod: %s", traj_final.toString().c_str());
 
@@ -3030,7 +3038,7 @@ void Planner::planningCycleCallback()
   if(modifications_) 
   {
     //////////////ROS_INFO("*****************************");
-    ////////ROS_INFO("Performing modification");
+    ROS_INFO("Performing modification");
     high_resolution_clock::time_point t = high_resolution_clock::now();
     modification();
     time_span = duration_cast<microseconds>(t - tStart);
@@ -3178,7 +3186,7 @@ void Planner::computeFullSwitch(const RampTrajectory& from, const RampTrajectory
 
   result = trajec;
 
-  requestEvaluation(result);
+  requestEvaluation(result, evalHMap_);
 
   if(log_enter_exit_)
   {
@@ -3308,7 +3316,7 @@ void Planner::getTransPop(const Population& pop, const RampTrajectory& movingOn,
 void Planner::doControlCycle() 
 {
   ////////////ROS_WARN("Control Cycle %i occurring at Time: %f", num_cc_, ros::Time::now().toSec());
-  //ROS_INFO("controlCycle_: %f", controlCycle_.toSec());
+  ROS_INFO("controlCycle_: %f", controlCycle_.toSec());
   //////////ROS_INFO("Time between control cycles: %f", (ros::Time::now() - t_prevCC_).toSec());
   ////////////ROS_INFO("Number of planning cycles that occurred between CC's: %i", c_pc_);
   
@@ -3337,6 +3345,10 @@ void Planner::doControlCycle()
 
   if(i_best != i_prevBest_)
   {
+    if(imminent_collision_)
+    {
+      ROS_INFO("*** SWITCHING WHILE IN IC ***");
+    }
     num_switches_++;
   }
   i_prevBest_ = i_best;
@@ -3389,7 +3401,7 @@ void Planner::doControlCycle()
   // The motion state that we should reach by the next control cycle
   if(imminent_collision_)
   {
-    //ROS_INFO("imminent_collision_: True");
+    ROS_INFO("imminent_collision_: True");
     m_cc_ = latestUpdate_;
     startPlanning_ = m_cc_;
     controlCycle_ = ros::Duration(t_fixed_cc_);
@@ -3623,6 +3635,7 @@ void Planner::sendPopulation()
 {
   //ROS_INFO("In Planner::sendPopulation");
   //ROS_INFO("Time since last sendPopulation(): %f", (ros::Time::now() - t_prevSendPop_).toSec());
+  //ROS_INFO("Pop: %s", population_.toString().c_str());
 
   /*
    * Send to trajectory_visualization node
@@ -3753,20 +3766,20 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
   // Check if we want to display the full trajectory
   if(show_full_traj_ && trajec.msg_.trajectory.points.size() > 0)
   {
-    ROS_INFO("In if show_full_traj, trajec.msg_.trajectory.points.size(): %i", (int)trajec.msg_.trajectory.points.size());
+    //ROS_INFO("In if show_full_traj, trajec.msg_.trajectory.points.size(): %i", (int)trajec.msg_.trajectory.points.size());
     // p = last non-holonomic point on trajectory
     trajectory_msgs::JointTrajectoryPoint p = trajec.msg_.trajectory.points.at(trajec.msg_.trajectory.points.size()-1);
-    ROS_INFO("p: %s", utility_.toString(p).c_str());
+    //ROS_INFO("p: %s", utility_.toString(p).c_str());
 
     // Find knot point index on holonomic path where non-holonomic segment ends
     int i_end=0;
     for(int i=0;i<trajec.msg_.holonomic_path.points.size();i++)
     {
-      ROS_INFO("i: %i trajec.holonomic_path.points.size(): %i", (int)i, (int)trajec.msg_.holonomic_path.points.size());
+      //ROS_INFO("i: %i trajec.holonomic_path.points.size(): %i", (int)i, (int)trajec.msg_.holonomic_path.points.size());
       double dist = utility_.positionDistance(trajec.msg_.holonomic_path.points[i].motionState.positions, p.positions);
 
       ////ROS_INFO("trajec.holonomic_path[%i]: %s", (int)i, utility_.toString(trajec.holonomic_path.points[i].motionState).c_str());
-      ROS_INFO("dist: %f", dist);
+      //ROS_INFO("dist: %f", dist);
       ////ROS_INFO("offset: %f", offset);
 
       // Account for some offset
@@ -3777,7 +3790,7 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
       }
     } // end for
    
-    ROS_INFO("i_end: %i", i_end);
+    //ROS_INFO("i_end: %i", i_end);
     for(int i=i_end;i<trajec.msg_.holonomic_path.points.size();i++)
     {
       geometry_msgs::Point p;
@@ -3905,6 +3918,9 @@ void Planner::hilbertMapObsCb(const ramp_msgs::ObstacleList& hmapObs)
   		
   evalHMap_ = true;		
   forceMinMod_ = true;
+
+  // If we are using hmap, then the population needs to be holonomic when doing pre-planning cycles
+  population_.type_ = HOLONOMIC;
   		
   ROS_INFO("Exiting Planner::hilbertMapObsCb");		
 }
@@ -4453,6 +4469,7 @@ void Planner::go()
   // initialize population
   initPopulation();
   //////ROS_INFO("Population initialized");
+  //ROS_INFO("Before initial eval, evalHMap_: %s", evalHMap_ ? "True" : "False");
   evaluatePopulation(evalHMap_);
   ROS_INFO("Initial population evaluated");
   sendPopulation();
@@ -4519,6 +4536,8 @@ void Planner::go()
   }
 
   ROS_INFO("Finished pre-planning cycles!");
+  evaluatePopulation(evalHMap_);
+  //ROS_INFO("Pop: %s", population_.toString().c_str());
   sendPopulation();
   h_parameters_.setPPCDone(true);
 
@@ -4534,6 +4553,7 @@ void Planner::go()
   // Stop evaluating with hilbert map and forcing the min. fit. traj to be replaced
   evalHMap_ = false;
   forceMinMod_ = false;
+  population_.type_ = pop_type_;
  
   ROS_INFO("Starting CCs at t: %f", ros::Time::now().toSec());
 

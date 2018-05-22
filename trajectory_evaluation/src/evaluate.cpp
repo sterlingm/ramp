@@ -30,7 +30,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   if(req.hmap_eval)
   {
     performFeasibilityHmap(req);
-    ////ROS_INFO("qr.packed_.innerColl_: %s", qrPacked_.innerColl_ ? "True" : "False");
+    //ROS_INFO("qr.packed_.innerColl_: %s", qrPacked_.innerColl_ ? "True" : "False");
     res.feasible = !qrPacked_.innerColl_;
     req.trajectory.feasible = res.feasible;
   }
@@ -187,14 +187,20 @@ void Evaluate::performFitnessHmap(ramp_msgs::RampTrajectory& trj, const Collisio
   // p_max is an int, convert to double
   double perc = qr.p_max_ / 100.0;
 
+  ROS_INFO("perc: %f", perc);
   
   // Check feasibility
   if(trj.feasible)
   {
     ////ROS_INFO("In trj.feasible");
     // Set cost. Scale the collision penalty with the max probability of the traj being in collision
-    cost = 1.0 - perc;
-    ////ROS_INFO("cost: %f", (1.0-perc));
+    cost = perc;
+    
+    double T = trj.trajectory.points.at(trj.trajectory.points.size()-1).time_from_start.toSec() / T_norm_;
+    double w_T = 1.0;
+    ROS_INFO("T: %f w_T: %f T*w_T: %f", T, w_T, T*w_T);
+    
+    cost += T * w_T;
   }
   else
   {
@@ -208,11 +214,12 @@ void Evaluate::performFitnessHmap(ramp_msgs::RampTrajectory& trj, const Collisio
   getBoundaryCost(trj, bcost);
   bcost /= 4.94975;
   double bcost_cost = 1.0/bcost;
-  bcost_cost *= 0.1;
-  ////ROS_INFO("bcost: %f bcost_cost: %f", bcost, bcost_cost);
+  double w_bcost = 0.05;
+  ROS_INFO("bcost: %f bcost_cost: %f", bcost, bcost_cost);
 
   // Add boundary cost to the full cost. Do the inverse of boundary cost b/c it's a distance
-  cost += bcost_cost; 
+  cost += (bcost_cost * w_bcost);
+
 
   // Set result
   result = cost > 0 ? 1.0 / cost : 1.00;
@@ -375,8 +382,15 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     /*double v = sqrt( pow(trj.trajectory.points[0].velocities[0],2) + pow(trj.trajectory.points[1].velocities[1],2) );
     A_weight_ = v;*/
 
+    // new
     // Minimum distance to any obstacle
     double D = cd_.min_dist_;
+    if (D < 0.00001f) D = 0.00001;
+    double _1_D = 1.0 / D; // consider 1/D, not D
+    //min_obs_dis = D;
+
+    // old
+    //double D = cd_.min_dist_;
 
     ////ROS_INFO("T: %f A: %f D: %f", T, A, D);
 
@@ -394,22 +408,21 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     ////ROS_INFO("Normalized terms T: %f A: %f D: %f", T, A, D);
 
     // Weight terms
-    T *= T_weight_;
-    A *= A_weight_;
-    D *= D_weight_;
-
     double Tterm = T * T_weight_;
     double Aterm = A * A_weight_;
-    double Dterm = D * D_weight_;
 
-    if(fabs(Dterm) < 0.01)
+    // new
+    double Dterm = _1_D * D_weight_;
+
+    // old
+    /*if(fabs(Dterm) < 0.01)
     {
       Dterm = 0;
     }
     else
     {
       Dterm = 1.0 / Dterm;
-    }
+    }*/
     
     ////ROS_INFO("Weighted terms T: %f A: %f D: %f", T, A, D);
 

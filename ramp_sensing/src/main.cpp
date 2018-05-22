@@ -530,6 +530,108 @@ void updateOtherRobotCb(const nav_msgs::Odometry::ConstPtr& o, const std::string
 
 
 
+void addHardCodedStaticObs()
+{
+  //ROS_INFO("In addHardCodedStaticObs");
+  list.obstacles.clear();
+
+  Obstacle oa;
+  oa.msg_.ob_ms.positions.push_back(2.0);
+  oa.msg_.ob_ms.positions.push_back(2.0);
+  oa.msg_.ob_ms.positions.push_back(0);
+  oa.msg_.cirGroup.fitCir.center.x = oa.msg_.ob_ms.positions[0];
+  oa.msg_.cirGroup.fitCir.center.y = oa.msg_.ob_ms.positions[1];
+  oa.msg_.cirGroup.fitCir.radius = 0.25;
+  oa.msg_.cirGroup.packedCirs.push_back(oa.msg_.cirGroup.fitCir);
+  oa.msg_.ob_ms.velocities.push_back(0);
+  oa.msg_.ob_ms.velocities.push_back(0);
+  oa.msg_.ob_ms.velocities.push_back(0);
+
+
+  Obstacle ob;
+  ob.msg_.ob_ms.positions.push_back(2.3);
+  ob.msg_.ob_ms.positions.push_back(1.7);
+  ob.msg_.ob_ms.positions.push_back(0);
+  ob.msg_.cirGroup.fitCir.center.x = ob.msg_.ob_ms.positions[0];
+  ob.msg_.cirGroup.fitCir.center.y = ob.msg_.ob_ms.positions[1];
+  ob.msg_.cirGroup.fitCir.radius = 0.25;
+  ob.msg_.cirGroup.packedCirs.push_back(ob.msg_.cirGroup.fitCir);
+  ob.msg_.ob_ms.velocities.push_back(0);
+  ob.msg_.ob_ms.velocities.push_back(0);
+  ob.msg_.ob_ms.velocities.push_back(0);
+
+
+  Obstacle oc;
+  oc.msg_.ob_ms.positions.push_back(2.5);
+  oc.msg_.ob_ms.positions.push_back(1.35);
+  oc.msg_.ob_ms.positions.push_back(0);
+  oc.msg_.cirGroup.fitCir.center.x = oc.msg_.ob_ms.positions[0];
+  oc.msg_.cirGroup.fitCir.center.y = oc.msg_.ob_ms.positions[1];
+  oc.msg_.cirGroup.fitCir.radius = 0.22;
+  oc.msg_.cirGroup.packedCirs.push_back(oc.msg_.cirGroup.fitCir);
+  oc.msg_.ob_ms.velocities.push_back(0);
+  oc.msg_.ob_ms.velocities.push_back(0);
+  oc.msg_.ob_ms.velocities.push_back(0);
+
+  Obstacle od;
+  od.msg_.ob_ms.positions.push_back(0.8);
+  od.msg_.ob_ms.positions.push_back(2.8);
+  od.msg_.ob_ms.positions.push_back(0);
+  od.msg_.cirGroup.fitCir.center.x = od.msg_.ob_ms.positions[0];
+  od.msg_.cirGroup.fitCir.center.y = od.msg_.ob_ms.positions[1];
+  od.msg_.cirGroup.fitCir.radius = 0.2;
+  od.msg_.cirGroup.packedCirs.push_back(od.msg_.cirGroup.fitCir);
+  od.msg_.ob_ms.velocities.push_back(0);
+  od.msg_.ob_ms.velocities.push_back(0);
+  od.msg_.ob_ms.velocities.push_back(0);
+
+  Obstacle oe;
+  oe.msg_.ob_ms.positions.push_back(1.2);
+  oe.msg_.ob_ms.positions.push_back(2.8);
+  oe.msg_.ob_ms.positions.push_back(0);
+  oe.msg_.cirGroup.fitCir.center.x = oe.msg_.ob_ms.positions[0];
+  oe.msg_.cirGroup.fitCir.center.y = oe.msg_.ob_ms.positions[1];
+  oe.msg_.cirGroup.fitCir.radius = 0.2;
+  oe.msg_.cirGroup.packedCirs.push_back(oe.msg_.cirGroup.fitCir);
+  oe.msg_.ob_ms.velocities.push_back(0);
+  oe.msg_.ob_ms.velocities.push_back(0);
+  oe.msg_.ob_ms.velocities.push_back(0);
+
+  /*Obstacle of;
+  of.msg_.ob_ms.positions.push_back(2.0);
+  of.msg_.ob_ms.positions.push_back(3.25);
+  of.msg_.ob_ms.positions.push_back(0);
+  of.msg_.cirGroup.fitCir.center.x = of.msg_.ob_ms.positions[0];
+  of.msg_.cirGroup.fitCir.center.y = of.msg_.ob_ms.positions[1];
+  of.msg_.cirGroup.fitCir.radius = 0.25;
+  of.msg_.cirGroup.packedCirs.push_back(of.msg_.cirGroup.fitCir);
+  of.msg_.ob_ms.velocities.push_back(0);
+  of.msg_.ob_ms.velocities.push_back(0);
+  of.msg_.ob_ms.velocities.push_back(0);
+
+  Obstacle og;
+  og.msg_.ob_ms.positions.push_back(3.2);
+  og.msg_.ob_ms.positions.push_back(0.33);
+  og.msg_.ob_ms.positions.push_back(0);
+  og.msg_.cirGroup.fitCir.center.x = og.msg_.ob_ms.positions[0];
+  og.msg_.cirGroup.fitCir.center.y = og.msg_.ob_ms.positions[1];
+  og.msg_.cirGroup.fitCir.radius = 0.33;
+  og.msg_.cirGroup.packedCirs.push_back(og.msg_.cirGroup.fitCir);
+  og.msg_.ob_ms.velocities.push_back(0);
+  og.msg_.ob_ms.velocities.push_back(0);
+  og.msg_.ob_ms.velocities.push_back(0);*/
+
+  list.obstacles.push_back(oa.msg_);
+  list.obstacles.push_back(ob.msg_);
+  list.obstacles.push_back(oc.msg_);
+  list.obstacles.push_back(od.msg_);
+  list.obstacles.push_back(oe.msg_);
+  //list.obstacles.push_back(of.msg_);
+  //list.obstacles.push_back(og.msg_);
+  //ROS_INFO("Exiting addHardCodedStaticObs, list.obstacles.size(): %i", (int)list.obstacles.size());
+}
+
+
 std::vector<visualization_msgs::Marker> convertObsToMarkers()
 {
   //ROS_INFO("In convertObsToMarkers");
@@ -539,9 +641,13 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
   {
     //////////ROS_INFO("cir_obs.size(): %i", (int)cir_obs.size());
     
-    //ROS_INFO("list.obstacles.size(): %i", (int)list.obstacles.size());
+    /*ROS_INFO("list.obstacles.size(): %i", (int)list.obstacles.size());
+    for(int i=0;i<list.obstacles.size();i++)
+    {
+      ROS_INFO("Obstacle %i, (x,y): (%f,%f)", i, list.obstacles[i].ob_ms.positions[0], list.obstacles[i].ob_ms.positions[1]);
+    }*/
     int iStop = use_odom_topics ? list.obstacles.size() : cir_obs.size();
-    //ROS_INFO("iStop: %i", iStop);
+    //ROS_INFO("iStop: %i list.obstacles.size(): %i cir_obs.size(): %i", iStop, (int)list.obstacles.size(), (int)cir_obs.size());
     // For each CircleOb, make a Marker
     for(int i=0;i<iStop;i++)
     {
@@ -568,7 +674,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       cirMarker.pose.orientation.w = 1.0;
 
       double radius = use_odom_topics ? list.obstacles[i].cirGroup.fitCir.radius : cir_obs[i]->cirGroup.fitCir.radius;
-      //ROS_INFO("x: %f y: %f r: %f", x, y, radius);
+      //ROS_INFO("i: %i x: %f y: %f r: %f", i, x, y, radius);
         
       // scale values are the diameter so use the radius*2
       cirMarker.scale.x = radius*2.00f;
@@ -611,7 +717,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
         marker.pose.orientation.z = 0.0;
         marker.pose.orientation.w = 1.0;
 
-        double radius = use_odom_topics ? 0.2 : cir_obs[i]->cirGroup.packedCirs[j].radius;
+        double radius = use_odom_topics ? list.obstacles[i].cirGroup.fitCir.radius : cir_obs[i]->cirGroup.packedCirs[j].radius;
 
         // scale values are the diameter so use the radius*2
         marker.scale.x = radius*2.00f;
@@ -640,6 +746,11 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
 /** Publish the list of objects */
 void publishList(const ros::TimerEvent& e) 
 {
+  //addHardCodedStaticObs();
+  /*for(int i=0;i<list.obstacles.size();i++)
+  {
+    ROS_INFO("Ob %i at (%f,%f)", i, list.obstacles[i].fitCir.center.x, list.obstacles[i].fitCir.center.y); 
+  }*/
   pub_obj.publish(list);
 } //End sendList
 
@@ -673,10 +784,9 @@ void publishMarkers(const ros::TimerEvent& e)
    */
   for(int i=0;i<cir_obs.size();i++)
   {
-    /*////////ROS_INFO("Creating text and arrow for marker i: %i", i);
+    ////////ROS_INFO("Creating text and arrow for marker i: %i", i);
     ////////ROS_INFO("prev_velocities.size(): %i", (int)prev_velocities.size());
     ////////ROS_INFO("prev_velocities[%i].size(): %i", i, (int)prev_velocities[i].size());
-    ////////ROS_INFO("Marker %i position: (%f, %f) v: %f", i, markers[i].pose.position.x, markers[i].pose.position.y, prev_velocities[prev_velocities.size()-1][i].v);*/
     visualization_msgs::Marker text;
     visualization_msgs::Marker arrow;
 
@@ -701,6 +811,7 @@ void publishMarkers(const ros::TimerEvent& e)
 
     text.ns   = "basic_shapes";
     arrow.ns  = "basic_shapes";
+
     
     text.type   = visualization_msgs::Marker::TEXT_VIEW_FACING;
     arrow.type  = visualization_msgs::Marker::ARROW;
@@ -810,7 +921,7 @@ void publishMarkers(const ros::TimerEvent& e)
   //ROS_INFO("result.markers.size(): %i", (int)result.markers.size());
 
   pub_rviz.publish(result);
-  //////ROS_INFO("Exiting publishMarkers");
+  //ROS_INFO("Exiting publishMarkers");
 }
 
 
@@ -1985,7 +2096,7 @@ void populateObstacleList(const std::vector<Velocity>& velocities)
     
     obs.push_back(o);
     list.obstacles.push_back(o.msg_);
-    //////////ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
+    //ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
   }
   
   //////////ROS_INFO("Exiting populateObstacleList");
@@ -2081,9 +2192,9 @@ void persistGridCb(const nav_msgs::OccupancyGridConstPtr grid)
 
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
-  /*ROS_INFO("**************************************************");
-  ROS_INFO("In costmapCb");
-  ROS_INFO("**************************************************");*/
+  //ROS_INFO("**************************************************");
+  //ROS_INFO("In costmapCb");
+  //ROS_INFO("**************************************************");
   ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;
   t_last_costmap = ros::Time::now();
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
@@ -2678,12 +2789,14 @@ int main(int argc, char** argv)
   ms.positions.push_back(start[2]);
   setRobotPos(ms);
 
-  printf("\nSpinning\n");
+  printf("\nSensing node Spinning\n");
 
-  ros::AsyncSpinner spinner(8);
+  /*ros::AsyncSpinner spinner(8);
   printf("\nWaiting for requests...\n");
   spinner.start();
-  ros::waitForShutdown();
+  ros::waitForShutdown();*/
+
+  ros::spin();
 
   printf("\nExiting normally\n");
   return 0;
