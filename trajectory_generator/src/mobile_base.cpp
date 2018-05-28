@@ -66,7 +66,7 @@ void MobileBase::initReflexxes()
   
 
   // Maximum acceleration
-  reflexxesData_.inputParameters->MaxAccelerationVector->VecData[0] = 1.;
+  reflexxesData_.inputParameters->MaxAccelerationVector->VecData[0] = max_acc_;
   reflexxesData_.inputParameters->MaxAccelerationVector->VecData[1] = (2.f*PI)/3.f;
   
 

@@ -393,7 +393,7 @@ int main(int argc, char** argv) {
   tr.segments = 2;
   tr.max_speed_linear = 0.33f;
   tr.max_speed_angular = 0.57f;
-  tr.max_acc_longitudal = 1.0f;
+  tr.max_acc_longitudal = 0.2f;
 
   ramp_msgs::TrajectorySrv tr_srv;
   tr_srv.request.reqs.push_back(tr);
