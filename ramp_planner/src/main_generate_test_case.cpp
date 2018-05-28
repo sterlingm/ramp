@@ -286,7 +286,6 @@ struct ABTC
 {
   bool moving[9];
   double times[9];
-  
 };
 
 
