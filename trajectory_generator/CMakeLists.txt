@@ -30,7 +30,7 @@ set (CMAKE_CXX_FLAGS "-g")
 
 
 #### Declare a cpp executable
-add_executable(${PROJECT_NAME} src/bezier_curve.cpp src/circle.cpp src/line.cpp src/main.cpp src/mobile_base.cpp src/prediction.cpp src/utility.cpp)
+add_executable(${PROJECT_NAME} src/bezier_curve.cpp src/circle.cpp src/circleSL.cpp src/line.cpp src/lineSL.cpp src/main.cpp src/mobile_base.cpp src/prediction.cpp src/utility.cpp)
 
 # Add the -std argument to compile enum
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS -std=c++0x)

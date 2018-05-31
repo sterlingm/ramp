@@ -621,7 +621,7 @@ void pubObTrj(const ros::TimerEvent e, TestCaseTwo& tc)
     double d_elap_ob = d_elapsed.toSec() - ob_delay[i];
     int index = d_elap_ob*10;
     //ROS_INFO("d_elap_ob: %f index: %i", d_elap_ob, index);
-       
+
     if( (ros::Time::now() - tc.t_begin).toSec() > ob_delay[i])
     {
       int temp_index = index >= (tc.ob_trjs[i].trajectory.points.size()-1) ? tc.ob_trjs[i].trajectory.points.size()-1 : 

@@ -533,7 +533,7 @@ void updateOtherRobotCb(const nav_msgs::Odometry::ConstPtr& o, const std::string
 void addHardCodedStaticObs()
 {
   //ROS_INFO("In addHardCodedStaticObs");
-  list.obstacles.clear();
+  //list.obstacles.clear();
 
   Obstacle oa;
   oa.msg_.ob_ms.positions.push_back(2.0);
@@ -621,11 +621,22 @@ void addHardCodedStaticObs()
   og.msg_.ob_ms.velocities.push_back(0);
   og.msg_.ob_ms.velocities.push_back(0);*/
 
-  list.obstacles.push_back(oa.msg_);
-  list.obstacles.push_back(ob.msg_);
-  list.obstacles.push_back(oc.msg_);
-  list.obstacles.push_back(od.msg_);
-  list.obstacles.push_back(oe.msg_);
+  if(list.obstacles.size() > 6)
+  {
+    list.obstacles[2] = oa.msg_;
+    list.obstacles[3] = ob.msg_;
+    list.obstacles[4] = oc.msg_;
+    list.obstacles[5] = od.msg_;
+    list.obstacles[6] = oe.msg_;
+  }
+  else
+  {
+    list.obstacles.push_back(oa.msg_);
+    list.obstacles.push_back(ob.msg_);
+    list.obstacles.push_back(oc.msg_);
+    list.obstacles.push_back(od.msg_);
+    list.obstacles.push_back(oe.msg_);
+  }
   //list.obstacles.push_back(of.msg_);
   //list.obstacles.push_back(og.msg_);
   //ROS_INFO("Exiting addHardCodedStaticObs, list.obstacles.size(): %i", (int)list.obstacles.size());
@@ -636,8 +647,9 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
 {
   //ROS_INFO("In convertObsToMarkers");
   std::vector<visualization_msgs::Marker> result;
+  //ROS_INFO("list.obstacles.size(): %i", (int)list.obstacles.size());
   
-  if(use_odom_topics || (global_grid.info.width != 0 && global_grid.info.height != 0))
+  if(use_odom_topics || list.obstacles.size() > 0 || (global_grid.info.width != 0 && global_grid.info.height != 0))
   {
     //////////ROS_INFO("cir_obs.size(): %i", (int)cir_obs.size());
     
@@ -2757,7 +2769,7 @@ int main(int argc, char** argv)
   }
 
   // Subscribers
-  ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);
+  //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);
   ros::Subscriber sub_robot_update = handle.subscribe<ramp_msgs::MotionState>("/updateAfterTf", 1, &robotUpdateCb);
   //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/hilbert_map_grid", 1, &costmapCb);
   //ros::Subscriber sub_odom = handle.subscribe<nav_msgs::Odometry>("/odom", 1, &odomCb);
@@ -2784,10 +2796,10 @@ int main(int argc, char** argv)
   // Set initial robot position
   // start vector needs to be set (usually it is obtained from rosparam)
   ramp_msgs::MotionState ms;
-  ms.positions.push_back(start[0]);
+  /*ms.positions.push_back(start[0]);
   ms.positions.push_back(start[1]);
   ms.positions.push_back(start[2]);
-  setRobotPos(ms);
+  setRobotPos(ms);*/
 
   printf("\nSensing node Spinning\n");
 

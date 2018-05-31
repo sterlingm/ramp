@@ -1475,8 +1475,8 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
 {
   ros::Duration d = ros::Time::now() - t_prevIC_;
   t_prevIC_ = ros::Time::now();
-  ROS_INFO("In imminentCollisionCallback");
-  ROS_INFO("Time since last: %f", d.toSec());
+  //ROS_INFO("In imminentCollisionCallback");
+  //ROS_INFO("Time since last: %f", d.toSec());
 
   std_msgs::Bool ic;
 
@@ -1488,7 +1488,7 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
     //ROS_INFO("Ob %i: %f", o, utility_.positionDistance(latestUpdate_.msg_.positions, ob_trajectory_[o].msg_.trajectory.points[0].positions));
   //}
   
-  ROS_INFO("moving_on_coll_: %s t_firstcoll: %f t_cc: %f t_prevCC_ros_: %f", moving_on_coll_ ? "True" : "False", movingOn_.msg_.t_firstCollision.toSec(), time_threshold, t_prevCC_ros_.toSec());
+  //ROS_INFO("moving_on_coll_: %s t_firstcoll: %f t_cc: %f t_prevCC_ros_: %f", moving_on_coll_ ? "True" : "False", movingOn_.msg_.t_firstCollision.toSec(), time_threshold, t_prevCC_ros_.toSec());
 
   if(ob_trajectory_.size() > 0 && moving_on_coll_ && (movingOn_.msg_.t_firstCollision.toSec() < time_threshold
     || (movingOn_.msg_.t_firstCollision.toSec() - (ros::Time::now().toSec()-t_prevCC_ros_.toSec())) < time_threshold))
@@ -1501,8 +1501,8 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
       t_IC_ = ros::Time::now();
     }
   
-    ROS_INFO("movingOn: %s", movingOn_.toString().c_str());
-    ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
+    //ROS_INFO("movingOn: %s", movingOn_.toString().c_str());
+    //ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
 
     ic.data = true;
     imminent_collision_ = true;
@@ -2688,7 +2688,7 @@ void Planner::modifyTrajec(std::vector<RampTrajectory>& result)
 
   // Modify path
   std::vector<Path> modded_paths = modifyPath();
-  ROS_INFO("modded_paths.size(): %i", (int)modded_paths.size());
+  //ROS_INFO("modded_paths.size(): %i", (int)modded_paths.size());
   
   // Save duration data
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tNow);
@@ -2741,7 +2741,7 @@ void Planner::modification()
   // Do modification
   std::vector<RampTrajectory> mod_trajec;
   modifyTrajec(mod_trajec);
-  ROS_INFO("mod_trajec.size(): %i", (int)mod_trajec.size());
+  //ROS_INFO("mod_trajec.size(): %i", (int)mod_trajec.size());
 
   // Save duration data
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tNow);
@@ -2775,7 +2775,7 @@ void Planner::modification()
       //ROS_INFO("evalHMap_: %s", evalHMap_ ? "True" : "False");
       evaluateTrajectory(traj_final, evalHMap_);
     }
-    ROS_INFO("Mod trajec %i fit: %f feas: %s t_fc: %f", i, traj_final.msg_.fitness, traj_final.msg_.feasible ? "True" : "False", traj_final.msg_.t_firstCollision.toSec());
+    //ROS_INFO("Mod trajec %i fit: %f feas: %s t_fc: %f", i, traj_final.msg_.fitness, traj_final.msg_.feasible ? "True" : "False", traj_final.msg_.t_firstCollision.toSec());
 
     //ROS_INFO("Final mod: %s", traj_final.toString().c_str());
 
@@ -3038,7 +3038,7 @@ void Planner::planningCycleCallback()
   if(modifications_) 
   {
     //////////////ROS_INFO("*****************************");
-    ROS_INFO("Performing modification");
+    //ROS_INFO("Performing modification");
     high_resolution_clock::time_point t = high_resolution_clock::now();
     modification();
     time_span = duration_cast<microseconds>(t - tStart);
@@ -3316,7 +3316,7 @@ void Planner::getTransPop(const Population& pop, const RampTrajectory& movingOn,
 void Planner::doControlCycle() 
 {
   ////////////ROS_WARN("Control Cycle %i occurring at Time: %f", num_cc_, ros::Time::now().toSec());
-  ROS_INFO("controlCycle_: %f", controlCycle_.toSec());
+  //ROS_INFO("controlCycle_: %f", controlCycle_.toSec());
   //////////ROS_INFO("Time between control cycles: %f", (ros::Time::now() - t_prevCC_).toSec());
   ////////////ROS_INFO("Number of planning cycles that occurred between CC's: %i", c_pc_);
   
@@ -3345,10 +3345,10 @@ void Planner::doControlCycle()
 
   if(i_best != i_prevBest_)
   {
-    if(imminent_collision_)
+    /*if(imminent_collision_)
     {
       ROS_INFO("*** SWITCHING WHILE IN IC ***");
-    }
+    }*/
     num_switches_++;
   }
   i_prevBest_ = i_best;
@@ -3401,7 +3401,7 @@ void Planner::doControlCycle()
   // The motion state that we should reach by the next control cycle
   if(imminent_collision_)
   {
-    ROS_INFO("imminent_collision_: True");
+    //ROS_INFO("imminent_collision_: True");
     m_cc_ = latestUpdate_;
     startPlanning_ = m_cc_;
     controlCycle_ = ros::Duration(t_fixed_cc_);

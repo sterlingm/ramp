@@ -1,7 +1,9 @@
 #ifndef PREDICTION_H
 #define PREDICTION_H
 #include "line.h"
+#include "lineSL.h"
 #include "circle.h"
+#include "circleSL.h"
 #include "utility.h"
 
 

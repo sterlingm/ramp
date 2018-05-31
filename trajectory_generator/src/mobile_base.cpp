@@ -66,7 +66,7 @@ void MobileBase::initReflexxes()
   
 
   // Maximum acceleration
-  reflexxesData_.inputParameters->MaxAccelerationVector->VecData[0] = max_acc_;
+  reflexxesData_.inputParameters->MaxAccelerationVector->VecData[0] = 1.0;
   reflexxesData_.inputParameters->MaxAccelerationVector->VecData[1] = (2.f*PI)/3.f;
   
 
@@ -102,17 +102,6 @@ void MobileBase::init(const ramp_msgs::TrajectoryRequest req)
   MAX_SPEED_ANGULAR = req.max_speed_angular;
   ////ROS_INFO("MAX_SPEED_LINEAR: %f MAX_SPEED_ANGULAR: %f", MAX_SPEED_LINEAR, MAX_SPEED_ANGULAR);
   
-  // Set acceleration
-  if(req.max_acc_longitudal > 0.01)
-  {
-    max_acc_ = req.max_acc_longitudal;
-  }
-  // Default value
-  else
-  {
-    max_acc_ = 1.0;
-  }
-
   // Set print
   print_ = req.print;
  
