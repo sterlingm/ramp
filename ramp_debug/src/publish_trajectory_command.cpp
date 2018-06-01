@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
 
   // Build a Path
   ramp_msgs::KnotPoint c1;
-  c1.motionState.positions.push_back(0.0); // 0.70455
+  c1.motionState.positions.push_back(1.0); // 0.70455
   c1.motionState.positions.push_back(0.0); // 0.4026
   c1.motionState.positions.push_back(0.0); // 0.519146
   
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
   // Velocities
   c1.motionState.velocities.push_back(0.3);  //.151426
   c1.motionState.velocities.push_back(0.3); //-.297903
-  c1.motionState.velocities.push_back(0.); //-.118126*/
+  c1.motionState.velocities.push_back(0.785); //-.118126*/
  
   /*c2.motionState.velocities.push_back(0.175905);  //.151426
   c2.motionState.velocities.push_back(-0.0106699); //-.297903
@@ -397,7 +397,7 @@ int main(int argc, char** argv) {
 
   // Set system level test values
   tr.sl_traj = true;
-  tr.sl_final_speed = 0.4f;
+  tr.sl_final_speed = 0.5f;
   tr.sl_init_dur = ros::Duration(1);
   tr.sl_final_dur = ros::Duration(2);
 
