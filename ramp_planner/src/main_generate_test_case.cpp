@@ -605,7 +605,7 @@ MotionState getGoal(const MotionState init, const double dim)
  */
 void pubObTrj(const ros::TimerEvent e, TestCaseTwo& tc)
 {
-  //ROS_INFO("In pubObTrj");
+  ROS_INFO("In pubObTrj");
   //ROS_INFO("tc.t_begin: %f", tc.t_begin.toSec());
   //ROS_INFO("ros::Time::now(): %f", ros::Time::now().toSec());
 
@@ -866,7 +866,7 @@ int main(int argc, char** argv) {
     ROS_INFO("Generate: Planner ready, publishing static obstacles");
 
     // Publish static obstacles
-    pub_obs.publish(obs_stat);
+    //pub_obs.publish(obs_stat);
 
     // Wait for 1 second
     d_history.sleep();
@@ -879,7 +879,7 @@ int main(int argc, char** argv) {
     tc.t_begin = ros::Time::now();
 
     // Create timer to continuously publish obstacle information
-    ob_trj_timer = handle.createTimer(ros::Duration(1./20.), boost::bind(pubObTrj, _1, tc));
+    //ob_trj_timer = handle.createTimer(ros::Duration(1./20.), boost::bind(pubObTrj, _1, tc));
 
 
 
