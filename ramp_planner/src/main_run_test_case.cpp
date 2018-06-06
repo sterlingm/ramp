@@ -435,12 +435,20 @@ void pubObTrj(const ros::TimerEvent e, const TestCase tc)
   ramp_msgs::Obstacle ob = buildObstacleMsg(p.positions[0], p.positions[1], tc.obs[0].v, p.positions[2], tc.obs[0].w);
 }
 
+void shutdown(int sigint)
+{
+  ros::param::set("ramp/ready_tc", false);
+}
+
 
 int main(int argc, char** argv) {
   srand( time(0));
 
   ros::init(argc, argv, "ramp_planner");
   ros::NodeHandle handle;
+
+  signal(SIGINT, shutdown);
+
   
   // Load ros parameters and obstacle transforms
   loadParameters(handle);
@@ -461,7 +469,7 @@ int main(int argc, char** argv) {
 
   ros::Timer ob_trj_timer;
   
-  int num_tests = 5;
+  int num_tests = 1;
   int num_successful_tests = 0;
   std::vector<int> num_generations;
   std::vector<TestCase> test_cases;
@@ -495,11 +503,13 @@ int main(int argc, char** argv) {
     
     // Test case done, stop publishing obs
     my_planner.h_parameters_.setTestCase(false);
+    ROS_INFO("After setting SetTestCase(false)");
 
     // Wait for test case to be generated
     bool tc_generated = false;
     while(!tc_generated)
     {
+      ROS_INFO("In while");
       handle.getParam("/ramp/tc_generated", tc_generated);
       r.sleep();
       ros::spinOnce();

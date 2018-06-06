@@ -135,6 +135,7 @@ class Planner {
               const bool                only_sensing=0,
               const bool                moving_robot=1,
               const bool                errorReduction=0,
+              const bool                try_ic_loop=0,
               bool                      show_full_traj=0);
     
     // Send the best trajectory to the control package
@@ -551,6 +552,7 @@ class Planner {
 
     bool forceMinMod_;
     bool evalHMap_;
+    bool tryICLoop_;
 
     /*
      * General data

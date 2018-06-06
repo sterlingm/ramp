@@ -31,6 +31,8 @@ use_hilbert_map: false
 
 stop_after_ppcs: false
 
+try_ic_loop: false
+
 
 
 # Sensing parameters #
@@ -41,7 +43,7 @@ remove_outside_fov: false
 
 use_persistent_grid: false
 
-use_odom_topics: true
+use_odom_topics: false
 
 
 
@@ -56,9 +58,9 @@ eval_weight_T: 1.0 #1 #1.75
 
 # As D weight increases, overall contribution of D to the cost decreases
 # This is because high values of D are good so we add 1/D to the fitness cost
-eval_weight_D: 0.71 #0.13 #5
+eval_weight_D: 0.0 #0.13 #5
 
-eval_weight_A: 0.66 #0.48 #0.01
+eval_weight_A: 0.0 #0.48 #0.01
 
 
 
@@ -76,9 +78,9 @@ shrink_ranges: false
 #
 # Turtlebot obstacle topics
 #obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity', '/obstacle_2/mobile_base/commands/velocity', '/obstacle_3/mobile_base/commands/velocity']
-obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom']
+#obstacle_odoms: ['/obstacle_1/odom', '/obstacle_2/odom']
 #obstacle_odoms: ['/obstacle_1/odom','/obstacle_2/odom']
-obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity','/obstacle_2/mobile_base/commands/velocity']
+#obstacle_vels: ['/obstacle_1/mobile_base/commands/velocity','/obstacle_2/mobile_base/commands/velocity']
 #obstacle_delays: [0,0]
 #obstacle_radii: [0.2,0.2]
 

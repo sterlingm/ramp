@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <chrono>
 #include <time.h>
+#include <signal.h>
 #include "range.h"
 #include "ramp_msgs/RampTrajectory.h"
 #include "ramp_msgs/Path.h"

@@ -6,7 +6,8 @@
 <!-- Robot info parameters -->
 <rosparam file="$(find ramp_launch)/launch/config/robot_0.yaml" command="load" ns="robot_info/" />
 
-
+<param name="ramp/skip_map_tf" type="bool" value="1" />
+<param name="ramp/global_frame" type="string" value="odom" />
 
 <!-- Trajectory Generator -->
 <node name="trajectory_generator" pkg="trajectory_generator" type="trajectory_generator" output="screen"/>
@@ -21,7 +22,7 @@
 <!-- Planner -->
 <!-- <node name="ramp_planner" pkg="ramp_planner" type="ramp_planner" output="screen" /> -->
 <node name="run_test_case" pkg="ramp_planner" type="run_test_case" output="screen" />
-<node name="generate_test_case" pkg="ramp_planner" type="generate_test_case" output="screen" />
+<node name="generate_test_case" pkg="ramp_planner" type="generate_test_case" output="log" />
 
 <!-- Sensing -->
 <!-- <node name="ramp_sensing" pkg="ramp_sensing" type="ramp_sensing" /> -->
@@ -29,7 +30,7 @@
 
 <!-- Simulation -->
 <node name="stageros" pkg="stage_ros" type="stageros" args="/home/sterlingm/ros_workspace/src/ramp/ramp_launch/launch/world/single_robot.world" /> 
-<node name="ramp_control" pkg="ramp_control" type="ramp_control" output="log" >
+<node name="ramp_control" pkg="ramp_control" type="ramp_control" output="screen" >
   <remap from="odometry" to="odom" />
   <param name="simulation" value="true" />
   <param name="orientation" type="double" value="0.785" />
@@ -37,6 +38,6 @@
 
 
 <!-- Trajectory Visualization -->
-<node name="trajectory_visualisation" pkg="trajectory_visualisation" type="trajectory_visualisation" />
+<node name="trajectory_visualisation" pkg="trajectory_visualisation" type="trajectory_visualisation" output="screen" />
 
 </launch>

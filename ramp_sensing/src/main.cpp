@@ -2204,9 +2204,9 @@ void persistGridCb(const nav_msgs::OccupancyGridConstPtr grid)
 
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
-  //ROS_INFO("**************************************************");
-  //ROS_INFO("In costmapCb");
-  //ROS_INFO("**************************************************");
+  /*ROS_INFO("**************************************************");
+  ROS_INFO("In costmapCb");
+  ROS_INFO("**************************************************");*/
   ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;
   t_last_costmap = ros::Time::now();
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
@@ -2259,7 +2259,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   }
   else
   {
-    ////ROS_INFO("In else");
+    //ROS_INFO("In else");
     accumulated_grid = *grid;
     global_grid = *grid;
     
@@ -2275,6 +2275,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
     //////////ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
     accumulateCostmaps(global_costmap, prev_grids, accumulated_grid);
+    //ROS_INFO("After accumulateCostmaps");
     
     // Set global_grid 
     global_grid = global_costmap;
@@ -2510,9 +2511,9 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
   ////ROS_INFO("Duration: %f", time_span.count());
   num_costmaps++;
-  //////////ROS_INFO("**************************************************");
-  //ROS_INFO("Exiting costmapCb");
-  //////////ROS_INFO("**************************************************");
+  /*ROS_INFO("**************************************************");
+  ROS_INFO("Exiting costmapCb");
+  ROS_INFO("**************************************************");*/
 }
 
 void writeData()
@@ -2769,7 +2770,7 @@ int main(int argc, char** argv)
   }
 
   // Subscribers
-  //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);
+  ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);
   ros::Subscriber sub_robot_update = handle.subscribe<ramp_msgs::MotionState>("/updateAfterTf", 1, &robotUpdateCb);
   //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/hilbert_map_grid", 1, &costmapCb);
   //ros::Subscriber sub_odom = handle.subscribe<nav_msgs::Odometry>("/odom", 1, &odomCb);
@@ -2796,10 +2797,10 @@ int main(int argc, char** argv)
   // Set initial robot position
   // start vector needs to be set (usually it is obtained from rosparam)
   ramp_msgs::MotionState ms;
-  /*ms.positions.push_back(start[0]);
+  ms.positions.push_back(start[0]);
   ms.positions.push_back(start[1]);
   ms.positions.push_back(start[2]);
-  setRobotPos(ms);*/
+  setRobotPos(ms);
 
   printf("\nSensing node Spinning\n");
 

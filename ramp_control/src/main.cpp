@@ -127,18 +127,28 @@ int main(int argc, char** argv)
   }
 
 
+  bool skip_map_tf;
+  handle.getParam("/ramp/skip_map_tf", skip_map_tf);
+  ROS_INFO("skip_map_tf: %s", skip_map_tf ? "False" : "True");
   /*
    * Get transform information from odom to the frame the planner uses
    */
-  ros::Duration d(0.5);
-  d.sleep();
+  if(skip_map_tf == false)
+  {
+    ros::Duration d(0.5);
+    d.sleep();
 
-  tf::TransformListener listen;
-  listen.waitForTransform(global_frame, "odom", ros::Time(0), ros::Duration(2.0));
-  ROS_INFO("Time: %f", ros::Time::now().toSec());
-  listen.lookupTransform(global_frame, "odom", ros::Time(0), robot.tf_global_odom_);
-  ROS_INFO("(ramp_control) Odom tf: translate: (%f, %f) rotation: %f", robot.tf_global_odom_.getOrigin().getX(), robot.tf_global_odom_.getOrigin().getX(), robot.tf_global_odom_.getRotation().getAngle());
-  robot.tf_rot_ = robot.tf_global_odom_.getRotation().getAngle();
+    tf::TransformListener listen;
+    listen.waitForTransform(global_frame, "odom", ros::Time(0), ros::Duration(2.0));
+    ROS_INFO("Time: %f", ros::Time::now().toSec());
+    listen.lookupTransform(global_frame, "odom", ros::Time(0), robot.tf_global_odom_);
+    ROS_INFO("(ramp_control) Odom tf: translate: (%f, %f) rotation: %f", robot.tf_global_odom_.getOrigin().getX(), robot.tf_global_odom_.getOrigin().getX(), robot.tf_global_odom_.getRotation().getAngle());
+    robot.tf_rot_ = robot.tf_global_odom_.getRotation().getAngle();
+  }
+  else
+  {
+    ROS_INFO("Not waiting for map transform");
+  }
   
 
 

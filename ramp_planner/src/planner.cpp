@@ -121,7 +121,8 @@ const MotionType Planner::findMotionType(const ramp_msgs::Obstacle ob) const
  * TODO: Remove Duration parameter and make the predicted trajectory be computed until robot reaches bounds of environment */
 const ramp_msgs::RampTrajectory Planner::getPredictedTrajectory(const ramp_msgs::Obstacle ob) const 
 {
-  //ROS_INFO("In Planner::getPredictedTrajectory");
+  ROS_INFO("In Planner::getPredictedTrajectory");
+  ROS_INFO("ob: %s", utility_.toString(ob).c_str());
   ramp_msgs::RampTrajectory result;
 
   // First, identify which type of trajectory it is
@@ -137,13 +138,20 @@ const ramp_msgs::RampTrajectory Planner::getPredictedTrajectory(const ramp_msgs:
   ramp_msgs::TrajectorySrv tr_srv;
   tr_srv.request.reqs.push_back(tr);
 
+  ROS_INFO("Path: %s", utility_.toString(tr.path).c_str());
+
   // Get trajectory
   if(h_traj_req_->request(tr_srv))
   {
+    ROS_INFO("In if request successful, resps.size(): %i", (int)tr_srv.response.resps.size());
     result = tr_srv.response.resps.at(0).trajectory;
   }
+  else
+  {
+    ROS_INFO("Trajec req for obstacle not successful");
+  }
 
-  //ROS_INFO("Exiting Planner::getPredictedTrajectory");
+  ROS_INFO("Exiting Planner::getPredictedTrajectory");
   return result;
 } // End getPredictedTrajectory
 
@@ -159,6 +167,7 @@ const ramp_msgs::RampTrajectory Planner::getPredictedTrajectory(const ramp_msgs:
  */
 const ramp_msgs::Path Planner::getObstaclePath(const ramp_msgs::Obstacle ob, const MotionType mt) const 
 {
+  ROS_INFO("In Planner::getObstaclePath");
   ramp_msgs::Path result;
 
   std::vector<ramp_msgs::KnotPoint> path;
@@ -221,6 +230,8 @@ const ramp_msgs::Path Planner::getObstaclePath(const ramp_msgs::Obstacle ob, con
 
   //std::cout<<"\nPath: "<<utility_.toString(utility_.getPath(path));
   result = utility_.getPath(path);
+  
+  ROS_INFO("Exiting Planner::getObstaclePath");
   return result; 
 }
 
@@ -231,7 +242,7 @@ const ramp_msgs::Path Planner::getObstaclePath(const ramp_msgs::Obstacle ob, con
 
 void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
 {
-  //ROS_INFO("In sensingCycleCallback");
+  ROS_INFO("In sensingCycleCallback");
   //ROS_INFO("msg.obstacles.size(): %i", (int) msg.obstacles.size());
   ////////ROS_INFO("msg: %s", utility_.toString(msg).c_str());
   
@@ -245,14 +256,14 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   ob_trajectory_.clear();
   obs_.clear();
 
-  Population pop_obs;
-  Population copy = population_;
 
+  ROS_INFO("msg.obstacles.size(): %i", (int)msg.obstacles.size());
   /*
    * Predict obstacle trajectories
    */
   for(int i=0;i<msg.obstacles.size();i++)
   {
+    ROS_INFO("i: %i", i);
     obs_.push_back(msg.obstacles[i]);
 
     if(msg.obstacles[i].ob_ms.velocities.size() > 0)
@@ -267,8 +278,6 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
         ob_trajectory_.at(i) = ob_temp_trj;
       }
       //ROS_INFO("ob_temp_trj %i: %s", i, ob_temp_trj.toString().c_str());
-
-      copy.trajectories_.push_back(ob_temp_trj);
     }
     ////////ROS_INFO("Time to get obstacle trajectory: %f", (ros::Time::now() - start).toSec());
     ////ROS_INFO("ob_trajectory_: %s", ob_temp_trj.toString().c_str());
@@ -383,7 +392,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   d.sleep();
   std::cin.get();*/
 
-  //ROS_INFO("Exiting sensingCycleCallback");
+  ROS_INFO("Exiting sensingCycleCallback");
 }
 
 
@@ -1511,8 +1520,55 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
     {
       resetStart();
     }
+
+    if(tryICLoop_ && movingOn_.msg_.t_firstCollision.toSec() < 0.1)
+    {
+      ROS_INFO("IC in first point: %f", movingOn_.msg_.t_firstCollision.toSec());
+      ROS_INFO("angle: %f", modifier_->repair_dir_);
+
+      double thetaA = latestUpdate_.msg_.positions[2];
+      double thetaB = modifier_->repair_dir_;
+      
+      double diff = utility_.findDistanceBetweenAngles(thetaA, thetaB);
+      ROS_INFO("thetaA: %f thetaB: %f diff; %f", thetaA, thetaB, diff);
+
+
+      // Make a twist msg to move backwards
+      geometry_msgs::Twist t;
+      t.linear.x = -0.3;
+      t.linear.y = 0;
+      t.linear.z = 0;
+
+      // No angular speed
+      t.angular.x = 0;
+      t.angular.y = 0;
+      t.angular.z = 0;
+
+      // Check for the need to move forward instead of back
+      if(fabs(diff) > 2.35)
+      {
+        t.linear.x = 0.3;
+      }
+
+      // Move robot for 1s
+      ros::Time t_start = ros::Time::now();
+      ros::Duration d(1.0);
+      ros::Rate r(10);
+      while(ros::Time::now() - t_start < d)
+      {
+        h_control_->sendVelocity(t);
+        ROS_INFO("Sending vel command to break IC");
+        ROS_INFO("Latest update: %s", latestUpdate_.toString().c_str());
+        r.sleep();
+        ros::spinOnce();
+      } // end while sending velocity command
+    } // end if IC at first point
+
+   
+
+    // Introduce repair operator
     num_ops_ = 6;
-  }
+  } // end if IC
 
   // Do not set any imminent collision values
   else 
@@ -1542,13 +1598,16 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
 void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg) 
 {
   t_prev_update_ = ros::Time::now();
-  //ROS_INFO("In Planner::updateCbControlNode");
+  ROS_INFO("In Planner::updateCbControlNode");
   //////ROS_INFO("Time since last: %f", (ros::Time::now()-t_prev_update_).toSec());
 
  
   if(msg.positions.size() < 3 ||
      msg.velocities.size() < 3 ||
-     msg.accelerations.size() < 3 )
+     msg.accelerations.size() < 3 ||
+     latestUpdate_.msg_.positions.size() < 3 ||
+     latestUpdate_.msg_.velocities.size() < 3 ||
+     latestUpdate_.msg_.accelerations.size() < 3)
   { 
     //////ROS_ERROR("Odometry message from ramp_control does not have all DOFs: %s", utility_.toString(msg).c_str());
   }
@@ -1558,10 +1617,11 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
 
     if(update_topic_ == "odom")
     {
-      //////ROS_INFO("update_topic_ == \"odom\"");
+      //ROS_INFO("update_topic_ == \"odom\"");
       latestUpdate_ = msg;
       latestUpdate_.transformBase(T_w_odom_);
     }
+    //ROS_INFO("latestUpdate_.toString(): %s", latestUpdate_.toString().c_str());
 
     /*
      * Velocity values from ramp_control are [longitudal, 0, angular.z]
@@ -1584,6 +1644,7 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
     // so transform the velocity and acceleration values
     if(global_frame_ != "odom")
     {
+      //ROS_INFO("In global_frame_ != 'odom");
       tf::Vector3 v(latestUpdate_.msg_.velocities[0], latestUpdate_.msg_.velocities[1], 0);
       tf::Vector3 v_tf = tf_global_odom_rot_ * v;
       latestUpdate_.msg_.velocities[0] = v_tf.getX();
@@ -1599,7 +1660,7 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
     //ROS_INFO("New latestUpdate_: %s", latestUpdate_.toString().c_str());
   } // end else
   
-  //////ROS_INFO("Exiting Planner::updateCallback");
+  ROS_INFO("Exiting Planner::updateCbControlNode");
 } // End updateCallback
 
 
@@ -1708,7 +1769,7 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int num_ppcs, bool stop_after_ppcs, const bool sensingBeforeCC, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction, bool show_full_traj)
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int num_ppcs, bool stop_after_ppcs, const bool sensingBeforeCC, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction, const bool try_ic_loop, bool show_full_traj)
 {
   //ROS_INFO("In Planner::init");
 
@@ -1777,6 +1838,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   // These are set to true in hilbertMapObsCb
   forceMinMod_ = false;
   evalHMap_ = false;
+  tryICLoop_ = try_ic_loop;
 
   // Data to collect
   num_pcs_  = 0;
@@ -2930,6 +2992,7 @@ const MotionState Planner::errorCorrection()
 
 void Planner::planningCycleCallback() 
 {
+  //ROS_INFO("In planningCycleCallback");
   // Get duration data
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
   duration<double> time_span = duration_cast<microseconds>(tStart - t_prevPC_);
@@ -3079,6 +3142,7 @@ void Planner::planningCycleCallback()
   //////////////ROS_INFO("********************************************************************");
   //ROS_INFO("Generation %i completed, time elapse: %f", (generation_-1), time_span.count());
   //////////////ROS_INFO("********************************************************************");
+  //ROS_INFO("Exiting planningCycleCallback");
 } // End planningCycleCallback
 
 
@@ -3547,6 +3611,7 @@ void Planner::doControlCycle()
  *  and sends a new (and better) trajectory for the robot to move along */
 void Planner::controlCycleCallback(const ros::TimerEvent& e) 
 {
+  //ROS_INFO("In controlCycleCallback");
   
   /*//////ROS_INFO("*************************************************");
   //////ROS_INFO("  Control cycle timer event happening  ");
@@ -3569,6 +3634,7 @@ void Planner::controlCycleCallback(const ros::TimerEvent& e)
     
   num_ccs_++;
   //////////////ROS_INFO("Leaving Control Cycle, period: %f", controlCycle_.toSec());
+  //ROS_INFO("Exiting controlCycleCallback");
 } // End controlCycleCallback
 
 
@@ -3633,19 +3699,27 @@ void Planner::sendBest()
 /** Send the whole population of trajectories to the trajectory viewer */
 void Planner::sendPopulation()
 {
-  //ROS_INFO("In Planner::sendPopulation");
+  ROS_INFO("In Planner::sendPopulation");
   //ROS_INFO("Time since last sendPopulation(): %f", (ros::Time::now() - t_prevSendPop_).toSec());
   //ROS_INFO("Pop: %s", population_.toString().c_str());
 
   /*
    * Send to trajectory_visualization node
    */
-  /*ramp_msgs::Population msg = population_.populationMsg();
+  ramp_msgs::Population msg = population_.populationMsg();
   msg.robot_id = id_;
 
+  // Add movingOn
   msg.population.push_back(movingOn_.msg_);
-  h_control_->sendPopulation(msg);*/
+  
+  ROS_INFO("Adding %i obstacle trajectories", (int)ob_trajectory_.size());
+  for(int i=0;i<ob_trajectory_.size();i++)
+  {
+    //ROS_INFO("Ob trajectory %i: %s", i, utility_.toString(ob_trajectory_[i].msg_).c_str());
+    msg.population.push_back(ob_trajectory_[i].msg_);
+  }
     
+  h_control_->sendPopulation(msg);
     
   /*
    * Send to rviz
@@ -4430,6 +4504,10 @@ void Planner::goTest(float sec)
   // Start the control cycles
   controlCycleTimer_.start();
   imminentCollisionTimer_.start();
+  
+  // Start Timer to send population to rviz
+  sendPopTimer_.start();
+
 
 
   //////ROS_INFO("Sec > 0, %f", sec);
@@ -4612,7 +4690,7 @@ void Planner::go()
 
 
   d_runtime_  = ros::Time::now() - t_startLoop;
-  //////ROS_INFO("Done at time %f", ros::Time::now().toSec());
+  ROS_INFO("Done at time %f", ros::Time::now().toSec());
   num_pcs_    = generation_;
 
 
@@ -4626,7 +4704,7 @@ void Planner::go()
   // Close files opened for data writing
   closeFiles();
 
-  //////ROS_INFO("Planning done!");
+  ROS_INFO("Planning done!");
   //////////////ROS_INFO("latestUpdate_: %s\ngoal: %s", latestUpdate_.toString().c_str(), goal_.toString().c_str());
   
   // Stop timer

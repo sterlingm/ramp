@@ -678,12 +678,24 @@ void updateCb(const ramp_msgs::MotionState& msg)
 }
 
 
+void shutdown(int sigint)
+{
+  // Set flag signifying that the next test case is not ready
+  ros::param::set("/ramp/tc_generated", false);
+}
+
+
+
 
 int main(int argc, char** argv) {
   srand( time(0));
 
   ros::init(argc, argv, "ramp_planner");
   ros::NodeHandle handle;
+
+  // Set function to run at shutdown
+  signal(SIGINT, shutdown);
+  
   
   // Load ros parameters and obstacle transforms
   //loadParameters(handle);
@@ -707,7 +719,7 @@ int main(int argc, char** argv) {
   ros::Timer ob_trj_timer;
   ob_trj_timer.stop();
   
-  int num_tests = 42;
+  int num_tests = 1;
 
   ob_delay.push_back(2);
   ob_delay.push_back(2);
@@ -960,7 +972,7 @@ int main(int argc, char** argv) {
 
     bestTrajec_at_end.push_back(bestTrajec);
     test_cases.push_back(tc);
-  } // end for
+  } // end for each test case
 
   f_reached.close();
   f_feasible.close();

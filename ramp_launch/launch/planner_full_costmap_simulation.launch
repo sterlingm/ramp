@@ -39,7 +39,9 @@
 </node>
 
 <!-- Planner -->
-<node name="ramp_planner" pkg="ramp_planner" type="ramp_planner" output="screen" />
+<node name="ramp_planner" pkg="ramp_planner" type="ramp_planner" output="screen">
+  <remap from="cmd_vel" to="mobile_base/commands/velocity" />
+</node>
 
 <!-- Get hmap, and publish hmap obstacles -->
 <node name="process_hmap" pkg="ramp_sensing" type="process_hmap" output="screen" />

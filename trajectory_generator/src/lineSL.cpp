@@ -109,7 +109,7 @@ const bool LineSL::finalStateReached()
 }
 
   
-const std::vector<ramp_msgs::MotionState> LineSL::generatePoints() 
+const std::vector<ramp_msgs::MotionState> LineSL::generatePoints()
 {
   std::vector<ramp_msgs::MotionState> result;
 
