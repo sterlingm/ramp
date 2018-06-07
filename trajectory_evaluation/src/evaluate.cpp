@@ -30,7 +30,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   if(req.hmap_eval)
   {
     performFeasibilityHmap(req);
-    //ROS_INFO("qr.packed_.innerColl_: %s", qrPacked_.innerColl_ ? "True" : "False");
+    ROS_INFO("qr.packed_.innerColl_: %s", qrPacked_.innerColl_ ? "True" : "False");
     res.feasible = !qrPacked_.innerColl_;
     req.trajectory.feasible = res.feasible;
   }

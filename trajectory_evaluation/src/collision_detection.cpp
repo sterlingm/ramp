@@ -15,8 +15,8 @@ void CollisionDetection::performNum(const ramp_msgs::RampTrajectory& trajectory,
   min_dist_ = 100;
   for(uint8_t i=0;i<obstacle_trjs.size() && !result.collision_;i++)
   {
-    //////ROS_INFO("Ob radius: %f", obstacle_radii[i]);
-    //////ROS_INFO("Ob traj: %s", utility_.toString(obstacle_trjs[i]).c_str());
+    ROS_INFO("Ob radius: %f", ob_cir_groups[i].fitCir.radius);
+    ROS_INFO("Ob traj: %s", utility_.toString(obstacle_trjs[i]).c_str());
     double d_min = query(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), robot_radius, ob_cir_groups[i], result);
     //////ROS_INFO("d_min: %f", d_min);
 
@@ -1769,10 +1769,9 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
 {
   ros::Time time_start = ros::Time::now();
 
-  //////ROS_INFO("In CollisionDetection::query"); 
+  ROS_INFO("In CollisionDetection::query"); 
   ////////ROS_INFO("trajectory.points.size(): %i", (int)segment.size());
   ////////ROS_INFO("ob_trajectory.points.size(): %i", (int)ob_trajectory.size());
-  ////////ROS_INFO("ob_radius: %f"
 
   /*if(ob_trajectory.trajectory.points.size() > 2)
   {
@@ -1813,7 +1812,7 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
     float dist = sqrt( pow(p_i->positions.at(0) - p_ob->positions.at(0),2) + pow(p_i->positions.at(1) - p_ob->positions.at(1),2) );
     float dist_threshold = ob_r.fitCir.radius + robot_r;
 
-    /*//////ROS_INFO("p_i: %s", utility_.toString(*p_i).c_str());
+    //////ROS_INFO("p_i: %s", utility_.toString(*p_i).c_str());
     //////ROS_INFO("p_j: %s", utility_.toString(*p_ob).c_str());
     //////ROS_INFO("dist: %f", dist);*/
     

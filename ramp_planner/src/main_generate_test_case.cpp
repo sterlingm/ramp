@@ -421,7 +421,7 @@ ObInfo generateObInfo(const MotionState robot_state)
 
   Range dist(0, 3.5);
 
-  Range v(0, 0.5);
+  Range v       (0, 0.5);
   Range w       (0      ,  PI/2.f);
   Range rela_dir(PI/6.f ,  5.f*PI/6.f);
   
@@ -481,6 +481,10 @@ const ramp_msgs::Obstacle buildObstacleMsg(const double& p_x, const double& p_y,
   result.ob_ms.velocities.push_back(v_mag*cos(v_direction));
   result.ob_ms.velocities.push_back(v_mag*sin(v_direction));
   result.ob_ms.velocities.push_back(w);
+
+  // Add in obstacle radius
+  result.cirGroup.fitCir.radius = 0.21;
+  result.cirGroup.packedCirs.push_back(result.cirGroup.fitCir);
 
   return result;
 }
@@ -866,7 +870,7 @@ int main(int argc, char** argv) {
     ROS_INFO("Generate: Planner ready, publishing static obstacles");
 
     // Publish static obstacles
-    //pub_obs.publish(obs_stat);
+    pub_obs.publish(obs_stat);
 
     // Wait for 1 second
     d_history.sleep();
@@ -874,12 +878,12 @@ int main(int argc, char** argv) {
     ROS_INFO("Generate: Done sleeping for 1 second");
 
     // Publish dynamic obstacles
-    //pub_obs.publish(tc.ob_list);
+    pub_obs.publish(tc.ob_list);
 
     tc.t_begin = ros::Time::now();
 
     // Create timer to continuously publish obstacle information
-    //ob_trj_timer = handle.createTimer(ros::Duration(1./20.), boost::bind(pubObTrj, _1, tc));
+    ob_trj_timer = handle.createTimer(ros::Duration(1./20.), boost::bind(pubObTrj, _1, tc));
 
 
 

@@ -1,5 +1,5 @@
 # RAMP misc parameters #
-population_size: 10
+population_size: 4
 
 sub_populations: false
 

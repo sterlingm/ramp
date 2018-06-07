@@ -43,8 +43,8 @@ bool handleRequest(ramp_msgs::EvaluationSrv::Request& reqs,
     //t_start = ros::Time::now();
 
     ramp_msgs::EvaluationResponse res;
-    //ROS_INFO("Robot Evaluating trajectory %i: %s", (int)i, u.toString(reqs.reqs[i].trajectory).c_str());
-    ////////ROS_INFO("Obstacle size: %i", (int)reqs.reqs[i].obstacle_trjs.size());
+    ROS_INFO("Robot Evaluating trajectory %i: %s", (int)i, u.toString(reqs.reqs[i].trajectory).c_str());
+    ROS_INFO("Obstacle size: %i", (int)reqs.reqs[i].obstacle_trjs.size());
     //ROS_INFO("imminent_collision: %s", reqs.reqs[i].imminent_collision ? "True" : "False");
     //ROS_INFO("currentTheta: %f", reqs.reqs[i].currentTheta);
     //ROS_INFO("robot_r: %f consider_trans: %s trans_possible: %s hmap: %s", reqs.reqs[i].robot_radius, reqs.reqs[i].consider_trans ? "True" : "False", reqs.reqs[i].trans_possible ? "True" : "False", reqs.reqs[i].hmap_eval ? "True" : "False");
@@ -63,7 +63,7 @@ bool handleRequest(ramp_msgs::EvaluationSrv::Request& reqs,
       res.t_firstCollision = ros::Duration(9999.f);
     }
 
-    //ROS_INFO("Done evaluating, fitness: %f feasible: %s t_firstCollision: %f", res.fitness, res.feasible ? "True" : "False", res.t_firstCollision.toSec());
+    ROS_INFO("Done evaluating, fitness: %f feasible: %s t_firstCollision: %f", res.fitness, res.feasible ? "True" : "False", res.t_firstCollision.toSec());
     ros::Time t_vec = ros::Time::now();
     resps.resps.push_back(res);
     
