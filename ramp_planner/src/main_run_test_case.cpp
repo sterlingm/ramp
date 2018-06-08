@@ -679,9 +679,10 @@ int main(int argc, char** argv) {
     // Reset Stage positions
     client_reset.call(reset_srv);
   }
+  ROS_INFO("Outside of for loop");
 
 
-  std::cout<<"\n\nExiting Normally\n";
+  printf("\n\nExiting normally\n");
   ros::shutdown();
   return 0;
 }

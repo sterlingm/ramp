@@ -4,7 +4,7 @@
 <include file="$(find ramp_launch)/launch/planner_parameters.launch" />
 
 <!-- Robot info parameters -->
-<rosparam file="$(find ramp_launch)/launch/config/robot_0.yaml" command="load" ns="robot_info/" />
+<rosparam file="$(find ramp_launch)/launch/config/system_level_testing.yaml" command="load" ns="robot_info/" />
 
 <param name="ramp/skip_map_tf" type="bool" value="1" />
 <param name="ramp/global_frame" type="string" value="odom" />

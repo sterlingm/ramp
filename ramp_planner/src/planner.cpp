@@ -121,8 +121,8 @@ const MotionType Planner::findMotionType(const ramp_msgs::Obstacle ob) const
  * TODO: Remove Duration parameter and make the predicted trajectory be computed until robot reaches bounds of environment */
 const ramp_msgs::RampTrajectory Planner::getPredictedTrajectory(const ramp_msgs::Obstacle ob) const 
 {
-  ROS_INFO("In Planner::getPredictedTrajectory");
-  ROS_INFO("ob: %s", utility_.toString(ob).c_str());
+  //ROS_INFO("In Planner::getPredictedTrajectory");
+  //ROS_INFO("ob: %s", utility_.toString(ob).c_str());
   ramp_msgs::RampTrajectory result;
 
   // First, identify which type of trajectory it is
@@ -138,20 +138,13 @@ const ramp_msgs::RampTrajectory Planner::getPredictedTrajectory(const ramp_msgs:
   ramp_msgs::TrajectorySrv tr_srv;
   tr_srv.request.reqs.push_back(tr);
 
-  ROS_INFO("Path: %s", utility_.toString(tr.path).c_str());
-
   // Get trajectory
   if(h_traj_req_->request(tr_srv))
   {
-    ROS_INFO("In if request successful, resps.size(): %i", (int)tr_srv.response.resps.size());
     result = tr_srv.response.resps.at(0).trajectory;
   }
-  else
-  {
-    ROS_INFO("Trajec req for obstacle not successful");
-  }
 
-  ROS_INFO("Exiting Planner::getPredictedTrajectory");
+  //ROS_INFO("Exiting Planner::getPredictedTrajectory");
   return result;
 } // End getPredictedTrajectory
 
@@ -167,7 +160,7 @@ const ramp_msgs::RampTrajectory Planner::getPredictedTrajectory(const ramp_msgs:
  */
 const ramp_msgs::Path Planner::getObstaclePath(const ramp_msgs::Obstacle ob, const MotionType mt) const 
 {
-  ROS_INFO("In Planner::getObstaclePath");
+  //ROS_INFO("In Planner::getObstaclePath");
   ramp_msgs::Path result;
 
   std::vector<ramp_msgs::KnotPoint> path;
@@ -231,7 +224,7 @@ const ramp_msgs::Path Planner::getObstaclePath(const ramp_msgs::Obstacle ob, con
   //std::cout<<"\nPath: "<<utility_.toString(utility_.getPath(path));
   result = utility_.getPath(path);
   
-  ROS_INFO("Exiting Planner::getObstaclePath");
+  //ROS_INFO("Exiting Planner::getObstaclePath");
   return result; 
 }
 
@@ -1220,12 +1213,12 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
   // Setting imminent collision to true HERE!
   //******************************************************
   // If control cycles are happening, but the robot is stopped, toggle imminent collision for the evalution so that it does not consider the turning angle for the trajectory
-  /* Temporarily out for RL experiments
-   * double v = sqrt( pow(latestUpdate_.msg_.velocities[0], 2) + pow(latestUpdate_.msg_.velocities[1],2) );
+  /* Temporarily out for RL experiments*/
+  double v = sqrt( pow(latestUpdate_.msg_.velocities[0], 2) + pow(latestUpdate_.msg_.velocities[1],2) );
   if(moving_robot_ && v < 0.01)
   {
     result.imminent_collision = true;
-  }*/
+  }
 
   // full_eval is for predicting segments that are not generated
   // Used to have param for this, but it was only used for movingOn_
@@ -4551,6 +4544,11 @@ void Planner::goTest(float sec)
   } // end while
   ROS_INFO("Reached goal");
 
+  // Send an empty trajectory
+  ramp_msgs::RampTrajectory empty;
+  h_control_->send(empty);
+  h_control_->send(empty);
+  h_control_->send(empty);
 
   ros::Duration t_execution = ros::Time::now() - t_start;
   ////ROS_INFO("Total execution time: %f", t_execution.toSec());

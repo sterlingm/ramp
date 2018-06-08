@@ -49,8 +49,8 @@ TrajectoryView::TrajectoryView(QWidget *parent)
 {
     width_ = 540;
     height_ = 540;
-    maxWidthMeters_ = 2.f;
-    maxHeightMeters_ = 2.f;
+    maxWidthMeters_ = 2.5f;
+    maxHeightMeters_ = 2.5f;
 
     // Setup the scene
     QGraphicsScene *scene = new QGraphicsScene(this);
