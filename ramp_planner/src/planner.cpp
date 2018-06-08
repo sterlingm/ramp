@@ -4537,12 +4537,10 @@ void Planner::goTest(float sec)
   while( (latestUpdate_.comparePosition(relative_goal, false) > goalThreshold_) && (ros::Time::now() - t_begin).toSec() 
       < sec && ros::ok())
   {
-    ROS_INFO("Dist: %f", latestUpdate_.comparePosition(relative_goal, false));
     planningCycleCallback();
     r.sleep();
     ros::spinOnce(); 
   } // end while
-  ROS_INFO("Reached goal");
 
   // Send an empty trajectory
   ramp_msgs::RampTrajectory empty;
