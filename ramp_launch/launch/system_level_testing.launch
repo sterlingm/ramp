@@ -22,7 +22,7 @@
 <!-- Planner -->
 <!-- <node name="ramp_planner" pkg="ramp_planner" type="ramp_planner" output="screen" /> -->
 <node name="run_test_case" pkg="ramp_planner" type="run_test_case" output="screen" />
-<node name="generate_test_case" pkg="ramp_planner" type="generate_test_case" output="log" />
+<node name="generate_test_case" pkg="ramp_planner" type="generate_test_case" output="screen" />
 
 <!-- Sensing -->
 <!-- <node name="ramp_sensing" pkg="ramp_sensing" type="ramp_sensing" /> -->

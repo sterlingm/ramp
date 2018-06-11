@@ -250,7 +250,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   obs_.clear();
 
 
-  ROS_INFO("msg.obstacles.size(): %i", (int)msg.obstacles.size());
+  //ROS_INFO("msg.obstacles.size(): %i", (int)msg.obstacles.size());
   /*
    * Predict obstacle trajectories
    */
@@ -270,10 +270,10 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
       {
         ob_trajectory_.at(i) = ob_temp_trj;
       }
-      //ROS_INFO("ob_temp_trj %i: %s", i, ob_temp_trj.toString().c_str());
+      ROS_INFO("ob_temp_trj %i: %s", i, ob_temp_trj.toString().c_str());
     }
     ////////ROS_INFO("Time to get obstacle trajectory: %f", (ros::Time::now() - start).toSec());
-    ////ROS_INFO("ob_trajectory_: %s", ob_temp_trj.toString().c_str());
+    //ROS_INFO("ob_trajectory_: %s", ob_temp_trj.toString().c_str());
   } // end for
 
   ros::Time s = ros::Time::now();

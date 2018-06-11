@@ -403,6 +403,9 @@ const std::string Utility::toString(const ramp_msgs::TrajectoryRequest tr) const
 
   result<<"\nMax speed linear: "<<tr.max_speed_linear;
   result<<"\nMax speed angular: "<<tr.max_speed_angular;
+  result<<"\nsl_final_speed: "<<tr.sl_final_speed;
+  result<<"\nsl_init_dur: "<<tr.sl_init_dur.toSec();
+  result<<"\nsl_final_dur: "<<tr.sl_final_dur.toSec();
   
   result<<"\n";
 

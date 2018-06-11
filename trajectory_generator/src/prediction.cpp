@@ -69,7 +69,7 @@ bool Prediction::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
   {
     if(req.sl_traj)
     {
-      //ROS_INFO("In SL circle prediction");
+      ROS_INFO("In SL circle prediction");
       CircleSL ciSL;
       ciSL.init(req.path.points.at(0).motionState, req.sl_init_dur, req.sl_final_dur, req.sl_final_speed);
       traj = ciSL.generatePoints(); 

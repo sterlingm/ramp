@@ -35,9 +35,9 @@ int main(int argc, char** argv) {
 
   // Build a Path
   ramp_msgs::KnotPoint c1;
-  c1.motionState.positions.push_back(1.0); // 0.70455
-  c1.motionState.positions.push_back(0.0); // 0.4026
-  c1.motionState.positions.push_back(0.0); // 0.519146
+  c1.motionState.positions.push_back(0.9); // 0.70455
+  c1.motionState.positions.push_back(1.9); // 0.4026
+  c1.motionState.positions.push_back(-2.01317); // 0.519146
   
   ramp_msgs::KnotPoint c2;
   c2.motionState.positions.push_back(2.2); // 0.70455
@@ -84,9 +84,9 @@ int main(int argc, char** argv) {
   
   
   // Velocities
-  c1.motionState.velocities.push_back(0.3);  //.151426
-  c1.motionState.velocities.push_back(0.3); //-.297903
-  c1.motionState.velocities.push_back(0.785); //-.118126*/
+  c1.motionState.velocities.push_back(-0.114844);  //.151426
+  c1.motionState.velocities.push_back(-0.232451); //-.297903
+  c1.motionState.velocities.push_back(0.916294); //-.118126*/
  
   /*c2.motionState.velocities.push_back(0.175905);  //.151426
   c2.motionState.velocities.push_back(-0.0106699); //-.297903
@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
   ramp_msgs::Path p;
   //p.points.push_back(zero);
   p.points.push_back(c1);
-  p.points.push_back(c2);
+  //p.points.push_back(c2);
   //p.points.push_back(c3);
   //p.points.push_back(c4);
   //p.points.push_back(c5);
@@ -168,7 +168,7 @@ int main(int argc, char** argv) {
 
   
   ramp_msgs::MotionState sp1;
-  sp1 = p.points.at(1).motionState;
+  //sp1 = p.points.at(1).motionState;
   //sp1 = p.points.at(0).motionState;
   //sp1 = c2.motionState;
 
@@ -391,15 +391,15 @@ int main(int argc, char** argv) {
   tr.print = true;
   tr.bezierCurves = curves;
   tr.segments = 2;
-  tr.max_speed_linear = 0.33f;
-  tr.max_speed_angular = 0.57f;
+  tr.max_speed_linear = 0.;
+  tr.max_speed_angular = 0.f;
 
 
   // Set system level test values
   tr.sl_traj = true;
-  tr.sl_final_speed = 0.5f;
-  tr.sl_init_dur = ros::Duration(1);
-  tr.sl_final_dur = ros::Duration(2);
+  tr.sl_final_speed = 0.368614f;
+  tr.sl_init_dur = ros::Duration(0.770334);
+  tr.sl_final_dur = ros::Duration(1.11993);
 
   ramp_msgs::TrajectorySrv tr_srv;
   tr_srv.request.reqs.push_back(tr);

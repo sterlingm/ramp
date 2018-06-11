@@ -463,6 +463,8 @@ ObInfoExt generateObInfoGridExt(const MotionState robot_state)
   result.d_s = ros::Duration(durs.random());
   result.d_vi = ros::Duration(durs.random());
   result.d_vf = ros::Duration(durs.random());
+
+  ROS_INFO("Test case v_i: %f v_f: %f d_s: %f d_vi: %f d_vf: %f", result.v_i, result.v_f, result.d_s.toSec(), result.d_vi.toSec(), result.d_vf.toSec());
   
   
   return result;
@@ -686,7 +688,7 @@ TestCaseExt generateTestCaseExt(const MotionState robot_state, int num_obs)
 {
   TestCaseExt result;
 
-  ROS_INFO("In generateTestCase");
+  ROS_INFO("In generateTestCaseExt");
   ROS_INFO("num_obs: %i", num_obs);
 
   // Generate all obstacles and push them onto test case
@@ -929,7 +931,7 @@ int main(int argc, char** argv) {
   //loadParameters(handle);
   //loadObstacleTF();
 
-  num_obs = 3;
+  num_obs = 1;
 
   ros::Rate r(100);
 
@@ -1019,8 +1021,6 @@ int main(int argc, char** argv) {
       abtc.times[i_ob+3] = 1;
       abtc.times[i_ob+6] = 1;
     }
-
-    generateObInfoGrid(initial_state);
     
     /*
      * Get test data for the abtc
