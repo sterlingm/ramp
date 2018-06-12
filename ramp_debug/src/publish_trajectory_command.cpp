@@ -36,13 +36,13 @@ int main(int argc, char** argv) {
   // Build a Path
   ramp_msgs::KnotPoint c1;
   c1.motionState.positions.push_back(0.9); // 0.70455
-  c1.motionState.positions.push_back(1.9); // 0.4026
-  c1.motionState.positions.push_back(-2.01317); // 0.519146
+  c1.motionState.positions.push_back(0.8); // 0.4026
+  c1.motionState.positions.push_back(-2.41495); // 0.519146
   
   ramp_msgs::KnotPoint c2;
-  c2.motionState.positions.push_back(2.2); // 0.70455
-  c2.motionState.positions.push_back(2.2); // 0.4026
-  c2.motionState.positions.push_back(0.785); // 0.519146
+  c2.motionState.positions.push_back(0.7916); // 0.70455
+  c2.motionState.positions.push_back(0.7036); // 0.4026
+  c2.motionState.positions.push_back(-2.41495); // 0.519146
 
 
   ramp_msgs::KnotPoint c3;
@@ -84,9 +84,9 @@ int main(int argc, char** argv) {
   
   
   // Velocities
-  c1.motionState.velocities.push_back(-0.114844);  //.151426
-  c1.motionState.velocities.push_back(-0.232451); //-.297903
-  c1.motionState.velocities.push_back(0.916294); //-.118126*/
+  c1.motionState.velocities.push_back(-0.009);  //.151426
+  c1.motionState.velocities.push_back(-0.008); //-.297903
+  c1.motionState.velocities.push_back(0); //-.118126*/
  
   /*c2.motionState.velocities.push_back(0.175905);  //.151426
   c2.motionState.velocities.push_back(-0.0106699); //-.297903
@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
   ramp_msgs::Path p;
   //p.points.push_back(zero);
   p.points.push_back(c1);
-  //p.points.push_back(c2);
+  p.points.push_back(c2);
   //p.points.push_back(c3);
   //p.points.push_back(c4);
   //p.points.push_back(c5);
@@ -397,9 +397,10 @@ int main(int argc, char** argv) {
 
   // Set system level test values
   tr.sl_traj = true;
-  tr.sl_final_speed = 0.368614f;
-  tr.sl_init_dur = ros::Duration(0.770334);
-  tr.sl_final_dur = ros::Duration(1.11993);
+  //tr.sl_final_speed = 0.2894;
+  tr.sl_final_speed = 0.2894;
+  tr.sl_init_dur = ros::Duration(2.3527);
+  tr.sl_final_dur = ros::Duration(1.16523);
 
   ramp_msgs::TrajectorySrv tr_srv;
   tr_srv.request.reqs.push_back(tr);

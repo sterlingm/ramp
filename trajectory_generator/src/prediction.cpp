@@ -46,7 +46,7 @@ bool Prediction::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
     // If doing a SL-test obstacle trajectory
     if(req.sl_traj)
     {
-      //ROS_INFO("In SL straight line prediction");
+      ROS_INFO("In SL straight line prediction");
       //ROS_INFO("goal: %s", utility_.toString(req.path.points[1].motionState).c_str());
       LineSL liSL;
 
