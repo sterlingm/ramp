@@ -212,7 +212,7 @@ void LineSL::initReflexxes()
 
 void LineSL::changeReflexxes()
 {
-  ROS_INFO("Current velocity (%f,%f), changing to (%f,%f)", reflexxesData_.inputParameters->MaxVelocityVector->VecData[0], reflexxesData_.inputParameters->MaxVelocityVector->VecData[1], final_speed_, final_speed_);
+  //ROS_INFO("Current velocity (%f,%f), changing to (%f,%f)", reflexxesData_.inputParameters->MaxVelocityVector->VecData[0], reflexxesData_.inputParameters->MaxVelocityVector->VecData[1], final_speed_, final_speed_);
   
   // Set up the motion constraints (max velocity, acceleration and jerk)
   // Maximum velocity   
@@ -222,7 +222,7 @@ void LineSL::changeReflexxes()
   reflexxesData_.inputParameters->TargetVelocityVector->VecData[1] = final_speed_;
 
 
-  ROS_INFO("Position validity: %i", reflexxesData_.inputParameters->CheckForValidity());
+  //ROS_INFO("Position validity: %i", reflexxesData_.inputParameters->CheckForValidity());
   //! RMLVelocityInputParameters::CheckForValidity()).
 
 }
@@ -308,7 +308,7 @@ const ramp_msgs::MotionState LineSL::spinOnce()
                                     reflexxesData_.outputParameters, 
                                     reflexxesData_.flags);
 
-  ROS_INFO("Reflexxes state: %i", reflexxesData_.resultValue);
+  //ROS_INFO("Reflexxes state: %i", reflexxesData_.resultValue);
 
   /** Build the JointTrajectoryPoint object that will be used to build the trajectory */
   ramp_msgs::MotionState result = buildMotionState(reflexxesData_);

@@ -45,7 +45,7 @@ void CircleSL::init(const ramp_msgs::MotionState s, const ros::Duration sl_init_
   w_ = s.velocities.at(2);
   v_ = sqrt( pow(s.velocities.at(0),2) + pow(s.velocities.at(1),2) );
   r_ = v_ / w_;
-  std::cout<<"\nw: "<<w_<<" v: "<<v_<<" r: "<<r_;
+  //std::cout<<"\nw: "<<w_<<" v: "<<v_<<" r: "<<r_;
 
 
   // Theta = angle to the position vector
@@ -103,9 +103,9 @@ void CircleSL::initReflexxes() {
 
 void CircleSL::changeReflexxes()
 {
-  ROS_INFO("Current velocity (%f,%f), changing to (%f,%f)", reflexxesData_.inputParameters->MaxVelocityVector->VecData[0], reflexxesData_.inputParameters->MaxVelocityVector->VecData[1], v_/r_, 0);
+  //ROS_INFO("Current velocity (%f,%f), changing to (%f,%f)", reflexxesData_.inputParameters->MaxVelocityVector->VecData[0], reflexxesData_.inputParameters->MaxVelocityVector->VecData[1], v_/r_, 0);
 
-  ROS_INFO("Before: v: %f w: %f r: %f", v_, w_, r_);
+  //ROS_INFO("Before: v: %f w: %f r: %f", v_, w_, r_);
   
   // Set up the motion constraints (max velocity, acceleration and jerk)
   // Maximum velocity   
@@ -115,15 +115,15 @@ void CircleSL::changeReflexxes()
   //w_ = final_speed_;
   //v_ = w_*r_;
   
-  ROS_INFO("After: v: %f w: %f r: %f", v_, w_, r_);
+  //ROS_INFO("After: v: %f w: %f r: %f", v_, w_, r_);
   
   reflexxesData_.inputParameters->MaxVelocityVector->VecData[0]     = fabs(w_)+0.00001;
   reflexxesData_.inputParameters->TargetVelocityVector->VecData[0]  = fabs(w_);
 
-  ROS_INFO("Changed velocity (%f,%f)", reflexxesData_.inputParameters->MaxVelocityVector->VecData[0], reflexxesData_.inputParameters->MaxVelocityVector->VecData[1]);
+  //ROS_INFO("Changed velocity (%f,%f)", reflexxesData_.inputParameters->MaxVelocityVector->VecData[0], reflexxesData_.inputParameters->MaxVelocityVector->VecData[1]);
  
 
-  ROS_INFO("Position validity: %i", reflexxesData_.inputParameters->CheckForValidity());
+  //ROS_INFO("Position validity: %i", reflexxesData_.inputParameters->CheckForValidity());
   //! RMLVelocityInputParameters::CheckForValidity()).
 }
 
@@ -133,13 +133,13 @@ const ramp_msgs::MotionState CircleSL::buildMotionState(const ReflexxesData data
   ramp_msgs::MotionState result;
 
   
-  std::cout<<"\ndata.outputParameters->NewPositionVector->VecData[0]: "<<data.outputParameters->NewPositionVector->VecData[0];
+  //std::cout<<"\ndata.outputParameters->NewPositionVector->VecData[0]: "<<data.outputParameters->NewPositionVector->VecData[0];
 
   double circleTheta, orientation;
   // Find the orientation around the circle
   if(w_ > 0) 
   {
-    ROS_INFO("In w>0");
+    //ROS_INFO("In w>0");
     circleTheta = utility_.displaceAngle(initCircleTheta_, 
         data.outputParameters->NewPositionVector->VecData[0]);
     
@@ -148,7 +148,7 @@ const ramp_msgs::MotionState CircleSL::buildMotionState(const ReflexxesData data
   }
   else 
   {
-    ROS_INFO("In w<=0");
+    //ROS_INFO("In w<=0");
     circleTheta = utility_.displaceAngle(initCircleTheta_, 
         -data.outputParameters->NewPositionVector->VecData[0]);
     
@@ -168,13 +168,13 @@ const ramp_msgs::MotionState CircleSL::buildMotionState(const ReflexxesData data
   std::cout<<"\nx+center_.positions.at(0): "<<x+center_.positions.at(0);
   std::cout<<"\ny+center_.positions.at(1): "<<y+center_.positions.at(1);*/
 
-  ROS_INFO("initCircleTheta_: %f r: %f circleTheta: %f (x,y): (%f,%f)", initCircleTheta_, r_, circleTheta, x+center_.positions.at(0), y+center_.positions.at(1));
+  //ROS_INFO("initCircleTheta_: %f r: %f circleTheta: %f (x,y): (%f,%f)", initCircleTheta_, r_, circleTheta, x+center_.positions.at(0), y+center_.positions.at(1));
   
   
   double phi = data.outputParameters->NewPositionVector->VecData[0];
   double theta = utility_.findAngleToVector(result.positions);
 
-  ROS_INFO("phi: %f theta: %f", phi, theta);
+  //ROS_INFO("phi: %f theta: %f", phi, theta);
   
   //double x_dot = v_*cos(phi)*sin(theta);
   //double y_dot = v_*cos(phi)*cos(theta);
@@ -183,7 +183,7 @@ const ramp_msgs::MotionState CircleSL::buildMotionState(const ReflexxesData data
   double x_dot = v_*cos(result.positions[2]);
   double y_dot = v_*sin(result.positions[2]);
 
-  ROS_INFO("x_dot: %f y_dot: %f", x_dot, y_dot);
+  //ROS_INFO("x_dot: %f y_dot: %f", x_dot, y_dot);
 
   result.velocities.push_back(x_dot);
   result.velocities.push_back(y_dot);

@@ -253,7 +253,7 @@ void TrajectoryView::drawPopulation() {
 
         this->scene()->addEllipse(metersToPixels(p.at(0), true)-(radiusPixels/2),
                                     metersToPixels(p.at(1), false)+(radiusPixels/2),
-                                    metersToPixels(radius, true), metersToPixels(radius, false), pen);
+                                    metersToPixels(radius*2, true), metersToPixels(radius*2, false), pen);
       } //end if 1 point
 
       else if (points.size() > 0) {
@@ -275,7 +275,7 @@ void TrajectoryView::drawPopulation() {
             // Draw a circle
             this->scene()->addEllipse(metersToPixels(points.at(j).positions.at(0), true)-(radiusPixels/2),
                                       metersToPixels(points.at(j).positions.at(1), false)+(radiusPixels/2),
-                                      metersToPixels(radius, true), metersToPixels(radius, false), pen);
+                                      metersToPixels(radius*2, true), metersToPixels(radius*2, false), pen);
             pen = penTraj;               
           } // end if first point
 

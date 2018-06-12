@@ -103,10 +103,8 @@ bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
     else if(treq.path.points.size() > 0) 
     {
       //ROS_INFO("In prediction");
-      ROS_INFO("Trajectory Request Received: %s", utility.toString(treq).c_str());
       Prediction prediction;
       prediction.trajectoryRequest(treq, tres);
-      ROS_INFO("Response: %s", utility.toString(tres).c_str());
     }
 
     if( tres.trajectory.i_knotPoints[0] == tres.trajectory.i_knotPoints[1] )

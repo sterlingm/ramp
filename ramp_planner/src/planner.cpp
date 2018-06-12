@@ -256,7 +256,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
    */
   for(int i=0;i<msg.obstacles.size();i++)
   {
-    ROS_INFO("i: %i", i);
+    //ROS_INFO("i: %i", i);
     obs_.push_back(msg.obstacles[i]);
 
     if(msg.obstacles[i].ob_ms.velocities.size() > 0)
@@ -1496,7 +1496,7 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
   if(ob_trajectory_.size() > 0 && moving_on_coll_ && (movingOn_.msg_.t_firstCollision.toSec() < time_threshold
     || (movingOn_.msg_.t_firstCollision.toSec() - (ros::Time::now().toSec()-t_prevCC_ros_.toSec())) < time_threshold))
   {
-    //ROS_WARN("IC: moving_on_coll_: %s t_firstCollision: %f Elapsed time: %f", moving_on_coll_ ? "True" : "False", movingOn_.msg_.t_firstCollision.toSec(), (ros::Time::now().toSec()-t_prevCC_.toSec()));
+    ROS_WARN("IC: moving_on_coll_: %s t_firstCollision: %f", moving_on_coll_ ? "True" : "False", movingOn_.msg_.t_firstCollision.toSec());
     
     // Check if IC was previously false
     if(!imminent_collision_)
@@ -1504,7 +1504,7 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
       t_IC_ = ros::Time::now();
     }
   
-    //ROS_INFO("movingOn: %s", movingOn_.toString().c_str());
+    ROS_INFO("movingOn: %s", movingOn_.toString().c_str());
     //ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
 
     ic.data = true;
