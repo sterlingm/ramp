@@ -227,9 +227,9 @@ void MotionState::transformBase(const tf::Transform t)
   msg_.positions.at(1) = p.getY();
   
   // Get the new orientation
-  ROS_INFO("msg_.positions[2]: %f t.getRotation: %f", msg_.positions.at(2), tf::getYaw(t.getRotation()));
+  //ROS_INFO("msg_.positions[2]: %f t.getRotation: %f", msg_.positions.at(2), tf::getYaw(t.getRotation()));
   msg_.positions.at(2) = utility_.displaceAngle(msg_.positions.at(2), tf::getYaw(t.getRotation()));
-  ROS_INFO("Final msg_.positions[2]: %f", msg_.positions[2]);
+  //ROS_INFO("Final msg_.positions[2]: %f", msg_.positions[2]);
 } //End transformBase
 
 

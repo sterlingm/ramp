@@ -590,7 +590,7 @@ int main(int argc, char** argv) {
 
   ros::Timer ob_trj_timer;
   
-  int num_tests = 1;
+  int num_tests = 10;
   int num_successful_tests = 0;
   std::vector<int> num_generations;
   std::vector<TestCase> test_cases;
@@ -654,6 +654,7 @@ int main(int argc, char** argv) {
     ROS_INFO("Planner initialized");
     ROS_INFO("Start: %s", my_planner.start_.toString().c_str());
     ROS_INFO("Goal: %s", my_planner.goal_.toString().c_str());
+  
 
     /*
      * Prep test
@@ -662,10 +663,44 @@ int main(int argc, char** argv) {
     auto p_next_cc = my_planner.prepareForTestCase();
 
     ROS_INFO("Done with prepareForTestCase");
+    ROS_INFO("Setting tc_ready param to true");
 
-
-    // Start publishing obstacle info
+    // Toggle flag saying we are ready to start a new test case
     my_planner.h_parameters_.setTestCase(true); 
+
+    // Wait for static obs
+    ROS_INFO("Waiting for param /ramp/static-obs to be true");
+    bool stat_obs = false;
+    while(stat_obs == false)
+    {
+      handle.getParam("/ramp/static_obs", stat_obs);
+      r.sleep();
+      ros::spinOnce();
+    }
+
+    ROS_INFO("Running planning cycles with static obs");
+    // Run planning cycles while stat obs is true
+    while(stat_obs)
+    {
+      my_planner.planningCycleCallback(); 
+      handle.getParam("/ramp/static_obs", stat_obs);
+      r.sleep();
+      ros::spinOnce();
+    }
+    
+    ROS_INFO("Done doing planning cycles with static obs");
+    
+    // Wait for dynamic obs
+    ROS_INFO("Waiting for param /ramp/dy_obs to be true");
+    bool dy_obs = false;
+    while(dy_obs == false)
+    {
+      handle.getParam("/ramp/dy_obs", dy_obs);
+      r.sleep();
+      ros::spinOnce();
+    }
+
+    ROS_INFO("dy_obs is true, running full planner");
 
     /*
      * Run planner

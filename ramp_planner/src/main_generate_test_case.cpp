@@ -947,7 +947,7 @@ int main(int argc, char** argv) {
   ros::Timer ob_trj_timer;
   ob_trj_timer.stop();
   
-  int num_tests = 1;
+  int num_tests = 10;
 
   ob_delay.push_back(2);
   ob_delay.push_back(2);
@@ -1111,13 +1111,23 @@ int main(int argc, char** argv) {
 
     ROS_INFO("Generate: Planner ready, publishing static obstacles");
 
+    // Set static-obs param true
+    ROS_INFO("Setting flag for static obs to true");
+    ros::param::set("/ramp/static_obs", true);
+
     // Publish static obstacles
     pub_obs.publish(obs_stat);
 
     // Wait for 1 second
     d_history.sleep();
 
-    ROS_INFO("Generate: Done sleeping for 1 second");
+    // Set static-obs param false
+    ros::param::set("/ramp/static_obs", false);
+    ROS_INFO("static_obs flag set to false");
+
+    // Set dy-obs param true
+    ROS_INFO("Setting flag for dy obs to true");
+    ros::param::set("/ramp/dy_obs", true);
 
     // Publish dynamic obstacles
     pub_obs.publish(tc.ob_list);
@@ -1126,7 +1136,6 @@ int main(int argc, char** argv) {
 
     // Create timer to continuously publish obstacle information
     ob_trj_timer = handle.createTimer(ros::Duration(1./20.), boost::bind(pubObTrjExt, _1, tc));
-
 
 
     /*
@@ -1139,15 +1148,19 @@ int main(int argc, char** argv) {
       r.sleep();
       ros::spinOnce();
     }
+    // Get execution time
     ros::Duration elasped = ros::Time::now() - tc.t_begin;
+    
+    // Stop publishing dy obs
+    ob_trj_timer.stop();
 
-    ROS_INFO("generate_test_case: Test case completed");
+    ROS_INFO("Test case done, setting flags back to false");
 
     // Set flag signifying that the next test case is not ready
     ros::param::set("/ramp/tc_generated", false);
     
-
-    ob_trj_timer.stop();
+    // Set dy-obs param false
+    ros::param::set("/ramp/dy_obs", false);
 
 
     /*
