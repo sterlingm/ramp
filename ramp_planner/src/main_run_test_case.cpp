@@ -590,7 +590,7 @@ int main(int argc, char** argv) {
 
   ros::Timer ob_trj_timer;
   
-  int num_tests = 10;
+  int num_tests = 25;
   int num_successful_tests = 0;
   std::vector<int> num_generations;
   std::vector<TestCase> test_cases;
@@ -678,20 +678,22 @@ int main(int argc, char** argv) {
       ros::spinOnce();
     }
 
-    ROS_INFO("Running planning cycles with static obs");
+    ROS_INFO("Run:Running planning cycles with static obs");
+    //ROS_INFO("latestUpdate_: %s diff_: %s", my_planner.latestUpdate_.toString().c_str(), my_planner.diff_.toString().c_str());
     // Run planning cycles while stat obs is true
     while(stat_obs)
     {
       my_planner.planningCycleCallback(); 
+      my_planner.sendPopulation();
       handle.getParam("/ramp/static_obs", stat_obs);
       r.sleep();
       ros::spinOnce();
     }
     
-    ROS_INFO("Done doing planning cycles with static obs");
+    ROS_INFO("Run:Done doing planning cycles with static obs");
     
     // Wait for dynamic obs
-    ROS_INFO("Waiting for param /ramp/dy_obs to be true");
+    ROS_INFO("Run:Waiting for param /ramp/dy_obs to be true");
     bool dy_obs = false;
     while(dy_obs == false)
     {
@@ -700,18 +702,23 @@ int main(int argc, char** argv) {
       ros::spinOnce();
     }
 
-    ROS_INFO("dy_obs is true, running full planner");
+    ROS_INFO("Run:dy_obs is true, running full planner");
 
     /*
      * Run planner
      */
     my_planner.goTest(d_test_case_thresh.toSec());
+
+    ROS_INFO("Run:Finished test %i", i);
+    ROS_INFO("Run:Setting tc_ready to false");
     
     
     // Test case done, stop publishing obs
     my_planner.h_parameters_.setTestCase(false);
+    my_planner.h_parameters_.setTestCase(false);
 
     // Reset Stage positions
+    client_reset.call(reset_srv);
     client_reset.call(reset_srv);
   }
   ROS_INFO("Outside of for loop");

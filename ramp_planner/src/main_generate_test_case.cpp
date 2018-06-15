@@ -452,9 +452,9 @@ ObInfoExt generateObInfoGridExt(const MotionState robot_state)
   result.x = ob_x;
   result.y = ob_y;
 
-  result.v_i = v.random();
-  result.v_f = v.random();
-  result.w = 0;//w.random();
+  result.v_i  = v.random();
+  result.v_f  = v.random();
+  result.w    = w.random();
 
 
   // Set durations
@@ -947,7 +947,7 @@ int main(int argc, char** argv) {
   ros::Timer ob_trj_timer;
   ob_trj_timer.stop();
   
-  int num_tests = 10;
+  int num_tests = 25;
 
   ob_delay.push_back(2);
   ob_delay.push_back(2);
@@ -1043,8 +1043,8 @@ int main(int argc, char** argv) {
       // the trajec. goal and causing the trajec to 'back up'
       // May still face issues with circular arc trajectories?
       ramp_msgs::Obstacle o = tc.obs[i].msg;
-      o.ob_ms.velocities[0] = tc.obs[i].v_f * cos(tc.obs[i].relative_direction);
-      o.ob_ms.velocities[1] = tc.obs[i].v_f * sin(tc.obs[i].relative_direction);
+      o.ob_ms.velocities[0] = (tc.obs[i].v_f*2) * cos(tc.obs[i].relative_direction);
+      o.ob_ms.velocities[1] = (tc.obs[i].v_f*2) * sin(tc.obs[i].relative_direction);
       
       // Get the path. Use the ob msg with final speed
       //ramp_msgs::Path p = my_planner.getObstaclePath(tc.obs[i].msg, mt);
@@ -1059,10 +1059,10 @@ int main(int argc, char** argv) {
       tr.type = PREDICTION;
 
       // Set Ext ob model stuff
-      tr.sl_traj = true;
+      tr.sl_traj        = true;
       tr.sl_final_speed = tc.obs[i].v_f;
-      tr.sl_init_dur = tc.obs[i].d_vi;
-      tr.sl_final_dur = tc.obs[i].d_vf;
+      tr.sl_init_dur    = tc.obs[i].d_vi;
+      tr.sl_final_dur   = tc.obs[i].d_vf;
     
       tr_srv.request.reqs.push_back(tr);
     } // end for
@@ -1072,7 +1072,7 @@ int main(int argc, char** argv) {
     {
       for(int i=0;i<tr_srv.response.resps.size();i++)
       {
-        ROS_INFO("Traj: %s", utility.toString(tr_srv.response.resps[i].trajectory).c_str());
+        ROS_INFO("Ob Traj: %s", utility.toString(tr_srv.response.resps[i].trajectory).c_str());
         tc.ob_trjs.push_back(tr_srv.response.resps[i].trajectory);
       }
     }
@@ -1112,7 +1112,7 @@ int main(int argc, char** argv) {
     ROS_INFO("Generate: Planner ready, publishing static obstacles");
 
     // Set static-obs param true
-    ROS_INFO("Setting flag for static obs to true");
+    ROS_INFO("Generate: Setting flag for static obs to true");
     ros::param::set("/ramp/static_obs", true);
 
     // Publish static obstacles
@@ -1123,10 +1123,10 @@ int main(int argc, char** argv) {
 
     // Set static-obs param false
     ros::param::set("/ramp/static_obs", false);
-    ROS_INFO("static_obs flag set to false");
+    ROS_INFO("Generate: static_obs flag set to false");
 
     // Set dy-obs param true
-    ROS_INFO("Setting flag for dy obs to true");
+    ROS_INFO("Generate: Setting flag for dy obs to true");
     ros::param::set("/ramp/dy_obs", true);
 
     // Publish dynamic obstacles
@@ -1137,7 +1137,9 @@ int main(int argc, char** argv) {
     // Create timer to continuously publish obstacle information
     ob_trj_timer = handle.createTimer(ros::Duration(1./20.), boost::bind(pubObTrjExt, _1, tc));
 
-
+    // Set flag signifying that the next test case is not ready
+    ros::param::set("/ramp/tc_generated", false);
+    
     /*
      * Wait for planner to run for time threshold
      */
@@ -1154,11 +1156,8 @@ int main(int argc, char** argv) {
     // Stop publishing dy obs
     ob_trj_timer.stop();
 
-    ROS_INFO("Test case done, setting flags back to false");
+    ROS_INFO("Generate:Test case done, setting flags back to false");
 
-    // Set flag signifying that the next test case is not ready
-    ros::param::set("/ramp/tc_generated", false);
-    
     // Set dy-obs param false
     ros::param::set("/ramp/dy_obs", false);
 

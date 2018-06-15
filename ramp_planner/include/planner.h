@@ -361,7 +361,7 @@ class Planner {
 
 
     // Work for CC
-    void doControlCycle();
+    void doControlCycle(bool sendBestTraj=true);
 
     // Returns the index in the trajectory's path to start checking if the robot has passed it
     const uint8_t getIndexStartPathAdapting(const RampTrajectory t) const;

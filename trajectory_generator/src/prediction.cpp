@@ -17,7 +17,7 @@ void Prediction::init(const ramp_msgs::TrajectoryRequest req)
 
 bool Prediction::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs::TrajectoryResponse& res) 
 {
-  //ROS_INFO("In Prediction::trajectoryRequest");
+  ROS_INFO("In Prediction::trajectoryRequest");
   res.trajectory.i_knotPoints.push_back(0);
 
 
@@ -46,7 +46,7 @@ bool Prediction::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
     // If doing a SL-test obstacle trajectory
     if(req.sl_traj)
     {
-      ROS_INFO("In SL straight line prediction");
+      //ROS_INFO("In SL straight line prediction");
       //ROS_INFO("goal: %s", utility_.toString(req.path.points[1].motionState).c_str());
       LineSL liSL;
 
@@ -69,7 +69,7 @@ bool Prediction::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
   {
     if(req.sl_traj)
     {
-      ROS_INFO("In SL circle prediction");
+      //ROS_INFO("In SL circle prediction");
       CircleSL ciSL;
       ciSL.init(req.path.points.at(0).motionState, req.sl_init_dur, req.sl_final_dur, req.sl_final_speed);
       traj = ciSL.generatePoints(); 

@@ -45,15 +45,23 @@ void fixDuplicates(ramp_msgs::TrajectoryRequest& req)
 
 bool checkGoal(ramp_msgs::TrajectoryRequest req)
 {
-  ramp_msgs::MotionState a = req.path.points.at(0).motionState;
-  ramp_msgs::MotionState b = req.path.points.at(1).motionState;
-
-  if(utility.positionDistance(a.positions, b.positions) < 0.01)
+  // Circle predictions only have one knotpoint
+  if(req.path.points.size() == 1)
   {
-    return true;
+    return false;
   }
 
-  return false;
+  // Go through each knot point
+  for(int i=0;i<req.path.points.size()-1;i++)
+  {
+    if(utility.positionDistance(req.path.points[i].motionState.positions, req.path.points[i+1].motionState.positions) > 0.1)
+    {
+      return false;
+    }
+  }
+
+
+  return true;
 }
 
 
@@ -71,7 +79,7 @@ bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
     /*
      * Check for start == goal
      */
-    if(treq.path.points.size() == 2 && checkGoal(treq))
+    if(checkGoal(treq))
     {
       tres.trajectory.trajectory.points.push_back(utility.getTrajectoryPoint(treq.path.points.at(0).motionState));
       tres.trajectory.i_knotPoints.push_back(0);

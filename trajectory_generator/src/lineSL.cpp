@@ -191,9 +191,9 @@ void LineSL::initReflexxes()
   
 
   // Maximum acceleration
-  reflexxesData_.inputParameters->MaxAccelerationVector->VecData[0] = 1.0;
-  reflexxesData_.inputParameters->MaxAccelerationVector->VecData[1] = 1.0;
-  reflexxesData_.inputParameters->MaxAccelerationVector->VecData[2] = PI/4;
+  reflexxesData_.inputParameters->MaxAccelerationVector->VecData[0] = 2.0;
+  reflexxesData_.inputParameters->MaxAccelerationVector->VecData[1] = 2.0;
+  reflexxesData_.inputParameters->MaxAccelerationVector->VecData[2] = PI;
   
 
   // As the maximum jerk values are not known, this is just to try
