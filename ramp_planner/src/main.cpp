@@ -28,6 +28,7 @@ bool                show_full_traj;
 bool                try_ic_loop;
 double              t_cc_rate;
 double              t_sc_rate;
+double              T_weight, A_weight, D_weight;
 int                 pop_type;
 TrajectoryType      pt;
 std::vector<std::string> ob_topics;
@@ -181,6 +182,11 @@ void loadParameters(const ros::NodeHandle handle)
     ROS_ERROR("Did not find robot_info/max_speed_linear rosparam");
     exit(1);
   }
+  
+  // Get the evaluation weights
+  handle.getParam("/ramp/eval_weight_T", T_weight);
+  handle.getParam("/ramp/eval_weight_D", D_weight);
+  handle.getParam("/ramp/eval_weight_A", A_weight);
 
   if(handle.hasParam("robot_info/max_speed_angular"))
   {
@@ -554,7 +560,7 @@ int main(int argc, char** argv)
    */
  
   // Initialize the planner
-  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, global_frame, update_topic, pt, num_ppcs, stop_after_ppcs, sensingBeforeCC, t_sc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction, try_ic_loop, show_full_traj);
+  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, global_frame, update_topic, pt, num_ppcs, stop_after_ppcs, sensingBeforeCC, t_sc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction, try_ic_loop, T_weight, A_weight, D_weight, show_full_traj);
   my_planner.modifications_   = modifications;
   my_planner.evaluations_     = evaluations;
   my_planner.seedPopulation_  = seedPopulation;

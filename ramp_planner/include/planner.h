@@ -136,6 +136,9 @@ class Planner {
               const bool                moving_robot=1,
               const bool                errorReduction=0,
               const bool                try_ic_loop=0,
+              const double              T_weight=0,
+              const double              A_weight=0,
+              const double              D_weight=0,
               bool                      show_full_traj=0);
     
     // Send the best trajectory to the control package
@@ -554,6 +557,10 @@ class Planner {
     bool evalHMap_;
     bool tryICLoop_;
 
+    double T_weight_;
+    double A_weight_;
+    double D_weight_;
+
     /*
      * General data
      */
@@ -584,6 +591,7 @@ class Planner {
     std::ofstream f_num_ccs_;
     std::ofstream f_num_switches_;
     std::ofstream f_pop_size_;
+    std::ofstream f_eval_weights_;
     std::ofstream f_compute_switch_all_ts_;
     std::ofstream f_switch_t_size_;
     std::ofstream f_trajec_size_;

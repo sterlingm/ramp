@@ -447,7 +447,7 @@ ObInfoExt generateObInfoGridExt(const MotionState robot_state)
   
   // Set speeds
   Range v(0, 0.5);
-  Range w(0, PI/2.f);
+  Range w(0.25, PI/2.f);
 
   result.x = ob_x;
   result.y = ob_y;
@@ -690,6 +690,8 @@ TestCaseExt generateTestCaseExt(const MotionState robot_state, int num_obs)
 
   //ROS_INFO("In generateTestCaseExt");
   //ROS_INFO("num_obs: %i", num_obs);
+  
+  double obInitD = 0.5;
 
   // Generate all obstacles and push them onto test case
   for(int i=0;i<num_obs;i++)
@@ -705,7 +707,7 @@ TestCaseExt generateTestCaseExt(const MotionState robot_state, int num_obs)
       two.push_back(temp.x);
       two.push_back(temp.y);
       double dist = utility.positionDistance(one, two);
-      while(dist < 0.2) 
+      while(dist < obInitD) 
       {
         //ROS_INFO("one: (%f, %f) temp: (%f, %f)", one[0], one[1], two[0], two[1]);
         
@@ -728,7 +730,7 @@ TestCaseExt generateTestCaseExt(const MotionState robot_state, int num_obs)
       three.push_back(temp.y);
       double dist1 = utility.positionDistance(one, three);
       double dist2 = utility.positionDistance(two, three);
-      while(dist1 < 0.2 || dist2 < 0.2)
+      while(dist1 < obInitD || dist2 < obInitD)
       {
         //ROS_INFO("one: (%f, %f) two:(%f, %f) temp: (%f, %f)", one[0], one[1], two[0], two[1], three[0], three[1]);
         temp = generateObInfoGridExt(robot_state);
@@ -741,7 +743,7 @@ TestCaseExt generateTestCaseExt(const MotionState robot_state, int num_obs)
 
     // What is this used for?
     temp.msg = buildObstacleMsg(temp.x, temp.y, temp.v_i, temp.relative_direction, temp.w);
-    
+
     result.obs.push_back(temp);
     result.ob_list.obstacles.push_back(temp.msg);
     //ROS_INFO("result.obs.size(): %i", (int)result.obs.size());
@@ -846,7 +848,7 @@ void pubObTrjExt(const ros::TimerEvent e, TestCaseExt& tc)
     int index = d_elap_ob*10;
     //ROS_INFO("d_elap_ob: %f index: %i", d_elap_ob, index);
 
-    if( (ros::Time::now() - tc.t_begin).toSec() > ob_delay[i])
+    if( (ros::Time::now() - tc.t_begin).toSec() > tc.obs[i].d_s.toSec())
     {
       //ROS_INFO("Publishing ob trj");
       int temp_index = index >= (tc.ob_trjs[i].trajectory.points.size()-1) ? tc.ob_trjs[i].trajectory.points.size()-1 : 
@@ -1069,6 +1071,9 @@ int main(int argc, char** argv) {
       tr.sl_init_dur    = tc.obs[i].d_vi;
       tr.sl_final_dur   = tc.obs[i].d_vf;
     
+      // Get initial delay from hard-coded vector (for now)
+      tr.sl_init_dur    = ros::Duration(ob_delay[i]);
+
       tr_srv.request.reqs.push_back(tr);
     } // end for
 

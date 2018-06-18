@@ -1,5 +1,5 @@
 # RAMP misc parameters #
-population_size: 4
+population_size: 10
 
 sub_populations: false
 
@@ -58,9 +58,9 @@ eval_weight_T: 1.0 #1 #1.75
 
 # As D weight increases, overall contribution of D to the cost decreases
 # This is because high values of D are good so we add 1/D to the fitness cost
-eval_weight_D: 0.0 #0.13 #5
+eval_weight_D: 0.71 #0.13 #5
 
-eval_weight_A: 0.0 #0.48 #0.01
+eval_weight_A: 0.66 #0.48 #0.01
 
 
 

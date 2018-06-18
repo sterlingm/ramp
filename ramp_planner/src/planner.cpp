@@ -1795,7 +1795,7 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int num_ppcs, bool stop_after_ppcs, const bool sensingBeforeCC, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction, const bool try_ic_loop, bool show_full_traj)
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int num_ppcs, bool stop_after_ppcs, const bool sensingBeforeCC, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction, const bool try_ic_loop, const double T_weight, const double A_weight, const double D_weight, bool show_full_traj)
 {
   //ROS_INFO("In Planner::init");
 
@@ -1857,6 +1857,10 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   errorReduction_       = errorReduction;
   show_full_traj_       = show_full_traj;
   generationsPerCC_     = controlCycle_.toSec() / planningCycle_.toSec();
+  
+  T_weight_ = T_weight;
+  A_weight_ = A_weight;
+  D_weight_ = D_weight;
 
   num_ppcs_ = num_ppcs;
   stop_after_ppcs_ = stop_after_ppcs;
@@ -1873,6 +1877,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   num_scs_  = 0;
   num_ccs_  = 0;
   num_switches_ = 0;
+  generation_   = 0;
   pop_size_ = populationSize_;
 
   ////////ROS_INFO("Exiting Planner::init");
@@ -1893,6 +1898,7 @@ void Planner::openFiles()
   f_num_ccs_.open(directory+"/data/num_ccs.txt");
   f_num_switches_.open(directory+"/data/num_switches.txt");
   f_pop_size_.open(directory+"/data/pop_size.txt");
+  f_eval_weights_.open(directory+"/data/eval_weights.txt");
   f_compute_switch_all_ts_.open(directory+"/data/compute_switch_ts.txt");
   f_switch_t_size_.open(directory+"/data/switch_t_size.txt");
   f_trajec_size_.open(directory+"/data/trajec_size.txt");
@@ -1929,6 +1935,7 @@ void Planner::closeFiles()
   f_num_ccs_.close();
   f_num_switches_.close();
   f_pop_size_.close();
+  f_eval_weights_.close();
   f_compute_switch_all_ts_.close();
   f_switch_t_size_.close();
   f_trajec_size_.close();
@@ -3079,7 +3086,7 @@ void Planner::planningCycleCallback()
     
     // diff_ is the overall offset of pop since last CC
     diff_ = diff_.subtractPosition(temp);
-    //ROS_INFO("diff_: %s diff: %s temp: %s", diff_.toString().c_str(), diff.toString().c_str(), temp.toString().c_str());
+    ROS_INFO("diff_: %s diff: %s temp: %s", diff_.toString().c_str(), diff.toString().c_str(), temp.toString().c_str());
 
     //ROS_INFO("m_cc_: %s", m_cc_.toString().c_str());
     startPlanning_ = m_cc_.add(temp);
@@ -3465,7 +3472,7 @@ void Planner::doControlCycle(bool sendBestTraj)
 
   // Send the best trajectory and set movingOn
   //////////ROS_INFO("Sending best");
-  //ROS_INFO("bestT: %s", bestT.toString().c_str());
+  ROS_INFO("bestT: %s", bestT.toString().c_str());
   if(sendBestTraj)
   {
     sendBest();
@@ -4164,6 +4171,10 @@ void Planner::writeGeneralData()
   f_num_ccs_<<num_ccs_;
   f_num_switches_<<num_switches_;
   f_pop_size_<<pop_size_;
+  
+  
+  f_eval_weights_<<T_weight_<<","<<A_weight_<<","<<D_weight_;
+  ROS_INFO("In writeGeneralData, %f %f %f", T_weight_, A_weight_, D_weight_);
 
   // Time to compute switching trajectories
   for(int i=0;i<d_compute_switch_all_ts_.size();i++)
@@ -4609,6 +4620,9 @@ void Planner::goTest(float sec)
   planningCycleTimer_.stop();
   imminentCollisionTimer_.stop();
   ob_dists_timer_.stop();
+
+  writeData();
+  closeFiles();
 
   ////////ROS_INFO("Total number of planning cycles: %i", generation_-1);
   ////////ROS_INFO("Total number of control cycles:  %i", num_cc_);
