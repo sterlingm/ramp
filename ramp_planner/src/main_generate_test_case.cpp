@@ -928,7 +928,7 @@ int main(int argc, char** argv) {
   //loadParameters(handle);
   //loadObstacleTF();
 
-  num_obs = 1;
+  num_obs = 3;
 
   ros::Rate r(100);
 
@@ -1038,13 +1038,18 @@ int main(int argc, char** argv) {
       tf.setOrigin( tf::Vector3(0,0,0) );
       tf.setRotation( tf::createQuaternionFromYaw(0) );
       MotionType mt = my_planner.findMotionType(tc.obs[i].msg);
-
+      
       // Temporarily set the ob speed to the final speed to avoid overshooting
       // the trajec. goal and causing the trajec to 'back up'
       // May still face issues with circular arc trajectories?
       ramp_msgs::Obstacle o = tc.obs[i].msg;
-      o.ob_ms.velocities[0] = (tc.obs[i].v_f*2) * cos(tc.obs[i].relative_direction);
-      o.ob_ms.velocities[1] = (tc.obs[i].v_f*2) * sin(tc.obs[i].relative_direction);
+      
+      if(tc.obs[i].v_f > tc.obs[i].v_i)
+      {
+        o.ob_ms.velocities[0] = (tc.obs[i].v_f*2) * cos(tc.obs[i].relative_direction);
+        o.ob_ms.velocities[1] = (tc.obs[i].v_f*2) * sin(tc.obs[i].relative_direction);
+      }
+
       
       // Get the path. Use the ob msg with final speed
       //ramp_msgs::Path p = my_planner.getObstaclePath(tc.obs[i].msg, mt);

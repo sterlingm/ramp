@@ -3070,7 +3070,7 @@ void Planner::planningCycleCallback()
     // Get the difference in position based on trajectory point at that time
     diff = movingOnCC_.getPointAtTime(t_since_cc.toSec());
     
-    ROS_INFO("movingOnCC_ at t_since_cc: %s", diff.toString().c_str());
+    //ROS_INFO("movingOnCC_ at t_since_cc: %s", diff.toString().c_str());
     //ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
 
     // Find offset for this PC
@@ -3079,7 +3079,7 @@ void Planner::planningCycleCallback()
     
     // diff_ is the overall offset of pop since last CC
     diff_ = diff_.subtractPosition(temp);
-    ROS_INFO("diff_: %s diff: %s temp: %s", diff_.toString().c_str(), diff.toString().c_str(), temp.toString().c_str());
+    //ROS_INFO("diff_: %s diff: %s temp: %s", diff_.toString().c_str(), diff.toString().c_str(), temp.toString().c_str());
 
     //ROS_INFO("m_cc_: %s", m_cc_.toString().c_str());
     startPlanning_ = m_cc_.add(temp);
@@ -3465,7 +3465,7 @@ void Planner::doControlCycle(bool sendBestTraj)
 
   // Send the best trajectory and set movingOn
   //////////ROS_INFO("Sending best");
-  ROS_INFO("bestT: %s", bestT.toString().c_str());
+  //ROS_INFO("bestT: %s", bestT.toString().c_str());
   if(sendBestTraj)
   {
     sendBest();
@@ -3572,12 +3572,12 @@ void Planner::doControlCycle(bool sendBestTraj)
     adapt_durs_.push_back(d_adapt);
 
     
-    ROS_INFO("After adaptation:");
+    //ROS_INFO("After adaptation:");
     ////ROS_INFO("Pop earliest time: %f", population_.getEarliestStartTime().toSec());
-    for(int i=0;i<population_.size();i++)
-    {
-      ROS_INFO("%s", population_.get(i).toString().c_str());
-    }
+    //for(int i=0;i<population_.size();i++)
+    //{
+      //ROS_INFO("%s", population_.get(i).toString().c_str());
+    //}
     //////////ROS_INFO("Time spent adapting: %f", d_adapt.toSec());
    
    
