@@ -3086,7 +3086,7 @@ void Planner::planningCycleCallback()
     
     // diff_ is the overall offset of pop since last CC
     diff_ = diff_.subtractPosition(temp);
-    ROS_INFO("diff_: %s diff: %s temp: %s", diff_.toString().c_str(), diff.toString().c_str(), temp.toString().c_str());
+    //ROS_INFO("diff_: %s diff: %s temp: %s", diff_.toString().c_str(), diff.toString().c_str(), temp.toString().c_str());
 
     //ROS_INFO("m_cc_: %s", m_cc_.toString().c_str());
     startPlanning_ = m_cc_.add(temp);
@@ -3445,12 +3445,6 @@ void Planner::doControlCycle(bool sendBestTraj)
   t_prevCC_ros_ = ros::Time::now();
   //////////////ROS_INFO("Number of planning cycles that occurred between CC's: %i", c_pc_);
 
-  // Set all of the trajectory t_start values to 0 b/c they would be starting now
-  /*for(int i=0;i<population_.size();i++)
-  {
-    population_.trajectories_[i].msg_.t_start = ros::Duration(0);
-  }*/
-
 
   // Set the bestT
   RampTrajectory bestT = population_.getBest();
@@ -3581,10 +3575,10 @@ void Planner::doControlCycle(bool sendBestTraj)
     
     //ROS_INFO("After adaptation:");
     ////ROS_INFO("Pop earliest time: %f", population_.getEarliestStartTime().toSec());
-    //for(int i=0;i<population_.size();i++)
-    //{
-      //ROS_INFO("%s", population_.get(i).toString().c_str());
-    //}
+    /*for(int i=0;i<population_.size();i++)
+    {
+      ROS_INFO("%s", population_.get(i).toString().c_str());
+    }*/
     //////////ROS_INFO("Time spent adapting: %f", d_adapt.toSec());
    
    
@@ -3794,7 +3788,7 @@ void Planner::sendPopulation()
 
   text.header.stamp     = ros::Time::now();
   text.id               = 57000;
-  text.header.frame_id  = global_frame_;
+  text.header.frame_id  = global_frame_ == "global_frame" ? "map" : global_frame_;
 
   text.ns       = "basic_shapes";
   text.type     = visualization_msgs::Marker::TEXT_VIEW_FACING;
@@ -3849,7 +3843,7 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
   //ROS_INFO("buildLineList id: %i", id);
   result.id = id;
   result.header.stamp = ros::Time::now();
-  result.header.frame_id = global_frame_;
+  result.header.frame_id = global_frame_ == "global_frame" ? "map" : global_frame_;
   result.ns = "basic_shapes";
 
   result.type = visualization_msgs::Marker::LINE_STRIP;
@@ -4174,7 +4168,6 @@ void Planner::writeGeneralData()
   
   
   f_eval_weights_<<T_weight_<<","<<A_weight_<<","<<D_weight_;
-  ROS_INFO("In writeGeneralData, %f %f %f", T_weight_, A_weight_, D_weight_);
 
   // Time to compute switching trajectories
   for(int i=0;i<d_compute_switch_all_ts_.size();i++)
@@ -4530,7 +4523,7 @@ trajectory_msgs::JointTrajectoryPoint Planner::prepareForTestCase()
   m_cc_.msg_.accelerations.clear();
   diff_ = diff_.zero(3);
   latestUpdate_ = latestUpdate_.zero(3);
-  //ROS_INFO("m_cc_: %s latestUpdate_: %s diff_: %s", m_cc_.toString().c_str(), latestUpdate_.toString().c_str(), diff_.toString().c_str());
+  ROS_INFO("m_cc_: %s latestUpdate_: %s diff_: %s", m_cc_.toString().c_str(), latestUpdate_.toString().c_str(), diff_.toString().c_str());
   
 
   // Get the time until next control cycle, t_{i+1}
@@ -4555,6 +4548,23 @@ void Planner::planningCycles(int num)
   while(generation_ < num) {planningCycleCallback(); r.sleep(); ros::spinOnce();}
 }
 
+void Planner::resetForSLTest()
+{
+  ROS_INFO("In resetForSLTest");
+  // Send an empty trajectory
+  ramp_msgs::RampTrajectory empty;
+  h_control_->send(empty);
+  h_control_->send(empty);
+  h_control_->send(empty);
+  ROS_INFO("Sent empty");
+
+  // Reset IC
+  std_msgs::Bool bIC;
+  bIC.data = false;
+  h_control_->sendIC(bIC);
+
+  diff_ = diff_.zero(3);
+}
 
 void Planner::goTest(float sec) 
 {
@@ -4603,19 +4613,21 @@ void Planner::goTest(float sec)
   ros::Duration t_execution = ros::Time::now() - t_start;
   ////ROS_INFO("Total execution time: %f", t_execution.toSec());
     
+  // The below code is moved to a separate method, resetForSLTest
   // Send an empty trajectory
-  ramp_msgs::RampTrajectory empty;
+  /*ramp_msgs::RampTrajectory empty;
   h_control_->send(empty);
   h_control_->send(empty);
   h_control_->send(empty);
-  ROS_INFO("Sent empty");
+  ROS_INFO("Sent empty");*/
 
   // Reset IC
-  std_msgs::Bool bIC;
+  /*std_msgs::Bool bIC;
   bIC.data = false;
-  h_control_->sendIC(bIC);
+  h_control_->sendIC(bIC);*/
 
   // Stop timers
+  ROS_INFO("Stopping timers");
   controlCycleTimer_.stop();
   planningCycleTimer_.stop();
   imminentCollisionTimer_.stop();

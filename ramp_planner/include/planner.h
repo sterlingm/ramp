@@ -110,6 +110,7 @@ class Planner {
     void planningCycles(int num);
     void go();
     void goTest(float sec=-1);
+    void resetForSLTest();
     
     // Initialization 
     void initPopulation();

@@ -12,6 +12,7 @@ class Change {
 
     ramp_msgs::Path path_;
     Utility utility_;
+    std::vector<ramp_msgs::Range> ranges_;
 
   private:
     Constraints checkConstraints_;

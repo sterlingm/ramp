@@ -204,29 +204,29 @@ const ramp_msgs::Path Repair::perform()
    * Check the bounds
    */
   // x dimension
-  if(x < utility_.standardRanges_[0].min)
+  if(x < ranges_[0].min)
   {
-    std::vector<double> pos = getNewPosition(x, y, utility_.standardRanges_[0].min, theta, dist, true);
+    std::vector<double> pos = getNewPosition(x, y, ranges_[0].min, theta, dist, true);
     x = pos[0];
     y = pos[1];
   }
-  else if(x > utility_.standardRanges_[0].max)
+  else if(x > ranges_[0].max)
   {
-    std::vector<double> pos = getNewPosition(x, y, utility_.standardRanges_[0].max, theta, dist, true);
+    std::vector<double> pos = getNewPosition(x, y, ranges_[0].max, theta, dist, true);
     x = pos[0];
     y = pos[1];
   }
   
   // y dimension
-  if(y < utility_.standardRanges_[1].min)
+  if(y < ranges_[1].min)
   {
-    std::vector<double> pos = getNewPosition(y, x, utility_.standardRanges_[1].min, theta, dist, false);
+    std::vector<double> pos = getNewPosition(y, x, ranges_[1].min, theta, dist, false);
     x = pos[1];
     y = pos[0];
   }
-  else if(y > utility_.standardRanges_[1].max)
+  else if(y > ranges_[1].max)
   {
-    std::vector<double> pos = getNewPosition(y, x, utility_.standardRanges_[1].max, theta, dist, false);
+    std::vector<double> pos = getNewPosition(y, x, ranges_[1].max, theta, dist, false);
     x = pos[1];
     y = pos[0];
   }

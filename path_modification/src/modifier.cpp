@@ -3,6 +3,12 @@
 Modifier::Modifier(ramp_msgs::ModificationRequest::Request& req) : mod_req(req) {}
 
 
+Modifier::Modifier(ramp_msgs::ModificationRequest::Request& req, std::vector<ramp_msgs::Range> r) : mod_req(req), ranges_(r) 
+{
+  in_.ranges_ = r;
+  chg_.ranges_ = r;
+  repair_.ranges_ = r;
+}
 
 const std::vector<ramp_msgs::Path> Modifier::perform() 
 {

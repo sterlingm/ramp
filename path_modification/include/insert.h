@@ -11,6 +11,7 @@ class Insert {
     const ramp_msgs::Path perform();
 
     ramp_msgs::Path path_;
+    std::vector<ramp_msgs::Range> ranges_;
     Utility utility_;
   private:
     Constraints checkConstraints_;

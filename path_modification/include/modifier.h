@@ -13,6 +13,7 @@ class Modifier {
   public:
 
     Modifier(ramp_msgs::ModificationRequest::Request& req);
+    Modifier(ramp_msgs::ModificationRequest::Request& req, std::vector<ramp_msgs::Range> ranges);
     ~Modifier() {}
     
     Insert in_;
@@ -21,6 +22,8 @@ class Modifier {
     Crossover cross_;
     Swap swap_; 
     Repair repair_;
+    
+    std::vector<ramp_msgs::Range> ranges_;
 
     ramp_msgs::ModificationRequest::Request mod_req;
     const std::vector<ramp_msgs::Path> perform();

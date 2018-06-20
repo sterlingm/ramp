@@ -23,8 +23,8 @@ void init_advertisers_subscribers(MobileRobot& robot, ros::NodeHandle& handle, b
 
   
   // Publishers
-  robot.pub_twist_ = handle.advertise<geometry_msgs::Twist>(MobileRobot::TOPIC_STR_TWIST, 1000);
-  robot.pub_update_ = handle.advertise<ramp_msgs::MotionState>(MobileRobot::TOPIC_STR_UPDATE, 1000);
+  robot.pub_twist_ = handle.advertise<geometry_msgs::Twist>(MobileRobot::TOPIC_STR_TWIST, 10);
+  robot.pub_update_ = handle.advertise<ramp_msgs::MotionState>(MobileRobot::TOPIC_STR_UPDATE, 1);
 
   if(simulation) 
   {

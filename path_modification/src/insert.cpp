@@ -38,8 +38,8 @@ const ramp_msgs::Path Insert::perform()
       for(unsigned int i=0;i<path_.points.at(0).motionState.positions.size();i++) {
         
         // Generate a random value for each K in the specified range
-        double  min = utility_.standardRanges_.at(i).min;
-        double  max = utility_.standardRanges_.at(i).max;
+        double  min = ranges_.at(i).min;
+        double  max = ranges_.at(i).max;
         float   temp = (min == 0 && max == 0) ? 0 :      
                ( min + (float)rand() / ((float)RAND_MAX / (max - min)) );
 

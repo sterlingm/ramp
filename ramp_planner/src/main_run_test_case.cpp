@@ -596,7 +596,7 @@ int main(int argc, char** argv) {
 
   ros::Timer ob_trj_timer;
   
-  int num_tests = 25;
+  int num_tests = 5;
   int num_successful_tests = 0;
   std::vector<int> num_generations;
   std::vector<TestCase> test_cases;
@@ -723,9 +723,18 @@ int main(int argc, char** argv) {
     my_planner.h_parameters_.setTestCase(false);
     my_planner.h_parameters_.setTestCase(false);
 
+    // Sleep to let robot finish trajec
+    ros::Duration d(1.4);
+    // During this sleep, updates are still coming from control node
+    d.sleep();
+    my_planner.resetForSLTest();
+
+    // Can updates register here?
+
     // Reset Stage positions
     client_reset.call(reset_srv);
     client_reset.call(reset_srv);
+    ROS_INFO("After resetting Stage positions");
   }
   ROS_INFO("Outside of for loop");
 

@@ -386,6 +386,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     // Minimum distance to any obstacle
     double D = cd_.min_dist_;
     if (D < 0.00001f) D = 0.00001;
+  
     double _1_D = 1.0 / D; // consider 1/D, not D
     //min_obs_dis = D;
 

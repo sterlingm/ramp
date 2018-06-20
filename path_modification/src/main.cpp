@@ -26,10 +26,9 @@ bool handleRequest(ramp_msgs::ModificationRequest::Request& req,
 
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
 
-  Modifier mod(req);
+  Modifier mod(req, ranges);
 
-  // Set the ranges
-  // do this in a better way eventually...
+  // Set utility members
   mod.in_.utility_ = u; 
   mod.chg_.utility_ = u;
   mod.repair_.utility_ = u;
