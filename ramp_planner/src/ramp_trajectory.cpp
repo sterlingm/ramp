@@ -406,10 +406,10 @@ const RampTrajectory RampTrajectory::concatenate(const RampTrajectory traj, cons
  */
 void RampTrajectory::offsetPositions(const MotionState& diff)
 {
-  ////////ROS_INFO("In RampTrajectory::offsetPositions");
+  ROS_INFO("In RampTrajectory::offsetPositions");
  
   // Go through all the points and subtract diff
-  for(uint16_t i=0;i<msg_.trajectory.points.size();i++)
+  for(int i=0;i<msg_.trajectory.points.size();i++)
   {
     MotionState temp(msg_.trajectory.points.at(i));
     temp = temp.add(diff);
@@ -420,7 +420,7 @@ void RampTrajectory::offsetPositions(const MotionState& diff)
       msg_.trajectory.points.at(i).positions.at(j) = temp.msg_.positions.at(j);
     }
   } // end outter for
-  ////////ROS_INFO("Done offsetting points");
+  ROS_INFO("Done offsetting points");
 
   if(msg_.holonomic_path.points.size() > 0)
   {

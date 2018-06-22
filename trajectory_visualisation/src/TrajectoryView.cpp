@@ -218,7 +218,7 @@ void TrajectoryView::drawPopulation() {
       //std::cout<<"\npoints[0]: ("<<points.at(0).positions.at(0)<<", "<<points.at(0).positions.at(1)<<")\n";
         
       // If movingOn, set to black
-      if(t == populations_.at(p).population.size()-1) 
+      if(t == 0) 
       {
         penTraj = QPen( QColor(0, 0, 0, 255) );
       }

@@ -561,6 +561,17 @@ void pubObTrj(const ros::TimerEvent e, const TestCase tc)
   ramp_msgs::Obstacle ob = buildObstacleMsg(p.positions[0], p.positions[1], tc.obs[0].v, p.positions[2], tc.obs[0].w);
 }
 
+
+bool StageUpdateFinished()
+{
+  return (my_planner.latestUpdate_.msg_.positions[0] < 0.02 &&
+          my_planner.latestUpdate_.msg_.positions[1] < 0.02);// &&
+          //my_planner.latestUpdate_.msg_.positions[2] < 0.01);
+}
+
+
+
+
 void shutdown(int sigint)
 {
   ros::param::set("ramp/ready_tc", false);
@@ -734,6 +745,16 @@ int main(int argc, char** argv) {
     // Reset Stage positions
     client_reset.call(reset_srv);
     client_reset.call(reset_srv);
+
+    ROS_INFO("Waiting for stage reset to be done");
+    // Wait for reset to go through
+    // We will know because latestUpdate will be back to 0s
+    while(StageUpdateFinished() == false)
+    {
+      r.sleep();
+      ros::spinOnce();
+    }
+
     ROS_INFO("After resetting Stage positions");
   }
   ROS_INFO("Outside of for loop");

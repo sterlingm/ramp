@@ -844,32 +844,32 @@ void pubObTrj(const ros::TimerEvent e, TestCaseTwo& tc)
  */
 void pubObTrjExt(const ros::TimerEvent e, TestCaseExt& tc)
 {
-  ROS_INFO("In pubObTrjExt");
+  /*ROS_INFO("In pubObTrjExt");
   ROS_INFO("tc.t_begin: %f", tc.t_begin.toSec());
-  ROS_INFO("ros::Time::now(): %f", ros::Time::now().toSec());
+  ROS_INFO("ros::Time::now(): %f", ros::Time::now().toSec());*/
 
   ros::Duration d_elapsed = ros::Time::now() - tc.t_begin;
   
-  ROS_INFO("d_elapsed: %f traj size: %i", d_elapsed.toSec(), (int)tc.ob_trjs[0].trajectory.points.size()); 
+  //ROS_INFO("d_elapsed: %f traj size: %i", d_elapsed.toSec(), tc.ob_trjs[0].trajectory.points.size()); 
 
   for(int i=0;i<tc.ob_trjs.size();i++)
   {
-    ROS_INFO("i: %i ob_delay[%i]: %i", i, i, ob_delay[i]);
-    ROS_INFO("Elapsed time: %f",(ros::Time::now() - tc.t_begin).toSec());
+    //ROS_INFO("i: %i ob_delay[%i]: %i", i, i, ob_delay[i]);
+    //ROS_INFO("Elapsed time: %f",(ros::Time::now() - tc.t_begin).toSec());
     double d_elap_ob = d_elapsed.toSec() - tc.obs[i].d_s.toSec();
     int index = d_elap_ob*10;
-    ROS_INFO("d_elap_ob: %f index: %i", d_elap_ob, index);
-    ROS_INFO("d_s.toSec(): %f", tc.obs[i].d_s.toSec());
+    //ROS_INFO("d_elap_ob: %f index: %i", d_elap_ob, index);
+    //ROS_INFO("d_s.toSec(): %f", tc.obs[i].d_s.toSec());
 
     if( (ros::Time::now() - tc.t_begin).toSec() > tc.obs[i].d_s.toSec())
     {
-      ROS_INFO("size: %i", tc.ob_trjs[i].trajectory.points.size()-1);
+      //ROS_INFO("size: %i", tc.ob_trjs[i].trajectory.points.size()-1);
       //ROS_INFO("Publishing ob trj");
       int temp_index = index >= ((int)tc.ob_trjs[i].trajectory.points.size()-1) ? tc.ob_trjs[i].trajectory.points.size()-1 : 
         index;
         
       trajectory_msgs::JointTrajectoryPoint p = tc.ob_trjs[i].trajectory.points[temp_index]; 
-      ROS_INFO("temp_index: %i p: %s", temp_index, utility.toString(p).c_str());
+      //ROS_INFO("temp_index: %i p: %s", temp_index, utility.toString(p).c_str());
 
       // Build new obstacle msg
       ramp_msgs::Obstacle ob;
@@ -948,7 +948,7 @@ void collisionCb(const ros::TimerEvent e, TestCaseExt& tc)
       // Set collision to true
       colls[i] = true;
     }
-    else ROS_INFO("No collision");
+    //else ROS_INFO("No collision");
   } // end for
 }
 
@@ -990,7 +990,7 @@ int main(int argc, char** argv) {
   //loadParameters(handle);
   //loadObstacleTF();
 
-  num_obs = 2;
+  num_obs = 1;
 
   ros::Rate r(100);
 
@@ -1144,7 +1144,7 @@ int main(int argc, char** argv) {
       tr.sl_final_dur   = tc.obs[j].d_vf;
     
       // Get initial delay from hard-coded vector (for now)
-      tr.sl_init_dur    = ros::Duration(ob_delay[j]);
+      tr.sl_init_dur    = tc.obs[j].d_s;
 
       // Push back request
       tr_srv.request.reqs.push_back(tr);
