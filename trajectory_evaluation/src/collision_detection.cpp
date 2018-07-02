@@ -1765,6 +1765,7 @@ std::vector<geometry_msgs::Vector3> CollisionDetection::getCirOffsets(const ramp
 }
 
 
+// main query method used
 double CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, const double& traj_start, const double& robot_r, const ramp_msgs::CircleGroup& ob_r, QueryResult& result) const
 {
   ros::Time time_start = ros::Time::now();
@@ -1809,6 +1810,15 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
     // Get the points
     const trajectory_msgs::JointTrajectoryPoint* p_i    = &segment[i];
     const trajectory_msgs::JointTrajectoryPoint* p_ob   = &ob_trajectory[j];
+
+    /*
+     * *********************************************************************
+     * Set this for SL testing, change for real environments!!!!!
+     * *********************************************************************
+     */ 
+    if(p_ob->positions[0] > 2.0 || p_ob->positions[0] < 0.0 || p_ob->positions[1] > 2.0 || p_ob->positions[1] < 0.0)
+      continue;
+
     float dist = sqrt( pow(p_i->positions.at(0) - p_ob->positions.at(0),2) + pow(p_i->positions.at(1) - p_ob->positions.at(1),2) );
     float dist_threshold = ob_r.fitCir.radius + robot_r;
 

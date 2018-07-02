@@ -17,6 +17,20 @@ Obstacle::Obstacle(CircleGroup& cg)
 
     msg_.cirGroup.packedCirs.push_back(pc);
   }
+  
+  // Update motion state
+  msg_.ob_ms.positions.clear();
+  msg_.ob_ms.velocities.clear();
+
+  msg_.ob_ms.positions.push_back(cg.fitCir.center.x);
+  msg_.ob_ms.positions.push_back(cg.fitCir.center.y);
+  msg_.ob_ms.positions.push_back(0);
+
+  msg_.ob_ms.velocities.push_back(0);
+  msg_.ob_ms.velocities.push_back(0);
+  msg_.ob_ms.velocities.push_back(0);
+  
+  last_updated_ = ros::Time::now();
 }
 
 Obstacle::~Obstacle() {}

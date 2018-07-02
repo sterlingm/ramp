@@ -14,6 +14,7 @@
 #include "circle_filter.h"
 #include <visualization_msgs/MarkerArray.h>
 #include "utility.h"
+#include <sensor_msgs/PointCloud2.h>
 
 
 #include <bfl/filter/extendedkalmanfilter.h>
@@ -22,8 +23,11 @@
 #include <bfl/pdf/linearanalyticconditionalgaussian.h>
 #include <bfl/pdf/analyticconditionalgaussian.h>
 
+#include <dynmeans/dynmeans.hpp>
+#include <eigen3/Eigen/Dense>
 
-bool use_static_map = false;
+
+bool persistGrid = false;
 bool gotPersistent = false;
 bool use_odom_topics = false;
 bool use_hilbert_map = false;
@@ -53,15 +57,12 @@ std::vector<visualization_msgs::Marker> pLines;
 std::vector<visualization_msgs::Marker> cLines;
 
 nav_msgs::OccupancyGrid global_costmap;
-nav_msgs::OccupancyGrid staticMap;
 
 Utility util;
 double rate;
 ros::Publisher pub_obj, pub_rviz, pub_cons_costmap, pub_half_costmap, pub_global_costmap;
 std::vector<Obstacle> obs;
 ramp_msgs::ObstacleList list;
-ramp_msgs::ObstacleList staticObsList;
-ramp_msgs::ObstacleList dynamicObsList;
 std::vector< std::string > ob_odoms;
 std::map< std::string, uint8_t > topic_index_map;
 nav_msgs::OccupancyGrid global_grid;
@@ -112,8 +113,6 @@ int    ob_not_moving_count  = 10;
 
 // Obstacles that we want to save the circlegroup for
 std::vector<CircleGroup> largeObs;
-
-std::vector<CircleGroup> staticObs;
 
 double initial_theta        = PI;
               
@@ -322,9 +321,9 @@ void loadParameters(const ros::NodeHandle& handle)
     ////////ROS_ERROR("Did not find rosparam /ramp/remove_outside_fov");
   }
   
-  if(handle.hasParam("/ramp/use_static_map"))
+  if(handle.hasParam("/ramp/use_persistent_grid"))
   {
-    handle.getParam("/ramp/use_static_map", use_static_map);
+    handle.getParam("/ramp/use_persistent_grid", persistGrid);
   }
   else
   {
@@ -503,6 +502,30 @@ void init_linear_system_model()
 }
 
 
+void pointCloudCb(const sensor_msgs::PointCloud2::ConstPtr& msg)
+{
+  ROS_INFO("In pointCloudCb");
+  double lambda = 0.05;
+  double T_Q = 6.8;
+  double K_tau = 1.01;
+  double Q = lambda/T_Q;
+  double tau = (T_Q*(K_tau - 1.0)+1.0)/(T_Q-1.0);
+
+  DynMeans<Eigen::Vector2d> dynm(lambda, Q, tau);
+
+
+  std::vector<Eigen::Vector2d> dataWindow1;
+  int nRestarts = 10;
+  std::vector<Eigen::Vector2d> learnedParams1;
+  std::vector<int> learnedLabels1;
+  double obj1, tTaken1;
+
+  dynm.cluster(dataWindow1, nRestarts, learnedLabels1, learnedParams1, obj1, tTaken1);
+
+}
+
+
+
 
 /** Get the other robot's current odometry information and update the obstacle info */
 void updateOtherRobotCb(const nav_msgs::Odometry::ConstPtr& o, const std::string& topic) 
@@ -656,13 +679,14 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
   
   if(use_odom_topics || list.obstacles.size() > 0 || (global_grid.info.width != 0 && global_grid.info.height != 0))
   {
+    //////////ROS_INFO("cir_obs.size(): %i", (int)cir_obs.size());
+    
     /*ROS_INFO("list.obstacles.size(): %i", (int)list.obstacles.size());
     for(int i=0;i<list.obstacles.size();i++)
     {
       ROS_INFO("Obstacle %i, (x,y): (%f,%f)", i, list.obstacles[i].ob_ms.positions[0], list.obstacles[i].ob_ms.positions[1]);
     }*/
-
-    int iStop = (use_odom_topics || use_static_map) ? list.obstacles.size() : cir_obs.size();
+    int iStop = use_odom_topics ? list.obstacles.size() : cir_obs.size();
     //ROS_INFO("iStop: %i list.obstacles.size(): %i cir_obs.size(): %i", iStop, (int)list.obstacles.size(), (int)cir_obs.size());
     // For each CircleOb, make a Marker
     for(int i=0;i<iStop;i++)
@@ -678,8 +702,8 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       cirMarker.action = visualization_msgs::Marker::ADD;
 
       // Set x and y
-      double x = (use_odom_topics || use_static_map) ? list.obstacles[i].cirGroup.fitCir.center.x : cir_obs[i]->cirGroup.fitCir.center.x;
-      double y = (use_odom_topics || use_static_map) ? list.obstacles[i].cirGroup.fitCir.center.y : cir_obs[i]->cirGroup.fitCir.center.y;
+      double x = use_odom_topics ? list.obstacles[i].cirGroup.fitCir.center.x : cir_obs[i]->cirGroup.fitCir.center.x;
+      double y = use_odom_topics ? list.obstacles[i].cirGroup.fitCir.center.y : cir_obs[i]->cirGroup.fitCir.center.y;
         
       cirMarker.pose.position.x = x;
       cirMarker.pose.position.y = y;
@@ -689,7 +713,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       cirMarker.pose.orientation.z = 0.0;
       cirMarker.pose.orientation.w = 1.0;
 
-      double radius = (use_odom_topics || use_static_map) ? list.obstacles[i].cirGroup.fitCir.radius : cir_obs[i]->cirGroup.fitCir.radius;
+      double radius = use_odom_topics ? list.obstacles[i].cirGroup.fitCir.radius : cir_obs[i]->cirGroup.fitCir.radius;
       //ROS_INFO("i: %i x: %f y: %f r: %f", i, x, y, radius);
         
       // scale values are the diameter so use the radius*2
@@ -704,7 +728,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
 
       result.push_back(cirMarker);
 
-      int jStop = (use_odom_topics || use_static_map) ? list.obstacles[i].cirGroup.packedCirs.size() : cir_obs[i]->cirGroup.packedCirs.size();
+      int jStop = use_odom_topics ? list.obstacles[i].cirGroup.packedCirs.size() : cir_obs[i]->cirGroup.packedCirs.size();
       for(int j=0;j<jStop;j++)
       {
         //////////ROS_INFO("i: %i obs.size(): %i", i, (int)obs.size());
@@ -719,11 +743,11 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
         marker.action = visualization_msgs::Marker::ADD;
 
         // Set x and y
-        double x = (use_odom_topics || use_static_map) ? list.obstacles[i].cirGroup.packedCirs[j].center.x : cir_obs[i]->cirGroup.packedCirs[j].center.x;
-        double y = (use_odom_topics || use_static_map) ? list.obstacles[i].cirGroup.packedCirs[j].center.y : cir_obs[i]->cirGroup.packedCirs[j].center.y;
+        double x = use_odom_topics ? list.obstacles[i].cirGroup.packedCirs[j].center.x : cir_obs[i]->cirGroup.packedCirs[j].center.x;
+        double y = use_odom_topics ? list.obstacles[i].cirGroup.packedCirs[j].center.y : cir_obs[i]->cirGroup.packedCirs[j].center.y;
 
         //////////ROS_INFO("cir_obs[%i]->cir.center.x: %f cir_obs[%i]->cir.center.y: %f cir_obs[%i]->cir.radius: %f", i, cir_obs[i]->cir.center.x, i, cir_obs[i]->cir.center.y, i, cir_obs[i]->cir.radius);
-        //ROS_INFO("(x,y): (%f,%f)", x, y);
+        //////////ROS_INFO("(x,y): (%f,%f) x_origin: %f y_origin: %f", x, y, x_origin, y_origin);
 
         marker.pose.position.x = x;
         marker.pose.position.y = y;
@@ -733,7 +757,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
         marker.pose.orientation.z = 0.0;
         marker.pose.orientation.w = 1.0;
 
-        double radius = (use_odom_topics || use_static_map) ? list.obstacles[i].cirGroup.fitCir.radius : cir_obs[i]->cirGroup.packedCirs[j].radius;
+        double radius = use_odom_topics ? list.obstacles[i].cirGroup.fitCir.radius : cir_obs[i]->cirGroup.packedCirs[j].radius;
 
         // scale values are the diameter so use the radius*2
         marker.scale.x = radius*2.00f;
@@ -767,19 +791,6 @@ void publishList(const ros::TimerEvent& e)
   {
     ROS_INFO("Ob %i at (%f,%f)", i, list.obstacles[i].fitCir.center.x, list.obstacles[i].fitCir.center.y); 
   }*/
-  //ROS_INFO("List size: %i", (int)list.obstacles.size());
-  
-  for(int i=0;i<staticObs.size();i++)
-  {
-
-  }
-  
-  for(int i=0;i<list.obstacles.size();i++)
-  {
-
-  }
-
-
   pub_obj.publish(list);
 } //End sendList
 
@@ -2045,29 +2056,28 @@ void convertCircleToGlobal(const nav_msgs::OccupancyGrid& grid, Circle& cir)
 {
   double x_origin = grid.info.origin.position.x;
   double y_origin = grid.info.origin.position.y;
-  //ROS_INFO("x_origin: %f, y_origin: %f resolution: %f", x_origin, y_origin, grid.info.resolution);
 
   cir.center.x = (cir.center.x * grid.info.resolution) + x_origin;
   cir.center.y = (cir.center.y * grid.info.resolution) + y_origin;
   cir.radius *= grid.info.resolution;
 }
 
-void convertGroups(const nav_msgs::OccupancyGrid& grid, std::vector<CircleGroup>& groups)
+void convertGroups()
 {
  
   // Convert fit circles in outer loop
-  for(int i=0;i<groups.size();i++)
+  for(int i=0;i<cirGroups.size();i++)
   {
-    //ROS_INFO("Fit circle for cirGroup %i center: (%f,%f) radius: %f", i, groups[i].fitCir.center.x, groups[i].fitCir.center.y, groups[i].fitCir.radius);
-    convertCircleToGlobal(grid, groups[i].fitCir);
-    //ROS_INFO("New point: (%f,%f) New radius: %f", groups[i].fitCir.center.x, groups[i].fitCir.center.y, groups[i].fitCir.radius);
+    //////ROS_INFO("Fit circle for cirGroup %i center: (%f,%f) radius: %f", i, cirGroups[i].fitCir.center.x, cirGroups[i].fitCir.center.y, cirGroups[i].fitCir.radius);
+    convertCircleToGlobal(global_grid, cirGroups[i].fitCir);
+    //////ROS_INFO("New point: (%f,%f) New radius: %f", cirGroups[i].fitCir.center.x, cirGroups[i].fitCir.center.y, cirGroups[i].fitCir.radius);
 
     // Convert packed circles in inner loop
-    for(int j=0;j<groups[i].packedCirs.size();j++)
+    for(int j=0;j<cirGroups[i].packedCirs.size();j++)
     {
-      //////////ROS_INFO("Packed circle %i center: (%f,%f) radius: %f ", j, groups[i].packedCirs[j].center.x, groups[i].packedCirs[j].center.y, groups[i].packedCirs[j].radius);
-      convertCircleToGlobal(global_grid, groups[i].packedCirs[j]);
-      //////////ROS_INFO("New Point: (%f,%f) New Radius: %f ", groups[i].packedCirs[j].center.x, groups[i].packedCirs[j].center.y, groups[i].packedCirs[j].radius);
+      //////////ROS_INFO("Packed circle %i center: (%f,%f) radius: %f ", j, cirGroups[i].packedCirs[j].center.x, cirGroups[i].packedCirs[j].center.y, cirGroups[i].packedCirs[j].radius);
+      convertCircleToGlobal(global_grid, cirGroups[i].packedCirs[j]);
+      //////////ROS_INFO("New Point: (%f,%f) New Radius: %f ", cirGroups[i].packedCirs[j].center.x, cirGroups[i].packedCirs[j].center.y, cirGroups[i].packedCirs[j].radius);
     }
   }
 }
@@ -2202,38 +2212,21 @@ void computeVelocities(const std::vector<CircleMatch> cm, const ros::Duration d_
 }
 
 
-void staticMapCb(const nav_msgs::OccupancyGridConstPtr grid)
+void persistGridCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
-  ROS_INFO("In staticMapCb");
+  //ROS_INFO("In persistGridCb");
+  ros::Time tStart = ros::Time::now();
+  CirclePacker c(grid); // (If using modified costmap)
   
-  if(staticObs.size() == 0)
+  c.getGroups(largeObs);
+
+  ros::Duration d = ros::Time::now() - tStart;
+  for(int i=0;i<largeObs.size();i++)
   {
-    staticMap = *grid;
-    ros::Time tStart = ros::Time::now();
-    CirclePacker c(grid); // (If using modified costmap)
-
-    c.setStaticMap(grid);
-    c.staticMap_ = *grid;
-    
-
-    staticObs = c.getGroupsForStaticMap();
-    
-    convertGroups(staticMap, staticObs);
-
-    ros::Duration d = ros::Time::now() - tStart;
-    for(int i=0;i<staticObs.size();i++)
-    {
-      //ROS_INFO("static ob %i - Center: (%f,%f) Radius: %f packedCirs.size(): %i", i, staticObs[i].fitCir.center.x, staticObs[i].fitCir.center.y, staticObs[i].fitCir.radius, (int)staticObs[i].packedCirs.size());
-      Obstacle o(staticObs[i]);
-      list.obstacles.push_back(o.msg_);
-    }
-    //ROS_INFO("Elapsed time: %f", d.toSec());
-    ROS_INFO("staticObs.size(): %i", (int)staticObs.size());
+    //ROS_INFO("Large ob %i - Center: (%f,%f) Radius: %f", i, largeObs[i].fitCir.center.x, largeObs[i].fitCir.center.y, largeObs[i].fitCir.radius);
   }
-  /*else
-  {
-    ROS_INFO("Already got static map obstacles");
-  }*/
+  //ROS_INFO("Elapsed time: %f", d.toSec());
+
   gotPersistent = true;
 }
 
@@ -2383,7 +2376,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   /*
    * Convert centers and radii to the global frame
    */ 
-  convertGroups(global_grid, cirGroups);
+  convertGroups();
   for(int i=0;i<cirGroups.size();i++)
   {
     ////ROS_INFO("cirGroups[%i].fitCir.size: %f", i, cirGroups[i].fitCir.radius);
@@ -2538,7 +2531,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tStart);
   durs.push_back( time_span.count() );
   
-  if(use_static_map == true && gotPersistent == false)
+  if(persistGrid == true && gotPersistent == false)
   {
     gotPersistent = true;
   }
@@ -2776,16 +2769,16 @@ int main(int argc, char** argv)
     }*/
 
     // Before instantiating Subscribers, check if we are using a persistent grid
-    if(use_static_map)
+    if(persistGrid)
     {
       handle.setParam("/ramp/sensing_ready", false);
-      ROS_INFO("Rosparam staticMap is true so this node will wait until a nav_msgs/OccupancyGrid is published on '/map'");
-      ros::Subscriber sub_staticMap = handle.subscribe<nav_msgs::OccupancyGrid>("/map", 1, &staticMapCb);
+      ROS_INFO("Rosparam persistGrid is true so this node will wait until a nav_msgs/OccupancyGrid is published on '/persistent_grid'");
+      ros::Subscriber sub_persistentGrid = handle.subscribe<nav_msgs::OccupancyGrid>("/persistent_grid", 1, &persistGridCb);
 
       ros::Rate r(100);
-      while(ros::ok() && gotPersistent == false) {ros::spinOnce(); r.sleep();ROS_INFO("In while");}
+      while(ros::ok() && gotPersistent == false) {ros::spinOnce(); r.sleep();}
       
-      ROS_INFO("Got grid!");
+      //ROS_INFO("Got grid!");
     }
   }
   
@@ -2810,6 +2803,7 @@ int main(int argc, char** argv)
   //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/hilbert_map_grid", 1, &costmapCb);
   //ros::Subscriber sub_odom = handle.subscribe<nav_msgs::Odometry>("/odom", 1, &odomCb);
   //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/consolidated_costmap", 1, &costmapCb);
+  ros::Subscriber sub_pointCloud = handle.subscribe<sensor_msgs::PointCloud2>("/camera/depth/points", 1, &pointCloudCb);
 
   // Publishers
   pub_obj = handle.advertise<ramp_msgs::ObstacleList>("obstacles", 1);

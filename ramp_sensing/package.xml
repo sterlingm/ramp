@@ -25,7 +25,9 @@
   <build_depend>ramp_msgs</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>roslib</build_depend>
+  <build_depend>sensor_msgs</build_depend>
   <build_depend>tf</build_depend>
+  <build_depend>cmake_modules</build_depend>
   
   <run_depend>corobot_msgs</run_depend>
   <run_depend>map_msgs</run_depend>
@@ -33,8 +35,10 @@
   <run_depend>ramp_msgs</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>roslib</run_depend>
+  <run_depend>sensor_msgs</run_depend>
   <run_depend>message_runtime</run_depend>
   <run_depend>tf</run_depend>
+  <run_depend>cmake_modules</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

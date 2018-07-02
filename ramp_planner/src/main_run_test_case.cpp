@@ -607,7 +607,7 @@ int main(int argc, char** argv) {
 
   ros::Timer ob_trj_timer;
   
-  int num_tests = 5;
+  int num_tests = 200;
   int num_successful_tests = 0;
   std::vector<int> num_generations;
   std::vector<TestCase> test_cases;
@@ -754,6 +754,7 @@ int main(int argc, char** argv) {
       r.sleep();
       ros::spinOnce();
     }
+    my_planner.imminent_collision_ = false;
 
     ROS_INFO("After resetting Stage positions");
   }

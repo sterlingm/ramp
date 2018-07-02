@@ -92,7 +92,7 @@ void CircleSL::initReflexxes() {
   reflexxesData_.inputParameters->MaxVelocityVector->VecData[0]     = fabs(w_);
   reflexxesData_.inputParameters->MaxAccelerationVector->VecData[0] = PI*2;
 
-  reflexxesData_.inputParameters->TargetPositionVector->VecData[0] = PI;
+  reflexxesData_.inputParameters->TargetPositionVector->VecData[0] = PI*10;
   reflexxesData_.inputParameters->TargetVelocityVector->VecData[0] = fabs(w_);
 
   reflexxesData_.inputParameters->SelectionVector->VecData[0] = true;

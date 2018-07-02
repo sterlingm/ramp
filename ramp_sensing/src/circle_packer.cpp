@@ -5,7 +5,7 @@
 CirclePacker::CirclePacker(nav_msgs::OccupancyGridConstPtr g)
 {
   grid_ = *g;
-  convertOGtoMat(g);
+  convertOGtoMat(g, src);
 }
 
 CirclePacker::CirclePacker(cv::Mat grid, const nav_msgs::OccupancyGrid& g)
@@ -23,6 +23,12 @@ CirclePacker::~CirclePacker()
 
 
 
+void CirclePacker::setStaticMap(nav_msgs::OccupancyGridConstPtr grid)
+{
+  staticMap_ = *grid;
+  convertOGtoMat(grid, srcStaticMap);
+}
+
 
 
 
@@ -33,13 +39,13 @@ void CirclePacker::setNewGrid(nav_msgs::OccupancyGridConstPtr g)
   detected_edges.release();
 
   grid_ = *g;
-  convertOGtoMat(g);
+  convertOGtoMat(g, src);
 }
 
 
 
 
-void CirclePacker::convertOGtoMat(nav_msgs::OccupancyGridConstPtr g)
+void CirclePacker::convertOGtoMat(nav_msgs::OccupancyGridConstPtr g, cv::Mat& result)
 {
   ////ROS_INFO("In CirclePacker::convertOGtoMat");
 
@@ -49,7 +55,7 @@ void CirclePacker::convertOGtoMat(nav_msgs::OccupancyGridConstPtr g)
   ////ROS_INFO("Done with making GridMap2D");
 
   // Set src
-  src = gmap.binaryMap();
+  result = gmap.binaryMap();
   ////ROS_INFO("Done calling gmap.binaryMap()");
   
   ////ROS_INFO("Exiting CirclePacker::convertOGtoMat");
@@ -1721,6 +1727,73 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, s
   if(needsAdded)
   {
     largeObs.push_back(result);
+  }
+
+  return result;
+}
+
+
+std::vector<CircleGroup> CirclePacker::getGroupsForStaticMap()
+{
+  ROS_INFO("In CirclePacker::getGroupsForStaticMap");
+  std::vector<CircleGroup> result;
+
+
+  // Create a matrix of the same size and type as src
+  dst.create( srcStaticMap.size(), srcStaticMap.type() );
+  
+  cv::Mat srcCopy, srcTrans;
+  srcStaticMap.copyTo(srcCopy);
+  //cv::transpose(srcStaticMap, srcTrans);
+
+  
+  /*
+   * Detect blobs
+   */
+  // Get contours
+  std::vector< std::vector<cv::Point> > contours;
+  std::vector<cv::Vec4i> hierarchy;
+
+  // ***** findContours modifies src! *****
+  findContours( srcCopy, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
+  //drawContourPoints(contours, hierarchy);
+  //ROS_INFO("contours.size(): %i", (int)contours.size());
+  
+  // Go through each set of contour points
+  /*for(int i=0;i<contours.size();i++)
+  {
+    for(int j=0;j<contours[i].size();j++)
+    {
+      Circle c;
+      c.center.x = contours[i][j].y;
+      c.center.y = contours[i][j].x;
+      c.radius = 1;
+
+      CircleGroup temp;
+      temp.fitCir = c;
+
+      result.push_back(temp);
+    }
+  }*/
+
+  for (int r = 0; r < srcCopy.rows; r++)
+  {
+    // Loop over all columns
+    for ( int c = 0; c < srcCopy.cols; c++)
+    {
+      if(srcCopy.at<unsigned char>(r,c) > 0)
+      {
+        Circle cir;
+        cir.center.x = r;
+        cir.center.y = c;
+        cir.radius = 1;
+
+        CircleGroup temp;
+        temp.fitCir = cir;
+
+        result.push_back(temp);
+      }
+    }
   }
 
   return result;

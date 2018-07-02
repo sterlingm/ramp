@@ -40,8 +40,10 @@ const ramp_msgs::Path Insert::perform()
         // Generate a random value for each K in the specified range
         double  min = ranges_.at(i).min;
         double  max = ranges_.at(i).max;
+        float r = (float)rand();
+        ROS_INFO("r: %f min: %f max: %f max-min: %f", r, min, max, max-min);
         float   temp = (min == 0 && max == 0) ? 0 :      
-               ( min + (float)rand() / ((float)RAND_MAX / (max - min)) );
+               ( min + r / ((float)RAND_MAX / (max - min)) );
 
         // Set the position and velocity
         kp.motionState.positions.push_back(temp);

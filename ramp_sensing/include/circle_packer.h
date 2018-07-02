@@ -23,7 +23,9 @@ class CirclePacker
     void setNewGrid(nav_msgs::OccupancyGridConstPtr);
     void setNewGrid(nav_msgs::OccupancyGrid);
 
-    void convertOGtoMat(nav_msgs::OccupancyGridConstPtr);
+    void setStaticMap(nav_msgs::OccupancyGridConstPtr);
+
+    void convertOGtoMat(nav_msgs::OccupancyGridConstPtr, cv::Mat& result);
 
     void CannyThreshold(int, void*);
 
@@ -65,11 +67,14 @@ class CirclePacker
     CircleGroup               getGroupForContours(std::vector<cv::Point> contours, std::vector<CircleGroup>& largeObs, bool usingHMap=false);
     std::vector<CircleGroup>  getGroups(std::vector<CircleGroup>& largeObs, bool usingHMap=false);
     
+    std::vector<CircleGroup>  getGroupsForStaticMap();
+    
     visualization_msgs::Marker polygonMarker_;
     std::vector<visualization_msgs::Marker> pMarkers_;
 
     std::vector<visualization_msgs::Marker> cMarkers_; 
 
+    nav_msgs::OccupancyGrid staticMap_;
 
   private:
 
@@ -85,7 +90,7 @@ class CirclePacker
 
     Utility utility_;
 
-    cv::Mat src;
+    cv::Mat src, srcStaticMap;
     cv::Mat dst, detected_edges;
 
     nav_msgs::OccupancyGrid grid_;

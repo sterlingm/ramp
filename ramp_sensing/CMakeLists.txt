@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ramp_sensing)
 
-find_package(catkin REQUIRED COMPONENTS geometry_msgs map_msgs message_generation nav_msgs ramp_msgs roscpp roslib tf)
+find_package(catkin REQUIRED COMPONENTS cmake_modules geometry_msgs map_msgs message_generation nav_msgs ramp_msgs roscpp roslib sensor_msgs tf)
 find_package(OpenCV REQUIRED)
 find_package(PkgConfig)
+find_package(Eigen3 REQUIRED)
 pkg_check_modules(BFL REQUIRED orocos-bfl)
 
 #######################################
@@ -15,14 +16,14 @@ catkin_package(
   INCLUDE_DIRS include 
   LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS nav_msgs roscpp ramp_msgs
-#  DEPENDS system_lib
+  DEPENDS Eigen
 )
 
 ###########
 ## Build ##
 ###########
 
-include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${BFL_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${BFL_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS})
 link_directories(${BFL_LIBRARY_DIRS})
 
 ## Debugging flag for using gdb
@@ -32,6 +33,11 @@ set (CMAKE_CXX_FLAGS "-std=c++11 -g -O0")
 add_executable(${PROJECT_NAME} src/circle_filter.cpp src/circle_packer.cpp src/GridMap2D.cpp src/main.cpp src/obstacle.cpp src/polypartition.cpp src/utility.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBS} ${BFL_LIBRARIES})
 add_dependencies(${PROJECT_NAME} ramp_msgs_generate_messages_cpp)
+
+
+add_executable(sensing_dynamic_means src/circle_filter.cpp src/circle_packer.cpp src/GridMap2D.cpp src/main_dm.cpp src/obstacle.cpp src/polypartition.cpp src/utility.cpp)
+target_link_libraries(sensing_dynamic_means ${catkin_LIBRARIES} ${OpenCV_LIBS} ${BFL_LIBRARIES})
+add_dependencies(sensing_dynamic_means ramp_msgs_generate_messages_cpp)
 
 add_executable(convert_hilbert_data src/main_convert_map_to_hilbert_data.cpp)
 target_link_libraries(convert_hilbert_data ${catkin_LIBRARIES} ${OpenCV_LIBS} ${BFL_LIBRARIES})

@@ -429,8 +429,8 @@ ObInfoExt generateObInfoGridExt(const MotionState robot_state)
 {
   ObInfoExt result;
 
-  Range x(0.75, 2.);
-  Range y(0.75, 2.);
+  Range x(0.5, 1.5);
+  Range y(0.5, 1.5);
 
   double ob_x = x.random();
   
@@ -903,10 +903,32 @@ void bestTrajCb(const ramp_msgs::RampTrajectory::ConstPtr& msg)
   bestTrajec = *msg;
 }
 
+bool checkIfObOnGoal(TestCaseExt tc)
+{
+  std::vector<double> goal;
+  goal.push_back(2);
+  goal.push_back(2);
+  for(int i=0;i<num_obs;i++)
+  {
+    trajectory_msgs::JointTrajectoryPoint p = tc.ob_trjs[i].trajectory.points[tc.ob_trjs[i].trajectory.points.size()-1];
+
+    double dist = utility.positionDistance(p.positions, goal);
+    ROS_INFO("p: %s\ndist: %f", utility.toString(p).c_str(), dist);
+
+    // Do .42 b/c we also need to consider if obstacles is close enough to prevent the robot from getting to the goal w/o collision
+    if(dist < 0.42)
+    {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
 
 void imminentCollisionCb(const std_msgs::Bool msg)
 {
-  //ROS_INFO("In imminentCollisionCb, msg: %s", msg.data ? "True" : "False");
+  //ROS_INFO("Gen: In imminentCollisionCb, msg: %s", msg.data ? "True" : "False");
   IC_current = msg.data;
   if(msg.data)
   {
@@ -934,13 +956,11 @@ void collisionCb(const ros::TimerEvent e, TestCaseExt& tc)
     {
       if(colls[i] == false && IC_current)
       {
-        ROS_INFO("In first if");
         // Check if robot in ic
-        icAtColl[i] = IC_current;
+        icAtColl[i] = true;
       }
-      else
+      else if(colls[i] == false)
       {
-        ROS_INFO("In else");
         // Check if robot in ic
         icAtColl[i] = false;
       }
@@ -990,7 +1010,7 @@ int main(int argc, char** argv) {
   //loadParameters(handle);
   //loadObstacleTF();
 
-  num_obs = 1;
+  num_obs = 3;
 
   ros::Rate r(100);
 
@@ -1002,6 +1022,7 @@ int main(int argc, char** argv) {
   std::vector<double> time_left;
   std::vector<bool>   stuck_in_ic;
   std::vector<bool>   ic_occurred;
+  std::vector<bool>   ob_on_goal;
   std::vector<TestCaseTwo> test_cases;
   std::vector<TestCaseExt> test_cases_ext;
 
@@ -1010,11 +1031,7 @@ int main(int argc, char** argv) {
   ob_trj_timer.stop();
   checkCollTimer.stop();
   
-  int num_tests = 5;
-
-  ob_delay.push_back(2);
-  ob_delay.push_back(2);
-  ob_delay.push_back(4);
+  int num_tests = 200;
 
 
   // Make an ObstacleList Publisher
@@ -1050,6 +1067,18 @@ int main(int argc, char** argv) {
   f_ic_occurred.open("/home/sterlingm/ros_workspace/src/ramp/ramp_planner/system_level_data/8/ic_occurred.txt", 
       std::ios::out | std::ios::app | std::ios::binary);
   
+  std::ofstream f_ob_on_goal;
+  f_ob_on_goal.open("/home/sterlingm/ros_workspace/src/ramp/ramp_planner/system_level_data/8/ob_on_goal.txt", 
+      std::ios::out | std::ios::app | std::ios::binary);
+  
+  std::ofstream f_colls;
+  f_colls.open("/home/sterlingm/ros_workspace/src/ramp/ramp_planner/system_level_data/8/colls.txt", 
+      std::ios::out | std::ios::app | std::ios::binary);
+  
+  std::ofstream f_icAtColl;
+  f_icAtColl.open("/home/sterlingm/ros_workspace/src/ramp/ramp_planner/system_level_data/8/icAtColl.txt", 
+      std::ios::out | std::ios::app | std::ios::binary);
+
   
   // Set flag signifying that the next test case is not ready
   ros::param::set("/ramp/tc_generated", false);
@@ -1331,6 +1360,26 @@ int main(int argc, char** argv) {
       f_ic_occurred<<false<<std::endl;
     }
 
+    if(checkIfObOnGoal(tc))
+    {
+      ob_on_goal.push_back(true);
+      f_ob_on_goal<<true<<std::endl;
+    }
+    else
+    {
+      ob_on_goal.push_back(false);
+      f_ob_on_goal<<false<<std::endl;
+    }
+
+    int numColls = 0;
+    int numICAtColl = 0;
+    for(int i=0;i<num_obs;i++)
+    {
+      numColls += colls[i] ? 1 : 0;  
+      numICAtColl += icAtColl[i] ? 1 : 0;
+    }
+    f_colls<<numColls<<std::endl;
+    f_icAtColl<<numICAtColl<<std::endl;
 
     bestTrajec_at_end.push_back(bestTrajec);
     test_cases_ext.push_back(tc);
@@ -1342,6 +1391,9 @@ int main(int argc, char** argv) {
   f_time_left.close();
   f_ic_stuck.close();
   f_ic_occurred.close();
+  f_ob_on_goal.close();
+  f_colls.close();
+  f_icAtColl.close();
     
 
   std::cout<<"\n\nExiting Normally\n";

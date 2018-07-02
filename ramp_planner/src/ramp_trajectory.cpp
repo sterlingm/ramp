@@ -106,15 +106,14 @@ const double RampTrajectory::getDirection() const
 // TODO: Change for loop to only use integers because it's a pain to deal with floating point +,-
 const RampTrajectory RampTrajectory::getSubTrajectory(const float t) const 
 {
-  ////////ROS_INFO("In RampTrajectory::getSubTrajectory");
-  ////////ROS_INFO("t: %f size: %i", t, (int)msg_.trajectory.points.size());
+  //ROS_INFO("In RampTrajectory::getSubTrajectory");
+  //ROS_INFO("t: %f size: %i", t, (int)msg_.trajectory.points.size());
   ramp_msgs::RampTrajectory rt;
 
   double t_stop = t;
 
   if(msg_.trajectory.points.size() < 1)
   {
-    //////ROS_ERROR("msg_.trajectory.points.size == 0");
     return clone();
   }
   else if(msg_.trajectory.points.size() == 1)
@@ -137,7 +136,8 @@ const RampTrajectory RampTrajectory::getSubTrajectory(const float t) const
       uint16_t index = floor(i*10.) < msg_.trajectory.points.size() ? floor(i*10) : 
         msg_.trajectory.points.size()-1;
 
-      ////////ROS_INFO("index: %i size: %i i_kp: %i msg_.i_knotPoints.size(): %i", index, (int)msg_.trajectory.points.size(), 
+      //ROS_INFO("index: %i size: %i i_kp: %i msg_.i_knotPoints.size(): %i", index, (int)msg_.trajectory.points.size(), i_kp, (int)msg_.i_knotPoints.size()); 
+      //ROS_INFO("msg_.i_knotPoints.at(i_kp): %i", msg_.i_knotPoints.at(i_kp));
           //i_kp, (int)msg_.i_knotPoints.size());
       rt.trajectory.points.push_back(msg_.trajectory.points.at(index)); 
       if(i_kp < msg_.i_knotPoints.size() && msg_.i_knotPoints.at(i_kp) == index) 
@@ -147,8 +147,9 @@ const RampTrajectory RampTrajectory::getSubTrajectory(const float t) const
       } // end if
     } // end for
     
+    //ROS_INFO("rt.i_knotPoints.size(): %i", (int)rt.i_knotPoints.size());
     // If the last point was not a knot point, make it one for the sub-trajectory
-    if(rt.i_knotPoints.at( rt.i_knotPoints.size()-1 ) != rt.trajectory.points.size()-1)
+    if(rt.i_knotPoints.size() > 0 && rt.i_knotPoints.at( rt.i_knotPoints.size()-1 ) != rt.trajectory.points.size()-1)
     {
       rt.i_knotPoints.push_back(rt.trajectory.points.size()-1);
     }
@@ -406,7 +407,7 @@ const RampTrajectory RampTrajectory::concatenate(const RampTrajectory traj, cons
  */
 void RampTrajectory::offsetPositions(const MotionState& diff)
 {
-  ROS_INFO("In RampTrajectory::offsetPositions");
+  //ROS_INFO("In RampTrajectory::offsetPositions");
  
   // Go through all the points and subtract diff
   for(int i=0;i<msg_.trajectory.points.size();i++)
@@ -420,7 +421,7 @@ void RampTrajectory::offsetPositions(const MotionState& diff)
       msg_.trajectory.points.at(i).positions.at(j) = temp.msg_.positions.at(j);
     }
   } // end outter for
-  ROS_INFO("Done offsetting points");
+  //ROS_INFO("Done offsetting points");
 
   if(msg_.holonomic_path.points.size() > 0)
   {
