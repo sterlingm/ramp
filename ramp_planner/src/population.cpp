@@ -186,6 +186,12 @@ const bool Population::replacementPossible(const RampTrajectory& rt) const
     ////ROS_INFO("rt is infeasible, no other infeasible trajecs, returning false");
     return false;
   }
+  
+  if(rt.msg_.fitness < getMinFitness())
+  {
+    ROS_INFO("Fitness is less than minimum fitness");
+    return false;
+  }
 
   /** IF subpopulations are being used */
   // Need to calculate new trajectory's i_subPop to check stuff about that 1 subPop
@@ -236,6 +242,12 @@ const bool Population::canReplace(const RampTrajectory& rt, const int& i) const
   if(!rt.msg_.feasible && trajectories_.at(i).msg_.feasible) 
   {
     //ROS_INFO("rt infeasible, i feasible, returning false");
+    return false;
+  }
+
+  if(rt.msg_.fitness < trajectories_.at(i).msg_.fitness)
+  {
+    ROS_INFO("fitness is less than %i fitness, returning false", i);
     return false;
   }
 

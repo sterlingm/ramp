@@ -1822,6 +1822,22 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
     float dist = sqrt( pow(p_i->positions.at(0) - p_ob->positions.at(0),2) + pow(p_i->positions.at(1) - p_ob->positions.at(1),2) );
     float dist_threshold = ob_r.fitCir.radius + robot_r;
 
+    /*float distBoundary = 10000;
+    for(int r=0;r<ranges_.size();r++)
+    {
+      float dmin = fabs(p_i->positions[i] - ranges_[i].min);
+      float dmax = fabs(p_i->positions[i] - ranges_[i].max);
+
+      if(dmin < dmax && dmin < distBoundary)
+      {
+        distBoundary = dmin;
+      }
+      else if(dmax < dmin && dmax < distBoundary)
+      {
+        distBoundary = dmax;
+      }
+    }*/
+
     //////ROS_INFO("p_i: %s", utility_.toString(*p_i).c_str());
     //////ROS_INFO("p_j: %s", utility_.toString(*p_ob).c_str());
     //////ROS_INFO("dist: %f", dist);*/
@@ -1832,6 +1848,10 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
     {
       d_min = dist;
     }
+    /*else if(distBoundary < d_min)
+    {
+      d_min = distBoundary;
+    }*/
     
     /*
      * If there is collision with the bounding circle, then

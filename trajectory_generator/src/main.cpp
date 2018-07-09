@@ -46,7 +46,6 @@ void fixDuplicates(ramp_msgs::TrajectoryRequest& req)
 
 bool checkGoal(ramp_msgs::TrajectoryRequest req)
 {
-  ROS_INFO("In checkGoal");
   // Circle predictions only have one knotpoint
   if(req.path.points.size() == 1)
   {

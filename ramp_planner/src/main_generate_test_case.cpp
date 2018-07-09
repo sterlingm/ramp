@@ -429,8 +429,8 @@ ObInfoExt generateObInfoGridExt(const MotionState robot_state)
 {
   ObInfoExt result;
 
-  Range x(0.5, 1.5);
-  Range y(0.5, 1.5);
+  Range x(0.75, 2.0);
+  Range y(0.75, 2.0);
 
   double ob_x = x.random();
   
@@ -460,12 +460,6 @@ ObInfoExt generateObInfoGridExt(const MotionState robot_state)
   result.v_i  = v.random();
   result.v_f  = v.random();
   result.w    = w.random();
-
-  // Threshold for minimum w
-  if(result.w < 0.33)
-  {
-    result.w = 0.;
-  }
 
 
   // Set durations

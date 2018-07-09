@@ -9,18 +9,18 @@ Modifier::Modifier(ramp_msgs::ModificationRequest::Request& req, std::vector<ram
   chg_.ranges_ = r;
   repair_.ranges_ = r;
 
-  ROS_INFO("Ranges in Path Mod package Modifier");
+  /*ROS_INFO("Ranges in Path Mod package Modifier");
   for(int i=0;i<ranges_.size();i++)
   {
     ROS_INFO("Range %i min: %f max %f", i, ranges_[i].min, ranges_[i].max);
-  }
+  }*/
 }
 
 const std::vector<ramp_msgs::Path> Modifier::perform() 
 {
   std::vector<ramp_msgs::Path> result;
 
-  ROS_INFO("Modifier received path: %s", u.toString(mod_req.paths[0]).c_str());
+  /*ROS_INFO("Modifier received path: %s", u.toString(mod_req.paths[0]).c_str());
   ROS_INFO("mod_req.op: %s", mod_req.op.c_str());
   
   for(int i=0;i<mod_req.paths.size();i++)
@@ -32,7 +32,7 @@ const std::vector<ramp_msgs::Path> Modifier::perform()
         ROS_INFO("Path has an out-of-bounds motion state");
       }
     }
-  }
+  }*/
 
   if(mod_req.op == "insert") 
   {
@@ -75,7 +75,7 @@ const std::vector<ramp_msgs::Path> Modifier::perform()
     result.push_back(repair_.perform());
   }
 
-  ROS_INFO("Modifier returning: %s", u.toString(result.at(0)).c_str());
+  //ROS_INFO("Modifier returning: %s", u.toString(result.at(0)).c_str());
   
   for(int i=0;i<result.size();i++)
   {

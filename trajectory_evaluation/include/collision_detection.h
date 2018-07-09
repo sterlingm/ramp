@@ -6,6 +6,7 @@
 #include "tf/transform_datatypes.h"
 #include "ramp_msgs/TrajectoryRequest.h"
 #include "ramp_msgs/Obstacle.h"
+#include "ramp_msgs/Range.h"
 #include <chrono>
 
 
@@ -147,6 +148,8 @@ class CollisionDetection
 
 
     double min_dist_;
+
+    std::vector<ramp_msgs::Range> ranges_;
 
   private:
 

@@ -64,8 +64,14 @@ class CirclePacker
     void deleteCellsInCir(const std::vector<Cell>&, const Circle, std::vector<Cell>&);
     Circle                    fitCirOverContours(const std::vector<cv::Point> contours);
     std::vector<Circle>       packCirsIntoPoly(const Polygon p, const double min_r);
-    CircleGroup               getGroupForContours(std::vector<cv::Point> contours, std::vector<CircleGroup>& largeObs, bool usingHMap=false);
-    std::vector<CircleGroup>  getGroups(std::vector<CircleGroup>& largeObs, bool usingHMap=false);
+
+
+    CircleGroup               getGroupForContours(std::vector<cv::Point> contours, std::vector<CircleGroup>& largeObs, const double gridOriginX, const double gridOriginY, const double gridResolution, bool usingHMap=false);
+
+
+    std::vector<CircleGroup>  getGroups(std::vector<CircleGroup>& staticObs, const double gridOriginX, const double gridOriginY, const double gridResolution, bool usingHMap=false);
+    
+    std::vector<CircleGroup>  getGroups(std::vector<CircleGroup>& staticObs, bool usingHMap=false);
     
     std::vector<CircleGroup>  getGroupsForStaticMap();
     

@@ -1656,36 +1656,51 @@ std::vector<Circle> CirclePacker::goMyBlobs(bool hmap)
 }
 
 
-CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, std::vector<CircleGroup>& largeObs, bool usingHMap)
+CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, std::vector<CircleGroup>& staticObs, const double gridOriginX, const double gridOriginY, const double gridResolution, bool usingHMap)
 {
+  ROS_INFO("In getGroupForContours");
   Circle blank;
 
   // If we are not using a hilbert map grid, find the circle to fit over to contours
   // otherwise, just set this to a blank circle (0 radius)
   Circle c = usingHMap ? blank : fitCirOverContours(contours);
 
+  // Convert the circle
+  c.center.x = (c.center.x * gridResolution) + gridOriginX;
+  c.center.y = (c.center.y * gridResolution) + gridOriginY;
+  c.radius *= gridResolution;
+
   // Circle packing result
   std::vector<Circle> cs;
 
-  bool needsAdded = false;
+  bool isStatic = false;
 
+  double dmin = 10000;
+  int imin=0;
 
-  // Check c against largeObs
-  for(int i=0;i<largeObs.size();i++)
+  ROS_INFO("c.center: %f,%f", c.center.x, c.center.y);
+  // Check c against staticObs
+  for(int i=0;i<staticObs.size();i++)
   {
-    if(utility_.positionDistance(c.center.x, c.center.y, largeObs[i].fitCir.center.x, largeObs[i].fitCir.center.y) < 2 && fabs(c.radius - largeObs[i].fitCir.radius) < 2)
+    //ROS_INFO("staticOb: %f,%f d: %f", staticObs[i].fitCir.center.x, staticObs[i].fitCir.center.y, d);
+    
+    // Check distance threshold for matching to a static obstacle
+    if(utility_.positionDistance(c.center.x, c.center.y, staticObs[i].fitCir.center.x, staticObs[i].fitCir.center.y) < 0.2)
     {
-      cs = largeObs[i].packedCirs;
+      ROS_INFO("Setting isStatic to true, c.center: %f,%f, staticObs[%i].center: %f, %f", c.center.x, c.center.y, i, staticObs[i].fitCir.center.x, staticObs[i].fitCir.center.y);
+      isStatic = true;
 
       // Translate circles
-      //double delta_x = c.center.x - largeObs[i].fitCir.center.x;
-      //double delta_y = c.center.y - largeObs[i].fitCir.center.y;
+      //double delta_x = c.center.x - staticObs[i].fitCir.center.x;
+      //double delta_y = c.center.y - staticObs[i].fitCir.center.y;
       break;
     }
   }
+  ROS_INFO("dmin: %f i: %i", dmin, imin);
+  ROS_INFO("isStatic: %s", isStatic ? "True" : "False");
 
-  // If it wasn't a large ob, then do circle packing
-  if(cs.size() == 0)
+  // If it wasn't a static ob, then do circle packing
+  if(isStatic == false)
   {
     // Manually transpose set of points
     if(usingHMap == false)
@@ -1711,22 +1726,30 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, s
     for(int i=0;i<ps.size();i++)
     {
       std::vector<Circle> temp = packCirsIntoPoly(ps[i], 1);
+
+      // Convert packed circles
+      for(int j=0;j<temp.size();j++)
+      {
+        temp[j].center.x = (temp[j].center.x * gridResolution) + gridOriginX;
+        temp[j].center.y = (temp[j].center.y * gridResolution) + gridOriginY;
+        temp[j].radius *= gridResolution;
+      }
       cs.insert(std::end(cs), std::begin(temp), std::end(temp)); 
     }
-
-    // Check if we add to largeObs vector 
-    needsAdded = c.radius > 12;
   }
   //ROS_INFO("cs.size(): %i", (int)cs.size());
 
 
   CircleGroup result;
-  result.fitCir = c;
-  result.packedCirs = cs;
-
-  if(needsAdded)
+  if(isStatic == false)
   {
-    largeObs.push_back(result);
+    result.fitCir = c;
+    result.packedCirs = cs;
+  }
+  else
+  {
+    // Set radius to -1 to signify that it's a static obstacle
+    result.fitCir.radius = -1;
   }
 
   return result;
@@ -1799,12 +1822,16 @@ std::vector<CircleGroup> CirclePacker::getGroupsForStaticMap()
   return result;
 }
 
+std::vector<CircleGroup> CirclePacker::getGroups(std::vector<CircleGroup>& staticObs, bool usingHMap)
+{
+  return getGroups(staticObs, 0, 0, 1, usingHMap);
+}
 
 /*
  * Returns a vector of CircleGroup objects
  * One for each obstacle region in the src matrix
  */
-std::vector<CircleGroup> CirclePacker::getGroups(std::vector<CircleGroup>& largeObs, bool usingHMap)
+std::vector<CircleGroup> CirclePacker::getGroups(std::vector<CircleGroup>& staticObs, const double gridOriginX, const double gridOriginY, const double gridResolution, bool usingHMap)
 {
   std::vector<CircleGroup> result;
 
@@ -1827,19 +1854,25 @@ std::vector<CircleGroup> CirclePacker::getGroups(std::vector<CircleGroup>& large
   findContours( srcCopy, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
   //if(contours.size() > 1)
   //drawContourPoints(contours, hierarchy);
-  //ROS_INFO("contours.size(): %i", (int)contours.size());
+  ROS_INFO("contours.size(): %i", (int)contours.size());
   
   // Go through each set of contour points
   for(int i=0;i<contours.size();i++)
   {
+    ROS_INFO("contours[%i].size(): %i", i, (int)contours[i].size());
     // Check size
     if(contours[i].size() < 10)
     {
       continue;
     }
 
-    CircleGroup cg = getGroupForContours(contours[i], largeObs, usingHMap);
-    result.push_back(cg);
+    CircleGroup cg = getGroupForContours(contours[i], staticObs, gridOriginX, gridOriginY, gridResolution, usingHMap);
+
+    // Check that it wasn't a static obstacle
+    if(cg.fitCir.radius > -1)
+    {
+      result.push_back(cg);
+    }
     //ROS_INFO("cg %i, packedCirs.size(): %i fitCir: (%f,%f)", i, (int)cg.packedCirs.size(), cg.fitCir.center.x, cg.fitCir.center.y);
   }
 

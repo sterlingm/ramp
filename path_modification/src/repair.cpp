@@ -42,9 +42,9 @@ const std::vector<double> Repair::getNewPosition(const double value, const doubl
 
 const ramp_msgs::Path Repair::perform() 
 {
-  ROS_INFO("dir_: %f", dir_);
+  /*ROS_INFO("dir_: %f", dir_);
   ROS_INFO("dist_: %f", dist_);
-  ROS_INFO("r: %f", r_);
+  ROS_INFO("r: %f", r_);*/
   //ROS_INFO("Before: %s", utility_.toString(path_).c_str());
 
   /*
@@ -197,7 +197,7 @@ const ramp_msgs::Path Repair::perform()
     x = path_.points[0].motionState.positions[0] + (cos(theta) * dist);
     y = path_.points[0].motionState.positions[1] + (sin(theta) * dist);
 
-    ROS_INFO("New point: (%f, %f)", x, y);
+    //ROS_INFO("New point: (%f, %f)", x, y);
   } // end else
     
   /*

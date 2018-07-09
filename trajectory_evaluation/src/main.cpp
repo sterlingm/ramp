@@ -5,6 +5,7 @@
 #include "evaluate.h"
 #include "tf/transform_datatypes.h"
 #include "ramp_msgs/Obstacle.h"
+#include "ramp_msgs/Range.h"
 #include <ros/package.h>
 using namespace std::chrono;
 
@@ -276,6 +277,15 @@ int main(int argc, char** argv) {
   ev.D_norm_ = (dof_max[0] - dof_min[0]) * (dof_max[1] - dof_min[1]);
   //ROS_INFO("ev.D_norm_: %f", ev.D_norm_);
 
+  // Make Ranges for collision detection module
+  for(int i=0;i<dof_min.size();i++)
+  {
+    ramp_msgs::Range temp;
+    temp.min = dof_min[i];
+    temp.max = dof_max[i];
+
+    ev.cd_.ranges_.push_back(temp);
+  }
  
   // Advertise Service
   ros::ServiceServer service = handle.advertiseService("trajectory_evaluation", handleRequest);

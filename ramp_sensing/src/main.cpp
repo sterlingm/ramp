@@ -520,16 +520,16 @@ void updateOtherRobotCb(const nav_msgs::Odometry::ConstPtr& o, const std::string
     Obstacle temp;
     temp.update(*o);
     obs.push_back(temp);
-    list.obstacles.push_back(temp.msg_);
+    dynamicObsList.obstacles.push_back(temp.msg_);
   }
   else
   {
     //ROS_INFO("In else");
     obs.at(index).update(*o);
-    list.obstacles.at(index) = obs.at(index).msg_;
+    dynamicObsList.obstacles.at(index) = obs.at(index).msg_;
   }
 
-  //ROS_INFO("list.obstacles.size(): %i", (int)list.obstacles.size());
+  //ROS_INFO("dynamicObsList.obstacles.size(): %i", (int)dynamicObsList.obstacles.size());
   //ROS_INFO("Exiting updateOtherRobotCb");
 } //End updateOtherRobotCb
 
@@ -538,7 +538,7 @@ void updateOtherRobotCb(const nav_msgs::Odometry::ConstPtr& o, const std::string
 void addHardCodedStaticObs()
 {
   //ROS_INFO("In addHardCodedStaticObs");
-  //list.obstacles.clear();
+  //dynamicObsList.obstacles.clear();
 
   Obstacle oa;
   oa.msg_.ob_ms.positions.push_back(2.0);
@@ -626,44 +626,45 @@ void addHardCodedStaticObs()
   og.msg_.ob_ms.velocities.push_back(0);
   og.msg_.ob_ms.velocities.push_back(0);*/
 
-  if(list.obstacles.size() > 6)
+  if(dynamicObsList.obstacles.size() > 6)
   {
-    list.obstacles[2] = oa.msg_;
-    list.obstacles[3] = ob.msg_;
-    list.obstacles[4] = oc.msg_;
-    list.obstacles[5] = od.msg_;
-    list.obstacles[6] = oe.msg_;
+    dynamicObsList.obstacles[2] = oa.msg_;
+    dynamicObsList.obstacles[3] = ob.msg_;
+    dynamicObsList.obstacles[4] = oc.msg_;
+    dynamicObsList.obstacles[5] = od.msg_;
+    dynamicObsList.obstacles[6] = oe.msg_;
   }
   else
   {
-    list.obstacles.push_back(oa.msg_);
-    list.obstacles.push_back(ob.msg_);
-    list.obstacles.push_back(oc.msg_);
-    list.obstacles.push_back(od.msg_);
-    list.obstacles.push_back(oe.msg_);
+    dynamicObsList.obstacles.push_back(oa.msg_);
+    dynamicObsList.obstacles.push_back(ob.msg_);
+    dynamicObsList.obstacles.push_back(oc.msg_);
+    dynamicObsList.obstacles.push_back(od.msg_);
+    dynamicObsList.obstacles.push_back(oe.msg_);
   }
-  //list.obstacles.push_back(of.msg_);
-  //list.obstacles.push_back(og.msg_);
-  //ROS_INFO("Exiting addHardCodedStaticObs, list.obstacles.size(): %i", (int)list.obstacles.size());
+  //dynamicObsList.obstacles.push_back(of.msg_);
+  //dynamicObsList.obstacles.push_back(og.msg_);
+  //ROS_INFO("Exiting addHardCodedStaticObs, dynamicObsList.obstacles.size(): %i", (int)dynamicObsList.obstacles.size());
 }
 
 
-std::vector<visualization_msgs::Marker> convertObsToMarkers()
+std::vector<visualization_msgs::Marker> convertObsToMarkers(const ramp_msgs::ObstacleList& obList, int lastId)
 {
   //ROS_INFO("In convertObsToMarkers");
   std::vector<visualization_msgs::Marker> result;
-  //ROS_INFO("list.obstacles.size(): %i", (int)list.obstacles.size());
+  //ROS_INFO("dynamicObsList.obstacles.size(): %i", (int)dynamicObsList.obstacles.size());
   
-  if(use_odom_topics || list.obstacles.size() > 0 || (global_grid.info.width != 0 && global_grid.info.height != 0))
+  if(use_odom_topics || obList.obstacles.size() > 0 || (global_grid.info.width != 0 && global_grid.info.height != 0))
   {
-    /*ROS_INFO("list.obstacles.size(): %i", (int)list.obstacles.size());
-    for(int i=0;i<list.obstacles.size();i++)
+    /*ROS_INFO("obList.obstacles.size(): %i", (int)obList.obstacles.size());
+    for(int i=0;i<obList.obstacles.size();i++)
     {
-      ROS_INFO("Obstacle %i, (x,y): (%f,%f)", i, list.obstacles[i].ob_ms.positions[0], list.obstacles[i].ob_ms.positions[1]);
+      ROS_INFO("Obstacle %i, (x,y): (%f,%f)", i, obList.obstacles[i].ob_ms.positions[0], obList.obstacles[i].ob_ms.positions[1]);
     }*/
 
-    int iStop = (use_odom_topics || use_static_map) ? list.obstacles.size() : cir_obs.size();
-    //ROS_INFO("iStop: %i list.obstacles.size(): %i cir_obs.size(): %i", iStop, (int)list.obstacles.size(), (int)cir_obs.size());
+    //int iStop = (use_odom_topics) ? obList.obstacles.size() : cir_obs.size();
+    int iStop = obList.obstacles.size();
+    //ROS_INFO("iStop: %i obList.obstacles.size(): %i cir_obs.size(): %i", iStop, (int)obList.obstacles.size(), (int)cir_obs.size());
     // For each CircleOb, make a Marker
     for(int i=0;i<iStop;i++)
     {
@@ -671,15 +672,15 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       cirMarker.header.stamp = ros::Time::now();
       cirMarker.header.frame_id = global_frame;
       cirMarker.ns = "basic_shapes";
-      cirMarker.id = populationSize * i;
+      cirMarker.id = (populationSize * i) + lastId;
       //ROS_INFO("Bounding Circle id: %i popSize: %i i: %i", cirMarker.id, populationSize, i);
         
       cirMarker.type = visualization_msgs::Marker::SPHERE;
       cirMarker.action = visualization_msgs::Marker::ADD;
 
       // Set x and y
-      double x = (use_odom_topics || use_static_map) ? list.obstacles[i].cirGroup.fitCir.center.x : cir_obs[i]->cirGroup.fitCir.center.x;
-      double y = (use_odom_topics || use_static_map) ? list.obstacles[i].cirGroup.fitCir.center.y : cir_obs[i]->cirGroup.fitCir.center.y;
+      double x = (use_odom_topics || use_static_map) ? obList.obstacles[i].cirGroup.fitCir.center.x : cir_obs[i]->cirGroup.fitCir.center.x;
+      double y = (use_odom_topics || use_static_map) ? obList.obstacles[i].cirGroup.fitCir.center.y : cir_obs[i]->cirGroup.fitCir.center.y;
         
       cirMarker.pose.position.x = x;
       cirMarker.pose.position.y = y;
@@ -689,7 +690,8 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
       cirMarker.pose.orientation.z = 0.0;
       cirMarker.pose.orientation.w = 1.0;
 
-      double radius = (use_odom_topics || use_static_map) ? list.obstacles[i].cirGroup.fitCir.radius : cir_obs[i]->cirGroup.fitCir.radius;
+      //double radius = (use_odom_topics || use_static_map) ? obList.obstacles[i].cirGroup.fitCir.radius : cir_obs[i]->cirGroup.fitCir.radius;
+      double radius = obList.obstacles[i].cirGroup.fitCir.radius;
       //ROS_INFO("i: %i x: %f y: %f r: %f", i, x, y, radius);
         
       // scale values are the diameter so use the radius*2
@@ -704,7 +706,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
 
       result.push_back(cirMarker);
 
-      int jStop = (use_odom_topics || use_static_map) ? list.obstacles[i].cirGroup.packedCirs.size() : cir_obs[i]->cirGroup.packedCirs.size();
+      int jStop = (use_odom_topics || use_static_map) ? obList.obstacles[i].cirGroup.packedCirs.size() : cir_obs[i]->cirGroup.packedCirs.size();
       for(int j=0;j<jStop;j++)
       {
         //////////ROS_INFO("i: %i obs.size(): %i", i, (int)obs.size());
@@ -712,18 +714,17 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
         marker.header.stamp = ros::Time::now();
         marker.header.frame_id = global_frame;
         marker.ns = "basic_shapes";
-        marker.id = 20000 + (populationSize * i) + j;
+
+        // FIX THIS B/C THERE ARE SOME OVERLAPS
+        marker.id = (20000 + (populationSize * i) + j) + lastId;
         //ROS_INFO("Packed cir id: %i popSize: %i i: %i j: %i", marker.id, populationSize, i, j);
         
         marker.type = visualization_msgs::Marker::SPHERE;
         marker.action = visualization_msgs::Marker::ADD;
 
         // Set x and y
-        double x = (use_odom_topics || use_static_map) ? list.obstacles[i].cirGroup.packedCirs[j].center.x : cir_obs[i]->cirGroup.packedCirs[j].center.x;
-        double y = (use_odom_topics || use_static_map) ? list.obstacles[i].cirGroup.packedCirs[j].center.y : cir_obs[i]->cirGroup.packedCirs[j].center.y;
-
-        //////////ROS_INFO("cir_obs[%i]->cir.center.x: %f cir_obs[%i]->cir.center.y: %f cir_obs[%i]->cir.radius: %f", i, cir_obs[i]->cir.center.x, i, cir_obs[i]->cir.center.y, i, cir_obs[i]->cir.radius);
-        //ROS_INFO("(x,y): (%f,%f)", x, y);
+        double x = (use_odom_topics || use_static_map) ? obList.obstacles[i].cirGroup.packedCirs[j].center.x : cir_obs[i]->cirGroup.packedCirs[j].center.x;
+        double y = (use_odom_topics || use_static_map) ? obList.obstacles[i].cirGroup.packedCirs[j].center.y : cir_obs[i]->cirGroup.packedCirs[j].center.y;
 
         marker.pose.position.x = x;
         marker.pose.position.y = y;
@@ -733,7 +734,9 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
         marker.pose.orientation.z = 0.0;
         marker.pose.orientation.w = 1.0;
 
-        double radius = (use_odom_topics || use_static_map) ? list.obstacles[i].cirGroup.fitCir.radius : cir_obs[i]->cirGroup.packedCirs[j].radius;
+        double radius = use_odom_topics ? obList.obstacles[i].cirGroup.fitCir.radius : cir_obs[i]->cirGroup.packedCirs[j].radius;
+        
+        //ROS_INFO("cir_obs[%i]->packedCirs[%i].center.x: %f cir_obs[%i]->packedCirs[%i].center.y: %f cir_obs[%i]->packedCirs[%i].cir.radius: %f", i, j, x, i, j, y, i, j, radius);
 
         // scale values are the diameter so use the radius*2
         marker.scale.x = radius*2.00f;
@@ -763,20 +766,23 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers()
 void publishList(const ros::TimerEvent& e) 
 {
   //addHardCodedStaticObs();
-  /*for(int i=0;i<list.obstacles.size();i++)
+  /*for(int i=0;i<dynamicObsList.obstacles.size();i++)
   {
-    ROS_INFO("Ob %i at (%f,%f)", i, list.obstacles[i].fitCir.center.x, list.obstacles[i].fitCir.center.y); 
+    ROS_INFO("Ob %i at (%f,%f)", i, dynamicObsList.obstacles[i].fitCir.center.x, dynamicObsList.obstacles[i].fitCir.center.y); 
   }*/
-  //ROS_INFO("List size: %i", (int)list.obstacles.size());
+  //ROS_INFO("List size: %i", (int)dynamicObsList.obstacles.size());
   
+  ROS_INFO("In publishList, staticObsList.size(): %i", (int)staticObsList.obstacles.size());
+  ROS_INFO("In publishList, dynamicObsList.size(): %i", (int)dynamicObsList.obstacles.size());
+  list.obstacles.clear();
   for(int i=0;i<staticObs.size();i++)
   {
-
+    list.obstacles.push_back(staticObsList.obstacles[i]);
   }
   
-  for(int i=0;i<list.obstacles.size();i++)
+  for(int i=0;i<dynamicObsList.obstacles.size();i++)
   {
-
+    list.obstacles.push_back(dynamicObsList.obstacles[i]);
   }
 
 
@@ -794,9 +800,13 @@ void publishMarkers(const ros::TimerEvent& e)
 
   
   // Get circle markers for obstacles
-  std::vector<visualization_msgs::Marker> markers = convertObsToMarkers();
+  std::vector<visualization_msgs::Marker> markers = convertObsToMarkers(dynamicObsList,0);
+  std::vector<visualization_msgs::Marker> markersStatic = convertObsToMarkers(staticObsList, dynamicObsList.obstacles.size());
+  
+  markers.reserve(markers.size() + markersStatic.size());
+  markers.insert(markers.end(), markersStatic.begin(), markersStatic.end());
 
-  //ROS_INFO("Publishing %i markers", (int)markers.size());
+  ROS_INFO("markers.size(): %i markersStatic.size(): %i", (int)markers.size(), (int)markersStatic.size());
 
   result.markers = markers;
   
@@ -932,6 +942,10 @@ void publishMarkers(const ros::TimerEvent& e)
   text.lifetime = ros::Duration(rvizLifetime);
 
   result.markers.push_back(text);
+  /*for(int i=0;i<result.markers.size();i++)
+  {
+    ROS_INFO("Marker %i, id: %i", i, result.markers[i].id);
+  }*/
   
   // Draw the polygon lines
   /*result.markers.push_back(polygonLines);
@@ -2065,9 +2079,9 @@ void convertGroups(const nav_msgs::OccupancyGrid& grid, std::vector<CircleGroup>
     // Convert packed circles in inner loop
     for(int j=0;j<groups[i].packedCirs.size();j++)
     {
-      //////////ROS_INFO("Packed circle %i center: (%f,%f) radius: %f ", j, groups[i].packedCirs[j].center.x, groups[i].packedCirs[j].center.y, groups[i].packedCirs[j].radius);
+      //ROS_INFO("Packed circle %i center: (%f,%f) radius: %f ", j, groups[i].packedCirs[j].center.x, groups[i].packedCirs[j].center.y, groups[i].packedCirs[j].radius);
       convertCircleToGlobal(global_grid, groups[i].packedCirs[j]);
-      //////////ROS_INFO("New Point: (%f,%f) New Radius: %f ", groups[i].packedCirs[j].center.x, groups[i].packedCirs[j].center.y, groups[i].packedCirs[j].radius);
+      //ROS_INFO("New Point: (%f,%f) New Radius: %f ", groups[i].packedCirs[j].center.x, groups[i].packedCirs[j].center.y, groups[i].packedCirs[j].radius);
     }
   }
 }
@@ -2113,7 +2127,7 @@ void populateObstacleList(const std::vector<Velocity>& velocities)
   //////////ROS_INFO("In populateObstacleList");
   
   obs.clear();
-  list.obstacles.clear();
+  dynamicObsList.obstacles.clear();
   for(int i=0;i<cir_obs.size();i++)
   {
     //////////ROS_INFO("Creating obstacle, prevCirs.size(): %i prevTheta.size(): %i", (int)cir_obs[i]->prevCirs.size(), (int)cir_obs[i]->prevTheta.size());
@@ -2125,7 +2139,7 @@ void populateObstacleList(const std::vector<Velocity>& velocities)
     o.update(cir_obs[i]->cirGroup, velocities[i], theta);
     
     obs.push_back(o);
-    list.obstacles.push_back(o.msg_);
+    dynamicObsList.obstacles.push_back(o.msg_);
     //ROS_INFO("ob %i position: (%f,%f)", i, obs[i].msg_.ob_ms.positions[0], obs[i].msg_.ob_ms.positions[1]);
   }
   
@@ -2225,15 +2239,15 @@ void staticMapCb(const nav_msgs::OccupancyGridConstPtr grid)
     {
       //ROS_INFO("static ob %i - Center: (%f,%f) Radius: %f packedCirs.size(): %i", i, staticObs[i].fitCir.center.x, staticObs[i].fitCir.center.y, staticObs[i].fitCir.radius, (int)staticObs[i].packedCirs.size());
       Obstacle o(staticObs[i]);
-      list.obstacles.push_back(o.msg_);
+      staticObsList.obstacles.push_back(o.msg_);
     }
     //ROS_INFO("Elapsed time: %f", d.toSec());
     ROS_INFO("staticObs.size(): %i", (int)staticObs.size());
   }
-  /*else
+  else
   {
     ROS_INFO("Already got static map obstacles");
-  }*/
+  }
   gotPersistent = true;
 }
 
@@ -2356,7 +2370,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   // Do they have the same obstacle indices?
   //std::vector<Circle> cirs = c.goMyBlobs();
   cirGroups.clear();
-  cirGroups = c.getGroups(largeObs);
+  cirGroups = c.getGroups(staticObs, global_grid.info.origin.position.x, global_grid.info.origin.position.y, global_grid.info.resolution);
   polygonLines = c.polygonMarker_;
   pLines = c.pMarkers_;
   cLines = c.cMarkers_;
@@ -2364,11 +2378,11 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   //ROS_INFO("Finished getting Circle Groups");
   
 
-  //////ROS_INFO("cirGroups.size(): %i", (int)cirGroups.size());
+  ROS_INFO("cirGroups.size(): %i", (int)cirGroups.size());
   for(int i=0;i<cirGroups.size();i++)
   {
-    //////ROS_INFO("cirGroups[%i].fitCir.size: %f", i, cirGroups[i].fitCir.radius);
-    //////ROS_INFO("cirGroups[%i].packedCirs.size(): %i", i, (int)cirGroups[i].packedCirs.size());
+    ROS_INFO("cirGroups[%i].fitCir.size: %f", i, cirGroups[i].fitCir.radius);
+    ROS_INFO("cirGroups[%i].packedCirs.size(): %i", i, (int)cirGroups[i].packedCirs.size());
   }
 
 
@@ -2383,11 +2397,11 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   /*
    * Convert centers and radii to the global frame
    */ 
-  convertGroups(global_grid, cirGroups);
-  for(int i=0;i<cirGroups.size();i++)
+  //convertGroups(global_grid, cirGroups);
+  /*for(int i=0;i<cirGroups.size();i++)
   {
     ////ROS_INFO("cirGroups[%i].fitCir.size: %f", i, cirGroups[i].fitCir.radius);
-  }
+  }*/
 
 
 
@@ -2743,7 +2757,7 @@ int main(int argc, char** argv)
       Obstacle temp;
       temp.T_w_init_ = ob_tfs[i];
       obs.push_back(temp);
-      list.obstacles.push_back(temp.msg_);
+      dynamicObsList.obstacles.push_back(temp.msg_);
 
       ros::Subscriber sub_ob = handle.subscribe<nav_msgs::Odometry>(ob_odoms.at(i), 1, boost::bind(updateOtherRobotCb, _1, ob_odoms.at(i)));
       subs_obs.push_back(sub_ob);
