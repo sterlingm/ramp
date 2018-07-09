@@ -12,49 +12,41 @@ class Obstacle:
     def __init__(self, tp):
         self.testPath = tp
         self.inState = 0
-
-
-def ComputeTotal(obs):
-    print 'In ComputeTotal'
-    result = []
-
-
-    states = range(0, obs[0].testPath.numStates)
-    print states
-
-    for i in range(0, obs[0].testPath.numStates):
-        print i
-
-        # Set the first obstacle's state
-        obs[0].inState = i
-
-        # At this state, the next obstacle can start
-        #result += 1
-        #print 'Adding 1 with Ob 0 at state %s' % i
-
-        # Compute when next obstacle starts
-        # next obstacle can start at any state so do a full for loop
-        for j in range(0, obs[1].testPath.numStates):
-            print j
-
-            # At this state, the next obstacle can start
-            if len(obs) > 2:
-                print 'Adding 1 with Ob 0 at state %s and Ob 1 at state %s' % (i, j)
-
-                abtc = [0, i, i+j]
-                result.append(abtc)
-
-        
         
 
-    print 'Exiting ComputeTotal'
-    return result
+
+
+def GetABTCs(obs, numObs, abtc, allAbtcs):
+    #print 'In GetABTCs, abtc: %s' % abtc
+ 
+    allAbtcs.append(abtc[:])
+
+    for i in range(len(abtc)-1, 0, -1):
+        # Get difference in ob states
+        diff = abtc[i] - abtc[i-1]
+
+        # Check that we are not at the end
+        if diff < obs[i-1].testPath.numStates-1:
+            abtc[i] += 1
+
+            # If incrementing a middle obstacle, put all remaining obstacle states equal to new state value
+            # e.g. if 3 obs, and setting ob 2 state to 1, then set ob 3 state to 1 so the next abtc is 0,1,1
+            if i < len(abtc):
+                abtc[i+1:] = [abtc[i] for aa in abtc[i+1:]]
+
+            # Do recursion
+            GetABTCs(obs, numObs, abtc, allAbtcs)
+
+    #return allAbtcs
+
 
 
 def main():
     print 'In main'
-    tp = TestPath(3)
-    print tp.numStates
+
+    tp = TestPath(6)
+
+    print 'Number of obstacle states: %s' % tp.numStates
 
     ob = Obstacle(tp)
     obs = [ob]
@@ -62,11 +54,19 @@ def main():
 # Append the second ob
     obs.append(ob)
     obs.append(ob)
+    #obs.append(ob)
+    #obs.append(ob)
 
 
-    total = ComputeTotal(obs)
-    print 'ABTCs: %s' % total
-    print 'Total number of ABTCs: %s' % len(total)
+    #total = ComputeTotal(obs)
+    #print 'ABTCs: %s' % total
+    #print 'Total number of ABTCs: %s' % len(total)
+
+    abtcs = []
+    initialABTC = [0 for i in range(0,len(obs))]
+    GetABTCs(obs, len(obs), initialABTC, abtcs)
+    print 'ABTCs: %s' % abtcs
+    print 'Total number of ABTCs: %s' % len(abtcs)
 
 
 if __name__ == '__main__':
