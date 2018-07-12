@@ -74,6 +74,7 @@ class CirclePacker
     std::vector<CircleGroup>  getGroups(std::vector<CircleGroup>& staticObs, bool usingHMap=false);
     
     std::vector<CircleGroup>  getGroupsForStaticMap();
+    std::vector<Cell> getCellsInPolygonStaticMap(const Polygon& p, const std::vector<cv::Point> contours); 
     
     visualization_msgs::Marker polygonMarker_;
     std::vector<visualization_msgs::Marker> pMarkers_;

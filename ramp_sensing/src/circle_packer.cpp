@@ -908,7 +908,7 @@ double CirclePacker::getMinDistToCirs(const std::vector<Circle>& cirs, const Cel
 
 
 /*
- *zz Returns true if the center of the cell is inside the Polygon
+ * Returns true if the center of the cell is inside the Polygon
  */ 
 bool CirclePacker::cellInPoly(Polygon poly, Point cell)
 {
@@ -917,7 +917,7 @@ bool CirclePacker::cellInPoly(Polygon poly, Point cell)
   {
     //std::cout<<"\nnormal a: "<<poly.normals[i].a<<" b: "<<poly.normals[i].b<<" c: "<<poly.normals[i].c;
     double d = poly.normals[i].a*cell.x + poly.normals[i].b*cell.y + poly.normals[i].c;
-    //ROS_INFO("a: %f b: %f c: %f dist: %f", poly.normals[i].a, poly.normals[i].b, poly.normals[i].c, d);
+    ROS_INFO("a: %f b: %f c: %f dist: %f", poly.normals[i].a, poly.normals[i].b, poly.normals[i].c, d);
     //std::cout<<"\ncell center: "<<cell.x<<", "<<cell.y<<" d: "<<d;
     if(d > 1.5)
     {
@@ -1057,6 +1057,117 @@ bool CirclePacker::cellInPolyConcave(Polygon poly, Point cell)
   //ROS_INFO("collPoints.size(): %i", (int)collPoints.size());
   return collPoints.size() % 2 == 1;
 }
+
+    
+
+std::vector<Cell> CirclePacker::getCellsInPolygonStaticMap(const Polygon& poly, const std::vector<cv::Point> contours)
+{
+  std::vector<Cell> result;
+  
+  /*
+   *  Get all vertices of polygon
+   */
+  std::vector<Point> vertices;
+  for(int i=0;i<poly.edges.size();i++)
+  {
+    ROS_INFO("Poly edge %i: (%f,%f)", i, poly.edges[i].start.x, poly.edges[i].start.y);
+    vertices.push_back(poly.edges[i].start);
+  }
+  
+  
+  /*
+   *  Find minimum and maximum x and y
+   */
+  double MAX_LENGTH= vertices[0].y;
+  double MAX_WIDTH = vertices[0].x;
+  double MIN_LENGTH= vertices[0].y;
+  double MIN_WIDTH = vertices[0].x;
+
+
+  MAX_LENGTH = contours[0].x;
+  MAX_WIDTH = contours[0].y;
+  MIN_LENGTH = contours[0].x;
+  MIN_WIDTH = contours[0].y;
+
+  for(int i=0;i<vertices.size();i++)
+  {
+    if(vertices[i].x > MAX_LENGTH)
+    {
+      MAX_LENGTH = vertices[i].x;
+    }
+    if(vertices[i].x < MIN_LENGTH)
+    {
+      MIN_LENGTH = vertices[i].x;
+    }
+    
+    if(vertices[i].y > MAX_WIDTH)
+    {
+      MAX_WIDTH = vertices[i].y;
+    }
+    if(vertices[i].y < MIN_WIDTH)
+    {
+      MIN_WIDTH = vertices[i].y;
+    }
+  }
+  ROS_INFO("MIN W(x),L(y): %f, %f MAX W(x),L(y): %f, %f", MIN_WIDTH, MIN_LENGTH, MAX_WIDTH, MAX_LENGTH);
+  double mxw = (MAX_LENGTH * 0.05) + -2.85;
+  double mnw = (MIN_LENGTH * 0.05) + -2.85;
+  double mxl = (MAX_WIDTH * 0.05) + -2.9;
+  double mnl = (MIN_WIDTH * 0.05) + -2.9;
+  ROS_INFO("Converted MIN W(x),L(y): %f, %f MAX W(x),L(y): %f, %f", mnw, mnl, mxw, mxl);
+
+  double round = 1;
+
+  // Find number of cells in both directions
+  int width_count = (MAX_WIDTH - MIN_WIDTH) / round;
+  int length_count = (MAX_LENGTH - MIN_LENGTH) / round;
+
+  // Start from the center
+  // Add round/2 because that makes the cell center be the center of squares formed by grid lines
+  double start_x = MIN_LENGTH + round/2.f;
+  double start_y = MIN_WIDTH + round/2.f;
+  //double start_x = MIN_WIDTH;
+  //double start_y = MIN_LENGTH;
+
+  ROS_INFO("width_count: %i length_count: %i start_x: %f start_y: %f", width_count, length_count, start_x, start_y);
+
+  /*
+   * Check each cell in bounds
+   */ 
+  for(int i=0;i<width_count;i++)
+  {
+    for(int j=0;j<length_count;j++)
+    {
+      double x = start_y + (round * (i));
+      double y = start_x + (round * (j));
+      ROS_INFO("i: %i j: %i x: %f y: %f, value: %i", i, j, x, y, (int)srcStaticMap.at<unsigned char>(i,j));
+      Cell temp;
+      temp.p.x = x;
+      temp.p.y = y;
+
+      // Convert to grid coordinates
+      double iAdd = start_y;// *2;
+      double jAdd = start_x;// *2;
+      ROS_INFO("iAdd: %f jAdd: %f", iAdd, jAdd);
+    
+      //std::cout<<"\n("<<temp.p.x<<", "<<temp.p.y<<")";
+
+      // This part is responsible for the shape of the obstacle b/c if the shape is correct then this is accessing the correct pixels
+      if(srcStaticMap.at<unsigned char>(i+iAdd,j+jAdd) > 0)
+      {
+        //ROS_INFO("Cell in poly");
+        result.push_back(temp);
+      }
+      else
+      {
+        //ROS_INFO("Cell not in poly");
+      }
+    }
+  }
+
+  return result;
+}
+
 
 
 /*
@@ -1658,7 +1769,7 @@ std::vector<Circle> CirclePacker::goMyBlobs(bool hmap)
 
 CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, std::vector<CircleGroup>& staticObs, const double gridOriginX, const double gridOriginY, const double gridResolution, bool usingHMap)
 {
-  ROS_INFO("In getGroupForContours");
+  //ROS_INFO("In getGroupForContours");
   Circle blank;
 
   // If we are not using a hilbert map grid, find the circle to fit over to contours
@@ -1669,16 +1780,67 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, s
   c.center.x = (c.center.x * gridResolution) + gridOriginX;
   c.center.y = (c.center.y * gridResolution) + gridOriginY;
   c.radius *= gridResolution;
+  
+  /*for(int i=0;i<staticObs.size();i++)
+  {
+    ROS_INFO("Static ob point %i: %f,%f", i, staticObs[i].fitCir.center.x, staticObs[i].fitCir.center.y);
+  }*/
+
+
+  bool isStatic = false;
+
+  /*
+   * Comparing dynamic obstacle contour points to static obstacle points
+   */
+
+  int numMatchedPoints=0;
+  for(int i=0;i<contours.size();i++)
+  {
+    ROS_INFO("Dynamic Contours[%i][]: %i,%i", i, contours[i].x, contours[i].y);
+    
+    bool matched=false;
+    double dmin=10000;
+
+    // Convert point
+    double x = (contours[i].x * gridResolution) + gridOriginX;
+    double y = (contours[i].y * gridResolution) + gridOriginY;
+    //ROS_INFO("Contour point: %f,%f", x, y);
+    for(int j=0;j<staticObs.size();j++)
+    {
+      double d = utility_.positionDistance(x, y, staticObs[j].fitCir.center.x, staticObs[j].fitCir.center.y);
+      //ROS_INFO("d: %f", d);
+      if(d < dmin) dmin = d;
+      // Check if the contour point is a static obstacle point
+      if( d  < 0.2)
+      {
+        matched = true;
+        break;
+      }
+      //ROS_INFO("dmin: %f", dmin);
+    }
+
+    if(matched)
+    {
+      numMatchedPoints++;
+    }
+  }
+  //ROS_INFO("Number of matched contour points: %i Total number of contour points: %i", numMatchedPoints, (int)contours.size());
+  if( (float)numMatchedPoints / contours.size() > 0.5)
+  {
+    isStatic = true;
+  }
 
   // Circle packing result
   std::vector<Circle> cs;
 
-  bool isStatic = false;
+  /*
+   * Checking dynamic obstacle center to static obstacle points
+   */
 
   double dmin = 10000;
   int imin=0;
 
-  ROS_INFO("c.center: %f,%f", c.center.x, c.center.y);
+  //ROS_INFO("c.center: %f,%f", c.center.x, c.center.y);
   // Check c against staticObs
   for(int i=0;i<staticObs.size();i++)
   {
@@ -1687,7 +1849,7 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, s
     // Check distance threshold for matching to a static obstacle
     if(utility_.positionDistance(c.center.x, c.center.y, staticObs[i].fitCir.center.x, staticObs[i].fitCir.center.y) < 0.2)
     {
-      ROS_INFO("Setting isStatic to true, c.center: %f,%f, staticObs[%i].center: %f, %f", c.center.x, c.center.y, i, staticObs[i].fitCir.center.x, staticObs[i].fitCir.center.y);
+      //ROS_INFO("Setting isStatic to true, c.center: %f,%f, staticObs[%i].center: %f, %f", c.center.x, c.center.y, i, staticObs[i].fitCir.center.x, staticObs[i].fitCir.center.y);
       isStatic = true;
 
       // Translate circles
@@ -1696,8 +1858,26 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, s
       break;
     }
   }
-  ROS_INFO("dmin: %f i: %i", dmin, imin);
-  ROS_INFO("isStatic: %s", isStatic ? "True" : "False");
+  //ROS_INFO("dmin: %f i: %i", dmin, imin);
+  //ROS_INFO("isStatic: %s", isStatic ? "True" : "False");
+
+
+  /*
+   * Check dynamic obstacle points with static obstacle points
+   */ 
+  /*Polygon poly = getPolygonFromContours(contours);
+  std::vector<Cell> pixels = getCellsInPolygon(poly);
+  ROS_INFO("pixels.size(): %i", (int)pixels.size());
+  for(int i=0;i<staticObs.size();i++)
+  {
+    // Each static ob is just a fitCir
+    Cell temp;
+    temp.p.x = staticObs[i].fitCir.center.x;
+    temp.p.y = staticObs[i].fitCir.center.y;
+  }*/
+
+
+  // Done with static obstacle matching, continue on to do circle packing if necessary
 
   // If it wasn't a static ob, then do circle packing
   if(isStatic == false)
@@ -1780,24 +1960,40 @@ std::vector<CircleGroup> CirclePacker::getGroupsForStaticMap()
   // ***** findContours modifies src! *****
   findContours( srcCopy, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
   //drawContourPoints(contours, hierarchy);
-  //ROS_INFO("contours.size(): %i", (int)contours.size());
+  ROS_INFO("contours.size(): %i", (int)contours.size());
   
   // Go through each set of contour points
-  /*for(int i=0;i<contours.size();i++)
+  for(int i=0;i<contours.size();i++)
   {
     for(int j=0;j<contours[i].size();j++)
     {
-      Circle c;
-      c.center.x = contours[i][j].y;
-      c.center.y = contours[i][j].x;
-      c.radius = 1;
-
-      CircleGroup temp;
-      temp.fitCir = c;
-
-      result.push_back(temp);
+      ROS_INFO("Contours[%i][%i]: %i,%i", i, j, contours[i][j].x, contours[i][j].y);
     }
-  }*/
+
+    Polygon poly = getPolygonFromContours(contours[i]);
+    ROS_INFO("poly.edges.size: %i edge[0].start: %f,%f", (int)poly.edges.size(), poly.edges[0].start.x,  poly.edges[0].start.y);
+    std::vector<Cell> pixels = getCellsInPolygonStaticMap(poly, contours[i]);
+    ROS_INFO("contours[%i] pixels.size(): %i", i, (int)pixels.size());
+
+    CircleGroup cg;
+
+    for(int j=0;j<pixels.size();j++)
+    {
+      ROS_INFO("pixels[%i]: %f,%f", j, pixels[j].p.x, pixels[j].p.y);
+      //if(cellInPoly(poly, pixels[j].p))
+      //{
+        Circle temp;
+        temp.center.x = pixels[j].p.x;
+        temp.center.y = pixels[j].p.y;
+        temp.radius = 1;
+        cg.packedCirs.push_back(temp);
+      //}
+      ROS_INFO("contours[%i] packedCirs.size(): %i", i, (int)cg.packedCirs.size());
+    }
+
+    result.push_back(cg); 
+  }
+
 
   for (int r = 0; r < srcCopy.rows; r++)
   {
@@ -1814,7 +2010,7 @@ std::vector<CircleGroup> CirclePacker::getGroupsForStaticMap()
         CircleGroup temp;
         temp.fitCir = cir;
 
-        result.push_back(temp);
+        //result.push_back(temp);
       }
     }
   }
