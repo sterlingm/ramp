@@ -44,6 +44,19 @@ void CirclePacker::setNewGrid(nav_msgs::OccupancyGridConstPtr g)
 
 
 
+void CirclePacker::PrintSrc() const
+{
+  ROS_INFO("\n\nPrinting src!");
+  for(int i=0;i<src.rows;i++)
+  {
+    for(int j=0;j<src.cols;j++)
+    {
+      ROS_INFO("src[%i][%i]: %i", i, j, static_cast<int>(src.at<unsigned char>(i,j)));
+    }
+  }  
+}
+
+
 
 void CirclePacker::convertOGtoMat(nav_msgs::OccupancyGridConstPtr g, cv::Mat& result)
 {
@@ -1070,7 +1083,7 @@ std::vector<Cell> CirclePacker::getCellsInPolygonStaticMap(const Polygon& poly, 
   std::vector<Point> vertices;
   for(int i=0;i<poly.edges.size();i++)
   {
-    ROS_INFO("Poly edge %i: (%f,%f)", i, poly.edges[i].start.x, poly.edges[i].start.y);
+    //ROS_INFO("Poly edge %i: (%f,%f)", i, poly.edges[i].start.x, poly.edges[i].start.y);
     vertices.push_back(poly.edges[i].start);
   }
   
@@ -1109,12 +1122,6 @@ std::vector<Cell> CirclePacker::getCellsInPolygonStaticMap(const Polygon& poly, 
       MIN_WIDTH = vertices[i].y;
     }
   }
-  ROS_INFO("MIN W(x),L(y): %f, %f MAX W(x),L(y): %f, %f", MIN_WIDTH, MIN_LENGTH, MAX_WIDTH, MAX_LENGTH);
-  double mxw = (MAX_LENGTH * 0.05) + -2.85;
-  double mnw = (MIN_LENGTH * 0.05) + -2.85;
-  double mxl = (MAX_WIDTH * 0.05) + -2.9;
-  double mnl = (MIN_WIDTH * 0.05) + -2.9;
-  ROS_INFO("Converted MIN W(x),L(y): %f, %f MAX W(x),L(y): %f, %f", mnw, mnl, mxw, mxl);
 
   double round = 1;
 
@@ -1129,7 +1136,7 @@ std::vector<Cell> CirclePacker::getCellsInPolygonStaticMap(const Polygon& poly, 
   //double start_x = MIN_WIDTH;
   //double start_y = MIN_LENGTH;
 
-  ROS_INFO("width_count: %i length_count: %i start_x: %f start_y: %f", width_count, length_count, start_x, start_y);
+  //ROS_INFO("width_count: %i length_count: %i start_x: %f start_y: %f", width_count, length_count, start_x, start_y);
 
   /*
    * Check each cell in bounds
@@ -1140,7 +1147,7 @@ std::vector<Cell> CirclePacker::getCellsInPolygonStaticMap(const Polygon& poly, 
     {
       double x = start_y + (round * (i));
       double y = start_x + (round * (j));
-      ROS_INFO("i: %i j: %i x: %f y: %f, value: %i", i, j, x, y, (int)srcStaticMap.at<unsigned char>(i,j));
+      //ROS_INFO("i: %i j: %i x: %f y: %f, value: %i", i, j, x, y, (int)srcStaticMap.at<unsigned char>(i,j));
       Cell temp;
       temp.p.x = x;
       temp.p.y = y;
@@ -1148,8 +1155,8 @@ std::vector<Cell> CirclePacker::getCellsInPolygonStaticMap(const Polygon& poly, 
       // Convert to grid coordinates
       double iAdd = start_y;// *2;
       double jAdd = start_x;// *2;
-      ROS_INFO("iAdd: %f jAdd: %f", iAdd, jAdd);
-    
+      //ROS_INFO("iAdd: %f jAdd: %f", iAdd, jAdd);
+
       //std::cout<<"\n("<<temp.p.x<<", "<<temp.p.y<<")";
 
       // This part is responsible for the shape of the obstacle b/c if the shape is correct then this is accessing the correct pixels
@@ -1236,6 +1243,7 @@ std::vector<Cell> CirclePacker::getCellsInPolygon(const Polygon& poly)
   /*
    * Check each cell in bounds
    */ 
+  //PrintSrc();
   for(int i=0;i<width_count;i++)
   {
     for(int j=0;j<length_count;j++)
@@ -1248,7 +1256,14 @@ std::vector<Cell> CirclePacker::getCellsInPolygon(const Polygon& poly)
       temp.p.y = y;
     
       //std::cout<<"\n("<<temp.p.x<<", "<<temp.p.y<<")";
+      double iAdd = start_y;// *2;
+      double jAdd = start_x;// *2;
+      //ROS_INFO("iAdd: %f jAdd: %f", iAdd, jAdd);
+      //ROS_INFO("src at [%f,%f]: %i", i+iAdd, j+jAdd, static_cast<int>(src.at<unsigned char>(i+iAdd,j+jAdd)));
 
+      // Testing getting pixel values
+      //if(src.at<unsigned char>(i+iAdd,j+jAdd) > 0)
+      // Original
       if(cellInPolyConcave(poly, temp.p))
       {
         //ROS_INFO("Cell in poly");
@@ -1261,6 +1276,7 @@ std::vector<Cell> CirclePacker::getCellsInPolygon(const Polygon& poly)
     }
   }
 
+  ROS_INFO("cellsInPolygon result.size(): %i", (int)result.size());
   return result;
 }
 
@@ -1796,7 +1812,7 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, s
   int numMatchedPoints=0;
   for(int i=0;i<contours.size();i++)
   {
-    ROS_INFO("Dynamic Contours[%i][]: %i,%i", i, contours[i].x, contours[i].y);
+    //ROS_INFO("Dynamic Contours[%i][]: %i,%i", i, contours[i].x, contours[i].y);
     
     bool matched=false;
     double dmin=10000;
@@ -1938,7 +1954,7 @@ CircleGroup CirclePacker::getGroupForContours(std::vector<cv::Point> contours, s
 
 std::vector<CircleGroup> CirclePacker::getGroupsForStaticMap()
 {
-  ROS_INFO("In CirclePacker::getGroupsForStaticMap");
+  //ROS_INFO("In CirclePacker::getGroupsForStaticMap");
   std::vector<CircleGroup> result;
 
 
@@ -1960,35 +1976,32 @@ std::vector<CircleGroup> CirclePacker::getGroupsForStaticMap()
   // ***** findContours modifies src! *****
   findContours( srcCopy, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
   //drawContourPoints(contours, hierarchy);
-  ROS_INFO("contours.size(): %i", (int)contours.size());
+  //ROS_INFO("contours.size(): %i", (int)contours.size());
   
   // Go through each set of contour points
   for(int i=0;i<contours.size();i++)
   {
-    for(int j=0;j<contours[i].size();j++)
+    /*for(int j=0;j<contours[i].size();j++)
     {
       ROS_INFO("Contours[%i][%i]: %i,%i", i, j, contours[i][j].x, contours[i][j].y);
-    }
+    }*/
 
     Polygon poly = getPolygonFromContours(contours[i]);
-    ROS_INFO("poly.edges.size: %i edge[0].start: %f,%f", (int)poly.edges.size(), poly.edges[0].start.x,  poly.edges[0].start.y);
+    //ROS_INFO("poly.edges.size: %i edge[0].start: %f,%f", (int)poly.edges.size(), poly.edges[0].start.x,  poly.edges[0].start.y);
     std::vector<Cell> pixels = getCellsInPolygonStaticMap(poly, contours[i]);
-    ROS_INFO("contours[%i] pixels.size(): %i", i, (int)pixels.size());
+    //ROS_INFO("contours[%i] pixels.size(): %i", i, (int)pixels.size());
 
     CircleGroup cg;
 
     for(int j=0;j<pixels.size();j++)
     {
-      ROS_INFO("pixels[%i]: %f,%f", j, pixels[j].p.x, pixels[j].p.y);
-      //if(cellInPoly(poly, pixels[j].p))
-      //{
-        Circle temp;
-        temp.center.x = pixels[j].p.x;
-        temp.center.y = pixels[j].p.y;
-        temp.radius = 1;
-        cg.packedCirs.push_back(temp);
-      //}
-      ROS_INFO("contours[%i] packedCirs.size(): %i", i, (int)cg.packedCirs.size());
+      //ROS_INFO("pixels[%i]: %f,%f", j, pixels[j].p.x, pixels[j].p.y);
+      Circle temp;
+      temp.center.x = pixels[j].p.x;
+      temp.center.y = pixels[j].p.y;
+      temp.radius = 1;
+      cg.packedCirs.push_back(temp);
+      //ROS_INFO("contours[%i] packedCirs.size(): %i", i, (int)cg.packedCirs.size());
     }
 
     result.push_back(cg); 
@@ -2050,12 +2063,12 @@ std::vector<CircleGroup> CirclePacker::getGroups(std::vector<CircleGroup>& stati
   findContours( srcCopy, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );  
   //if(contours.size() > 1)
   //drawContourPoints(contours, hierarchy);
-  ROS_INFO("contours.size(): %i", (int)contours.size());
+  //ROS_INFO("contours.size(): %i", (int)contours.size());
   
   // Go through each set of contour points
   for(int i=0;i<contours.size();i++)
   {
-    ROS_INFO("contours[%i].size(): %i", i, (int)contours[i].size());
+    //ROS_INFO("contours[%i].size(): %i", i, (int)contours[i].size());
     // Check size
     if(contours[i].size() < 10)
     {

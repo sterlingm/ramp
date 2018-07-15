@@ -29,6 +29,8 @@ class CirclePacker
 
     void CannyThreshold(int, void*);
 
+    void PrintSrc() const;
+
     Normal computeNormal(Edge);
 
     void detectAttachedCircles(const std::vector<CircleOb*>& cir_obs, std::vector<Attachment>& result) const;

@@ -22,7 +22,7 @@ std::vector<double> durs;
 bool handleRequest(ramp_msgs::ModificationRequest::Request& req,
                    ramp_msgs::ModificationRequest::Response& res)
 {
-  ROS_INFO("Operator: %s", req.op.c_str());
+  //ROS_INFO("Operator: %s", req.op.c_str());
 
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
 

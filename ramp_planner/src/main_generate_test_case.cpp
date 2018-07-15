@@ -359,6 +359,7 @@ struct TestCaseExt
   std::vector<ramp_msgs::RampTrajectory> ob_trjs;
   ros::Time t_begin;
 
+  ros::Duration d_states;
   // Ext portion
 };
 
@@ -466,8 +467,8 @@ ObInfoExt generateObInfoGridExt(const MotionState robot_state)
   // ***
   Range durs(0,5);
   result.d_s = ros::Duration(durs.random());
-  result.d_vi = ros::Duration(durs.random());
-  result.d_vf = ros::Duration(durs.random());
+  //result.d_vi = ros::Duration(durs.random());
+  //result.d_vf = ros::Duration(durs.random());
 
   //ROS_INFO("Test case v_i: %f v_f: %f d_s: %f d_vi: %f d_vf: %f", result.v_i, result.v_f, result.d_s.toSec(), result.d_vi.toSec(), result.d_vf.toSec());
   
@@ -698,6 +699,11 @@ TestCaseExt generateTestCaseExt(const MotionState robot_state, int num_obs)
   
   double obInitD = 0.5;
 
+  // Get the random duration for state changes
+  Range r(2, 5);
+  result.d_states = ros::Duration( r.random() );
+  ROS_INFO("d_states: %f", result.d_states.toSec());
+
   // Generate all obstacles and push them onto test case
   for(int i=0;i<num_obs;i++)
   {
@@ -754,6 +760,12 @@ TestCaseExt generateTestCaseExt(const MotionState robot_state, int num_obs)
     //ROS_INFO("result.obs.size(): %i", (int)result.obs.size());
     //ROS_INFO("result.ob_list.obstacles.size(): %i", (int)result.ob_list.obstacles.size());
   }
+
+  // Manually set d_s values to control the ABTC!
+  result.obs[0].d_s = ros::Duration(0);
+  result.obs[1].d_s = ros::Duration(0);
+  result.obs[2].d_s = ros::Duration(0);
+ 
 
   return result;
 }
@@ -907,7 +919,7 @@ bool checkIfObOnGoal(TestCaseExt tc)
     trajectory_msgs::JointTrajectoryPoint p = tc.ob_trjs[i].trajectory.points[tc.ob_trjs[i].trajectory.points.size()-1];
 
     double dist = utility.positionDistance(p.positions, goal);
-    ROS_INFO("p: %s\ndist: %f", utility.toString(p).c_str(), dist);
+    //ROS_INFO("p: %s\ndist: %f", utility.toString(p).c_str(), dist);
 
     // Do .42 b/c we also need to consider if obstacles is close enough to prevent the robot from getting to the goal w/o collision
     if(dist < 0.42)
@@ -1025,7 +1037,7 @@ int main(int argc, char** argv) {
   ob_trj_timer.stop();
   checkCollTimer.stop();
   
-  int num_tests = 200;
+  int num_tests = 100;
 
 
   // Make an ObstacleList Publisher
@@ -1038,39 +1050,42 @@ int main(int argc, char** argv) {
 
   //ros::Timer collTimer = handle.createTimer(collisionCb);
   //ob_trj_timer = handle.createTimer(ros::Duration(1./20.), boost::bind(pubObTrjExt, _1, tc));
+  
+  
+  std::string path = "/home/sterlingm/ros_workspace/src/ramp/data/system-level-testing/ext/1/";
 
 
   // Open files for data
   std::ofstream f_reached;
-  f_reached.open("/home/sterlingm/ros_workspace/src/ramp/ramp_planner/system_level_data/8/reached_goal.txt", 
+  f_reached.open(path + "reached_goal.txt", 
       std::ios::out | std::ios::app | std::ios::binary);
   
   std::ofstream f_feasible;
-  f_feasible.open("/home/sterlingm/ros_workspace/src/ramp/ramp_planner/system_level_data/8/feasible.txt", std::ios::out 
+  f_feasible.open(path + "feasible.txt", std::ios::out 
       | std::ios::app | std::ios::binary);
 
   std::ofstream f_time_left;
-  f_time_left.open("/home/sterlingm/ros_workspace/src/ramp/ramp_planner/system_level_data/8/time_left.txt", 
+  f_time_left.open(path + "time_left.txt", 
       std::ios::out | std::ios::app | std::ios::binary);
   
   std::ofstream f_ic_stuck;
-  f_ic_stuck.open("/home/sterlingm/ros_workspace/src/ramp/ramp_planner/system_level_data/8/ic_stuck.txt", std::ios::out 
+  f_ic_stuck.open(path + "ic_stuck.txt", std::ios::out 
       | std::ios::app | std::ios::binary);
   
   std::ofstream f_ic_occurred;
-  f_ic_occurred.open("/home/sterlingm/ros_workspace/src/ramp/ramp_planner/system_level_data/8/ic_occurred.txt", 
+  f_ic_occurred.open(path + "ic_occurred.txt", 
       std::ios::out | std::ios::app | std::ios::binary);
   
   std::ofstream f_ob_on_goal;
-  f_ob_on_goal.open("/home/sterlingm/ros_workspace/src/ramp/ramp_planner/system_level_data/8/ob_on_goal.txt", 
+  f_ob_on_goal.open(path + "ob_on_goal.txt", 
       std::ios::out | std::ios::app | std::ios::binary);
   
   std::ofstream f_colls;
-  f_colls.open("/home/sterlingm/ros_workspace/src/ramp/ramp_planner/system_level_data/8/colls.txt", 
+  f_colls.open(path + "colls.txt", 
       std::ios::out | std::ios::app | std::ios::binary);
   
   std::ofstream f_icAtColl;
-  f_icAtColl.open("/home/sterlingm/ros_workspace/src/ramp/ramp_planner/system_level_data/8/icAtColl.txt", 
+  f_icAtColl.open(path + "icAtColl.txt", 
       std::ios::out | std::ios::app | std::ios::binary);
 
   
@@ -1163,11 +1178,14 @@ int main(int argc, char** argv) {
       // Set Ext ob model stuff
       tr.sl_traj        = true;
       tr.sl_final_speed = tc.obs[j].v_f;
-      tr.sl_init_dur    = tc.obs[j].d_vi;
-      tr.sl_final_dur   = tc.obs[j].d_vf;
+      //tr.sl_init_dur    = tc.obs[j].d_vi;
+      //tr.sl_final_dur   = tc.obs[j].d_vf;
+      // Changed to have a static time to be in a state for all obstacles
+      tr.sl_init_dur    = tc.d_states;
+      tr.sl_final_dur   = tc.d_states;
     
       // Get initial delay from hard-coded vector (for now)
-      tr.sl_init_dur    = tc.obs[j].d_s;
+      //tr.sl_init_dur    = tc.obs[j].d_s;
 
       // Push back request
       tr_srv.request.reqs.push_back(tr);

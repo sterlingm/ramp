@@ -2,9 +2,8 @@
 
   <!-- Run the costmap node -->
   <node name="costmap_node" pkg="costmap_2d" type="costmap_2d_node" >
-    <rosparam file="$(find ramp_launch)/launch/costmap_param/my_rolling_costmap.yaml" command="load" />
+    <rosparam file="$(find ramp_launch)/launch/costmap_param/my_costmap.yaml" command="load" />
 </node>
-<include file="$(find laser_filters)/launch/range_filter.launch" />
 
 
 </launch>

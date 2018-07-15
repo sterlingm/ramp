@@ -44,8 +44,8 @@ const ramp_msgs::Path Repair::perform()
 {
   /*ROS_INFO("dir_: %f", dir_);
   ROS_INFO("dist_: %f", dist_);
-  ROS_INFO("r: %f", r_);*/
-  //ROS_INFO("Before: %s", utility_.toString(path_).c_str());
+  ROS_INFO("r: %f", r_);
+  ROS_INFO("Before: %s", utility_.toString(path_).c_str());*/
 
   /*
    * Declare the variables we want to get

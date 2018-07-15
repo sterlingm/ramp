@@ -189,7 +189,7 @@ const bool Population::replacementPossible(const RampTrajectory& rt) const
   
   if(rt.msg_.fitness < getMinFitness())
   {
-    ROS_INFO("Fitness is less than minimum fitness");
+    //ROS_INFO("Fitness is less than minimum fitness");
     return false;
   }
 
@@ -247,7 +247,7 @@ const bool Population::canReplace(const RampTrajectory& rt, const int& i) const
 
   if(rt.msg_.fitness < trajectories_.at(i).msg_.fitness)
   {
-    ROS_INFO("fitness is less than %i fitness, returning false", i);
+    //ROS_INFO("fitness is less than %i fitness, returning false", i);
     return false;
   }
 

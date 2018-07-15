@@ -77,7 +77,7 @@ const std::vector<ramp_msgs::Path> Modifier::perform()
 
   //ROS_INFO("Modifier returning: %s", u.toString(result.at(0)).c_str());
   
-  for(int i=0;i<result.size();i++)
+  /*for(int i=0;i<result.size();i++)
   {
     for(int j=0;j<result[i].points.size();j++)
     {
@@ -89,7 +89,7 @@ const std::vector<ramp_msgs::Path> Modifier::perform()
         ROS_INFO("Result Path has an out-of-bounds motion state");
       }
     }
-  }
+  }*/
 
 
   return result;
