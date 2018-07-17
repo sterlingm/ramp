@@ -31,7 +31,7 @@ bool planner_started = false;
 
 
 
-bool cropMap = false;
+bool cropMap;
 bool remove_outside_fov;
 double rvizLifetime = 0.15;
 
@@ -330,6 +330,16 @@ void loadParameters(const ros::NodeHandle& handle)
   {
     ////////ROS_ERROR("Did not find rosparam /ramp/use_persistent_grid");
   }
+  
+  if(handle.hasParam("/ramp/crop_map"))
+  {
+    handle.getParam("/ramp/crop_map", cropMap);
+  }
+  else
+  {
+    ////////ROS_ERROR("Did not find rosparam /ramp/use_persistent_grid");
+  }
+
 
 
   if(handle.hasParam("ramp/use_odom_topics"))
@@ -2226,7 +2236,7 @@ void computeVelocities(const std::vector<CircleMatch> cm, const ros::Duration d_
 
 void staticMapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
-  //ROS_INFO("In staticMapCb");
+  ROS_INFO("In staticMapCb");
   
   if(staticObs.size() == 0)
   {
@@ -2264,6 +2274,54 @@ void staticMapCb(const nav_msgs::OccupancyGridConstPtr grid)
   gotPersistent = true;
 }
 
+
+int removeStaticOccupiedPixels(nav_msgs::OccupancyGrid& grid)
+{
+  int countMatches = 0;
+
+  // Use staticMap and global_grid
+  // Rotation is always identity so the only tf information is the difference in origin
+  float dx = grid.info.origin.position.x - staticMap.info.origin.position.x;
+  float dy = grid.info.origin.position.y - staticMap.info.origin.position.y;
+
+  int drows = dy / grid.info.resolution;
+  int dcols = dx / grid.info.resolution;
+
+  ROS_INFO("dx: %f dy: %f drows: %i dcols: %i", dx, dy, drows, dcols);
+
+  // For each point in grid
+  for(int i=0;i<grid.data.size();i++)
+  {
+    // Get the r,c value of it
+    int r = i / grid.info.width;
+    int c = i % grid.info.width;
+
+    // Now convert r and c to staticMap r and c
+    // Check more about +1 and -1, what if in different quadrants?
+    int staticR = r + drows;
+    int staticC = c + dcols;
+    int staticI = (staticR * staticMap.info.width) + staticC;
+
+    int v = staticMap.data[staticI];
+    /*ROS_INFO("v: %i v: %i r: %i c: %i x,y: %f,%f staticR: %i staticC: %i x,y: %f,%f staticI: %i", 
+        v, grid.data[i], r, c, 
+        (c*grid.info.resolution)+grid.info.origin.position.y, 
+        (r*grid.info.resolution)+grid.info.origin.position.x, 
+        staticR, staticC, 
+        (staticC*grid.info.resolution)+staticMap.info.origin.position.y, 
+        (staticR*grid.info.resolution)+staticMap.info.origin.position.x,
+        staticI);*/
+    
+    if(v != 0 && grid.data[i] > 0)
+    {
+      countMatches++;
+      grid.data[i] = 0;
+    } 
+  }
+
+  return countMatches;
+}
+
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
   /*ROS_INFO("**************************************************");
@@ -2272,7 +2330,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   ros::Duration d_elapsed = ros::Time::now() - t_last_costmap;
   t_last_costmap = ros::Time::now();
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
-  ////ROS_INFO("grid (w,h): (%i,%i) origin: (%f,%f)", grid->info.width, grid->info.height, grid->info.origin.position.x, grid->info.origin.position.y);
+  //ROS_INFO("grid (w,h): (%i,%i) origin: (%f,%f)", grid->info.width, grid->info.height, grid->info.origin.position.x, grid->info.origin.position.y);
 
   // Consolidate this occupancy grid with prev ones
   nav_msgs::OccupancyGrid accumulated_grid;
@@ -2288,21 +2346,32 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     cropCostmap(grid, cropped);
 
     transformCostmap(cropped);
-    pub_global_costmap.publish(global_costmap);
 
     double grid_resolution = grid->info.resolution; 
     
     global_grid = cropped;
     ////ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
     
+    // Call this
+    if(use_static_map)
+    {
+      int countMatches = removeStaticOccupiedPixels(global_costmap);
+      //ROS_INFO("%i pixels matched and changed", countMatches);
+    }
+    
+    
 
     //////////ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
     accumulateCostmaps(global_costmap, prev_grids, accumulated_grid);
     
+    // Done editing global_costmap
+    pub_global_costmap.publish(global_costmap);
+
     // Set global_grid 
     global_grid = global_costmap;
-    //////////ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
-    //////////ROS_INFO("global costmap (w,h): (%i,%i)", global_costmap.info.width, global_costmap.info.height);
+    ////ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
+    //ROS_INFO("global costmap (w,h): (%i,%i)", global_costmap.info.width, global_costmap.info.height);
+    //ROS_INFO("accumulated costmap (w,h): (%i,%i)", accumulated_grid.info.width, accumulated_grid.info.height);
     
     //////////ROS_INFO("Finished getting consolidated_grid");
     
@@ -2315,16 +2384,14 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     }
 
     // Publish the modified costmap(s)
-    //pub_half_costmap.publish(half);
     pub_cons_costmap.publish(accumulated_grid);
     //////ROS_INFO("accumulated grid (w,h): (%i,%i)", accumulated_grid.info.width, accumulated_grid.info.height);
   }
   else
   {
-    //ROS_INFO("In else");
     accumulated_grid = *grid;
     global_grid = *grid;
-    
+  
     // ***
     transformCostmap(global_grid);
     pub_global_costmap.publish(global_costmap);
@@ -2332,23 +2399,32 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     double grid_resolution = grid->info.resolution; 
     
     global_grid = *grid;
-    ////ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
+    
+    // Call this
+    if(use_static_map)
+    {
+      int countMatches = removeStaticOccupiedPixels(global_grid);
+      //ROS_INFO("%i pixels matched and changed", countMatches);
+    }
+    
     
 
     //////////ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
-    accumulateCostmaps(global_costmap, prev_grids, accumulated_grid);
+    accumulateCostmaps(global_grid, prev_grids, accumulated_grid);
     //ROS_INFO("After accumulateCostmaps");
-    
+   
     // Set global_grid 
-    global_grid = global_costmap;
+    // Why have separate 'global_costmap'?
+    //global_grid = global_costmap;
+    
     //////////ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
     //////////ROS_INFO("global costmap (w,h): (%i,%i)", global_costmap.info.width, global_costmap.info.height);
     
     //////////ROS_INFO("Finished getting consolidated_grid");
     
     // Push this grid onto prev_grids
-    //prev_grids.push_back(global_grid);
-    prev_grids.push_back(global_costmap);
+    prev_grids.push_back(global_grid);
+    //prev_grids.push_back(global_costmap);
     if(prev_grids.size() > num_costmaps_accumulate)
     {
       prev_grids.erase(prev_grids.begin(), prev_grids.begin()+1);
@@ -2368,6 +2444,8 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
   //////////ROS_INFO("consolidated_grid.data.size(): %i", (int)consolidated_grid.data.size());
   ////////ROS_INFO("cg_ptr->data.size(): %i", (int)cg_ptr->data.size());
+  
+
 
 
 

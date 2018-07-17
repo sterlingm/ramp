@@ -37,6 +37,7 @@ std::vector<RampTrajectory> bestTrajec_at_end;
 int num_IC;
 bool IC_occur;
 bool IC_current;
+bool collAmongObs;
 std::vector<bool> colls;
 std::vector<bool> icAtColl;
 MotionState latestUpdate;
@@ -761,7 +762,12 @@ TestCaseExt generateTestCaseExt(const MotionState robot_state, int num_obs)
     //ROS_INFO("result.ob_list.obstacles.size(): %i", (int)result.ob_list.obstacles.size());
   }
 
-  // Manually set d_s values to control the ABTC!
+
+  /*
+   ********************************************************************
+   *    Manually set the initial delay values to control the ABTC! 
+   ********************************************************************
+   */
   result.obs[0].d_s = ros::Duration(0);
   result.obs[1].d_s = ros::Duration(0);
   result.obs[2].d_s = ros::Duration(0);
@@ -978,6 +984,26 @@ void collisionCb(const ros::TimerEvent e, TestCaseExt& tc)
   } // end for
 }
 
+void obstacleCollisonCb(const ros::TimerEvent e)
+{
+  double obRadii = 0.21;
+  for(int i=0;i<num_obs;i++)
+  {
+    for(int j=0;j<num_obs;j++)
+    {
+      if(i != j)
+      {
+        double d = utility.positionDistance( globalTc.obs[i].msg.ob_ms.positions, globalTc.obs[j].msg.ob_ms.positions);
+        if( d <= obRadii*2.0)
+        {
+          collAmongObs = true; 
+        }
+      } // end if
+    } // end inner for
+  } // end outer for
+}
+
+
 
 void updateCb(const ramp_msgs::MotionState& msg)
 {
@@ -991,6 +1017,30 @@ void updateCb(const ramp_msgs::MotionState& msg)
   latestUpdate.transformBase(T_w_odom);
   //ROS_INFO("After transform, msg: %s", latestUpdate.toString().c_str());
 }
+
+
+
+
+
+
+
+std::string getTestCaseInfo(TestCaseExt tc)
+{
+  std::ostringstream result;
+
+  for(int i=0;i<tc.obs.size();i++)
+  {
+    ObInfoExt o = tc.obs[i];
+    result<<" "<<o.x<<","<<o.y<<","<<o.relative_direction<<","<<o.d<<","<<o.v_i<<","<<o.v_f<<","<<o.w<<","<<o.d_s.toSec();
+  }
+
+  result<<" "<<tc.d_states;
+  
+
+  return result.str();
+}
+
+
 
 
 void shutdown(int sigint)
@@ -1033,11 +1083,12 @@ int main(int argc, char** argv) {
   std::vector<TestCaseExt> test_cases_ext;
 
   
-  ros::Timer ob_trj_timer, checkCollTimer;
+  ros::Timer ob_trj_timer, checkCollTimer, checkCollAmongObsTimer;
   ob_trj_timer.stop();
   checkCollTimer.stop();
+  checkCollAmongObsTimer.stop();
   
-  int num_tests = 100;
+  int num_tests = 33;
 
 
   // Make an ObstacleList Publisher
@@ -1086,6 +1137,14 @@ int main(int argc, char** argv) {
   
   std::ofstream f_icAtColl;
   f_icAtColl.open(path + "icAtColl.txt", 
+      std::ios::out | std::ios::app | std::ios::binary);
+
+  std::ofstream f_testInfo;
+  f_testInfo.open(path + "testInfo.txt", 
+      std::ios::out | std::ios::app | std::ios::binary);
+
+  std::ofstream f_collAmongObs;
+  f_collAmongObs.open(path + "collAmongObs.txt",
       std::ios::out | std::ios::app | std::ios::binary);
 
   
@@ -1264,9 +1323,13 @@ int main(int argc, char** argv) {
     tc.t_begin = ros::Time::now();
     globalTc = tc;
 
+    // Set ob coll variable
+    collAmongObs = false;
+
     // Create timer to continuously publish obstacle information
     ob_trj_timer = handle.createTimer(ros::Duration(1./20.), boost::bind(pubObTrjExt, _1, tc));
     checkCollTimer = handle.createTimer(ros::Duration(1./20.), boost::bind(collisionCb, _1, tc));
+    checkCollAmongObsTimer = handle.createTimer(ros::Duration(1./20.), obstacleCollisonCb);
 
     // Set flag signifying that the next test case is not ready
     ros::param::set("/ramp/tc_generated", false);
@@ -1287,6 +1350,7 @@ int main(int argc, char** argv) {
     // Stop publishing dy obs
     ob_trj_timer.stop();
     checkCollTimer.stop();
+    checkCollAmongObsTimer.stop();
 
     ROS_INFO("Generate:Test case done, setting flags back to false");
 
@@ -1383,6 +1447,7 @@ int main(int argc, char** argv) {
       f_ob_on_goal<<false<<std::endl;
     }
 
+
     int numColls = 0;
     int numICAtColl = 0;
     for(int i=0;i<num_obs;i++)
@@ -1393,9 +1458,15 @@ int main(int argc, char** argv) {
     f_colls<<numColls<<std::endl;
     f_icAtColl<<numICAtColl<<std::endl;
 
+    f_testInfo<<getTestCaseInfo(tc)<<std::endl;
+
+    f_collAmongObs<<collAmongObs<<std::endl;
+
     bestTrajec_at_end.push_back(bestTrajec);
     test_cases_ext.push_back(tc);
     //test_cases.push_back(tc);
+    
+    ROS_INFO("Completed test %i", i); 
   } // end for each test case
 
   f_reached.close();
@@ -1406,6 +1477,8 @@ int main(int argc, char** argv) {
   f_ob_on_goal.close();
   f_colls.close();
   f_icAtColl.close();
+  f_testInfo.close();
+  f_collAmongObs.close();
     
 
   std::cout<<"\n\nExiting Normally\n";

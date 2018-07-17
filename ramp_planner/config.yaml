@@ -41,9 +41,13 @@ field_of_view_angle: 1.25
 
 remove_outside_fov: false
 
-use_static_map: false
+# if your sensor is an rgbd camera
+# crop the map so it doesn't cover behind the robot (b/c sensor cannot see there)
+crop_map: false
 
-use_odom_topics: true
+use_static_map: true
+
+use_odom_topics: false
 
 
 
