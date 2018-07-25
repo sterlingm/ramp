@@ -358,7 +358,8 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
 
   num_scs_++;
   
-  //sendPopulation();
+  // Send population to Rviz
+  sendPopulation();
   
   /*//////ROS_INFO("Pausing in Sensing Cycle");
   ros::Duration d(1);
@@ -3094,11 +3095,11 @@ void Planner::planningCycleCallback()
   /*//////////ROS_INFO("Exiting PC at time: %f", ros::Time::now().toSec());
   //////////ROS_INFO("Time spent in PC: %f", (ros::Time::now() - t).toSec());*/
 
-  Population copy = population_; 
+  /*Population copy = population_; 
   for(int i=0;i<ob_trajectory_.size();i++)
   {
     copy.trajectories_.push_back(ob_trajectory_[i]);
-  }
+  }*/
 
   if (!moving_robot_) {
     //// only in offline mode enter here
@@ -3109,7 +3110,8 @@ void Planner::planningCycleCallback()
     }
   }
 
-  //sendPopulation();
+  // Send population to Rviz
+  sendPopulation();
   
   ////////ROS_INFO("d: %f EC: %s mod_worked: %s modded_two: %s", d.toSec(), EC ? "True" : "False", mod_worked ? "True" : "False", modded_two ? "True" : "False");
   //////////ROS_INFO("********************************************************************");
@@ -3543,8 +3545,8 @@ void Planner::doControlCycle()
     }
   } // end else no imminent collision
  
-  // Send the population to trajectory_visualization
-  //sendPopulation();
+  // Send the population to Rviz
+  sendPopulation();
   
   controlCycle_         = population_.getEarliestStartTime();
   controlCycleTimer_.setPeriod(controlCycle_, false);
@@ -3729,7 +3731,7 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
     result.color.b = 0;
     result.scale.x = 0.01;
   }
-  // trajec may be an obstacle trajectory which has no points in the path member
+  // trajec may be an obstacle trajectory which has no points in the holonomic_path member
   // if(trajec.msg_.holonomic_path.points.size() > 0 && trajec.equals(population_.getBest()))
   if(trajec.msg_.holonomic_path.points.size() > 0 && id == population_.calcBestIndex())
   {
@@ -4510,7 +4512,7 @@ void Planner::offlineGo() {
     }
     diff_ = diff_.zero(3);
     if (!moving_robot_) {
-      sendPopTimer_.start();
+      //sendPopTimer_.start();
     } else {
       sendPopTimer_.stop();
     }
@@ -4616,7 +4618,7 @@ void Planner::go(const ros::NodeHandle& h)
   //ROS_INFO("Starting pre planning cycles");
 
   // Start Timer to send population to rviz
-  sendPopTimer_.start();
+  //sendPopTimer_.start();
   
   // Wait for the specified number of generations before starting CC's
   while (generation_ < num_pc && no_better_cnt < MAX_NO_BETTER_CNT)
@@ -4626,7 +4628,7 @@ void Planner::go(const ros::NodeHandle& h)
   }
 
   if (!moving_robot_) {
-    sendPopTimer_.start();
+    //sendPopTimer_.start();
   } else {
     sendPopTimer_.stop();
   }

@@ -385,14 +385,14 @@ void pubStartGoalMarkers()
   goal_marker.scale.z = 0.1;
 
   // Set colors
-  start_marker.color.r = 1;
+  start_marker.color.r = 0;
   start_marker.color.g = 0;
   start_marker.color.b = 0;
   start_marker.color.a = 1;
  
   goal_marker.color.r = 0;
   goal_marker.color.g = 0;
-  goal_marker.color.b = 1;
+  goal_marker.color.b = 0;
   goal_marker.color.a = 1;
 
   // Set lifetimes
