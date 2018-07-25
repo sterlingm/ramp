@@ -558,7 +558,7 @@ const Population Planner::getPopulation( const MotionState init, const MotionSta
  * If the robot DOES complete a curve within a single cc, it will still report the curve as being
  * unfinished which will likely result in the robot turning around to go back to the first control point
  */
-const uint8_t Planner::getIndexStartPathAdapting(const RampTrajectory t) const 
+const uint8_t Planner::getIndexStartPathAdapting(const RampTrajectory& t) const 
 {
   ////ROS_INFO("In Planner::getIndexStartPathAdapting");
   ////////ROS_INFO("t transTraj.size(): %i", (int)t.transitionTraj_.trajectory.points.size());
@@ -603,6 +603,8 @@ const uint8_t Planner::getIndexStartPathAdapting(const RampTrajectory t) const
 
 const uint8_t Planner::getNumThrowawayPoints(const RampTrajectory traj, const ros::Duration dur) const {
   uint8_t result = 1;
+
+  //ROS_INFO("getIndexStartPathAdapting result: %i", getIndexStartPathAdapting(traj));
 
   // For each knot point,
   // Start at 2 because that is the end of the first bezier curve
@@ -663,6 +665,7 @@ void Planner::adaptPaths(const MotionState& ms, const ros::Duration& d, std::vec
 
     // For each trajectory
     for(uint8_t i=0;i<population_.size();i++) {
+      //ROS_INFO("i: %i", i);
       //ROS_INFO("Path: %s", population_.paths_.at(i).toString().c_str());
       //ROS_INFO("Get Path: %s", population_.get(i).getNonHolonomicPath().toString().c_str());
       Path temp = population_.paths_.at(i);
@@ -780,6 +783,15 @@ const int Planner::estimateIfOnCurve(const MotionState ms, const ramp_msgs::Bezi
     if(xPastTwo || yPastTwo)
     {
       //ROS_INFO("Returning 3 (after curve)");
+      ROS_INFO("xSlope: %s xSlopeTwo: %s xSegOne: %s xSegTwo: %s ySlope: %s ySlopeTwo: %s ySegOne: %s ySegTwo: %s",
+          xSlope ? "True" : "False",
+          xSlopeTwo ? "True" : "False",
+          xSegOne ? "True" : "False",
+          xSegTwo ? "True" : "False",
+          ySlope ? "True" : "False",
+          ySlopeTwo ? "True" : "False",
+          ySegOne ? "True" : "False",
+          ySegTwo ? "True" : "False");
       return 3;
     }
   } // end if past segment 1
@@ -911,7 +923,7 @@ const double Planner::updateCurvePos(const RampTrajectory& traj, const ros::Dura
 
 
 
-void Planner::adaptCurves(const MotionState& ms, const ros::Duration& d, std::vector<ramp_msgs::BezierCurve>& result)
+void Planner::adaptCurves(const MotionState& ms, const ros::Duration& d, std::vector<ramp_msgs::BezierCurve>& result, std::vector<Path> adaptedPaths)
 {
   if(log_enter_exit_)
   {
@@ -969,7 +981,10 @@ void Planner::adaptCurves(const MotionState& ms, const ros::Duration& d, std::ve
       // Check if done with current curve
       if( i == population_.calcBestIndex() && (curve.u_0 > curve.u_target || estimateIfOnCurve(ms, curve) == 3) )
       {
-        //ROS_INFO("Done with curve, u_0: %f", curve.u_0);
+        /*ROS_INFO("Done with curve, i: %i d: %f u_0: %f ms: %s curve: %s", i, d.toSec(), curve.u_0, ms.toString().c_str(), utility_.toString(curve).c_str());
+        ROS_INFO("Old path: %s", population_.paths_[i].toString().c_str());
+        ROS_INFO("New path: %s", adaptedPaths[i].toString().c_str());
+        ROS_INFO("Traj: %s", population_.trajectories_[i].toString().c_str());*/
         curve = handleCurveEnd(population_.get(i));
       } // end if done with 1st curve
       else
@@ -997,6 +1012,32 @@ void Planner::adaptCurves(const MotionState& ms, const ros::Duration& d, std::ve
 
 
 
+void Planner::deleteDuplicateKnotPoints(Path& p)
+{
+
+  int i=0;
+  while(i<p.msg_.points.size()-1)
+  {
+    ramp_msgs::MotionState a = p.msg_.points.at(i).motionState;
+    ramp_msgs::MotionState b = p.msg_.points.at(i+1).motionState;
+
+    if(utility_.positionDistance(a.positions, b.positions) < 0.0001)
+    {
+      /*ROS_WARN("Consecutive duplicate knot points in path:\nPath[%i]:\n%s\nand\nPath[%i]\n%s\nDist: %f Removing knot point at index %i", 
+          i+1,
+          utility.toString(a).c_str(),
+          i+1,
+          utility.toString(b).c_str(),
+          utility.positionDistance(a.positions, b.positions),
+          i);*/
+      p.msg_.points.erase(p.msg_.points.begin()+i+1);
+      i--;
+    }
+
+    i++;
+  }
+
+}
 
 
 void Planner::adaptPopulation(const MotionState& ms, const ros::Duration& d)
@@ -1007,13 +1048,21 @@ void Planner::adaptPopulation(const MotionState& ms, const ros::Duration& d)
     ////ROS_INFO("d: %f", d.toSec());
   }
 
-  //std::vector<Path> paths = adaptPaths(population_, ms, d);
+  // Adapt paths
   std::vector<Path> paths;
   adaptPaths(ms, d, paths);
+
+  // Check duplicate points in paths
+  for(int i=0;i<paths.size();i++)
+  {
+    deleteDuplicateKnotPoints(paths[i]);
+  }
+
+  // Adapt curves
   std::vector<ramp_msgs::BezierCurve> curves;
   if(population_.type_ != HOLONOMIC)
   {
-    adaptCurves(ms, d, curves);
+    adaptCurves(ms, d, curves, paths);
   }
   
   // Create the vector to hold updated trajectories
@@ -1240,7 +1289,9 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
   }
 
   // consider_trans for trajs including switches if we're moving the robot
-  result.consider_trans = moving_robot_;
+  //result.consider_trans = moving_robot_;
+  //result.consider_trans = moving_robot_ && result.imminent_collision == false;
+  result.consider_trans = true;
 
   //ROS_INFO("Setting nec_theta, end, etc.");
   //ROS_INFO("trajec.msg_.trajectory.size(): %i trajec.msg_.i_knotPoints.size(): %i", (int)trajec.msg_.trajectory.points.size(), (int)trajec.msg_.i_knotPoints.size());
@@ -2947,9 +2998,10 @@ void Planner::offsetPopulation(const MotionState& diff)
 {
   for(uint16_t i=0;i<population_.size();i++)
   {
-    population_.trajectories_[i].offsetPositions(diff);
     population_.paths_[i].offsetPositions(diff);
+    population_.trajectories_[i].offsetPositions(diff);
   }
+  
 }
 
 
@@ -3432,6 +3484,7 @@ void Planner::doControlCycle(bool sendBestTraj)
 
 
   // Set the bestT
+  //ROS_INFO("Sending best");
   RampTrajectory bestT = population_.getBest();
   //ROS_INFO("After getting bestT");
 
@@ -3744,6 +3797,7 @@ void Planner::sendPopulation()
    */
   ramp_msgs::Population msg = population_.populationMsg();
   msg.robot_id = id_;
+  msg.best_id = population_.calcBestIndex();
 
   // Add movingOn
   msg.population.insert(msg.population.begin(), movingOn_.msg_);
@@ -4010,7 +4064,6 @@ void Planner::evaluateTrajectory(RampTrajectory& t, bool hmap)
 
 void Planner::evaluatePopulation(bool hmap)
 {
-  ////ROS_INFO("In evaluatePopulation");
   requestEvaluation(population_.trajectories_, hmap);
 }
 

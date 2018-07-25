@@ -233,23 +233,27 @@ const bool Population::canReplace(const RampTrajectory& rt, const int& i) const
   //ROS_INFO("In Population::canReplace");
   //ROS_INFO("i: %i feasible: %s", i, trajectories_.at(i).msg_.feasible ? "True" : "False");
   
+  // Don't replace the best trajectory in the population
+  // (maybe change this to be whatever traj the robot is moving on? the best may change between control cycles)
   if(i == calcBestIndex()) 
   {
     //ROS_INFO("i == i_best, returning false");
     return false;
   }
 
+  // Don't let an infeasible trajec replace a feasible one
   if(!rt.msg_.feasible && trajectories_.at(i).msg_.feasible) 
   {
     //ROS_INFO("rt infeasible, i feasible, returning false");
     return false;
   }
 
-  if(rt.msg_.fitness < trajectories_.at(i).msg_.fitness)
+  // Elitist method
+  /*if(rt.msg_.fitness < trajectories_.at(i).msg_.fitness)
   {
     //ROS_INFO("fitness is less than %i fitness, returning false", i);
     return false;
-  }
+  }*/
 
 
   // If sub-populations are used,

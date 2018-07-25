@@ -119,7 +119,7 @@ void Modifier::buildModificationRequest(const Population& pop, bool imminent_col
   }
   else
   {
-    //ROS_INFO("Modifier: Calling Move because IC exists");
+    ROS_INFO("Modifier: Calling Repair because IC exists");
     
     //*****************************************
     //Commented out for testing

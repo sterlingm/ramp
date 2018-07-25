@@ -121,6 +121,19 @@ bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
     {
       ////ROS_WARN("First two knot points are equal!");
     }
+    
+
+    if(tres.trajectory.curves.size() > 0)
+    {
+      std::vector<double> sp = tres.trajectory.curves[0].segmentPoints[1].positions;
+      std::vector<double> cp = tres.trajectory.curves[0].controlPoints[1].positions;
+
+      if(utility.positionDistance(sp,cp) > 0.5)
+      {
+        ROS_INFO("Trajectory Request Received: %s", utility.toString(treq).c_str());
+      }
+    }
+
     //ROS_INFO("Response: %s", utility.toString(tres).c_str());
     
     

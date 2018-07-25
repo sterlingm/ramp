@@ -431,8 +431,8 @@ ObInfoExt generateObInfoGridExt(const MotionState robot_state)
 {
   ObInfoExt result;
 
-  Range x(0.75, 2.0);
-  Range y(0.75, 2.0);
+  Range x(0.5, 2.0);
+  Range y(0.5, 2.0);
 
   double ob_x = x.random();
   
@@ -454,7 +454,7 @@ ObInfoExt generateObInfoGridExt(const MotionState robot_state)
   
   // Set speeds
   Range v(0, 0.5);
-  Range w(0, PI/2.f);
+  Range w(-PI/2.f, PI/2.f);
 
   result.x = ob_x;
   result.y = ob_y;
@@ -698,7 +698,7 @@ TestCaseExt generateTestCaseExt(const MotionState robot_state, int num_obs)
   //ROS_INFO("In generateTestCaseExt");
   //ROS_INFO("num_obs: %i", num_obs);
   
-  double obInitD = 0.5;
+  double obInitD = 0.75;
 
   // Get the random duration for state changes
   Range r(2, 5);
@@ -768,9 +768,25 @@ TestCaseExt generateTestCaseExt(const MotionState robot_state, int num_obs)
    *    Manually set the initial delay values to control the ABTC! 
    ********************************************************************
    */
-  result.obs[0].d_s = ros::Duration(0);
-  result.obs[1].d_s = ros::Duration(0);
-  result.obs[2].d_s = ros::Duration(0);
+  // 0
+  double d_initialDelay = 0;
+  ROS_INFO("Initial delay: %f", d_initialDelay);
+  
+  // 1 (1 after previous obstacle)
+  Range r_secondDelay(result.d_states.toSec()*0.0, result.d_states.toSec()*0.9);
+  double d_secondDelay = r_secondDelay.random();
+  ROS_INFO("Second delay: %f total: %f", d_secondDelay, d_initialDelay + d_secondDelay);
+
+  // 3 (2 after previous obstacle)
+  Range r_thirdDelay(result.d_states.toSec()*1.0, result.d_states.toSec()*1.9);
+  double d_thirdDelay = r_thirdDelay.random();
+  ROS_INFO("Third delay: %f total: %f", d_thirdDelay, d_initialDelay + d_secondDelay + d_thirdDelay);
+  
+
+  // Set all of them
+  result.obs[0].d_s = ros::Duration(d_initialDelay);
+  result.obs[1].d_s = ros::Duration(d_initialDelay + d_secondDelay);
+  result.obs[2].d_s = ros::Duration(d_initialDelay + d_secondDelay + d_thirdDelay);
  
 
   return result;
@@ -1088,7 +1104,7 @@ int main(int argc, char** argv) {
   checkCollTimer.stop();
   checkCollAmongObsTimer.stop();
   
-  int num_tests = 33;
+  int num_tests = 35;
 
 
   // Make an ObstacleList Publisher
@@ -1103,7 +1119,7 @@ int main(int argc, char** argv) {
   //ob_trj_timer = handle.createTimer(ros::Duration(1./20.), boost::bind(pubObTrjExt, _1, tc));
   
   
-  std::string path = "/home/sterlingm/ros_workspace/src/ramp/data/system-level-testing/ext/1/";
+  std::string path = "/home/sterlingm/ros_workspace/src/ramp/data/system-level-testing/ext/0-1-3/";
 
 
   // Open files for data
@@ -1260,7 +1276,7 @@ int main(int argc, char** argv) {
     {
       for(int i=0;i<tr_srv.response.resps.size();i++)
       {
-        ROS_INFO("Ob Traj: %s", utility.toString(tr_srv.response.resps[i].trajectory).c_str());
+        //ROS_INFO("Ob Traj: %s", utility.toString(tr_srv.response.resps[i].trajectory).c_str());
         tc.ob_trjs.push_back(tr_srv.response.resps[i].trajectory);
       }
     }

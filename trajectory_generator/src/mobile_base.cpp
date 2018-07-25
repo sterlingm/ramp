@@ -1547,8 +1547,8 @@ bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
   uint8_t c=0;
   // Go through every knotpoint in the path
   // (or until timeCutoff has been reached)
-  //for (i_kp_ = 1; i_kp_<path_.points.size(); i_kp_++) 
-  for (i_kp_ = 1; i_kp_<segments_; i_kp_++) 
+  for (i_kp_ = 1; i_kp_<path_.points.size(); i_kp_++) 
+  //for (i_kp_ = 1; i_kp_<segments_; i_kp_++) 
   {
     //ROS_INFO("i_kp_: %i", (int)i_kp_);
     reflexxesData_.resultValue = 0;
@@ -1691,7 +1691,7 @@ bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs:
 
         // Set orientation threshold that requires a rotation 
         // before continuing to the next knot point
-        double threshold = 0.3f; 
+        double threshold = 0.5f; 
         //////ROS_INFO("threshold: %f", threshold);
 
         // If we need to rotate towards the next knot point

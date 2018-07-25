@@ -36,10 +36,15 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
   }
   else
   {
+    // Sets orientation_infeasible_
     performFeasibility(req);
     
     // Set response members
-    res.feasible = !qr_.collision_ && !orientation_infeasible_;
+    res.feasible = !qr_.collision_;
+    if(imminent_collision_ == false && orientation_infeasible_)
+    {
+      res.feasible = false;
+    }
     req.trajectory.feasible = res.feasible;
     //ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
     ////////ROS_INFO("performFeasibility: %f", (ros::Time::now()-t_start).toSec());
@@ -147,8 +152,8 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
   ramp_msgs::RampTrajectory* trj = &er.trajectory;
   
   ////ROS_INFO("orientation_.getDeltaTheta(*trj): %f", orientation_.getDeltaTheta(*trj));
-  if((!er.imminent_collision && er.consider_trans && !er.trans_possible) ||
-      orientation_.getDeltaTheta(*trj) > 1.5708)
+  if((!er.imminent_collision && er.consider_trans && !er.trans_possible))
+      //orientation_.getDeltaTheta(*trj) > 1.5708)
   {
     ////ROS_INFO("In final if statement");
     orientation_infeasible_ = true;

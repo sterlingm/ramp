@@ -33,6 +33,10 @@ stop_after_ppcs: false
 
 try_ic_loop: false
 
+fixed_control_cycle_rate: 1.2
+
+sensing_cycle_rate: 10
+
 
 
 # Sensing parameters #
@@ -45,24 +49,20 @@ remove_outside_fov: false
 # crop the map so it doesn't cover behind the robot (b/c sensor cannot see there)
 crop_map: false
 
-use_static_map: true
+use_static_map: false
 
-use_odom_topics: false
+use_odom_topics: true
 
 
 
 
 # Evaluation weight parameters #
 
-fixed_control_cycle_rate: 1.2
-
-sensing_cycle_rate: 10
-
 eval_weight_T: 1.0 #1 #1.75
 
 # As D weight increases, overall contribution of D to the cost decreases
 # This is because high values of D are good so we add 1/D to the fitness cost
-eval_weight_D: 0.2 #0.13 #.2
+eval_weight_D: 0.02 #0.13 #.2
 
 eval_weight_A: 0.01 #0.48 #0.01
 

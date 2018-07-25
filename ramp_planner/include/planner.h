@@ -224,8 +224,9 @@ class Planner {
 
     const ramp_msgs::BezierCurve               handleCurveEnd(const RampTrajectory traj) const;
     
+    void deleteDuplicateKnotPoints(Path& p);
 
-    void adaptCurves     (const MotionState& ms, const ros::Duration& d, std::vector<ramp_msgs::BezierCurve>& result);
+    void adaptCurves     (const MotionState& ms, const ros::Duration& d, std::vector<ramp_msgs::BezierCurve>& result, std::vector<Path> adaptedPaths);
     void adaptPaths      (const MotionState& ms, const ros::Duration& d, std::vector<Path>& result);
     void adaptPopulation (const MotionState& ms, const ros::Duration& d);
 
@@ -368,7 +369,7 @@ class Planner {
     void doControlCycle(bool sendBestTraj=true);
 
     // Returns the index in the trajectory's path to start checking if the robot has passed it
-    const uint8_t getIndexStartPathAdapting(const RampTrajectory t) const;
+    const uint8_t getIndexStartPathAdapting(const RampTrajectory& t) const;
 
 
     // Returns true if motion state satisfies constraints to be a knot point in Path p 
