@@ -40,7 +40,8 @@ def main():
 # Create SpawnModelRequest object, set member values that won't change
     req = SpawnModelRequest()
 
-    f = open('/home/sterlingm/.gazebo/models/person_walking/model.sdf', 'r')
+    #f = open('/home/sterlingm/.gazebo/models/person_walking/model.sdf', 'r')
+    f = open('/home/sterlingm/.gazebo/models/cardboard_box/model.sdf', 'r')
     sdff = f.read()
     req.model_xml = sdff
 
@@ -52,7 +53,7 @@ def main():
     for i in range(0,N):
 
         # Create the model name
-        s = 'person_walking_%d' % i if i > 0 else 'person_walking'
+        s = 'cardboard_box_%d' % i if i > 0 else 'cardboard_box'
         print 's: %s' % s
         req.model_name = s
 

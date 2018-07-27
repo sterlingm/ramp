@@ -81,6 +81,12 @@ add_executable(generate_test_case src/bezier_curve.cpp src/main_generate_test_ca
 set_target_properties(generate_test_case PROPERTIES COMPILE_FLAGS -std=c++0x)
 target_link_libraries(generate_test_case ${catkin_LIBRARIES} yaml-cpp)
 
+add_executable(generate_test_case_gazebo src/bezier_curve.cpp src/main_generate_test_case_gazebo.cpp src/planner.cpp src/control_handler.cpp src/knot_point.cpp src/modification_request_handler.cpp src/modifier.cpp src/motion_state.cpp src/parameter_handler.cpp src/path.cpp src/population.cpp src/ramp_trajectory.cpp src/range.cpp src/rviz_handler.cpp src/trajectory_request_handler.cpp src/evaluation_request_handler.cpp src/utility.cpp)
+set_target_properties(generate_test_case_gazebo PROPERTIES COMPILE_FLAGS -std=c++0x)
+target_link_libraries(generate_test_case_gazebo ${catkin_LIBRARIES} yaml-cpp)
+
+
+
 
 add_executable(move_gazebo_obs src/main_gazebo_ob.cpp src/range.cpp src/utility.cpp)
 set_target_properties(move_gazebo_obs PROPERTIES COMPILE_FLAGS -std=c++0x)
