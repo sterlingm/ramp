@@ -718,7 +718,7 @@ std::vector<visualization_msgs::Marker> convertObsToMarkers(const ramp_msgs::Obs
       result.push_back(cirMarker);
 
       int jStop = (use_odom_topics || use_static_map) ? obList.obstacles[i].cirGroup.packedCirs.size() : cir_obs[i]->cirGroup.packedCirs.size();
-      ROS_INFO("jStop: %i obList.obstacles[i].cirGroup.packedCirs.size(): %i", jStop, (int)obList.obstacles[i].cirGroup.packedCirs.size());
+      //ROS_INFO("jStop: %i obList.obstacles[i].cirGroup.packedCirs.size(): %i", jStop, (int)obList.obstacles[i].cirGroup.packedCirs.size());
       for(int j=0;j<jStop;j++)
       {
         //ROS_INFO("j: %i", j);
@@ -785,8 +785,8 @@ void publishList(const ros::TimerEvent& e)
   }*/
   //ROS_INFO("List size: %i", (int)dynamicObsList.obstacles.size());
   
-  ROS_INFO("In publishList, staticObsList.size(): %i", (int)staticObsList.obstacles.size());
-  ROS_INFO("In publishList, dynamicObsList.size(): %i", (int)dynamicObsList.obstacles.size());
+  //ROS_INFO("In publishList, staticObsList.size(): %i", (int)staticObsList.obstacles.size());
+  //ROS_INFO("In publishList, dynamicObsList.size(): %i", (int)dynamicObsList.obstacles.size());
   list.obstacles.clear();
   for(int i=0;i<staticObs.size();i++)
   {
@@ -806,12 +806,12 @@ void publishList(const ros::TimerEvent& e)
 
 void publishMarkers(const ros::TimerEvent& e)
 {
-  ROS_INFO("In publishMarkers");
+  //ROS_INFO("In publishMarkers");
   
   // Publish a single Marker
   visualization_msgs::MarkerArray result;
 
-  ROS_INFO("dynamicObsList.size(): %i staticObsList.size: %i", (int)dynamicObsList.obstacles.size(), (int)staticObsList.obstacles.size());
+  //ROS_INFO("dynamicObsList.size(): %i staticObsList.size: %i", (int)dynamicObsList.obstacles.size(), (int)staticObsList.obstacles.size());
   
   // Get circle markers for obstacles
   std::vector<visualization_msgs::Marker> markers = convertObsToMarkers(dynamicObsList,0);
@@ -820,7 +820,7 @@ void publishMarkers(const ros::TimerEvent& e)
   markers.reserve(markers.size() + markersStatic.size());
   markers.insert(markers.end(), markersStatic.begin(), markersStatic.end());
 
-  ROS_INFO("markers.size(): %i markersStatic.size(): %i", (int)markers.size(), (int)markersStatic.size());
+  //ROS_INFO("markers.size(): %i markersStatic.size(): %i", (int)markers.size(), (int)markersStatic.size());
 
   result.markers = markers;
   
@@ -1242,27 +1242,27 @@ CircleOb* createCircleOb(CircleGroup temp)
 
 void transformCostmap(nav_msgs::OccupancyGrid& g)
 {
-  ////ROS_INFO("In transformCostmap");
+  //ROS_INFO("In transformCostmap");
   tf::Vector3 p(g.info.origin.position.x, g.info.origin.position.y, 0);
   float res = g.info.resolution;
   int w = g.info.width;
   int h = g.info.height;
-  ////ROS_INFO("p: (%f,%f) w: %i h: %i c_max (w): %f r_max (h): %f", p.getX(), p.getY(), w, h , global_costmap.info.resolution / w, global_costmap.info.resolution / h);
+  //ROS_INFO("p: (%f,%f) w: %i h: %i c_max (w): %f r_max (h): %f", p.getX(), p.getY(), w, h , global_grid.info.resolution / w, global_grid.info.resolution / h);
 
-  tf::Vector3 p_global(global_costmap.info.origin.position.x, global_costmap.info.origin.position.y, 0);
-  ////ROS_INFO("p_global: (%f,%f)", p_global.getX(), p_global.getY());
+  tf::Vector3 p_global(global_grid.info.origin.position.x, global_grid.info.origin.position.y, 0);
+  //ROS_INFO("p_global: (%f,%f)", p_global.getX(), p_global.getY());
 
  
-  float delta_x = g.info.origin.position.x - global_costmap.info.origin.position.x;
-  float delta_y = g.info.origin.position.y - global_costmap.info.origin.position.y;
+  float delta_x = g.info.origin.position.x - global_grid.info.origin.position.x;
+  float delta_y = g.info.origin.position.y - global_grid.info.origin.position.y;
   int i_dx = delta_x / res;
-  int i_dy = (delta_y / res) * global_costmap.info.width;
+  int i_dy = (delta_y / res) * global_grid.info.width;
   ////ROS_INFO("delta_x: %f delta_y: %f i_dx: %i i_dy: %i", delta_x, delta_y, i_dx, i_dy);
 
-  float x_global_max = (global_costmap.info.width * global_costmap.info.resolution) + global_costmap.info.origin.position.x;
-  float y_global_max = (global_costmap.info.height * global_costmap.info.resolution) + global_costmap.info.origin.position.y;
-  float x_global_min = global_costmap.info.origin.position.x;
-  float y_global_min = global_costmap.info.origin.position.y;
+  float x_global_max = (global_grid.info.width * global_grid.info.resolution) + global_grid.info.origin.position.x;
+  float y_global_max = (global_grid.info.height * global_grid.info.resolution) + global_grid.info.origin.position.y;
+  float x_global_min = global_grid.info.origin.position.x;
+  float y_global_min = global_grid.info.origin.position.y;
 
   ////ROS_INFO("x_global_max: %f y_global_max: %f", x_global_max, y_global_max);
 
@@ -1285,13 +1285,13 @@ void transformCostmap(nav_msgs::OccupancyGrid& g)
    
 
     // Get index on global costmap
-    int c_global = ((i % g.info.width) % global_costmap.info.width) + 1;
+    int c_global = ((i % g.info.width) % global_grid.info.width) + 1;
     // divide to get rid of remainder, then re-multiply by width
-    int r_global = (i / g.info.width) * global_costmap.info.width;
+    int r_global = (i / g.info.width) * global_grid.info.width;
     
     ////ROS_INFO("Before considering origin, c_global: %i r_global: %i", c_global, r_global);
 
-    c_global += i_dx ;//<= -(c/res) ? -(c/res) * global_costmap.info.width : i_dx;
+    c_global += i_dx ;//<= -(c/res) ? -(c/res) * global_grid.info.width : i_dx;
     r_global += i_dy;
 
     //int i_global = (c_global > -1 && c_global < 901 && r_global > -1 && r_global < 10001) ? r_global + c_global : -1;
@@ -1299,7 +1299,7 @@ void transformCostmap(nav_msgs::OccupancyGrid& g)
    
     // Print info 
     ////ROS_INFO("x_global_min, max: (%f,%f) y_global_min, max: (%f,%f)", x_global_min, x_global_max, y_global_min, y_global_max);
-    ////ROS_INFO("x: %f y: %f c_global: %i r_global: %i i: %i i_global: %i global.size(): %i", x, y, c_global, r_global, i, i_global, (int)global_costmap.data.size());
+    ////ROS_INFO("x: %f y: %f c_global: %i r_global: %i i: %i i_global: %i global.size(): %i", x, y, c_global, r_global, i, i_global, (int)global_grid.data.size());
 
     if(x >= x_global_min && x < x_global_max && y >= y_global_min && y < y_global_max)
     {
@@ -1313,12 +1313,12 @@ void transformCostmap(nav_msgs::OccupancyGrid& g)
     }
 
 
-    if(i_global > -1 && i_global < global_costmap.data.size())
+    if(i_global > -1 && i_global < global_grid.data.size())
     {
-      global_costmap.data[i_global] = g.data[i];
+      global_grid.data[i_global] = g.data[i];
     }
   }
-  //////////ROS_INFO("global_costmap.data.size(): %i", (int)global_costmap.data.size());
+  //////////ROS_INFO("global_grid.data.size(): %i", (int)global_grid.data.size());
 }
 
 
@@ -1866,8 +1866,8 @@ void initGlobalMap()
 
 void setRobotPos(const ramp_msgs::MotionState& ms)
 {
-  ////ROS_INFO("In setRobotPos");
-  ////ROS_INFO("ms: (%f,%f,%f)", ms.positions[0], ms.positions[1], ms.positions[2]);
+  //ROS_INFO("In setRobotPos");
+  //ROS_INFO("ms: (%f,%f,%f)", ms.positions[0], ms.positions[1], ms.positions[2]);
   robotState.positions.clear();
   
   // Set new position
@@ -1879,7 +1879,8 @@ void setRobotPos(const ramp_msgs::MotionState& ms)
 
   viewMinMax.push_back( util.displaceAngle(robotState.positions[2], -fovAngle/2.0) );
   viewMinMax.push_back( util.displaceAngle(robotState.positions[2], fovAngle/2.0) );
-  //////////ROS_INFO("viewMinMax: [%f,%f]", viewMinMax[0], viewMinMax[1]);
+  //ROS_INFO("viewMinMax: [%f,%f]", viewMinMax[0], viewMinMax[1]);
+  //ROS_INFO("global_frame: %s", global_frame.c_str());
 
   /* 
    * Create markers in rviz to display this information
@@ -2334,18 +2335,24 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
   // Consolidate this occupancy grid with prev ones
   nav_msgs::OccupancyGrid accumulated_grid;
+    
+  accumulated_grid = *grid;
+  global_grid = *grid;
 
   if(cropMap)
   {
+    //ROS_INFO("In if");
     /*
      * Only use half of the costmap since the kinect can only see in front of the robot
      */
-    
+
     // Update global grid
     nav_msgs::OccupancyGrid cropped;
     cropCostmap(grid, cropped);
+    //ROS_INFO("Done cropping costmap");
 
     transformCostmap(cropped);
+    //ROS_INFO("Done transforming costmap");
 
     double grid_resolution = grid->info.resolution; 
     
@@ -2355,17 +2362,17 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     // Call this
     if(use_static_map)
     {
-      int countMatches = removeStaticOccupiedPixels(global_costmap);
+      int countMatches = removeStaticOccupiedPixels(global_grid);
       //ROS_INFO("%i pixels matched and changed", countMatches);
     }
     
     
 
     //////////ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
-    accumulateCostmaps(global_costmap, prev_grids, accumulated_grid);
+    accumulateCostmaps(global_grid, prev_grids, accumulated_grid);
     
     // Done editing global_costmap
-    pub_global_costmap.publish(global_costmap);
+    pub_global_costmap.publish(global_grid);
 
     // Set global_grid 
     global_grid = global_costmap;

@@ -1325,6 +1325,7 @@ std::vector<Circle> CirclePacker::packCirsIntoPoly(Polygon poly, double min_r)
    * Create cells inside the polygon
    */
   std::vector<Cell> cells = getCellsInPolygon(poly);
+  ROS_INFO("Done getting cells in polygon");
   //cMarkers_ = drawCells(cells);
   
   /*ROS_INFO("cells.size(): %i", (int)cells.size());
@@ -1460,10 +1461,12 @@ std::vector< std::vector<Circle> > CirclePacker::goCirclePacking(double min_r)
    * Get list of Polygon objects that represent each convex hull
    */
   std::vector<Polygon> ps = getPolygonsFromContours(hull);
+  ROS_INFO("ps.size(): %i", (int)ps.size());
   for(int i=0;i<ps.size();i++)
   {
     // Get circles inside polygon
     result.push_back(packCirsIntoPoly(ps[i], min_r));
+    ROS_INFO("Done packing cirs into polygon %i", i);
   }
 
   //drawContourPoints(contours, hierarchy);

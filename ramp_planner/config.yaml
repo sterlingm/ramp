@@ -47,11 +47,11 @@ remove_outside_fov: false
 
 # if your sensor is an rgbd camera
 # crop the map so it doesn't cover behind the robot (b/c sensor cannot see there)
-crop_map: false
+crop_map: true
 
 use_static_map: false
 
-use_odom_topics: true
+use_odom_topics: false
 
 
 

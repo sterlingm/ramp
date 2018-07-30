@@ -598,9 +598,6 @@ int main(int argc, char** argv) {
 
   ros::Rate r(100);
   
-  ros::Subscriber sub_sc_     = handle.subscribe("obstacles", 1, &Planner::sensingCycleCallback,  &my_planner);
-  ros::Subscriber sub_update_ = handle.subscribe("update",    1, &Planner::updateCbControlNode,   &my_planner);
-
   ros::ServiceClient client_reset = handle.serviceClient<std_srvs::Empty>("reset_positions");
   std_srvs::Empty reset_srv;
 
@@ -641,7 +638,7 @@ int main(int argc, char** argv) {
     
     // Test case done, stop publishing obs
     my_planner.h_parameters_.setTestCase(false);
-    ROS_INFO("After setting SetTestCase(false)");
+    //ROS_INFO("After setting SetTestCase(false)");
 
     // Wait for test case to be generated
     bool tc_generated = false;
@@ -672,6 +669,9 @@ int main(int argc, char** argv) {
     ROS_INFO("Start: %s", my_planner.start_.toString().c_str());
     ROS_INFO("Goal: %s", my_planner.goal_.toString().c_str());
   
+    ros::Subscriber sub_sc_     = handle.subscribe("obstacles", 1, &Planner::sensingCycleCallback,  &my_planner);
+    ros::Subscriber sub_update_ = handle.subscribe("update",    1, &Planner::updateCbControlNode,   &my_planner);
+
 
     /*
      * Prep test
