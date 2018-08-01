@@ -259,17 +259,32 @@ def main_bhm():
     X_all = np.float_(g[:, 0:3])
     Y_all = np.float_(g[:, 3][:, np.newaxis]).ravel() #* 2 - 1
 
+
+    # Record some data
+    fitTimes = []
+    queryTimes = []
+    filterTimes = []
+    f_filterTimes = open('filterTimes.txt', 'w')
+    f_fitTimes = open('fitTimes.txt', 'w')
+    f_queryTimes = open('queryTimes.txt', 'w')
+
+    # Start training
+
     #thresh = 0
     max_t = len(np.unique(X_all[:, 0]))
     print('Total number of scans: %d' % max_t)
     for ith_scan in range(0, max_t, skip): #every other scan
+        print 'Beginning scan %d' % ith_scan
 
 
         # extract data points of the ith scan
+        tic = comp_timer.time()
         ith_scan_indx = X_all[:, 0] == ith_scan
-        print('{}th scan:\n  N={}'.format(ith_scan, np.sum(ith_scan_indx)))
         X_new = X_all[ith_scan_indx, 1:]
         y_new = Y_all[ith_scan_indx]
+        toc = comp_timer.time()
+        print("  Time elapsed (Extracting data points) = {:.0f} ms".format(1000*(toc-tic)))
+        print('{}th scan:\n  N={}'.format(ith_scan, np.sum(ith_scan_indx)))
 
         if ith_scan == 0:
             # get all data for the first scan and initialize the model
@@ -280,9 +295,15 @@ def main_bhm():
         else:
             # information filtering
             print X_new
+            tic = comp_timer.time()
             q_new = bhm_mdl.predict_proba(X_new)[:, 1]
             info_val_indx = np.absolute(q_new - y_new) > thresh
             X, y = X_new[info_val_indx, :], y_new[info_val_indx]
+            toc = comp_timer.time()
+            filterTimes.append(toc-tic)
+            filterStr = '%s\n' % (toc-tic)
+            f_filterTimes.write(filterStr)
+            print("  Time elapsed (Information filtering) = {:.0f} ms".format(1000*(toc-tic)))
 
             # Print number of new points used
             points = float(X.shape[0]) / X_new.shape[0]
@@ -310,33 +331,49 @@ def main_bhm():
         bhm_mdl.fit(X, y)
 
         toc = comp_timer.time()
-        print("  Time elapsed = {:.0f} ms".format(1000*(toc-tic)))
+        fitTimes.append(toc-tic)
+        fitStr = '%s\n' % (toc-tic)
+        f_fitTimes.write(fitStr)
+        print("  Time elapsed (Model fitting) = {:.0f} ms".format(1000*(toc-tic)))
 #
 #
 #        # query the model
-        q_resolution = 0.01
+        tic = comp_timer.time()
+        q_resolution = 0.1
         xx, yy = np.meshgrid(np.arange(cell_max_min[0], cell_max_min[1], q_resolution), np.arange(cell_max_min[2], 
             cell_max_min[3], q_resolution))
         q_x = np.hstack((xx.ravel()[:, np.newaxis], yy.ravel()[:, np.newaxis]))
         q_mn = bhm_mdl.predict_proba(q_x)[:,1]
+        toc = comp_timer.time()
+        queryTimes.append(toc-tic)
+        queryStr = '%s\n' % (toc-tic)
+        f_queryTimes.write(queryStr)
+        print("  Time elapsed (Querying model) = {:.0f} ms".format(1000*(toc-tic)))
 #
 #        # model
         pl.figure(figsize=(30,5))
 #
 #        # subplot parameters are for the whole plot
 #        # rows of subplots, columns of subplots, # of subplot
+        tic = comp_timer.time()
         pl.subplot(1,3,1)
         pl.scatter(X[:, 0], X[:, 1], c=y, cmap='jet', s=50, edgecolors='')
         pl.colorbar()
         pl.xlim([cell_max_min[0], cell_max_min[1]]); pl.ylim([cell_max_min[2], cell_max_min[3]])
+        toc = comp_timer.time()
+        print("  Time elapsed (Subplot 1) = {:.0f} ms".format(1000*(toc-tic)))
         
+        tic = comp_timer.time()
         pl.subplot(1,3,2)
 #        #pl.scatter(q_x[:, 0], q_x[:, 1], c=(q_mn*2-1), cmap='jet', s=25, 
 #        #marker='8', vmin=-1, vmax=1, edgecolors='')
         pl.scatter(q_x[:, 0], q_x[:, 1], c=(q_mn), cmap='jet', s=25, marker='8', vmin=0, vmax=1, edgecolors='')
         pl.colorbar()
         pl.xlim([cell_max_min[0], cell_max_min[1]]); pl.ylim([cell_max_min[2], cell_max_min[3]])
+        toc = comp_timer.time()
+        print("  Time elapsed (Subplot 2) = {:.0f} ms".format(1000*(toc-tic)))
         
+        tic = comp_timer.time()
         pl.subplot(1,3,3)
         #pl.scatter(q_x[:, 0], q_x[:, 1], c=np.round(q_mn*2-1, 0), cmap='jet', 
 #        #s=25, marker='8',edgecolors='')
@@ -345,6 +382,8 @@ def main_bhm():
         pl.xlim([cell_max_min[0], cell_max_min[1]]); pl.ylim([cell_max_min[2], cell_max_min[3]])
         pl.savefig(os.path.join(ros_pkg_path, data_dir_str, 'output/sim/seq_map_1iter_t' + str(ith_scan) + '.png'), 
                 bbox_inches='tight')
+        toc = comp_timer.time()
+        print("  Time elapsed (Subplot 3) = {:.0f} ms".format(1000*(toc-tic)))
         #pl.show()
 #        
         pl.close("all")
@@ -353,6 +392,15 @@ def main_bhm():
     print('Done training Hilbert map, writing map to file')
     # Write map 
     writeMap(bhm_mdl, p, os.path.join(ros_pkg_path, 'hilbert_map.csv'))
+
+    f_filterTimes.close()
+    f_fitTimes.close()
+    f_queryTimes.close()
+
+    #for i in range(0,len(filterTimes)):
+        #f_filterTimes.write(filterTimes[i]+"\n")
+        #f_fitTimes.write(fitTimes[i]+"\n")
+        #f_queryTimes.write(queryTimes[i]+"\n")
 
 
 

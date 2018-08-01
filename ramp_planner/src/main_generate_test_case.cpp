@@ -1047,10 +1047,13 @@ std::string getTestCaseInfo(TestCaseExt tc)
   for(int i=0;i<tc.obs.size();i++)
   {
     ObInfoExt o = tc.obs[i];
-    result<<" "<<o.x<<","<<o.y<<","<<o.relative_direction<<","<<o.d<<","<<o.v_i<<","<<o.v_f<<","<<o.w<<","<<o.d_s.toSec();
+    if(i>0)
+      result<<"\n";
+
+    result<<o.x<<" "<<o.y<<" "<<o.relative_direction<<" "<<o.d<<" "<<o.v_i<<" "<<o.v_f<<" "<<o.w<<" "<<o.d_s.toSec();
   }
 
-  result<<" "<<tc.d_states;
+  result<<"\n"<<tc.d_states;
   
 
   return result.str();

@@ -1276,7 +1276,7 @@ std::vector<Cell> CirclePacker::getCellsInPolygon(const Polygon& poly)
     }
   }
 
-  ROS_INFO("cellsInPolygon result.size(): %i", (int)result.size());
+  //ROS_INFO("cellsInPolygon result.size(): %i", (int)result.size());
   return result;
 }
 
@@ -1325,7 +1325,7 @@ std::vector<Circle> CirclePacker::packCirsIntoPoly(Polygon poly, double min_r)
    * Create cells inside the polygon
    */
   std::vector<Cell> cells = getCellsInPolygon(poly);
-  ROS_INFO("Done getting cells in polygon");
+  //ROS_INFO("Done getting cells in polygon");
   //cMarkers_ = drawCells(cells);
   
   /*ROS_INFO("cells.size(): %i", (int)cells.size());

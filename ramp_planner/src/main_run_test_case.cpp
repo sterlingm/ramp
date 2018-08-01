@@ -644,7 +644,7 @@ int main(int argc, char** argv) {
     bool tc_generated = false;
     while(!tc_generated)
     {
-      ROS_INFO("In while");
+      ROS_INFO("In while, tc_generated: %s", tc_generated ? "True" : "False");
       handle.getParam("/ramp/tc_generated", tc_generated);
       r.sleep();
       ros::spinOnce();

@@ -235,7 +235,7 @@ const ramp_msgs::Path Planner::getObstaclePath(const ramp_msgs::Obstacle ob, con
 
 void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
 {
-  ROS_INFO("In sensingCycleCallback");
+  //ROS_INFO("In sensingCycleCallback");
   ////ROS_INFO("msg.obstacles.size(): %i", (int) msg.obstacles.size());
   //////////ROS_INFO("msg: %s", utility_.toString(msg).c_str());
   
@@ -385,7 +385,7 @@ void Planner::sensingCycleCallback(const ramp_msgs::ObstacleList& msg)
   d.sleep();
   std::cin.get();*/
 
-  ROS_INFO("Exiting sensingCycleCallback");
+  //ROS_INFO("Exiting sensingCycleCallback");
 }
 
 
@@ -1611,7 +1611,7 @@ void Planner::imminentCollisionCallback(const ros::TimerEvent& t)
 void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg) 
 {
   t_prev_update_ = ros::Time::now();
-  ROS_INFO("In Planner::updateCbControlNode");
+  //ROS_INFO("In Planner::updateCbControlNode");
   ////ROS_INFO("latestUpdate_: %s", latestUpdate_.toString().c_str());
   ////////ROS_INFO("Time since last: %f", (ros::Time::now()-t_prev_update_).toSec());
 
@@ -1695,7 +1695,7 @@ void Planner::updateCbControlNode(const ramp_msgs::MotionState& msg)
     ////ROS_INFO("New latestUpdate_: %s", latestUpdate_.toString().c_str());
   } // end else
   
-  ROS_INFO("Exiting Planner::updateCbControlNode");
+  //ROS_INFO("Exiting Planner::updateCbControlNode");
 } // End updateCallback
 
 
