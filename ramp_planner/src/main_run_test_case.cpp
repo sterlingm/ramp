@@ -564,6 +564,7 @@ void pubObTrj(const ros::TimerEvent e, const TestCase tc)
 
 bool StageUpdateFinished()
 {
+  ROS_INFO("latestUpdate_: %s", my_planner.latestUpdate_.toString().c_str());
   return (my_planner.latestUpdate_.msg_.positions[0] < 0.02 &&
           my_planner.latestUpdate_.msg_.positions[1] < 0.02);// &&
           //my_planner.latestUpdate_.msg_.positions[2] < 0.01);
