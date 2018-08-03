@@ -46,7 +46,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
       res.feasible = false;
     }
     req.trajectory.feasible = res.feasible;
-    //ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
+    ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
     ////////ROS_INFO("performFeasibility: %f", (ros::Time::now()-t_start).toSec());
   }
 
@@ -192,7 +192,7 @@ void Evaluate::performFitnessHmap(ramp_msgs::RampTrajectory& trj, const Collisio
   // p_max is an int, convert to double
   double perc = qr.p_max_ / 100.0;
 
-  ROS_INFO("perc: %f", perc);
+  //ROS_INFO("perc: %f", perc);
   
   // Check feasibility
   if(trj.feasible)
@@ -220,7 +220,7 @@ void Evaluate::performFitnessHmap(ramp_msgs::RampTrajectory& trj, const Collisio
   bcost /= 4.94975;
   double bcost_cost = 1.0/bcost;
   double w_bcost = 0.05;
-  ROS_INFO("bcost: %f bcost_cost: %f", bcost, bcost_cost);
+  //ROS_INFO("bcost: %f bcost_cost: %f", bcost, bcost_cost);
 
   // Add boundary cost to the full cost. Do the inverse of boundary cost b/c it's a distance
   cost += (bcost_cost * w_bcost);

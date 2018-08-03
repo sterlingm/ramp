@@ -45,6 +45,59 @@ void CollisionDetection::performHmap(const ramp_msgs::RampTrajectory& trajectory
 }
 
 
+    
+void CollisionDetection::performCombined(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::CircleGroup>& packed_obs, const double& robot_radius, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result)
+{
+  result.p_max_ = 0;
+  result.innerColl_ = false;
+  result.outerColl_ = false;
+
+  for(uint8_t i=0;i<packed_obs.size();i++)
+  {
+    queryCombined(trajectory.trajectory.points, packed_obs[i], trajectory.t_start.toSec(), hmap, result);
+  }
+}
+
+void CollisionDetection::queryCombined(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const ramp_msgs::CircleGroup& ob, const double& traj_start, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result) const
+{
+  ROS_INFO("In queryCombined");
+  double t_start = segment[0].time_from_start.toSec();
+
+  std::vector<int> p_values;
+
+  for(int i=0;i<segment.size();i++)
+  {
+    const trajectory_msgs::JointTrajectoryPoint* p_i = &segment[i];
+        
+    // Get the p(x) value on the hmap
+    int i_r = (p_i->positions[1]-hmap.map.info.origin.position.y) / hmap.map.info.resolution;
+    int i_c = (p_i->positions[0]-hmap.map.info.origin.position.x) / hmap.map.info.resolution;
+    ////ROS_INFO("p: (%f,%f) i_r: %i i_c: %i", p_i->positions[0], p_i->positions[1], i_r, i_c);
+    ////ROS_INFO("origin: %f %f", hmap.map.info.origin.position.x, hmap.map.info.origin.position.y);
+
+    int i_data = (i_r * hmap.map.info.width) + i_c;
+        
+    // Push on the probability value
+    p_values.push_back(hmap.map.data[i_data]);
+  }
+
+
+  // Get max p_value
+  result.p_max_ = p_values[0];
+  for(int i=1;i<p_values.size();i++)
+  {
+    //result.p_max_ += p_values[i];
+    if(p_values[i] > result.p_max_)
+    {
+      result.p_max_ = p_values[i];
+    }
+  }
+  //result.p_max_ /= p_values.size();
+  
+
+  ROS_INFO("Exiting queryCombined");
+}
+
 
 void CollisionDetection::queryHmap(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const ramp_msgs::CircleGroup& ob, const double& traj_start, const double& robot_r, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result) const
 {

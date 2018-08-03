@@ -48,6 +48,9 @@ class CollisionDetection
     
     //OLDvoid                        performNum(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const double& robot_radius, const std::vector<double> obstacle_radii, QueryResult& result); 
 
+    
+    void performCombined(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::CircleGroup>& packed_obs, const double& robot_radius, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result);
+    void queryCombined(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const ramp_msgs::CircleGroup& ob, const double& traj_start, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result) const;
 
     void performHmap(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::CircleGroup>& packed_obs, const double& robot_radius, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result);
     void queryHmap(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const ramp_msgs::CircleGroup& ob, const double& traj_start, const double& robot_r, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result) const;

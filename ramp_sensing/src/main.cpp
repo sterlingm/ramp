@@ -54,10 +54,11 @@ std::vector<visualization_msgs::Marker> cLines;
 
 nav_msgs::OccupancyGrid global_costmap;
 nav_msgs::OccupancyGrid staticMap;
+nav_msgs::OccupancyGrid hilbertMap;
 
 Utility util;
 double rate;
-ros::Publisher pub_obj, pub_rviz, pub_cons_costmap, pub_half_costmap, pub_global_costmap;
+ros::Publisher pub_obj, pub_rviz, pub_cons_costmap, pub_half_costmap, pub_global_costmap, pub_combinedHmap;
 std::vector<Obstacle> obs;
 ramp_msgs::ObstacleList list;
 ramp_msgs::ObstacleList staticObsList;
@@ -2323,6 +2324,60 @@ int removeStaticOccupiedPixels(nav_msgs::OccupancyGrid& grid)
   return countMatches;
 }
 
+
+
+/*
+ * Hilbert map should be a global costmap
+ */
+void hilbertMapCb(const nav_msgs::OccupancyGridConstPtr grid)
+{
+  ROS_INFO("In hilbertMapCb");
+  hilbertMap = *grid;
+  ROS_INFO("hilbertMap.data.size(): %i", (int)hilbertMap.data.size());
+}
+
+
+/*
+ * grid should already be transformed to global coordinates
+ * For each occupied pixel in grid, set pixel in hmap to 1
+ */
+void combineCbAndHmap(const nav_msgs::OccupancyGrid& grid, nav_msgs::OccupancyGrid& result)
+{
+  ROS_INFO("In combineCbAndHmap");
+
+  if(hilbertMap.data.size() == 0 || grid.data.size() == 0)
+  {
+    ROS_INFO("Have not received hilbert map or global grid yet");
+    ROS_ERROR("hilbertMap.data.size(): %i grid.data.size(): %i", (int)hilbertMap.data.size(), (int)grid.data.size());
+  }
+  else if(hilbertMap.data.size() != grid.data.size())
+  {
+    ROS_ERROR("hilbertMap.data.size() != grid.data.size()");
+    ROS_ERROR("hilbertMap.data.size(): %i grid.data.size(): %i", (int)hilbertMap.data.size(), (int)grid.data.size());
+  }
+  else
+  {
+    //ROS_INFO("In else");
+    result = hilbertMap;
+    for(int i=0;i<grid.data.size();i++)
+    {
+      if(grid.data[i] > 0) 
+      {
+        result.data[i] = 100;
+        //result.data.push_back(255);
+      }
+      /*else
+      {
+        result.data.push_back(hilbertMap.data[i]);
+      }*/
+    }
+  }
+
+  ROS_INFO("Exiting combineCbAndHmap");
+}
+
+
+
 void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 {
   /*ROS_INFO("**************************************************");
@@ -2374,8 +2429,9 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     // Done editing global_costmap
     pub_global_costmap.publish(global_grid);
 
+    // Why was this here?
     // Set global_grid 
-    global_grid = global_costmap;
+    //global_grid = global_costmap;
     ////ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
     //ROS_INFO("global costmap (w,h): (%i,%i)", global_costmap.info.width, global_costmap.info.height);
     //ROS_INFO("accumulated costmap (w,h): (%i,%i)", accumulated_grid.info.width, accumulated_grid.info.height);
@@ -2454,6 +2510,9 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   
 
 
+  nav_msgs::OccupancyGrid combined;
+  combineCbAndHmap(global_grid, combined);
+  pub_combinedHmap.publish(combined);
 
 
   /*
@@ -2903,6 +2962,8 @@ int main(int argc, char** argv)
   
   ROS_INFO("Sensing module setting /ramp/sensing_ready to true");
   handle.setParam("/ramp/sensing_ready", true);
+  
+  ros::Subscriber sub_hilbertMap = handle.subscribe<nav_msgs::OccupancyGrid>("/hilbert_map_grid", 1, &hilbertMapCb);
 
   if(use_hilbert_map)
   {
@@ -2919,7 +2980,6 @@ int main(int argc, char** argv)
   // Subscribers
   ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/costmap_node/costmap/costmap", 1, &costmapCb);
   ros::Subscriber sub_robot_update = handle.subscribe<ramp_msgs::MotionState>("/updateAfterTf", 1, &robotUpdateCb);
-  //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/hilbert_map_grid", 1, &costmapCb);
   //ros::Subscriber sub_odom = handle.subscribe<nav_msgs::Odometry>("/odom", 1, &odomCb);
   //ros::Subscriber sub_costmap = handle.subscribe<nav_msgs::OccupancyGrid>("/consolidated_costmap", 1, &costmapCb);
 
@@ -2929,6 +2989,7 @@ int main(int argc, char** argv)
   pub_cons_costmap = handle.advertise<nav_msgs::OccupancyGrid>("accumulated_costmap", 2);
   pub_half_costmap = handle.advertise<nav_msgs::OccupancyGrid>("half_costmap", 2);
   pub_global_costmap = handle.advertise<nav_msgs::OccupancyGrid>("global_costmap", 2);
+  pub_combinedHmap = handle.advertise<nav_msgs::OccupancyGrid>("combined_map", 1);
 
   // Timers
   ros::Timer timer = handle.createTimer(ros::Duration(1.f / rate), publishList);
