@@ -15,7 +15,7 @@ bool firstRowDone = false;
 
 void costmapCb(const nav_msgs::OccupancyGrid grid)
 {
-  //ROS_INFO("In costmapCb");
+  ROS_INFO("In costmapCb");
 
   // Go through each cell, convert to global coordinates, and write to file
   double grid_resolution = grid.info.resolution; 
@@ -48,7 +48,7 @@ void costmapCb(const nav_msgs::OccupancyGrid grid)
   costmapTimeStep++;
   
   count++;
-  //ROS_INFO("Exiting costmapCb");
+  ROS_INFO("Exiting costmapCb");
 }
 
 void laserCb(const sensor_msgs::LaserScan scan)
@@ -112,6 +112,8 @@ int main(int argc, char** argv)
 
   f_laser_data.open("/home/sterlingm/ros_workspace/src/ramp/ramp_sensing/laser_data.csv", 
       std::ios::out | std::ios::app | std::ios::binary);
+
+  ROS_INFO("topicName: %s", topicName.c_str());
 
   ros::spin();
   return 0;

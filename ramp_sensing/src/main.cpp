@@ -2354,18 +2354,13 @@ void FillInUnknownWithHmap(const nav_msgs::OccupancyGrid& grid, nav_msgs::Occupa
   }
   else
   {
-    //ROS_INFO("In else");
     result = grid;
     for(int i=0;i<grid.data.size();i++)
     {
-      ROS_INFO("grid.data[%i]: %i", i, (uint8_t)grid.data[i]);
+      // If unknown space, then use hilbert map value (prob. of location being occupied)
       if(grid.data[i] == -1) 
       {
         result.data[i] = hilbertMap.data[i];
-      }
-      else
-      {
-        //result.data.push_back(hilbertMap.data[i]);
       }
     }
   }
