@@ -2337,6 +2337,44 @@ void hilbertMapCb(const nav_msgs::OccupancyGridConstPtr grid)
 }
 
 
+
+void FillInUnknownWithHmap(const nav_msgs::OccupancyGrid& grid, nav_msgs::OccupancyGrid& result)
+{
+  ROS_INFO("In FillInUnknownWithHmap");
+
+  if(hilbertMap.data.size() == 0 || grid.data.size() == 0)
+  {
+    ROS_INFO("Have not received hilbert map or global grid yet");
+    ROS_ERROR("hilbertMap.data.size(): %i grid.data.size(): %i", (int)hilbertMap.data.size(), (int)grid.data.size());
+  }
+  else if(hilbertMap.data.size() != grid.data.size())
+  {
+    ROS_ERROR("hilbertMap.data.size() != grid.data.size()");
+    ROS_ERROR("hilbertMap.data.size(): %i grid.data.size(): %i", (int)hilbertMap.data.size(), (int)grid.data.size());
+  }
+  else
+  {
+    //ROS_INFO("In else");
+    result = grid;
+    for(int i=0;i<grid.data.size();i++)
+    {
+      ROS_INFO("grid.data[%i]: %i", i, (uint8_t)grid.data[i]);
+      if(grid.data[i] == -1) 
+      {
+        result.data[i] = hilbertMap.data[i];
+      }
+      else
+      {
+        //result.data.push_back(hilbertMap.data[i]);
+      }
+    }
+  }
+
+  ROS_INFO("Exiting FillInUnknownWithHmap");
+}
+
+
+
 /*
  * grid should already be transformed to global coordinates
  * For each occupied pixel in grid, set pixel in hmap to 1
@@ -2366,10 +2404,10 @@ void combineCbAndHmap(const nav_msgs::OccupancyGrid& grid, nav_msgs::OccupancyGr
         result.data[i] = 100;
         //result.data.push_back(255);
       }
-      /*else
+      else
       {
         result.data.push_back(hilbertMap.data[i]);
-      }*/
+      }
     }
   }
 
@@ -2511,7 +2549,8 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
 
   nav_msgs::OccupancyGrid combined;
-  combineCbAndHmap(global_grid, combined);
+  //combineCbAndHmap(global_grid, combined);
+  FillInUnknownWithHmap(global_grid, combined);
   pub_combinedHmap.publish(combined);
 
 

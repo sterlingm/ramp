@@ -4,14 +4,14 @@
 
 <!-- Start the costmap -->
 <node name="costmap_node" pkg="costmap_2d" type="costmap_2d_node" output="screen" >
-  <rosparam file="$(find ramp_launch)/launch/costmap_param/my_rolling_costmap.yaml" command="load" />
+  <rosparam file="$(find ramp_launch)/launch/costmap_param/my_rolling_costmap_hmap.yaml" command="load" />
 </node>
 
 
 <!-- Start Gazebo simulation and missing tfs for the Turtlebot in Gazebo -->
-<include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_empty.launch" />
+<!-- <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_empty.launch" /> -->
 <!-- <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_static_obs.launch" /> -->
-<!-- <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_walls.launch" /> -->
+<include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_walls.launch" />
 <!-- <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_not_at_origin.launch" /> -->
 <node name="pub_tf_missing_turtlebot_gazebo"  pkg="ramp_sensing" type="pub_tf_missing_turtlebot_gazebo" />
 
