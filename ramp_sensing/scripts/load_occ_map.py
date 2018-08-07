@@ -38,7 +38,7 @@ def main():
 
     # For each line
     for i,l in enumerate(lines):
-        print l
+        #print l
 
         # Get values for the line
         nums = l.split(',')
@@ -59,14 +59,14 @@ def main():
             if len(nums) > 3:
                 if gamma == 0:
                     gamma = float(nums[3])
-                    print('gamma: %f' % gamma)
+                    #print('gamma: %f' % gamma)
 
     x_min = min(xs)
     x_max = max(xs)
     y_min = min(ys)
     y_max = max(ys)
 
-    print('x_min: %f x_max: %f y_min: %f y_max: %f' % (x_min, x_max, y_min, y_max))
+    #print('x_min: %f x_max: %f y_min: %f y_max: %f' % (x_min, x_max, y_min, y_max))
     
     # Set other properties of grid
     grid.header.frame_id = 'map'
