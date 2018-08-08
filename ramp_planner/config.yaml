@@ -66,6 +66,8 @@ eval_weight_D: 0.02 #0.13 #.2
 
 eval_weight_A: 0.01 #0.48 #0.01
 
+eval_weight_P: 0.2
+
 
 
 

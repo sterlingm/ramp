@@ -46,56 +46,180 @@ void CollisionDetection::performHmap(const ramp_msgs::RampTrajectory& trajectory
 
 
     
-void CollisionDetection::performCombined(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::CircleGroup>& packed_obs, const double& robot_radius, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result)
+void CollisionDetection::performUsingCombinedMap(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const double& robot_radius, const std::vector<ramp_msgs::CircleGroup> ob_cir_groups, const nav_msgs::OccupancyGrid& combinedGrid, QueryResult& result)
 {
   result.p_max_ = 0;
-  result.innerColl_ = false;
-  result.outerColl_ = false;
 
-  for(uint8_t i=0;i<packed_obs.size();i++)
+  for(uint8_t i=0;i<obstacle_trjs.size();i++)
   {
-    queryCombined(trajectory.trajectory.points, packed_obs[i], trajectory.t_start.toSec(), hmap, result);
+    queryUsingCombinedMap(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), robot_radius, ob_cir_groups[i], combinedGrid, result);
   }
 }
 
-void CollisionDetection::queryCombined(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const ramp_msgs::CircleGroup& ob, const double& traj_start, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result) const
+double CollisionDetection::queryUsingCombinedMap(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, const double& traj_start, const double& robot_r, const ramp_msgs::CircleGroup& ob_r, const nav_msgs::OccupancyGrid& combinedGrid, QueryResult& result)
 {
   ROS_INFO("In queryCombined");
-  double t_start = segment[0].time_from_start.toSec();
+  
+  float dist_threshold;// = ob_r + robot_r;
+  std::vector<geometry_msgs::Vector3> offsets = getCirOffsets(ob_r);
+  ////////ROS_INFO("ob_r: %f robot_r: %f dist_threshold: %f", ob_r, robot_r, dist_threshold);
 
+  // Trajectories start in the future, obstacle trajectories start at the present time, 
+  // set an offset for obstacle indices to account for this 
+  double  t_start   = traj_start;
+  int     j_offset  = t_start * 10.f;
+  
+  ////////////ROS_INFO("t_start: %f j_offset: %i", t_start, j_offset);
+
+  int i=0, j=0;
+
+  // Initialize to -1 because all dist values are >= 0
+  double d_min=100;
+  
+  /*
+   * Start collision checks
+   */
+  for(i=0;i<segment.size();i++) 
+  {
+    // Set obstacle index. If i+offset > trajectory size, set j to the last point on the obstacle trajectory
+    j = (i+j_offset) >= ob_trajectory.size() ? ob_trajectory.size()-1 : i+j_offset;
+
+    //////////////ROS_INFO("i: %i j: %i", i, j);
+    
+    // Get the points
+    const trajectory_msgs::JointTrajectoryPoint* p_i    = &segment[i];
+    const trajectory_msgs::JointTrajectoryPoint* p_ob   = &ob_trajectory[j];
+
+    /*
+     * *********************************************************************
+     * Set this for SL testing, change for real environments!!!!!
+     * *********************************************************************
+     */ 
+    if(p_ob->positions[0] > 2.0 || p_ob->positions[0] < 0.0 || p_ob->positions[1] > 2.0 || p_ob->positions[1] < 0.0)
+      continue;
+
+    float dist = sqrt( pow(p_i->positions.at(0) - p_ob->positions.at(0),2) + pow(p_i->positions.at(1) - p_ob->positions.at(1),2) );
+    float dist_threshold = ob_r.fitCir.radius + robot_r;
+
+    /*float distBoundary = 10000;
+    for(int r=0;r<ranges_.size();r++)
+    {
+      float dmin = fabs(p_i->positions[i] - ranges_[i].min);
+      float dmax = fabs(p_i->positions[i] - ranges_[i].max);
+
+      if(dmin < dmax && dmin < distBoundary)
+      {
+        distBoundary = dmin;
+      }
+      else if(dmax < dmin && dmax < distBoundary)
+      {
+        distBoundary = dmax;
+      }
+    }*/
+
+    //////ROS_INFO("p_i: %s", utility_.toString(*p_i).c_str());
+    //////ROS_INFO("p_j: %s", utility_.toString(*p_ob).c_str());
+    //////ROS_INFO("dist: %f", dist);*/
+    
+    // Need to set d_min even if no collision
+    // Only use the bounding circle for min distance to obstacle
+    if(dist < d_min)
+    {
+      d_min = dist;
+    }
+    /*else if(distBoundary < d_min)
+    {
+      d_min = distBoundary;
+    }*/
+    
+    /*
+     * If there is collision with the bounding circle, then
+     * check collision with packed circles
+     */
+    if(dist <= dist_threshold)
+    {
+      // For each packed circle, do collision check
+      for(int k=0;k<ob_r.packedCirs.size();k++)
+      {
+        // Set point
+        geometry_msgs::Vector3 obPoint;   
+        obPoint.x = p_ob->positions[0] + offsets[k].x;
+        obPoint.y = p_ob->positions[1] + offsets[k].y;
+
+        // Get distance between trajectory point and packed circle
+        dist = sqrt( pow(p_i->positions.at(0) - obPoint.x,2) + pow(p_i->positions.at(1) - obPoint.y,2) );
+       
+        // Check if distance is within collision threshold (based on circle radii)
+        dist_threshold = ob_r.packedCirs[k].radius + robot_r;
+        if(dist <= dist_threshold)
+        {
+          /*////////ROS_INFO("Points in collision: (%f,%f), and (%f,%f), dist: %f i: %i j: %i",
+              p_i->positions.at(0),
+              p_i->positions.at(1),
+              p_ob->positions.at(0),
+              p_ob->positions.at(1),
+              dist,
+              (int)i,
+              (int)j);*/
+          
+          result.collision_         = true;
+          result.t_firstCollision_  = p_i->time_from_start.toSec();
+          i                         = segment.size();
+          break;
+        }
+      } // end for each packed circle
+    } // end if collision with bounding circle
+  } // end for each trajectory segment point
+
+
+  /*
+   * Get the maximum probability of occupancy for each point
+   */
   std::vector<int> p_values;
 
   for(int i=0;i<segment.size();i++)
   {
     const trajectory_msgs::JointTrajectoryPoint* p_i = &segment[i];
-        
+
     // Get the p(x) value on the hmap
-    int i_r = (p_i->positions[1]-hmap.map.info.origin.position.y) / hmap.map.info.resolution;
-    int i_c = (p_i->positions[0]-hmap.map.info.origin.position.x) / hmap.map.info.resolution;
+    int i_r = (p_i->positions[1]-combinedGrid.info.origin.position.y) / combinedGrid.info.resolution;
+    int i_c = (p_i->positions[0]-combinedGrid.info.origin.position.x) / combinedGrid.info.resolution;
     ////ROS_INFO("p: (%f,%f) i_r: %i i_c: %i", p_i->positions[0], p_i->positions[1], i_r, i_c);
     ////ROS_INFO("origin: %f %f", hmap.map.info.origin.position.x, hmap.map.info.origin.position.y);
 
-    int i_data = (i_r * hmap.map.info.width) + i_c;
+    int i_data = (i_r * combinedGrid.info.width) + i_c;
         
-    // Push on the probability value
-    p_values.push_back(hmap.map.data[i_data]);
+    // If the value is between 0 and 99, then it is a hmap value
+    if( combinedGrid.data[i_data] > 0 && combinedGrid.data[i_data] < 99)
+    {
+      p_values.push_back(combinedGrid.data[i_data]);
+    }
   }
 
 
   // Get max p_value
-  result.p_max_ = p_values[0];
-  for(int i=1;i<p_values.size();i++)
+  if(p_values.size() > 0)
   {
-    //result.p_max_ += p_values[i];
-    if(p_values[i] > result.p_max_)
+    result.p_max_ = p_values[0];
+    for(int i=1;i<p_values.size();i++)
     {
-      result.p_max_ = p_values[i];
+      //result.p_max_ += p_values[i];
+      if(p_values[i] > result.p_max_)
+      {
+        result.p_max_ = p_values[i];
+      }
     }
   }
-  //result.p_max_ /= p_values.size();
+  else
+  {
+    result.p_max_ = -1;
+  }
+  // Use class member so that evaluate class can have access to it
+  p_max_ = result.p_max_;
   
 
   ROS_INFO("Exiting queryCombined");
+  return d_min;
 }
 
 
@@ -285,7 +409,7 @@ void CollisionDetection::perform(const ramp_msgs::RampTrajectory& trajectory, co
           ob.push_back(ob_a);
 
           t_start = ros::Time::now();
-          query(segment_points, ob, points_of_collision);
+          queryGetCollPoints(segment_points, ob, points_of_collision);
           t_ln_num.push_back(ros::Time::now() - t_start);
 
         }
@@ -318,7 +442,7 @@ void CollisionDetection::perform(const ramp_msgs::RampTrajectory& trajectory, co
           std::vector<trajectory_msgs::JointTrajectoryPoint> segment_points(first, last);
           
           t_start = ros::Time::now();
-          query(segment_points, obstacle_trjs[ob_i].trajectory.points, points_of_collision);
+          queryGetCollPoints(segment_points, obstacle_trjs[ob_i].trajectory.points, points_of_collision);
           t_ll_num.push_back(ros::Time::now() - t_start);
          
         }
@@ -1110,7 +1234,7 @@ void CollisionDetection::LineLineFull(const ramp_msgs::RampTrajectory& trajector
       std::vector<trajectory_msgs::JointTrajectoryPoint> segment(first, last);
 
       //////////////ROS_INFO("Calling query");
-      query(segment, ob_trajectory.trajectory.points, points_of_collision);
+      queryGetCollPoints(segment, ob_trajectory.trajectory.points, points_of_collision);
       //////////////ROS_INFO("Now collision point: (%f, %f)", points_of_collision[ points_of_collision.size()-1 ][0], points_of_collision[ points_of_collision.size()-1 ][1]);
     }
   }
@@ -1950,7 +2074,7 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
 } // End query
 
 
-void CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, std::vector< std::vector<double> >& points_of_collision) const
+void CollisionDetection::queryGetCollPoints(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, std::vector< std::vector<double> >& points_of_collision) const
 {
   ros::Time time_start = ros::Time::now();
   ////////////ROS_INFO("In CollisionDetection::query"); 
@@ -2011,148 +2135,6 @@ void CollisionDetection::query(const std::vector<trajectory_msgs::JointTrajector
     i++; 
   } // end for
 }
-
-
-/** 
- * This method returns true if there is collision between trajectory_ and the obstacle's trajectory, false otherwise 
- * The robots are treated as circles for simple collision detection
- */
-void CollisionDetection::query(const ramp_msgs::RampTrajectory& trajectory, const ramp_msgs::RampTrajectory& ob_trajectory, QueryResult& result) const 
-{
-  ros::Time time_start = ros::Time::now();
-  ////////////////ROS_INFO("In CollisionDetection::query"); 
-  ////////////////ROS_INFO("trajectory.points.size(): %i", (int)trajectory.trajectory.points.size());
-  ////////////////ROS_INFO("ob_trajectory.points.size(): %i", (int)ob_trajectory.trajectory.points.size());
-  /*if(ob_trajectory.trajectory.points.size() > 2)
-  {
-    //////////////ROS_INFO("ob_trajectory: %s", utility_.toString(ob_trajectory).c_str());
-  }*/
-
-  double t_start = trajectory.t_start.toSec();
-  int j_offset = t_start * 10.f;
-  ////////////////ROS_INFO("t_start: %f j_offset: %i", t_start, j_offset);
-
-  uint8_t t_checkColl = 3;
-
- 
-  // Find the point that ends the trajectory's non-holonomic section
-  uint16_t i_stop = 0;
-
-  // If there are no curves
-  // If there is a curve and only two knot points (curve ends traj)
-  if(t_start < 0.01)
-  {
-    ////////////////ROS_INFO("In 1st if");
-    i_stop = trajectory.i_knotPoints.at(trajectory.i_knotPoints.size()-1);
-  }
-  else if(   trajectory.curves.size() == 0 ||
-      ( trajectory.curves.size() == 1 && trajectory.i_knotPoints.size() == 2) )
-  {
-    ////////////////ROS_INFO("In 2nd if");
-    i_stop = trajectory.i_knotPoints.at(1);
-  }
-  
-  // If there's only one curve 
-  //  (If no transition traj, then two segments)
-  //  (If transition traj, then only one segment)
-  else if(trajectory.curves.size() == 1)
-  {
-    ////////////////ROS_INFO("In 3rd if");
-    i_stop = trajectory.i_knotPoints.at(2);
-  }
-
-  // If there's two curves
-  else
-  {
-    ////////////////ROS_INFO("In 4th if");
-    i_stop = trajectory.i_knotPoints.at(3);
-  }
- 
-  int j_start;
- 
-  ////////////////ROS_INFO("i_stop: %i", i_stop);
-  
-  // For every point, check circle detection on a subset of the obstacle's trajectory
-  float radius = 0.5f;
-  for(uint16_t i=0;i<i_stop;i++) 
-  {
-    
-    // Get the ith point on the trajectory
-    const trajectory_msgs::JointTrajectoryPoint* p_i = &trajectory.trajectory.points[i];
-
-    ////////////////ROS_INFO("p_i: %s", utility_.toString(p_i).c_str());
-
-    
-    // Compute which point on the obstacle trajectory to start doing collision checking
-    if(ob_trajectory.trajectory.points.size() == 1)
-    {
-      j_start = 0;
-      t_checkColl = 0;
-    }
-    else if(i <= t_checkColl)
-    {
-      j_start = 0+j_offset;
-    }
-    else
-    {
-      j_start = (i-t_checkColl)+j_offset;
-    }
-
-    ////////////////ROS_INFO("j_start: %i", j_start);
-
-    // *** Test position i for collision against some points on obstacle's trajectory ***
-    // Obstacle trajectory should already be in world coordinates!
-    for(int j = j_start;
-        j<=(i+t_checkColl+j_offset) && j<ob_trajectory.trajectory.points.size();
-        j++)
-    {
-    /*if(ob_trajectory.trajectory.points.size() > 2)
-    {
-      //////////////ROS_INFO("i: %i j: %i", i, j);
-    }*/
-
-      // Get the jth point of the obstacle's trajectory
-      const trajectory_msgs::JointTrajectoryPoint* p_ob  = &ob_trajectory.trajectory.points[j];
-
-      // Get the distance between the centers
-      float dist = sqrt( pow(p_i->positions.at(0) - p_ob->positions.at(0),2) + pow(p_i->positions.at(1) - p_ob->positions.at(1),2) );
-
-    /*if(ob_trajectory.trajectory.points.size() > 2)
-    {
-      //////////////ROS_INFO("Comparing trajectory point (%f,%f) and obstacle point (%f,%f): dist = %f", 
-          p_i.positions.at(0), p_i.positions.at(1), 
-          p_ob.positions.at(0), p_ob.positions.at(1), 
-          dist);
-    }*/
-        
-
-      // If the distance between the two centers is less than the sum of the two radii, 
-      // there is collision
-      if( dist <= radius*2 ) 
-      {
-        /*//////////ROS_INFO("Points in collision: (%f,%f), and (%f,%f), dist: %f i: %i j: %i",
-            p_i.positions.at(0),
-            p_i.positions.at(1),
-            p_ob.positions.at(0),
-            p_ob.positions.at(1),
-            dist,
-            (int)i,
-            (int)j);*/
-        result.collision_ = true;
-        result.t_firstCollision_ = p_i->time_from_start.toSec();
-        i = i_stop;
-        break;
-      } // end if
-    } // end for
-  } // end for
-
-  ////////////////ROS_INFO("result: %s", result.collision_ ? "True" : "False");
-  ////////////////ROS_INFO("Exiting CollisionDetection::query");
-  ////////////////ROS_INFO("Query Elapsed time: %f", (ros::Time::now()-time_start).toSec());
-} //End query
-
-
-
 
 
 

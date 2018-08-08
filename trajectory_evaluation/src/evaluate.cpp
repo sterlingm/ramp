@@ -141,9 +141,12 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
 
   // Check collision
   ros::Time t_numeric_start = ros::Time::now();
-  cd_.performNum(er.trajectory, er.obstacle_trjs, er.robot_radius, er.obstacle_cir_groups, qr_);
+  //cd_.performNum(er.trajectory, er.obstacle_trjs, er.robot_radius, er.obstacle_cir_groups, qr_);
+  cd_.performUsingCombinedMap(er.trajectory, er.obstacle_trjs, er.robot_radius, er.obstacle_cir_groups, combinedGrid_, qr_);
   ros::Duration d_numeric   = ros::Time::now() - t_numeric_start;
   t_numeric_.push_back(d_numeric);
+
+  ROS_INFO("p_max: %i", qr_.p_max_);
 
   ////ROS_INFO("feasible: %s", er.trajectory.feasible ? "True" : "False");
   er.trajectory.feasible            = !qr_.collision_;
@@ -406,6 +409,8 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
       T_norm_ = T;
     }
 
+    double P_max = cd_.p_max_ / 100;
+
     // Normalize terms
     T /= T_norm_;
     A /= A_norm_;
@@ -416,6 +421,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     // Weight terms
     double Tterm = T * T_weight_;
     double Aterm = A * A_weight_;
+    double Pterm = P_max * P_weight_;
 
     // new
     double Dterm = _1_D * D_weight_;

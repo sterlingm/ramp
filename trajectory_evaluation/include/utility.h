@@ -17,6 +17,7 @@
 #include <ros/console.h>
 #include "ros/ros.h"
 #include "ramp_msgs/HilbertMap.h"
+#include <nav_msgs/OccupancyGrid.h>
 
 #define PI 3.14159f
 
