@@ -2543,10 +2543,10 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   
 
 
-  nav_msgs::OccupancyGrid combined;
+  //nav_msgs::OccupancyGrid combined;
   //combineCbAndHmap(global_grid, combined);
-  FillInUnknownWithHmap(global_grid, combined);
-  pub_combinedHmap.publish(combined);
+  //FillInUnknownWithHmap(global_grid, combined);
+  //pub_combinedHmap.publish(combined);
 
 
   /*

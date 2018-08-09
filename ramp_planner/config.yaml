@@ -47,7 +47,7 @@ remove_outside_fov: false
 # crop the map so it doesn't cover behind the robot (b/c sensor cannot see there)
 crop_map: true
 
-use_hilbert_map: true
+use_hilbert_map: false
 
 use_static_map: false
 

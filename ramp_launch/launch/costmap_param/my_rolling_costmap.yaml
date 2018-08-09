@@ -29,7 +29,7 @@ costmap:
       observation_sources: scan bump
       scan:
         data_type: LaserScan
-        topic: scan_filtered
+        topic: scan
         marking: true
         clearing: true
         min_obstacle_height: 0.0

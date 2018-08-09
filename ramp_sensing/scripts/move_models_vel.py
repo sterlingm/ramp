@@ -20,7 +20,7 @@ def main():
     set_model_state = rospy.ServiceProxy('gazebo/set_model_state', SetModelState)
 
     req = GetModelState()
-    req.name = 'person_walking'
+    req.name = 'cardboard_box'
     req.relative_entity_name = 'link'
 
     # Call the service
@@ -30,22 +30,25 @@ def main():
 
     r = rospy.Duration(0.1)
 
-    for x in range(0,10):
-    
-        res = get_model_state(req.name, req.relative_entity_name)
+    inc = 0.1
+    while True:
+        for x in range(0,10):
+        
+            res = get_model_state(req.name, req.relative_entity_name)
 
-        # Set state
-        setReq = ModelState()
-        setReq.model_name = 'person_walking'
-        setReq.reference_frame = 'map'
-        setReq.pose.position.x = res.pose.position.x + 0.2
-        setReq.pose.position.y = res.pose.position.y + 0.2
+            # Set state
+            setReq = ModelState()
+            setReq.model_name = 'cardboard_box'
+            setReq.reference_frame = 'map'
+            setReq.pose.position.x = res.pose.position.x
+            setReq.pose.position.y = res.pose.position.y + inc
 
-        # Call the service
-        setRes = set_model_state(setReq)
-        print setRes.success
-    
-        rospy.sleep(r)
+            # Call the service
+            setRes = set_model_state(setReq)
+            print setRes.success
+        
+            rospy.sleep(r)
+        inc *= -1
 
 
     print "Exiting normally"

@@ -1,10 +1,10 @@
 <launch>
 
-  <!-- Run the costmap node -->
-  <node name="costmap_node" pkg="costmap_2d" type="costmap_2d_node" >
-    <rosparam file="$(find ramp_launch)/launch/costmap_param/my_costmap.yaml" command="load" />
-</node>
 
+<!-- Start the costmap -->
+<node name="costmap_node" pkg="costmap_2d" type="costmap_2d_node" output="screen" >
+  <rosparam file="$(find ramp_launch)/launch/costmap_param/my_rolling_costmap_hmap.yaml" command="load" />
+</node>
 
 </launch>
 
