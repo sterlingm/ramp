@@ -71,8 +71,8 @@ def main():
     # Set other properties of grid
     grid.header.frame_id = 'map'
     grid.info.resolution = 0.05
-    grid.info.width = ((x_max - x_min + grid.info.resolution) * 20)+1
-    grid.info.height = ((y_max - y_min + grid.info.resolution) * 20)+1
+    grid.info.width = ((x_max - x_min + grid.info.resolution) * 20)
+    grid.info.height = ((y_max - y_min + grid.info.resolution) * 20)
     #print('(x_max - x_min - grid.info.resolution): %f' % \
             #(x_max - x_min + grid.info.resolution))
     

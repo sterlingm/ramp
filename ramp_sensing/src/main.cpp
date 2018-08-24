@@ -786,8 +786,8 @@ void publishList(const ros::TimerEvent& e)
   }*/
   //ROS_INFO("List size: %i", (int)dynamicObsList.obstacles.size());
   
-  //ROS_INFO("In publishList, staticObsList.size(): %i", (int)staticObsList.obstacles.size());
-  //ROS_INFO("In publishList, dynamicObsList.size(): %i", (int)dynamicObsList.obstacles.size());
+  ROS_INFO("In publishList, staticObsList.size(): %i", (int)staticObsList.obstacles.size());
+  ROS_INFO("In publishList, dynamicObsList.size(): %i", (int)dynamicObsList.obstacles.size());
   list.obstacles.clear();
   for(int i=0;i<staticObs.size();i++)
   {
@@ -2340,7 +2340,7 @@ void hilbertMapCb(const nav_msgs::OccupancyGridConstPtr grid)
 
 void FillInUnknownWithHmap(const nav_msgs::OccupancyGrid& grid, nav_msgs::OccupancyGrid& result)
 {
-  ROS_INFO("In FillInUnknownWithHmap");
+  //ROS_INFO("In FillInUnknownWithHmap");
 
   if(hilbertMap.data.size() == 0 || grid.data.size() == 0)
   {
@@ -2365,7 +2365,7 @@ void FillInUnknownWithHmap(const nav_msgs::OccupancyGrid& grid, nav_msgs::Occupa
     }
   }
 
-  ROS_INFO("Exiting FillInUnknownWithHmap");
+  //ROS_INFO("Exiting FillInUnknownWithHmap");
 }
 
 
@@ -2407,6 +2407,25 @@ void combineCbAndHmap(const nav_msgs::OccupancyGrid& grid, nav_msgs::OccupancyGr
   }
 
   ROS_INFO("Exiting combineCbAndHmap");
+}
+
+
+void persistGridCb(const nav_msgs::OccupancyGridConstPtr grid)
+{
+  //ROS_INFO("In persistGridCb");
+  ros::Time tStart = ros::Time::now();
+  CirclePacker c(grid); // (If using modified costmap)
+  
+  c.getGroups(largeObs);
+
+  ros::Duration d = ros::Time::now() - tStart;
+  for(int i=0;i<largeObs.size();i++)
+  {
+    //ROS_INFO("Large ob %i - Center: (%f,%f) Radius: %f", i, largeObs[i].fitCir.center.x, largeObs[i].fitCir.center.y, largeObs[i].fitCir.radius);
+  }
+  //ROS_INFO("Elapsed time: %f", d.toSec());
+
+  gotPersistent = true;
 }
 
 
@@ -2543,10 +2562,13 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   
 
 
-  //nav_msgs::OccupancyGrid combined;
-  //combineCbAndHmap(global_grid, combined);
-  //FillInUnknownWithHmap(global_grid, combined);
-  //pub_combinedHmap.publish(combined);
+  if(use_hilbert_map)
+  {
+    nav_msgs::OccupancyGrid combined;
+    combineCbAndHmap(global_grid, combined);
+    FillInUnknownWithHmap(global_grid, combined);
+    pub_combinedHmap.publish(combined);
+  }
 
 
   /*
@@ -2988,7 +3010,7 @@ int main(int argc, char** argv)
       ros::Subscriber sub_staticMap = handle.subscribe<nav_msgs::OccupancyGrid>("/map", 1, &staticMapCb);
 
       ros::Rate r(100);
-      while(ros::ok() && gotPersistent == false) {ros::spinOnce(); r.sleep();ROS_INFO("In while");}
+      while(ros::ok() && gotPersistent == false) {ros::spinOnce(); r.sleep();}
       
       ROS_INFO("Got grid!");
     }

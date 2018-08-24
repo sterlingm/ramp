@@ -46,7 +46,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
       res.feasible = false;
     }
     req.trajectory.feasible = res.feasible;
-    ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
+    //ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
     ////////ROS_INFO("performFeasibility: %f", (ros::Time::now()-t_start).toSec());
   }
 
@@ -146,7 +146,7 @@ void Evaluate::performFeasibility(ramp_msgs::EvaluationRequest& er)
   ros::Duration d_numeric   = ros::Time::now() - t_numeric_start;
   t_numeric_.push_back(d_numeric);
 
-  ROS_INFO("p_max: %i", qr_.p_max_);
+  //ROS_INFO("p_max: %i", qr_.p_max_);
 
   ////ROS_INFO("feasible: %s", er.trajectory.feasible ? "True" : "False");
   er.trajectory.feasible            = !qr_.collision_;
@@ -206,7 +206,7 @@ void Evaluate::performFitnessHmap(ramp_msgs::RampTrajectory& trj, const Collisio
     
     double T = trj.trajectory.points.at(trj.trajectory.points.size()-1).time_from_start.toSec() / T_norm_;
     double w_T = 1.0;
-    ROS_INFO("T: %f w_T: %f T*w_T: %f", T, w_T, T*w_T);
+    //ROS_INFO("T: %f w_T: %f T*w_T: %f", T, w_T, T*w_T);
     
     cost += T * w_T;
   }
@@ -422,6 +422,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     double Tterm = T * T_weight_;
     double Aterm = A * A_weight_;
     double Pterm = P_max * P_weight_;
+    ROS_INFO("Pterm: %f", Pterm);
 
     // new
     double Dterm = _1_D * D_weight_;
@@ -439,7 +440,7 @@ void Evaluate::performFitness(ramp_msgs::RampTrajectory& trj, const double& offs
     ////ROS_INFO("Weighted terms T: %f A: %f D: %f", T, A, D);
 
     // Compute overall cost
-    cost = Tterm + Aterm + Dterm;
+    cost = Tterm + Aterm + Dterm + Pterm;
   }
 
   else

@@ -3505,7 +3505,7 @@ void Planner::doControlCycle(bool sendBestTraj)
 
   // Send the best trajectory and set movingOn
   //////////ROS_INFO("Sending best");
-  //ROS_INFO("bestT: %s", bestT.toString().c_str());
+  ROS_INFO("bestT: %s", bestT.toString().c_str());
   if(sendBestTraj)
   {
     sendBest();

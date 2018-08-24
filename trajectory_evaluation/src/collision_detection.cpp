@@ -58,7 +58,7 @@ void CollisionDetection::performUsingCombinedMap(const ramp_msgs::RampTrajectory
 
 double CollisionDetection::queryUsingCombinedMap(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, const double& traj_start, const double& robot_r, const ramp_msgs::CircleGroup& ob_r, const nav_msgs::OccupancyGrid& combinedGrid, QueryResult& result)
 {
-  ROS_INFO("In queryCombined");
+  //ROS_INFO("In queryCombined");
   
   float dist_threshold;// = ob_r + robot_r;
   std::vector<geometry_msgs::Vector3> offsets = getCirOffsets(ob_r);
@@ -117,9 +117,9 @@ double CollisionDetection::queryUsingCombinedMap(const std::vector<trajectory_ms
       }
     }*/
 
-    //////ROS_INFO("p_i: %s", utility_.toString(*p_i).c_str());
-    //////ROS_INFO("p_j: %s", utility_.toString(*p_ob).c_str());
-    //////ROS_INFO("dist: %f", dist);*/
+    /*ROS_INFO("p_i: %s", utility_.toString(*p_i).c_str());
+    ROS_INFO("p_j: %s", utility_.toString(*p_ob).c_str());
+    ROS_INFO("dist: %f", dist);*/
     
     // Need to set d_min even if no collision
     // Only use the bounding circle for min distance to obstacle
@@ -135,8 +135,10 @@ double CollisionDetection::queryUsingCombinedMap(const std::vector<trajectory_ms
     /*
      * If there is collision with the bounding circle, then
      * check collision with packed circles
+     * Also check if bounding circle radius is 0 b/c that means
+     * it is a static map obstacle
      */
-    if(dist <= dist_threshold)
+    if(dist <= dist_threshold || ob_r.fitCir.radius < 0.01)
     {
       // For each packed circle, do collision check
       for(int k=0;k<ob_r.packedCirs.size();k++)
@@ -170,55 +172,62 @@ double CollisionDetection::queryUsingCombinedMap(const std::vector<trajectory_ms
       } // end for each packed circle
     } // end if collision with bounding circle
   } // end for each trajectory segment point
+  //ROS_INFO("Done checking collision");
 
 
   /*
    * Get the maximum probability of occupancy for each point
+   * If the combined grid has already been used
    */
-  std::vector<int> p_values;
-
-  for(int i=0;i<segment.size();i++)
+  if(combinedGrid.data.size() > 0)
   {
-    const trajectory_msgs::JointTrajectoryPoint* p_i = &segment[i];
+    std::vector<int> p_values;
 
-    // Get the p(x) value on the hmap
-    int i_r = (p_i->positions[1]-combinedGrid.info.origin.position.y) / combinedGrid.info.resolution;
-    int i_c = (p_i->positions[0]-combinedGrid.info.origin.position.x) / combinedGrid.info.resolution;
-    ////ROS_INFO("p: (%f,%f) i_r: %i i_c: %i", p_i->positions[0], p_i->positions[1], i_r, i_c);
-    ////ROS_INFO("origin: %f %f", hmap.map.info.origin.position.x, hmap.map.info.origin.position.y);
-
-    int i_data = (i_r * combinedGrid.info.width) + i_c;
-        
-    // If the value is between 0 and 99, then it is a hmap value
-    if( combinedGrid.data[i_data] > 0 && combinedGrid.data[i_data] < 99)
+    for(int i=0;i<segment.size();i++)
     {
-      p_values.push_back(combinedGrid.data[i_data]);
-    }
-  }
+      const trajectory_msgs::JointTrajectoryPoint* p_i = &segment[i];
 
+      // Get the p(x) value on the hmap
+      int i_r = (p_i->positions[1] - combinedGrid.info.origin.position.y) / combinedGrid.info.resolution;
+      int i_c = (p_i->positions[0] - combinedGrid.info.origin.position.x) / combinedGrid.info.resolution;
+      //ROS_INFO("p: (%f,%f) i_r: %i i_c: %i", p_i->positions[0], p_i->positions[1], i_r, i_c);
+      //ROS_INFO("origin: %f %f res: %f", combinedGrid.info.origin.position.x, combinedGrid.info.origin.position.y, combinedGrid.info.resolution);
 
-  // Get max p_value
-  if(p_values.size() > 0)
-  {
-    result.p_max_ = p_values[0];
-    for(int i=1;i<p_values.size();i++)
-    {
-      //result.p_max_ += p_values[i];
-      if(p_values[i] > result.p_max_)
+      int i_data = (i_r * combinedGrid.info.width) + i_c;
+      //ROS_INFO("i_data: %i combinedGrid.data.size(): %i", i_data, (int)combinedGrid.data.size());
+          
+      // If the value is between 0 and 99, then it is a hmap value
+      if( combinedGrid.data[i_data] > 0 && combinedGrid.data[i_data] < 99)
       {
-        result.p_max_ = p_values[i];
+        p_values.push_back(combinedGrid.data[i_data]);
       }
     }
+    //ROS_INFO("Done checking p_values");
+
+
+    // Get max p_value
+    if(p_values.size() > 0)
+    {
+      result.p_max_ = p_values[0];
+      for(int i=1;i<p_values.size();i++)
+      {
+        //result.p_max_ += p_values[i];
+        if(p_values[i] > result.p_max_)
+        {
+          result.p_max_ = p_values[i];
+        }
+      }
+    }
+    else
+    {
+      result.p_max_ = -1;
+    }
+    // Use class member so that evaluate class can have access to it
+    p_max_ = result.p_max_;
   }
-  else
-  {
-    result.p_max_ = -1;
-  }
-  // Use class member so that evaluate class can have access to it
-  p_max_ = result.p_max_;
   
 
-  ROS_INFO("Exiting queryCombined");
+  //ROS_INFO("Exiting queryCombined");
   return d_min;
 }
 
@@ -1949,7 +1958,7 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
 
   //ROS_INFO("In CollisionDetection::query"); 
   ////////ROS_INFO("trajectory.points.size(): %i", (int)segment.size());
-  ////////ROS_INFO("ob_trajectory.points.size(): %i", (int)ob_trajectory.size());
+  //ROS_INFO("ob_trajectory.points.size(): %i", (int)ob_trajectory.size());
 
   /*if(ob_trajectory.trajectory.points.size() > 2)
   {
@@ -2015,9 +2024,9 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
       }
     }*/
 
-    //////ROS_INFO("p_i: %s", utility_.toString(*p_i).c_str());
-    //////ROS_INFO("p_j: %s", utility_.toString(*p_ob).c_str());
-    //////ROS_INFO("dist: %f", dist);*/
+    /*ROS_INFO("p_i: %s", utility_.toString(*p_i).c_str());
+    ROS_INFO("p_j: %s", utility_.toString(*p_ob).c_str());
+    ROS_INFO("dist: %f", dist);*/
     
     // Need to set d_min even if no collision
     // Only use the bounding circle for min distance to obstacle

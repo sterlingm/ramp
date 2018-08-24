@@ -32,7 +32,7 @@ def main():
 
     inc = 0.1
     while True:
-        for x in range(0,10):
+        for x in range(0,3):
         
             res = get_model_state(req.name, req.relative_entity_name)
 
