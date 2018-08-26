@@ -2771,7 +2771,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   }
 
 
-  ////ROS_INFO("Duration: %f", time_span.count());
+  ROS_INFO("Duration: %f", time_span.count());
   num_costmaps++;
   /*ROS_INFO("**************************************************");
   ROS_INFO("Exiting costmapCb");

@@ -17,13 +17,13 @@ only_sensing: false
 # If false, control cycles are cut off
 moving_robot: true
 
-preplanning_cycles: 20
+preplanning_cycles: 50
 
 sensing_before_control_cycle: false
 
 pop_traj_type: 1 #0=holonomic, 1=hybrid
 
-show_full_traj: false
+show_full_traj: true
 
 use_start_param: false
 
@@ -62,7 +62,7 @@ eval_weight_T: 1.0 #1 #1.75
 
 # As D weight increases, overall contribution of D to the cost decreases
 # This is because high values of D are good so we add 1/D to the fitness cost
-eval_weight_D: 0.02 #0.13 #.2
+eval_weight_D: 5.0 #0.13 #.2
 
 eval_weight_A: 0.01 #0.48 #0.01
 

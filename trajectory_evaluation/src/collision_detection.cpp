@@ -49,16 +49,23 @@ void CollisionDetection::performHmap(const ramp_msgs::RampTrajectory& trajectory
 void CollisionDetection::performUsingCombinedMap(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const double& robot_radius, const std::vector<ramp_msgs::CircleGroup> ob_cir_groups, const nav_msgs::OccupancyGrid& combinedGrid, QueryResult& result)
 {
   result.p_max_ = 0;
+  result.collision_ = false;
+  min_dist_ = 100;
 
   for(uint8_t i=0;i<obstacle_trjs.size();i++)
   {
-    queryUsingCombinedMap(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), robot_radius, ob_cir_groups[i], combinedGrid, result);
+    double d_min = queryUsingCombinedMap(trajectory.trajectory.points, obstacle_trjs[i].trajectory.points, trajectory.t_start.toSec(), robot_radius, ob_cir_groups[i], combinedGrid, result);
+    
+    if(d_min < min_dist_)
+    {
+      min_dist_ = d_min;
+    }
   }
 }
 
 double CollisionDetection::queryUsingCombinedMap(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, const double& traj_start, const double& robot_r, const ramp_msgs::CircleGroup& ob_r, const nav_msgs::OccupancyGrid& combinedGrid, QueryResult& result)
 {
-  //ROS_INFO("In queryCombined");
+  ROS_INFO("In queryCombined");
   
   float dist_threshold;// = ob_r + robot_r;
   std::vector<geometry_msgs::Vector3> offsets = getCirOffsets(ob_r);
@@ -155,14 +162,14 @@ double CollisionDetection::queryUsingCombinedMap(const std::vector<trajectory_ms
         dist_threshold = ob_r.packedCirs[k].radius + robot_r;
         if(dist <= dist_threshold)
         {
-          /*////////ROS_INFO("Points in collision: (%f,%f), and (%f,%f), dist: %f i: %i j: %i",
+          ROS_INFO("Points in collision: (%f,%f), and (%f,%f), dist: %f i: %i j: %i",
               p_i->positions.at(0),
               p_i->positions.at(1),
               p_ob->positions.at(0),
               p_ob->positions.at(1),
               dist,
               (int)i,
-              (int)j);*/
+              (int)j);
           
           result.collision_         = true;
           result.t_firstCollision_  = p_i->time_from_start.toSec();
@@ -1956,7 +1963,7 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
 {
   ros::Time time_start = ros::Time::now();
 
-  //ROS_INFO("In CollisionDetection::query"); 
+  ROS_INFO("In CollisionDetection::query"); 
   ////////ROS_INFO("trajectory.points.size(): %i", (int)segment.size());
   //ROS_INFO("ob_trajectory.points.size(): %i", (int)ob_trajectory.size());
 
@@ -2060,14 +2067,14 @@ double CollisionDetection::query(const std::vector<trajectory_msgs::JointTraject
         dist_threshold = ob_r.packedCirs[k].radius + robot_r;
         if(dist <= dist_threshold)
         {
-          /*////////ROS_INFO("Points in collision: (%f,%f), and (%f,%f), dist: %f i: %i j: %i",
+          ROS_INFO("Points in collision: (%f,%f), and (%f,%f), dist: %f i: %i j: %i",
               p_i->positions.at(0),
               p_i->positions.at(1),
               p_ob->positions.at(0),
               p_ob->positions.at(1),
               dist,
               (int)i,
-              (int)j);*/
+              (int)j);
           
           result.collision_         = true;
           result.t_firstCollision_  = p_i->time_from_start.toSec();

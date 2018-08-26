@@ -9,7 +9,7 @@ Insert::Insert(const ramp_msgs::Path p) : path_(p) {}
 const ramp_msgs::Path Insert::perform() 
 {
 
-  if(path_.points.size() < 5)
+  if(path_.points.size() < 7)
   {
     // Randomly choose two adjacent knot points
     // One index is generated randomly and the second will be the next knot point,

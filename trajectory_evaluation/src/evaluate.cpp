@@ -1,6 +1,6 @@
 #include "evaluate.h"
 
-Evaluate::Evaluate() : Q_coll_(10000.f), Q_kine_(100000.f), orientation_infeasible_(0), T_norm_(50), A_norm_(PI), D_norm_(1.0), T_weight_(1), A_weight_(1), D_weight_(1) {}
+Evaluate::Evaluate() : Q_coll_(10000.f), Q_kine_(1000.f), orientation_infeasible_(0), T_norm_(50), A_norm_(PI), D_norm_(1.0), T_weight_(1), A_weight_(1), D_weight_(1) {}
 
 void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationResponse& res)
 {
@@ -46,7 +46,7 @@ void Evaluate::perform(ramp_msgs::EvaluationRequest& req, ramp_msgs::EvaluationR
       res.feasible = false;
     }
     req.trajectory.feasible = res.feasible;
-    //ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
+    ROS_INFO("qr_.collision: %s orientation_infeasible_: %s", qr_.collision_ ? "True" : "False", orientation_infeasible_ ? "True" : "False");
     ////////ROS_INFO("performFeasibility: %f", (ros::Time::now()-t_start).toSec());
   }
 
