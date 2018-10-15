@@ -105,7 +105,7 @@ int main(int argc, char** argv)
   std::string topicName = argc > 1 ? argv[1] : "/costmap_node/costmap/costmap";
   ros::Subscriber sub_occ = handle.subscribe(topicName, 10, costmapCb);
 
-  f_data.open("/home/sterlingm/ros_workspace/src/ramp/ramp_sensing/persistent_grid.csv", 
+  f_data.open("/home/sterlingm/ros_workspace/src/ramp/ramp_sensing/static-map.csv", 
       std::ios::out | std::ios::binary);
 
   ros::spin();

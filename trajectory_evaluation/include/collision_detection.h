@@ -50,8 +50,9 @@ class CollisionDetection
     //OLDvoid                        performNum(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const double& robot_radius, const std::vector<double> obstacle_radii, QueryResult& result); 
 
     
-    void performUsingCombinedMap(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const double& robot_radius, const std::vector<ramp_msgs::CircleGroup> ob_cir_groups, const nav_msgs::OccupancyGrid& combinedGrid, QueryResult& result);
+    void performUsingCombinedMap(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::RampTrajectory>& obstacle_trjs, const double& robot_radius, const std::vector<ramp_msgs::CircleGroup> ob_cir_groups, const nav_msgs::OccupancyGrid& combinedGrid, const nav_msgs::OccupancyGrid& hmap, QueryResult& result);
     double queryUsingCombinedMap(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const std::vector<trajectory_msgs::JointTrajectoryPoint>& ob_trajectory, const double& traj_start, const double& robot_r, const ramp_msgs::CircleGroup& cirGroup, const nav_msgs::OccupancyGrid& combinedGrid, QueryResult& result);
+    double queryUsingCombinedMapNoObs(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const double& traj_start, const double& robot_r, const nav_msgs::OccupancyGrid& combinedGrid, QueryResult& result);
 
     void performHmap(const ramp_msgs::RampTrajectory& trajectory, const std::vector<ramp_msgs::CircleGroup>& packed_obs, const double& robot_radius, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result);
     void queryHmap(const std::vector<trajectory_msgs::JointTrajectoryPoint>& segment, const ramp_msgs::CircleGroup& ob, const double& traj_start, const double& robot_r, const ramp_msgs::HilbertMap& hmap, QueryResultPacked& result) const;

@@ -56,9 +56,9 @@ void laserCb(const sensor_msgs::LaserScan scan)
 
   float angle_start = scan.angle_min;
   float delta_theta = scan.angle_increment;
-  ROS_INFO("angle_start: %f delta_theta: %f", angle_start, delta_theta);
+  //ROS_INFO("angle_start: %f delta_theta: %f", angle_start, delta_theta);
 
-  ROS_INFO("range_min: %f range_max: %f", scan.range_min, scan.range_max);
+  //ROS_INFO("range_min: %f range_max: %f", scan.range_min, scan.range_max);
   
 
   for(int i=0;i<scan.ranges.size();i++)
@@ -68,8 +68,8 @@ void laserCb(const sensor_msgs::LaserScan scan)
     float x = dist * cos(angle);
     float y = dist * sin(angle);
 
-    ROS_INFO("i: %i angle: %f delta_theta*i: %f", i, angle, delta_theta*i);
-    ROS_INFO("scan.ranges[%i]: %f x: %f y: %f", i, scan.ranges[i], x, y);
+    //ROS_INFO("i: %i angle: %f delta_theta*i: %f", i, angle, delta_theta*i);
+    //ROS_INFO("scan.ranges[%i]: %f x: %f y: %f", i, scan.ranges[i], x, y);
 
     int value = scan.ranges[i] < 3.0 ? 1 : 0;
 

@@ -66,13 +66,19 @@ def main():
     y_min = min(ys)
     y_max = max(ys)
 
-    #print('x_min: %f x_max: %f y_min: %f y_max: %f' % (x_min, x_max, y_min, y_max))
+    print('x_min: %f x_max: %f y_min: %f y_max: %f' % (x_min, x_max, y_min, y_max))
     
     # Set other properties of grid
     grid.header.frame_id = 'map'
     grid.info.resolution = 0.05
-    grid.info.width = ((x_max - x_min + grid.info.resolution) * 20)
-    grid.info.height = ((y_max - y_min + grid.info.resolution) * 20)
+    # Added +1 for static map for medium env 1
+    if len(sys.argv) > 1:
+        grid.info.width = ((x_max - x_min + grid.info.resolution) * 20)+1
+        grid.info.height = ((y_max - y_min + grid.info.resolution) * 20)+1
+    else:
+        grid.info.width = ((x_max - x_min + grid.info.resolution) * 20)
+        grid.info.height = ((y_max - y_min + grid.info.resolution) * 20)
+
     #print('(x_max - x_min - grid.info.resolution): %f' % \
             #(x_max - x_min + grid.info.resolution))
     

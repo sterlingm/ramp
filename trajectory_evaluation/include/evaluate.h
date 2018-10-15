@@ -54,7 +54,7 @@ class Evaluate {
     std::vector< ros::Duration > t_analy_;
     std::vector< ros::Duration > t_numeric_;
 
-    ramp_msgs::HilbertMap hmap_;
+    nav_msgs::OccupancyGrid hmap_;
     nav_msgs::OccupancyGrid combinedGrid_;
   private:
     Utility utility_;

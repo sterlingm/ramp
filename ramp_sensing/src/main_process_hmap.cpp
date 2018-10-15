@@ -161,7 +161,7 @@ vector<cv::Point> bhFindLocalMaximum(InputArray _src,int neighbor=2)
 }
 
 
-visualization_msgs::Marker getMarker(Circle cir, int id, bool red, bool longTime=true)
+visualization_msgs::Marker getMarker(Circle cir, int id, bool red, bool longTime=false)
 {
   visualization_msgs::Marker result;
 
@@ -185,7 +185,7 @@ visualization_msgs::Marker getMarker(Circle cir, int id, bool red, bool longTime
   result.pose.orientation.y = 0.0;
   result.pose.orientation.z = 0.0;
   result.pose.orientation.w = 1.0;
-      
+
   double radius = cir.radius;
   //ROS_INFO("result info x: %f y: %f radius: %f", x, y, radius);
   
@@ -202,7 +202,7 @@ visualization_msgs::Marker getMarker(Circle cir, int id, bool red, bool longTime
   result.color.b = 0;
   result.color.a = 0.5;
   result.lifetime = longTime ? ros::Duration(120) : ros::Duration(5);
-  ROS_INFO("result.lifetime: %f", result.lifetime.toSec());
+  //ROS_INFO("result.lifetime: %f", result.lifetime.toSec());
 
 
   return result;
@@ -236,21 +236,21 @@ void hmapCombined(const ramp_msgs::HilbertMap& hmap)
   //imshow("hmap", hmap_mat);
 
   Mat hmap_thresh;
-  int thresholdV = 0;
+  int thresholdV = 25;
 
   // Does normal threshold, gives x>0
   thresholdHilbertMap(hmap_mat, hmap_thresh, thresholdV);
-  //imshow("threshold1", hmap_thresh);
-  //waitKey(0);
+  imshow("threshold1", hmap_thresh);
+  waitKey(0);
 
   Mat inv_thresh;
   // Min threshold, x<100
   threshold(hmap_mat, inv_thresh, 98, 255, CV_THRESH_BINARY_INV);
-  //imshow("threshold2", inv_thresh);
-  //waitKey(0);
+  imshow("threshold2", inv_thresh);
+  waitKey(0);
   //imshow("hmap_thresh", hmap_thresh);
   //cv::waitKey(0);
-  
+
   // Now, AND the two mats together to get the regions where 0<x<100 
   Mat hmap_regions;
   bitwise_and(hmap_thresh, inv_thresh, hmap_regions);
@@ -305,7 +305,7 @@ void hmapCombined(const ramp_msgs::HilbertMap& hmap)
     for(int j=0;j<N;j++)
     {
       //ROS_INFO("i: %i j: %i 100+j+i+N: %i 200+N+i+j: %i", i, j, 100+((j*(i+1))+j)+N, 200+N+i+j);
-      inner_radii.markers.push_back(getMarker(hmap_obs.obstacles[i].cirGroup.packedCirs[j], ++id, true, true));
+      inner_radii.markers.push_back(getMarker(hmap_obs.obstacles[i].cirGroup.packedCirs[j], ++id, true, false));
       
       // Increase radius for outer circle
       ramp_msgs::Circle inflated = hmap_obs.obstacles[i].cirGroup.packedCirs[j];
@@ -314,7 +314,7 @@ void hmapCombined(const ramp_msgs::HilbertMap& hmap)
       // Push that circle onto PackedOb vector
       hmap_obs.obstacles[i].cirGroup.packedCirs.push_back(inflated);
       
-      outer_radii.markers.push_back(getMarker(inflated, ++id, false, true));
+      outer_radii.markers.push_back(getMarker(inflated, ++id, false, false));
     }
   }
   
@@ -339,7 +339,7 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
   //imshow("hmap", hmap_mat);
 
   Mat hmap_thresh;
-  int threshold = 25;
+  int threshold = 10;
 
   // Does normal threshold
   thresholdHilbertMap(hmap_mat, hmap_thresh, threshold);
@@ -402,7 +402,7 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
     for(int j=0;j<N;j++)
     {
       //ROS_INFO("i: %i j: %i 100+j+i+N: %i 200+N+i+j: %i", i, j, 100+((j*(i+1))+j)+N, 200+N+i+j);
-      inner_radii.markers.push_back(getMarker(hmap_obs.obstacles[i].cirGroup.packedCirs[j], ++id, true, true));
+      inner_radii.markers.push_back(getMarker(hmap_obs.obstacles[i].cirGroup.packedCirs[j], ++id, true, false));
       
       // Increase radius for outer circle
       ramp_msgs::Circle inflated = hmap_obs.obstacles[i].cirGroup.packedCirs[j];
@@ -411,7 +411,7 @@ void hmapCb(const ramp_msgs::HilbertMap& hmap)
       // Push that circle onto PackedOb vector
       hmap_obs.obstacles[i].cirGroup.packedCirs.push_back(inflated);
       
-      outer_radii.markers.push_back(getMarker(inflated, ++id, false, true));
+      outer_radii.markers.push_back(getMarker(inflated, ++id, false, false));
     }
   }
   //ROS_INFO("Done creating Obstacle objects");
@@ -460,8 +460,8 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "process_hmap");
   ros::NodeHandle handle;
 
-  //ros::Subscriber sub_hmap = handle.subscribe("/hilbert_map", 10, &hmapCb);
-  ros::Subscriber sub_hmap = handle.subscribe("/hilbert_map", 10, &hmapCombined);
+  ros::Subscriber sub_hmap = handle.subscribe("/hilbert_map", 10, &hmapCb);
+  //ros::Subscriber sub_hmap = handle.subscribe("/hilbert_map", 10, &hmapCombined);
   pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1);
   pub_obs = handle.advertise<ramp_msgs::ObstacleList>("hmap_obstacles", 1);
   

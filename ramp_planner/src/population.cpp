@@ -71,6 +71,7 @@ void Population::replaceAll(const std::vector<RampTrajectory>& new_pop)
 
   // Set paths vector
   paths_.clear();
+  paths_.reserve(new_pop.size());
   for(uint8_t i=0;i<new_pop.size();i++) 
   {
     paths_.push_back(new_pop.at(i).msg_.holonomic_path);
@@ -364,7 +365,7 @@ const int Population::getSubPopIndex(const RampTrajectory& traj) const
 /** This method adds a trajectory to the population. 
  *  If the population is full, a random trajectory (that isn't the best one) is replaced
  *  Returns the index that the trajectory is added at */
-const int Population::add(const RampTrajectory& rt, bool forceMin) 
+const int Population::add(const RampTrajectory& rt, bool forceMin)
 {
   //ROS_INFO("In Population::add");
   //ROS_INFO("forceMin: %s", forceMin ? "True" : "False");
@@ -418,6 +419,10 @@ const int Population::add(const RampTrajectory& rt, bool forceMin)
         return i;
       }
     } // end if using sub-pops
+    else
+    {
+      replace(i_min, rt);
+    }
   } // end if forceMin
 
   // If full, replace a trajectory

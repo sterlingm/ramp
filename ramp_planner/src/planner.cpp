@@ -7,7 +7,7 @@
 
 Planner::Planner() : resolutionRate_(1.f / 10.f), ob_dists_timer_dur_(0.1), generation_(0), i_rt(1), goalThreshold_(0.4), num_ops_(6), D_(1.5f), 
   cc_started_(false), c_pc_(0), transThreshold_(1./50.), num_cc_(0), L_(0.33), h_traj_req_(0), h_eval_req_(0), h_control_(0), h_rviz_(0), modifier_(0), 
- delta_t_switch_(0.1), stop_(false), imminent_collision_(false), moving_on_coll_(false), log_enter_exit_(false), log_switching_(false), only_sensing_(0), id_line_list_(200000)
+ delta_t_switch_(0.1), stop_(false), imminent_collision_(false), moving_on_coll_(false), log_enter_exit_(false), log_switching_(false), only_sensing_(0), id_line_list_(200000), combinedMapReceived_(false)
 {
   imminentCollisionCycle_ = ros::Duration(1.f / 15.f);
   generationsPerCC_       = controlCycle_.toSec() / planningCycle_.toSec();
@@ -229,6 +229,13 @@ const ramp_msgs::Path Planner::getObstaclePath(const ramp_msgs::Obstacle ob, con
 }
 
 
+void Planner::combinedMapCb(const nav_msgs::OccupancyGrid msg)
+{
+  if(msg.data.size() > 0)
+  {
+    combinedMapReceived_ = true;
+  }
+}
 
 
 
@@ -1083,7 +1090,12 @@ void Planner::adaptPopulation(const MotionState& ms, const ros::Duration& d)
 
     ramp_msgs::TrajectoryRequest tr;
     buildTrajectoryRequest(paths.at(i), c, tr);
-    tr.segments = 2;
+    
+    //2 - normal adaptation segment number
+    //3 - for larger environments where we are using hilbert map information
+    //0 (all) -
+    //tr.segments = 2;
+    tr.segments = 0;
 
     tr_reqs.push_back(tr);
   }
@@ -2032,10 +2044,10 @@ void Planner::seedPopulation()
   Path p1(all);
 
 
-  /*ramp_msgs::KnotPoint kp2;
+  ramp_msgs::KnotPoint kp2;
   
-  kp2.motionState.positions.push_back(0.);
-  kp2.motionState.positions.push_back(3.);
+  kp2.motionState.positions.push_back(1.0);
+  kp2.motionState.positions.push_back(4.75);
   kp2.motionState.positions.push_back(PI/2.);
   
   kp2.motionState.velocities.push_back(0);
@@ -2049,7 +2061,7 @@ void Planner::seedPopulation()
 
   Path p2(all2);
 
-  ramp_msgs::KnotPoint kp3;
+  /*ramp_msgs::KnotPoint kp3;
   
   kp3.motionState.positions.push_back(2.f);
   kp3.motionState.positions.push_back(0.f);
@@ -2069,8 +2081,8 @@ void Planner::seedPopulation()
   /**** Create the vector of Paths ****/
 
   std::vector<Path> paths;
-  paths.push_back(p1);
-  //paths.push_back(p2);
+  //paths.push_back(p1);
+  paths.push_back(p2);
   //paths.push_back(p3);
   /************************************/
 
@@ -2905,6 +2917,7 @@ void Planner::modification()
     ros::Time t_start = ros::Time::now();
     ////ROS_INFO("Adding to pop");
     // Make sure forceMinMod is set properly
+    //ROS_INFO("forceMinMod_: %s", forceMinMod_ ? "True" : "False");
     int index = population_.add(traj_final, forceMinMod_);
     
     // No longer need to reset CC time because trajs should have same t_start
@@ -3505,7 +3518,7 @@ void Planner::doControlCycle(bool sendBestTraj)
 
   // Send the best trajectory and set movingOn
   //////////ROS_INFO("Sending best");
-  ROS_INFO("bestT: %s", bestT.toString().c_str());
+  //ROS_INFO("bestT: %s", bestT.toString().c_str());
   if(sendBestTraj)
   {
     sendBest();
@@ -4072,22 +4085,22 @@ void Planner::evaluatePopulation(bool hmap)
 
 
 		  
-void Planner::hilbertMapObsCb(const ramp_msgs::ObstacleList& hmapObs)		
+void Planner::hilbertMapObsCb(const nav_msgs::OccupancyGrid& hmap)		
 {		
-  //ROS_INFO("In Planner::hilbertMapObsCb");		
+  ROS_INFO("In Planner::hilbertMapObsCb");
  		
 		
   // Set obstacles		
-  obsHmap_ = hmapObs.obstacles;
+  //obsHmap_ = hmapObs.obstacles;
   //evaluatePopulation(true);		
   		
-  evalHMap_ = true;		
+  evalHMap_ = true;
   forceMinMod_ = true;
 
   // If we are using hmap, then the population needs to be holonomic when doing pre-planning cycles
   population_.type_ = HOLONOMIC;
   		
-  //ROS_INFO("Exiting Planner::hilbertMapObsCb");		
+  ROS_INFO("Exiting Planner::hilbertMapObsCb");		
 }
  
 
@@ -4701,7 +4714,7 @@ void Planner::go()
   evaluatePopulation(evalHMap_);
   //ROS_INFO("Initial population evaluated");
   sendPopulation();
-  //std::cin.get();
+  std::cin.get();
  
 
   // Seed the population
@@ -4724,7 +4737,7 @@ void Planner::go()
 
     //sendPopulation();
     std::cout<<"\ntransPopulation seeded! Press enter to continue\n";
-    std::cin.get();
+    //std::cin.get();
   }
 
 
@@ -4748,7 +4761,7 @@ void Planner::go()
 
   // Run # of pre planning cycles before control cycles start
   //ROS_INFO("Starting pre planning cycles");
-  ros::Rate r(20);
+  ros::Rate r(50);
   // Wait for the specified number of generations before starting CC's
   while(generation_ < num_ppcs_) 
   {
@@ -4764,10 +4777,15 @@ void Planner::go()
   }
 
   //ROS_INFO("Finished pre-planning cycles!");
-  evaluatePopulation(evalHMap_);
+  //evaluatePopulation(evalHMap_);
   ////ROS_INFO("Pop: %s", population_.toString().c_str());
   sendPopulation();
   h_parameters_.setPPCDone(true);
+  
+  // Sleep briefly and then spinOnce to get sensing cycle info
+  ros::Duration d(1);
+  d.sleep();
+  ros::spinOnce();
 
   // If we are stopping here (would only do this when using hmap obs), exit
   if(evalHMap_ && stop_after_ppcs_)
@@ -4778,6 +4796,19 @@ void Planner::go()
     exit(1);
   }
 
+  // If we are using hmaps (evalHMap_ will be true)
+  if(evalHMap_)
+  {
+    ROS_INFO("Planner waiting until a combined map is published!");
+    // Wait until we receive one combined map before starting planner
+    while(combinedMapReceived_ == false)
+    {
+      r.sleep();
+      ros::spinOnce();
+    }
+  }
+  ROS_INFO("Combined map is published!");
+
   // Stop evaluating with hilbert map and forcing the min. fit. traj to be replaced
   evalHMap_ = false;
   forceMinMod_ = false;
@@ -4787,6 +4818,7 @@ void Planner::go()
 
   // Initialze diff_ for adjustment procedures
   diff_ = diff_.zero(3);
+
   
   // Start the control cycles
   if(!only_sensing_ && moving_robot_)
@@ -4823,14 +4855,17 @@ void Planner::go()
   t_startRamp_ = high_resolution_clock::now();
 
   goalThreshold_ = 0.25;
+
+  //ros::MultiThreadedSpinner spinner(4);
+  //spinner.spinOnce();
   while( (latestUpdate_.comparePosition(goal_, false) > goalThreshold_) && ros::ok()) 
   {
+    r.sleep();
+    ros::spinOnce(); 
     if(!only_sensing_)
     {
       planningCycleCallback();
     }
-    r.sleep();
-    ros::spinOnce(); 
   } // end while
 
   /*

@@ -40,6 +40,20 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 ## as an example, message headers may need to be generated before nodes
 add_dependencies(${PROJECT_NAME} ramp_msgs_generate_messages_cpp)
 
+
+## Declare a cpp executable
+add_executable(planner_loop src/bezier_curve.cpp src/main_loop.cpp src/planner.cpp src/control_handler.cpp src/knot_point.cpp src/modification_request_handler.cpp src/modifier.cpp src/motion_state.cpp src/parameter_handler.cpp src/path.cpp src/population.cpp src/ramp_trajectory.cpp src/range.cpp src/rviz_handler.cpp src/trajectory_request_handler.cpp src/evaluation_request_handler.cpp src/utility.cpp)
+
+# Add the -std argument to compile enum
+set_target_properties(planner_loop PROPERTIES COMPILE_FLAGS -std=c++0x)
+
+## Specify libraries to link a library or executable target against
+target_link_libraries(planner_loop ${catkin_LIBRARIES} yaml-cpp)
+
+## Add cmake target dependencies of the executable/library
+## as an example, message headers may need to be generated before nodes
+add_dependencies(planner_loop ramp_msgs_generate_messages_cpp)
+
 add_executable(pub_map_odom src/main_pub_map_odom.cpp)
 target_link_libraries(pub_map_odom ${catkin_LIBRARIES})
 

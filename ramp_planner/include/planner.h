@@ -251,9 +251,10 @@ class Planner {
     void sensingCycleCallback     (const ramp_msgs::ObstacleList& msg);
     void updateCbPose(const geometry_msgs::PoseWithCovarianceStamped msg);
     void updateCbControlNode(const ramp_msgs::MotionState& msg);
+    void combinedMapCb(const nav_msgs::OccupancyGrid msg);
 
 
-    void hilbertMapObsCb(const ramp_msgs::ObstacleList& hmapObs);
+    void hilbertMapObsCb(const nav_msgs::OccupancyGrid& hmapObs);
 
 
     /** Data */
@@ -558,6 +559,7 @@ class Planner {
     bool forceMinMod_;
     bool evalHMap_;
     bool tryICLoop_;
+    bool combinedMapReceived_;
 
     double T_weight_;
     double A_weight_;

@@ -660,7 +660,7 @@ int main(int argc, char** argv) {
      */
 
     /** Initialize the Planner */
-  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, "global_frame", "odom", pt, num_ppcs, stop_after_ppcs, sensingBeforeCC, t_sc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction, try_ic_loop, T_weight, A_weight, D_weight, show_full_traj);
+    my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, "global_frame", "odom", pt, num_ppcs, stop_after_ppcs, sensingBeforeCC, t_sc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction, try_ic_loop, T_weight, A_weight, D_weight, show_full_traj);
     my_planner.modifications_   = modifications;
     my_planner.evaluations_     = evaluations;
     my_planner.seedPopulation_  = seedPopulation;

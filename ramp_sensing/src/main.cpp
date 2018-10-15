@@ -28,6 +28,7 @@ bool gotPersistent = false;
 bool use_odom_topics = false;
 bool use_hilbert_map = false;
 bool planner_started = false;
+bool detect_obs = true;
 
 
 
@@ -351,6 +352,16 @@ void loadParameters(const ros::NodeHandle& handle)
   if(handle.hasParam("ramp/use_hilbert_map"))
   {
     handle.getParam("ramp/use_hilbert_map", use_hilbert_map);
+  }
+
+
+  if(handle.hasParam("/ramp/detect_obs"))
+  {
+    handle.getParam("/ramp/detect_obs", detect_obs);
+  }
+  else
+  {
+    ////////ROS_ERROR("Did not find rosparam /ramp/use_persistent_grid");
   }
 
 
@@ -786,8 +797,8 @@ void publishList(const ros::TimerEvent& e)
   }*/
   //ROS_INFO("List size: %i", (int)dynamicObsList.obstacles.size());
   
-  ROS_INFO("In publishList, staticObsList.size(): %i", (int)staticObsList.obstacles.size());
-  ROS_INFO("In publishList, dynamicObsList.size(): %i", (int)dynamicObsList.obstacles.size());
+  //ROS_INFO("In publishList, staticObsList.size(): %i", (int)staticObsList.obstacles.size());
+  //ROS_INFO("In publishList, dynamicObsList.size(): %i", (int)dynamicObsList.obstacles.size());
   list.obstacles.clear();
   for(int i=0;i<staticObs.size();i++)
   {
@@ -1695,8 +1706,6 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
 {
   //////////ROS_INFO("In cropCostmap");
 
-  // This are the static bounds
-  // a is the lower-left corner, then go in cw order
   float res = grid->info.resolution;
   float w = grid->info.width  * res;
   float h = grid->info.height * res;
@@ -1707,8 +1716,10 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   float x_max=ranges[0].max;
   float y_max=ranges[1].max;
   
-  //////////ROS_INFO("costmap origin: (%f,%f) width: %i height: %i resolution: %f w: %f h: %f", grid->info.origin.position.x, grid->info.origin.position.y, grid->info.width, grid->info.height, grid->info.resolution, w, h);
+  //ROS_INFO("costmap origin: (%f,%f) width: %i height: %i resolution: %f w: %f h: %f", grid->info.origin.position.x, grid->info.origin.position.y, grid->info.width, grid->info.height, grid->info.resolution, w, h);
 
+  // These are the static bounds
+  // a is the lower-left corner, then go in cw order
   // a = costmap origin
   tf::Vector3 p_a(grid->info.origin.position.x, grid->info.origin.position.y, 0);
 
@@ -1742,19 +1753,30 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   float delta_x_max = fabs(x_max - p_c.getX());
   float delta_y_min = fabs(y_min - p_a.getY());
   float delta_y_max = fabs(y_max - p_c.getY());
-  //////////ROS_INFO("delta_x_min: %f delta_x_max: %f delta_y_min: %f delta_y_max: %f", delta_x_min, delta_x_max, delta_y_min, delta_y_max);
+  //ROS_INFO("delta_x_min: %f delta_x_max: %f delta_y_min: %f delta_y_max: %f", delta_x_min, delta_x_max, delta_y_min, delta_y_max);
   
   int x_min_ind = p_a.getX() < x_min ? delta_x_min / res : 0;
   int x_max_ind = p_c.getX() > x_max ? delta_x_max / res : 0;
   int y_min_ind = p_a.getY() < y_min ? delta_y_min / res : 0;
   int y_max_ind = p_c.getY() > y_max ? delta_y_max / res : 0;
-  //////////ROS_INFO("x_min_ind: %i x_max_ind: %i y_min_ind: %i y_max_ind: %i", x_min_ind, x_max_ind, y_min_ind, y_max_ind);
+  //ROS_INFO("x_min_ind: %i x_max_ind: %i y_min_ind: %i y_max_ind: %i", x_min_ind, x_max_ind, y_min_ind, y_max_ind);
 
   int width_new   = grid->info.width  - x_max_ind - x_min_ind;
   int height_new  = grid->info.height - y_max_ind - y_min_ind;
-  /*////////ROS_INFO("width_new: %i height_new: %i", width_new, height_new);
-  ////////ROS_INFO("grid->info.height-y_max_ind: %i", grid->info.height-y_max_ind);
-  ////////ROS_INFO("grid->info.width-x_max_ind: %i", grid->info.width-x_max_ind);*/
+  if(width_new > height_new)
+  {
+    width_new = height_new;
+    x_min_ind++;
+  }
+  else if(height_new > width_new)
+  {
+    height_new = width_new;
+    y_min_ind++;
+  }
+  
+  /*ROS_INFO("width_new: %i height_new: %i", width_new, height_new);
+  ROS_INFO("grid->info.height-y_max_ind: %i", grid->info.height-y_max_ind);
+  ROS_INFO("grid->info.width-x_max_ind: %i", grid->info.width-x_max_ind);*/
   for(int c=y_min_ind;c<grid->info.height-y_max_ind;c++)
   {
     int c_offset = (c*grid->info.width);
@@ -2289,7 +2311,7 @@ int removeStaticOccupiedPixels(nav_msgs::OccupancyGrid& grid)
   int drows = dy / grid.info.resolution;
   int dcols = dx / grid.info.resolution;
 
-  ROS_INFO("dx: %f dy: %f drows: %i dcols: %i", dx, dy, drows, dcols);
+  //ROS_INFO("dx: %f dy: %f drows: %i dcols: %i", dx, dy, drows, dcols);
 
   // For each point in grid
   for(int i=0;i<grid.data.size();i++)
@@ -2351,6 +2373,7 @@ void FillInUnknownWithHmap(const nav_msgs::OccupancyGrid& grid, nav_msgs::Occupa
   {
     ROS_ERROR("hilbertMap.data.size() != grid.data.size()");
     ROS_ERROR("hilbertMap.data.size(): %i grid.data.size(): %i", (int)hilbertMap.data.size(), (int)grid.data.size());
+    ROS_ERROR("grid.w: %i grid.h: %i", grid.info.width, grid.info.height);
   }
   else
   {
@@ -2381,21 +2404,23 @@ void combineCbAndHmap(const nav_msgs::OccupancyGrid& grid, nav_msgs::OccupancyGr
   if(hilbertMap.data.size() == 0 || grid.data.size() == 0)
   {
     ROS_INFO("Have not received hilbert map or global grid yet");
-    ROS_ERROR("hilbertMap.data.size(): %i grid.data.size(): %i", (int)hilbertMap.data.size(), (int)grid.data.size());
+    //ROS_ERROR("hilbertMap.data.size(): %i grid.data.size(): %i", (int)hilbertMap.data.size(), (int)grid.data.size());
   }
   else if(hilbertMap.data.size() != grid.data.size())
   {
     ROS_ERROR("hilbertMap.data.size() != grid.data.size()");
-    ROS_ERROR("hilbertMap.data.size(): %i grid.data.size(): %i", (int)hilbertMap.data.size(), (int)grid.data.size());
+    //ROS_ERROR("hilbertMap.data.size(): %i grid.data.size(): %i", (int)hilbertMap.data.size(), (int)grid.data.size());
   }
   else
   {
     //ROS_INFO("In else");
     result = hilbertMap;
+    int count=0;
     for(int i=0;i<grid.data.size();i++)
     {
       if(grid.data[i] > 0) 
       {
+        count++;
         result.data[i] = 100;
         //result.data.push_back(255);
       }
@@ -2404,9 +2429,10 @@ void combineCbAndHmap(const nav_msgs::OccupancyGrid& grid, nav_msgs::OccupancyGr
         result.data.push_back(hilbertMap.data[i]);
       }
     }
+    //ROS_INFO("Num changed pixels: %i", count);
   }
 
-  ROS_INFO("Exiting combineCbAndHmap");
+  //ROS_INFO("Exiting combineCbAndHmap");
 }
 
 
@@ -2456,6 +2482,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     // Update global grid
     nav_msgs::OccupancyGrid cropped;
     cropCostmap(grid, cropped);
+    //cropCostmapForHmapExp(grid, cropped);
     //ROS_INFO("Done cropping costmap");
 
     transformCostmap(cropped);
@@ -2565,7 +2592,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   if(use_hilbert_map)
   {
     nav_msgs::OccupancyGrid combined;
-    combineCbAndHmap(global_grid, combined);
+    //combineCbAndHmap(global_grid, combined);
     FillInUnknownWithHmap(global_grid, combined);
     pub_combinedHmap.publish(combined);
   }
@@ -2577,201 +2604,208 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
    ********************************************
    */
 
-  CirclePacker c(cg_ptr); // (If using modified costmap)
-  //CirclePacker c(grid); // (If not modifying costmap)
-  
-  // Do they have the same obstacle indices?
-  //std::vector<Circle> cirs = c.goMyBlobs();
-  cirGroups.clear();
-  cirGroups = c.getGroups(staticObs, global_grid.info.origin.position.x, global_grid.info.origin.position.y, global_grid.info.resolution);
-  polygonLines = c.polygonMarker_;
-  pLines = c.pMarkers_;
-  cLines = c.cMarkers_;
-
-  //ROS_INFO("Finished getting Circle Groups");
-  
-
-  /*ROS_INFO("cirGroups.size(): %i", (int)cirGroups.size());
-  for(int i=0;i<cirGroups.size();i++)
+  // Check if we are detecting obstacles or not
+  // Sometimes we may just want costmap information, like when we are collecting training data
+  if(detect_obs)
   {
-    ROS_INFO("cirGroups[%i].fitCir.size: %f", i, cirGroups[i].fitCir.radius);
-    ROS_INFO("cirGroups[%i].packedCirs.size(): %i", i, (int)cirGroups[i].packedCirs.size());
-  }*/
 
+    CirclePacker c(cg_ptr); // (If using modified costmap)
+    //CirclePacker c(grid); // (If not modifying costmap)
+    
+    // Do they have the same obstacle indices?
+    //std::vector<Circle> cirs = c.goMyBlobs();
+    cirGroups.clear();
+    cirGroups = c.getGroups(staticObs, global_grid.info.origin.position.x, global_grid.info.origin.position.y, global_grid.info.resolution);
+    polygonLines = c.polygonMarker_;
+    pLines = c.pMarkers_;
+    cLines = c.cMarkers_;
 
+    //ROS_INFO("Finished getting Circle Groups");
+    
 
-
-  /*
-   ********************************************
-   * Done finding circles on latest costmap
-   ********************************************
-   */
-
-  /*
-   * Convert centers and radii to the global frame
-   */ 
-  //convertGroups(global_grid, cirGroups);
-  /*for(int i=0;i<cirGroups.size();i++)
-  {
-    ////ROS_INFO("cirGroups[%i].fitCir.size: %f", i, cirGroups[i].fitCir.radius);
-  }*/
-
-
-
-   /*
-    * Check if obstacles are in viewing angle
-    */
-  if(remove_outside_fov)
-  {
-    int i=0;
-    while(i<cirGroups.size())
+    /*ROS_INFO("cirGroups.size(): %i", (int)cirGroups.size());
+    for(int i=0;i<cirGroups.size();i++)
     {
-      if(!checkViewingObstacle(cirGroups[i].fitCir))
+      ROS_INFO("cirGroups[%i].fitCir.size: %f", i, cirGroups[i].fitCir.radius);
+      ROS_INFO("cirGroups[%i].packedCirs.size(): %i", i, (int)cirGroups[i].packedCirs.size());
+    }*/
+
+
+
+
+    /*
+     ********************************************
+     * Done finding circles on latest costmap
+     ********************************************
+     */
+
+    /*
+     * Convert centers and radii to the global frame
+     */ 
+    //convertGroups(global_grid, cirGroups);
+    /*for(int i=0;i<cirGroups.size();i++)
+    {
+      ////ROS_INFO("cirGroups[%i].fitCir.size: %f", i, cirGroups[i].fitCir.radius);
+    }*/
+
+
+
+     /*
+      * Check if obstacles are in viewing angle
+      */
+    if(remove_outside_fov)
+    {
+      int i=0;
+      while(i<cirGroups.size())
       {
-        cirGroups.erase(cirGroups.begin()+i, cirGroups.begin()+i+1);
-        i--;
+        if(!checkViewingObstacle(cirGroups[i].fitCir))
+        {
+          cirGroups.erase(cirGroups.begin()+i, cirGroups.begin()+i+1);
+          i--;
+        }
+
+        i++;
       }
-
-      i++;
     }
-  }
-  //ROS_INFO("After checking viewing angle, cirGroups.size(): %i", (int)cirGroups.size());
- 
-
-  /*
-   * Data association
-   * Do the data associate before kf updates so that 
-   * 1) cir_obs.cir is set before doing update
-   * 2) the measurement for each cir_ob is correct before doing update
-   */
-  std::vector<CircleMatch> cm = dataAssociation(cirGroups);
-  //ROS_INFO("Done checking data association");
-
-
-  
-  /*
-   * Call the Kalman filter
-   */
-   std::vector<CircleGroup> circles_current = updateKalmanFilters(cirGroups, cm);
-   //ROS_INFO("After updateKalmanFilters");
-
-  
-
+    //ROS_INFO("After checking viewing angle, cirGroups.size(): %i", (int)cirGroups.size());
    
-  /*
-   * Circle positions are finalized at this point
-   */
+
+    /*
+     * Data association
+     * Do the data associate before kf updates so that 
+     * 1) cir_obs.cir is set before doing update
+     * 2) the measurement for each cir_ob is correct before doing update
+     */
+    std::vector<CircleMatch> cm = dataAssociation(cirGroups);
+    //ROS_INFO("Done checking data association");
+
+
+    
+    /*
+     * Call the Kalman filter
+     */
+     std::vector<CircleGroup> circles_current = updateKalmanFilters(cirGroups, cm);
+     //ROS_INFO("After updateKalmanFilters");
+
+    
+
+     
+    /*
+     * Circle positions are finalized at this point
+     */
 
 
 
 
-   /*
-    * Predict orientations
-    */
-   computeOrientations();
-   //ROS_INFO("After computeOrientations");
-  
-  
-  /*
-   * Predict velocities
-   */
-   std::vector<Velocity> velocities;
-   computeVelocities(cm, d_elapsed, velocities);
-   prev_velocities.push_back(velocities);
-   //ROS_INFO("After computeVelocities");
+     /*
+      * Predict orientations
+      */
+     computeOrientations();
+     //ROS_INFO("After computeOrientations");
+    
+    
+    /*
+     * Predict velocities
+     */
+     std::vector<Velocity> velocities;
+     computeVelocities(cm, d_elapsed, velocities);
+     prev_velocities.push_back(velocities);
+     //ROS_INFO("After computeVelocities");
 
 
 
 
-  // Get attachments
-  /*attachs.clear();
-  if(cirs.size() > 0)
-  {
-    c.detectAttachedCircles(cir_obs, attachs);  
-  }*/
-  /*for(int i=0;i<attachs.size();i++)
-  {
-    ////////ROS_INFO("Attachment %i:", i);
-    for(int j=0;j<attachs[i].cirs.size();j++)
+    // Get attachments
+    /*attachs.clear();
+    if(cirs.size() > 0)
     {
-      ////////ROS_INFO("%i", attachs[i].cirs[j]);
-    }
-  }*/
-
-  /*
-   * Handle attachments
-   */
-  /*for(int i=0;i<attachs.size();i++)
-  {
-    //////////ROS_INFO("Attachment %i", i);
-    // Get max speed among attached obstacles
-    int i_max_speed=0;
-    float speed_average = 0;
-    for(int j=0;j<attachs[i].cirs.size();j++)
+      c.detectAttachedCircles(cir_obs, attachs);  
+    }*/
+    /*for(int i=0;i<attachs.size();i++)
     {
-      int i_cir = attachs[i].cirs[j];
-      speed_average += cir_obs[i_cir]->vel.v;
-    }
-    speed_average /= attachs[i].cirs.size();
-
-    double theta = cir_obs[i_max_speed]->prevTheta[cir_obs[i_max_speed]->prevTheta.size()-1];
-    //////////ROS_INFO("attachs.size(): %i i: %i", (int)attachs.size(), i);
-
-    // Based on max speed, set all circles speeds and thetas in attachment
-    for(int j=0;j<attachs[i].cirs.size();j++)
-    {
-      //////////ROS_INFO("j: %i attachs[%i].cirs.size(): %i", j, i, (int)attachs[i].cirs.size());
-      int i_cir   = attachs[i].cirs[j];
-      int i_theta = cir_obs[i_cir]->prevTheta.size()-1;
-      //////////ROS_INFO("i_cir: %i i_theta: %i cir_obs.size(): %i velocities.size(): %i", i_cir, i_theta, (int)cir_obs.size(), (int)velocities.size());
-      cir_obs[ i_cir ]->vel.v = speed_average;
-      //cir_obs[ i_cir ]->theta = theta;
-
-      if(cir_obs[i_cir]->prevTheta.size() > 0)
+      ////////ROS_INFO("Attachment %i:", i);
+      for(int j=0;j<attachs[i].cirs.size();j++)
       {
-        cir_obs[ i_cir ]->prevTheta[i_theta] = theta;
+        ////////ROS_INFO("%i", attachs[i].cirs[j]);
       }
-      else
-      {
-        cir_obs[ i_cir ]->prevTheta.push_back(theta);
-      }
-      
-      velocities[ i_cir ].v = speed_average;
-    } // end inner for
-  } // end outer for*/
+    }*/
 
-  
-  /*
-   * Set previous circles
-   */
-  for(int i=0;i<cir_obs.size();i++)
-  {
-    cir_obs[i]->prevCirs.push_back(cir_obs[i]->cirGroup.fitCir);
+    /*
+     * Handle attachments
+     */
+    /*for(int i=0;i<attachs.size();i++)
+    {
+      //////////ROS_INFO("Attachment %i", i);
+      // Get max speed among attached obstacles
+      int i_max_speed=0;
+      float speed_average = 0;
+      for(int j=0;j<attachs[i].cirs.size();j++)
+      {
+        int i_cir = attachs[i].cirs[j];
+        speed_average += cir_obs[i_cir]->vel.v;
+      }
+      speed_average /= attachs[i].cirs.size();
+
+      double theta = cir_obs[i_max_speed]->prevTheta[cir_obs[i_max_speed]->prevTheta.size()-1];
+      //////////ROS_INFO("attachs.size(): %i i: %i", (int)attachs.size(), i);
+
+      // Based on max speed, set all circles speeds and thetas in attachment
+      for(int j=0;j<attachs[i].cirs.size();j++)
+      {
+        //////////ROS_INFO("j: %i attachs[%i].cirs.size(): %i", j, i, (int)attachs[i].cirs.size());
+        int i_cir   = attachs[i].cirs[j];
+        int i_theta = cir_obs[i_cir]->prevTheta.size()-1;
+        //////////ROS_INFO("i_cir: %i i_theta: %i cir_obs.size(): %i velocities.size(): %i", i_cir, i_theta, (int)cir_obs.size(), (int)velocities.size());
+        cir_obs[ i_cir ]->vel.v = speed_average;
+        //cir_obs[ i_cir ]->theta = theta;
+
+        if(cir_obs[i_cir]->prevTheta.size() > 0)
+        {
+          cir_obs[ i_cir ]->prevTheta[i_theta] = theta;
+        }
+        else
+        {
+          cir_obs[ i_cir ]->prevTheta.push_back(theta);
+        }
+        
+        velocities[ i_cir ].v = speed_average;
+      } // end inner for
+    } // end outer for*/
+
+    
+    /*
+     * Set previous circles
+     */
+    for(int i=0;i<cir_obs.size();i++)
+    {
+      cir_obs[i]->prevCirs.push_back(cir_obs[i]->cirGroup.fitCir);
+    }
+
+    // Set prev_cirs variable for data association
+    prev_valid_cirs = circles_current;
+   
+
+
+    /*
+     *  After finding velocities, populate Obstacle list
+     */  
+    populateObstacleList(velocities);
+
+
+
+    // Record duration data
+    duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tStart);
+    durs.push_back( time_span.count() );
+    
+    if(use_static_map == true && gotPersistent == false)
+    {
+      gotPersistent = true;
+    }
+
   }
 
-  // Set prev_cirs variable for data association
-  prev_valid_cirs = circles_current;
- 
 
-
-  /*
-   *  After finding velocities, populate Obstacle list
-   */  
-  populateObstacleList(velocities);
-
-
-
-  // Record duration data
-  duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now()-tStart);
-  durs.push_back( time_span.count() );
-  
-  if(use_static_map == true && gotPersistent == false)
-  {
-    gotPersistent = true;
-  }
-
-
-  ROS_INFO("Duration: %f", time_span.count());
+  //ROS_INFO("Duration: %f", time_span.count());
   num_costmaps++;
   /*ROS_INFO("**************************************************");
   ROS_INFO("Exiting costmapCb");
@@ -3024,13 +3058,14 @@ int main(int argc, char** argv)
   if(use_hilbert_map)
   {
     ROS_INFO("Sensing module is waiting for planner to start...");
-    ros::Rate rWaiting(1000);
+    ros::Rate rWaiting(100);
     while(planner_started == false)
     {
-      handle.getParam("ramp/preplanning_cycles_done", planner_started);
+      handle.getParam("/ramp/preplanning_cycles_done", planner_started);
       ros::spinOnce();
       rWaiting.sleep();
     }
+    ROS_INFO("Sensing module received param that planner is ready! planner_started: %s", planner_started ? "True" : "False");
   }
 
   // Subscribers
@@ -3055,8 +3090,8 @@ int main(int argc, char** argv)
   // Set function to run at shutdown
   signal(SIGINT, reportPredictedVelocity);
  
-  ros::Duration dd(0.5);
-  dd.sleep();
+  //ros::Duration dd(0.5);
+  //dd.sleep();
 
   // Set initial robot position
   // start vector needs to be set (usually it is obtained from rosparam)

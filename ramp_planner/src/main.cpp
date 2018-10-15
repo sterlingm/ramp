@@ -440,8 +440,8 @@ void pubStartGoalMarkers()
   goal_marker.color.a = 1;
 
   // Set lifetimes
-  start_marker.lifetime = ros::Duration(10.0);
-  goal_marker.lifetime = ros::Duration(10.0);
+  start_marker.lifetime = ros::Duration(120.0);
+  goal_marker.lifetime = ros::Duration(120.0);
 
   // Create marker array and publish
   result.markers.push_back(start_marker);
@@ -497,7 +497,9 @@ int main(int argc, char** argv)
   }
   ros::Subscriber sub_updateVel_  = handle.subscribe("update", 1, &Planner::updateCbControlNode, &my_planner);
   ros::Subscriber sub_sc_         = handle.subscribe("obstacles", 1, &Planner::sensingCycleCallback, &my_planner);
-  ros::Subscriber sub_hmap        = handle.subscribe("hmap_obstacles", 1, &Planner::hilbertMapObsCb, &my_planner);
+  //ros::Subscriber sub_hmap        = handle.subscribe("hmap_obstacles", 1, &Planner::hilbertMapObsCb, &my_planner);
+  ros::Subscriber sub_hmap        = handle.subscribe("hilbert_map_grid", 1, &Planner::hilbertMapObsCb, &my_planner);
+  ros::Subscriber sub_combined    = handle.subscribe("combined_map", 1, &Planner::combinedMapCb, &my_planner);
   ROS_INFO("Done initializing Subscribers");
 
   pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 10);
@@ -585,7 +587,7 @@ int main(int argc, char** argv)
   bool sensingReady = false;
   while(sensingReady == false && ros::ok())
   {
-    ROS_INFO("In while");
+    //ROS_INFO("In while");
     handle.param("/ramp/sensing_ready", sensingReady, false);
     ros::spinOnce();
     r.sleep();

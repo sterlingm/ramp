@@ -1,5 +1,5 @@
 # RAMP misc parameters #
-population_size: 8
+population_size: 6
 
 sub_populations: false
 
@@ -7,7 +7,7 @@ modifications: true
 
 evaluations: true
 
-seed_population: false 
+seed_population: false
 
 error_reduction: true
 
@@ -17,9 +17,9 @@ only_sensing: false
 # If false, control cycles are cut off
 moving_robot: true
 
-preplanning_cycles: 50
+preplanning_cycles: 100
 
-sensing_before_control_cycle: false
+sensing_before_control_cycle: true
 
 pop_traj_type: 1 #0=holonomic, 1=hybrid
 
@@ -31,7 +31,7 @@ stop_after_ppcs: false
 
 try_ic_loop: false
 
-fixed_control_cycle_rate: 1.2
+fixed_control_cycle_rate: 1.0
 
 sensing_cycle_rate: 10
 
@@ -47,26 +47,32 @@ remove_outside_fov: false
 # crop the map so it doesn't cover behind the robot (b/c sensor cannot see there)
 crop_map: true
 
-use_hilbert_map: false
+# Remember that the combined map is published on /combined_map 
+# Remember to set track_unknown_space = true in the costmap param file
+use_hilbert_map: true
 
 use_static_map: true
 
 use_odom_topics: false
+
+# This is here for cases when we just want to record costmap data w/o worrying about the obstacles generated or for recording static maps
+# Should only be false in very rare circumstances
+detect_obs: true
 
 
 
 
 # Evaluation weight parameters #
 
-eval_weight_T: 1.0 #1 #1.75
+eval_weight_T: 1.00 #1 #1.75
 
 # As D weight increases, overall contribution of D to the cost decreases
 # This is because high values of D are good so we add 1/D to the fitness cost
-eval_weight_D: 5.0 #0.13 #.2
+eval_weight_D: 0.00 #0.13 #.2
 
-eval_weight_A: 0.01 #0.48 #0.01
+eval_weight_A: 0.00 #0.48 #0.01
 
-eval_weight_P: 0.0
+eval_weight_P: 2.50
 
 
 
