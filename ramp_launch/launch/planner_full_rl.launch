@@ -1,0 +1,37 @@
+<launch>
+
+<!-- LOAD PARAMETERS -->
+
+<!-- <param name="use_sim_time" value="False"/> -->
+
+<!-- Load the planner's config.yaml file and robot_0.yaml file -->
+<include file="$(find ramp_launch)/launch/planner_parameters.launch" />
+
+
+<!-- START NODES -->
+
+
+<!-- Reset odometry -->
+<node name="reset_odom" pkg="ramp_control" type="reset_odom.py" output="log" />
+
+
+<!-- Trajectory Generator -->
+<node name="trajectory_generator" pkg="trajectory_generator" type="trajectory_generator" output="screen" />
+
+<!-- Path Modification -->
+<node name="path_modification" pkg="path_modification" type="path_modification" output="screen" />
+
+<!-- Evaluation -->
+<node name="trajectory_evaluation" pkg="trajectory_evaluation" type="trajectory_evaluation" output="screen" />
+
+<!-- Sensing -->
+<node name="ramp_sensing" pkg="ramp_sensing" type="ramp_sensing" output="screen" />
+
+<!-- Planner -->
+<node name="ramp_planner" pkg="ramp_planner" type="ramp_planner" output="screen" />
+
+<!-- map->odom transform -->
+<node name="pub_map_odom" pkg="ramp_planner" type="pub_map_odom" output="screen" />
+
+
+</launch>
