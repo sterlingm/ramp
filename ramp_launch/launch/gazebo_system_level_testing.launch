@@ -4,7 +4,7 @@
 
 <!-- Start the costmap -->
 <node name="costmap_node" pkg="costmap_2d" type="costmap_2d_node" output="screen" >
-  <rosparam file="$(find ramp_launch)/launch/costmap_param/my_rolling_costmap.yaml" command="load" />
+  <rosparam file="$(find ramp_launch)/launch/costmap_param/system_level_gazebo_costmap.yaml" command="load" />
 </node>
 
 
