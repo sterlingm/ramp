@@ -564,8 +564,8 @@ void pubObTrj(const ros::TimerEvent e, const TestCase tc)
 
 bool StageUpdateFinished()
 {
-  return (my_planner.latestUpdate_.msg_.positions[0] < 0.02 &&
-          my_planner.latestUpdate_.msg_.positions[1] < 0.02);// &&
+  return (my_planner.latestUpdate_.msg_.positions[0] < 0.1 &&
+          my_planner.latestUpdate_.msg_.positions[1] < 0.1);// &&
           //my_planner.latestUpdate_.msg_.positions[2] < 0.01);
 }
 
@@ -634,7 +634,7 @@ int main(int argc, char** argv) {
   ros::Duration d(1);
   for(int i=0;i<num_tests;i++)
   {
-    ROS_INFO("i: %i", i);
+    ROS_INFO("Run: i: %i", i);
     
     // Test case done, stop publishing obs
     my_planner.h_parameters_.setTestCase(false);
@@ -644,7 +644,7 @@ int main(int argc, char** argv) {
     bool tc_generated = false;
     while(!tc_generated)
     {
-      ROS_INFO("In while, tc_generated: %s", tc_generated ? "True" : "False");
+      ROS_INFO("Run: In while, tc_generated: %s", tc_generated ? "True" : "False");
       handle.getParam("/ramp/tc_generated", tc_generated);
       r.sleep();
       ros::spinOnce();
@@ -665,9 +665,9 @@ int main(int argc, char** argv) {
     my_planner.evaluations_     = evaluations;
     my_planner.seedPopulation_  = seedPopulation;
 
-    ROS_INFO("Planner initialized");
-    ROS_INFO("Start: %s", my_planner.start_.toString().c_str());
-    ROS_INFO("Goal: %s", my_planner.goal_.toString().c_str());
+    ROS_INFO("Run: Planner initialized");
+    ROS_INFO("Run: Start: %s", my_planner.start_.toString().c_str());
+    ROS_INFO("Run: Goal: %s", my_planner.goal_.toString().c_str());
   
     ros::Subscriber sub_sc_     = handle.subscribe("obstacles", 1, &Planner::sensingCycleCallback,  &my_planner);
     ros::Subscriber sub_update_ = handle.subscribe("update",    1, &Planner::updateCbControlNode,   &my_planner);
@@ -679,14 +679,14 @@ int main(int argc, char** argv) {
     // Initialize a population, perform a control cycle, and get the point at the end of current trajectory
     auto p_next_cc = my_planner.prepareForTestCase();
 
-    ROS_INFO("Done with prepareForTestCase");
-    ROS_INFO("Setting tc_ready param to true");
+    ROS_INFO("Run: Done with prepareForTestCase");
+    ROS_INFO("Run: Setting tc_ready param to true");
 
     // Toggle flag saying we are ready to start a new test case
     my_planner.h_parameters_.setTestCase(true); 
 
     // Wait for static obs
-    ROS_INFO("Waiting for param /ramp/static-obs to be true");
+    ROS_INFO("Run: Waiting for param /ramp/static-obs to be true");
     bool stat_obs = false;
     while(stat_obs == false)
     {

@@ -1276,6 +1276,50 @@ std::string getTestCaseInfo(TestCaseExt tc)
 
 
 
+/*
+ * Read collAmongObs file in the abtc directory and get the index of all test cases with no obstacle collision
+ */ 
+std::vector<int> getTestCasesNoObColl(std::string abtcDir)
+{
+  std::vector<int> result;
+
+  std::string filename = abtcDir + "/collAmongObs.txt";
+  std::ifstream f_info;
+  f_info.open(filename, std::ios::in | std::ios::binary); 
+  if(f_info.is_open() == 0)
+  {
+    ROS_ERROR("Could not open file: %s", filename.c_str());
+  } 
+  else
+  {
+    ROS_INFO("file open good");
+  }
+
+  
+  int i=0;
+  std::string temp;
+
+  while(std::getline(f_info, temp, '\n'))
+  {
+    ROS_INFO("i: %i temp: %s", i, temp.c_str());
+    
+    if(std::atoi(temp.c_str()) == 0)
+    {
+      result.push_back(i);
+    }
+
+    i++;
+  }
+
+  for(int i=0;i<result.size();i++)
+  {
+    ROS_INFO("result[%i]: %i", i, result[i]);
+  }
+
+  return result;
+}
+
+
 
 void shutdown(int sigint)
 {
@@ -1342,8 +1386,8 @@ int main(int argc, char** argv) {
 
   //ros::Timer collTimer = handle.createTimer(collisionCb);
   //ob_trj_timer = handle.createTimer(ros::Duration(1./20.), boost::bind(pubObTrjExt, _1, tc));
-  
-  
+ 
+
   std::string path = "/home/sterlingm/ros_workspace/src/ramp/data/system-level-testing/ext/0-1-3/";
 
 
@@ -1400,6 +1444,13 @@ int main(int argc, char** argv) {
     icAtColl.push_back(false);
   }
 
+
+  ROS_INFO("Calling getTestCasesNoObColl");
+  // Build an index list
+  //
+  std::vector<int> noObCollTestInd = getTestCasesNoObColl("/home/sterlingm/ros_workspace/src/ramp/data/system-level-testing/ext/0-1-3");
+
+
   ros::Duration d_history(1);
   ros::Duration d_test_case_thresh(20);
   for(int i=0;i<num_tests;i++)
@@ -1437,7 +1488,7 @@ int main(int argc, char** argv) {
     //TestCaseTwo tc = generateTestCase(initial_state, num_obs);
     ramp_msgs::MotionState initial_state;
     double d_states;
-    TestCaseExt tc = generateTestCaseExt(initial_state, i, num_obs, true, d_states);
+    TestCaseExt tc = generateTestCaseExt(initial_state, noObCollTestInd[i], num_obs, true, d_states);
     tc.d_states = ros::Duration(d_states);
     tc.abtc = abtc; 
     ROS_INFO("Done generate test case");
