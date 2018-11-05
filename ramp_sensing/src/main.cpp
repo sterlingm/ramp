@@ -1713,8 +1713,8 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
 
   float x_min=ranges[0].min;
   float y_min=ranges[1].min;
-  float x_max=ranges[0].max;
-  float y_max=ranges[1].max;
+  float x_max=ranges[0].max+0.25;
+  float y_max=ranges[1].max+0.25;
   
   //ROS_INFO("costmap origin: (%f,%f) width: %i height: %i resolution: %f w: %f h: %f", grid->info.origin.position.x, grid->info.origin.position.y, grid->info.width, grid->info.height, grid->info.resolution, w, h);
 

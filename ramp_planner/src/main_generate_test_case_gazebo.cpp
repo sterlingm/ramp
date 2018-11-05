@@ -1103,11 +1103,9 @@ void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
       trajectory_msgs::JointTrajectoryPoint p = tc.ob_trjs[i].trajectory.points[temp_index]; 
 
       std::ostringstream name;
-      name<<"cardboard_box";
-      if(i>0)
-      {
-        name<<"_"<<i;
-      }
+      name<<"system_level_obstacle";
+      //if(i>0)
+      name<<"_"<<i;
       
       // Don't need to build an obstacle msg, need to move in Gazebo
       gazebo_msgs::SetModelState setModelState;
@@ -1589,9 +1587,9 @@ int main(int argc, char** argv) {
     {
       obs_stat.obstacles.push_back(getStaticOb(tc.obs[i].msg));
       std::ostringstream name;
-      name<<"cardboard_box";
-      if(i>0)
-        name<<"_"<<i;
+      name<<"system_level_obstacle";
+      //if(i>0)
+      name<<"_"<<i;
       setStaticObGazebo(tc.obs[i].msg, name.str());
     }
     ROS_INFO("Generate: obs_stat.size(): %i", (int)obs_stat.obstacles.size());
