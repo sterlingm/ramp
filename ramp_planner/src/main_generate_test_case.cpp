@@ -453,8 +453,8 @@ ObInfoExt generateObInfoGridExt(const MotionState robot_state)
 
   
   // Set speeds
-  Range v(0, 0.5);
-  Range w(-PI/2.f, PI/2.f);
+  Range v(0.1, 0.5);
+  Range w(-PI/4.f, PI/4.f);
 
   result.x = ob_x;
   result.y = ob_y;
