@@ -1107,7 +1107,7 @@ int main(int argc, char** argv) {
   checkCollTimer.stop();
   checkCollAmongObsTimer.stop();
   
-  int num_tests = 35;
+  int num_tests = 65;
 
 
   // Make an ObstacleList Publisher
@@ -1131,7 +1131,7 @@ int main(int argc, char** argv) {
       std::ios::out | std::ios::app | std::ios::binary);
   
   std::ofstream f_feasible;
-  f_feasible.open(path + "feasible.txt", std::ios::out 
+  f_feasible.open(path + "feasible.txt", std::ios::out
       | std::ios::app | std::ios::binary);
 
   std::ofstream f_time_left;

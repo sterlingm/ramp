@@ -533,7 +533,7 @@ ObInfoExt generateObInfoGridExt(const MotionState robot_state)
 
   // Set durations
   // ***
-  Range durs(0,5);
+  Range durs(0,3);
   result.d_s = ros::Duration(durs.random());
   //result.d_vi = ros::Duration(durs.random());
   //result.d_vf = ros::Duration(durs.random());
@@ -1086,9 +1086,9 @@ void pubObTrjExt(const ros::TimerEvent e, TestCaseExt& tc)
  */
 void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
 {
-  ROS_INFO("In pubObTrjGazebo");
+  /*ROS_INFO("In pubObTrjGazebo");
   ROS_INFO("tc.t_begin: %f", tc.t_begin.toSec());
-  ROS_INFO("ros::Time::now(): %f", ros::Time::now().toSec());
+  ROS_INFO("ros::Time::now(): %f", ros::Time::now().toSec());*/
 
   ros::Duration d_elapsed = ros::Time::now() - tc.t_begin;
 
@@ -1096,13 +1096,13 @@ void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
   
   for(int i=0;i<tc.ob_trjs.size();i++)
   {
-    ROS_INFO("Elapsed time: %f",(ros::Time::now() - tc.t_begin).toSec());
+    //ROS_INFO("Elapsed time: %f",(ros::Time::now() - tc.t_begin).toSec());
     double d_elap_ob = d_elapsed.toSec() - tc.obs[i].d_s.toSec();
     int index = d_elap_ob*10;
 
     if( (ros::Time::now() - tc.t_begin).toSec() > tc.obs[i].d_s.toSec())
     {
-      ROS_INFO("In if");
+      //ROS_INFO("In if");
 
       int temp_index = index >= ((int)tc.ob_trjs[i].trajectory.points.size()-1) ? tc.ob_trjs[i].trajectory.points.size()-1 : 
         index;
@@ -1149,11 +1149,7 @@ void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
 
         if(setModelSrv.call(setModelState))
         {
-          ROS_INFO("Set state");
-        }
-        else
-        {
-          ROS_INFO("Problem setting state");
+          //ROS_INFO("Set state");
         }
 
         tc.obs[i].last_index = temp_index;
@@ -1161,7 +1157,7 @@ void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
     } // end if
   } // end for
 
-  ROS_INFO("Exiting pubObTrjGazebo");
+  //ROS_INFO("Exiting pubObTrjGazebo");
 }
 
 
@@ -1394,7 +1390,7 @@ int main(int argc, char** argv) {
   checkCollTimer.stop();
   checkCollAmongObsTimer.stop();
   
-  int num_tests = 35;
+  int num_tests = 63;
 
 
   // Make an ObstacleList Publisher
@@ -1417,7 +1413,7 @@ int main(int argc, char** argv) {
   //ob_trj_timer = handle.createTimer(ros::Duration(1./20.), boost::bind(pubObTrjExt, _1, tc));
  
 
-  std::string path = "/home/sterlingm/ros_workspace/src/ramp/data/system-level-testing/ext/0-1-3/";
+  std::string path = "/home/sterlingm/ros_workspace/src/ramp/data/system-level-testing/gazebo/ext/0-1-3/";
 
 
   // Open files for data
