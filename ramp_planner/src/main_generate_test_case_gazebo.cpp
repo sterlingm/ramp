@@ -5,6 +5,7 @@
 
 //gaz
 #include <gazebo_msgs/SetModelState.h>
+#include <gazebo_msgs/GetModelState.h>
  
 
 Utility utility;
@@ -46,6 +47,7 @@ std::vector<bool> icAtColl;
 MotionState latestUpdate;
 
 ros::ServiceClient setModelSrv;
+ros::ServiceClient getModelSrv;
 
 // Initializes a vector of Ranges that the Planner is initialized with
 void initDOF(const std::vector<double> dof_min, const std::vector<double> dof_max) 
@@ -351,6 +353,8 @@ struct ObInfoExt
   ros::Duration d_vf;
   
   ramp_msgs::Obstacle msg;
+
+  int last_index=0;
   
   bool faster;
 };
@@ -1060,7 +1064,8 @@ void pubObTrjExt(const ros::TimerEvent e, TestCaseExt& tc)
       }
 
       //ROS_INFO("ob: %s", utility.toString(ob.ob_ms).c_str());
-     
+      
+
       tc.obs[i].msg = ob;
       tc.ob_list.obstacles[i] = ob;
 
@@ -1086,6 +1091,8 @@ void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
   ROS_INFO("ros::Time::now(): %f", ros::Time::now().toSec());
 
   ros::Duration d_elapsed = ros::Time::now() - tc.t_begin;
+      
+  double dRobotThreshold = 0.5;
   
   for(int i=0;i<tc.ob_trjs.size();i++)
   {
@@ -1099,35 +1106,58 @@ void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
 
       int temp_index = index >= ((int)tc.ob_trjs[i].trajectory.points.size()-1) ? tc.ob_trjs[i].trajectory.points.size()-1 : 
         index;
+
+      if(temp_index - tc.obs[i].last_index > 2)
+      {
+        temp_index = tc.obs[i].last_index;
+      }
         
       trajectory_msgs::JointTrajectoryPoint p = tc.ob_trjs[i].trajectory.points[temp_index]; 
+
+      globalTc.obs[i].msg.ob_ms.positions = p.positions;
 
       std::ostringstream name;
       name<<"system_level_obstacle";
       //if(i>0)
       name<<"_"<<i;
       
-      // Don't need to build an obstacle msg, need to move in Gazebo
-      gazebo_msgs::SetModelState setModelState;
+      
+      // Get the position of the obstacle in gazebo
+      gazebo_msgs::GetModelState getModelState;
       gazebo_msgs::ModelState modelState; 
       modelState.model_name = name.str();
-      modelState.reference_frame = "map";
-      modelState.pose.position.x = p.positions[0];
-      modelState.pose.position.y = p.positions[1];
 
-      setModelState.request.model_state = modelState;
+      getModelState.request.model_name = name.str();
+      
+      getModelSrv.call(getModelState);
 
-      if(setModelSrv.call(setModelState))
+      // Get distance to robot
+      double dRobot = sqrt( pow( getModelState.response.pose.position.x - latestUpdate.msg_.positions[0], 2) + pow(getModelState.response.pose.position.y - latestUpdate.msg_.positions[1], 2) );
+
+
+      if(dRobot > dRobotThreshold)
       {
-        ROS_INFO("Set state");
-      }
-      else
-      {
-        ROS_INFO("Problem setting state");
-      }
+        // Don't need to build an obstacle msg, need to move in Gazebo
+        gazebo_msgs::SetModelState setModelState;
+        gazebo_msgs::ModelState modelState; 
+        modelState.model_name = name.str();
+        modelState.reference_frame = "map";
+        modelState.pose.position.x = p.positions[0];
+        modelState.pose.position.y = p.positions[1];
 
+        setModelState.request.model_state = modelState;
 
+        if(setModelSrv.call(setModelState))
+        {
+          ROS_INFO("Set state");
+        }
+        else
+        {
+          ROS_INFO("Problem setting state");
+        }
 
+        tc.obs[i].last_index = temp_index;
+      } // end if greater than distance threshold
     } // end if
   } // end for
 
@@ -1375,6 +1405,7 @@ int main(int argc, char** argv) {
 
   //gaz
   setModelSrv = handle.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
+  getModelSrv = handle.serviceClient<gazebo_msgs::GetModelState>("/gazebo/get_model_state");
 
   ROS_INFO("Created serviceClient");
 
@@ -1677,6 +1708,9 @@ int main(int argc, char** argv) {
 
     ROS_INFO("Generate:Test case done, setting flags back to false");
 
+    // Set dy-obs param false
+    ros::param::set("/ramp/dy_obs", false);
+
     // Print out collision info
     for(int c=0;c<colls.size();c++)
     {
@@ -1684,8 +1718,11 @@ int main(int argc, char** argv) {
       ROS_INFO("icAtColl[%i]: %s", c, icAtColl[c] ? "True" : "False");
     }
 
-    // Set dy-obs param false
-    ros::param::set("/ramp/dy_obs", false);
+    // Set last_index values back to 0
+    for(int o=0;o<tc.obs.size();o++)
+    {
+      tc.obs[i].last_index=0;
+    }
 
 
     /*

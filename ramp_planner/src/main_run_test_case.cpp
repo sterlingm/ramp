@@ -679,14 +679,14 @@ int main(int argc, char** argv) {
     // Initialize a population, perform a control cycle, and get the point at the end of current trajectory
     auto p_next_cc = my_planner.prepareForTestCase();
 
-    ROS_INFO("Run: Done with prepareForTestCase");
-    ROS_INFO("Run: Setting tc_ready param to true");
+    ROS_INFO("Done with prepareForTestCase");
+    ROS_INFO("Setting tc_ready param to true");
 
     // Toggle flag saying we are ready to start a new test case
     my_planner.h_parameters_.setTestCase(true); 
 
     // Wait for static obs
-    ROS_INFO("Run: Waiting for param /ramp/static-obs to be true");
+    ROS_INFO("Waiting for param /ramp/static-obs to be true");
     bool stat_obs = false;
     while(stat_obs == false)
     {
