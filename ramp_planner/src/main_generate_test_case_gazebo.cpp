@@ -520,8 +520,8 @@ ObInfoExt generateObInfoGridExt(const MotionState robot_state)
 
   
   // Set speeds
-  Range v(0, 0.5);
-  Range w(-PI/2.f, PI/2.f);
+  Range v(0.1, 0.5);
+  Range w(-PI/4.f, PI/4.f);
 
   result.x = ob_x;
   result.y = ob_y;
@@ -1091,8 +1091,8 @@ void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
   ROS_INFO("ros::Time::now(): %f", ros::Time::now().toSec());
 
   ros::Duration d_elapsed = ros::Time::now() - tc.t_begin;
-      
-  double dRobotThreshold = 0.5;
+
+  double dRobotThreshold = 0.6;
   
   for(int i=0;i<tc.ob_trjs.size();i++)
   {
@@ -1109,7 +1109,7 @@ void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
 
       if(temp_index - tc.obs[i].last_index > 2)
       {
-        temp_index = tc.obs[i].last_index;
+        temp_index = tc.obs[i].last_index+1;
       }
         
       trajectory_msgs::JointTrajectoryPoint p = tc.ob_trjs[i].trajectory.points[temp_index]; 
