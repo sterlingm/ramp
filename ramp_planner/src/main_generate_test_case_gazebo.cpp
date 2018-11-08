@@ -1412,6 +1412,7 @@ int main(int argc, char** argv) {
   checkCollAmongObsTimer.stop();
   
   int num_tests = 63;
+  int i_startTest = 27; // set equal to # of tests completed so far
 
 
   // Make an ObstacleList Publisher
@@ -1494,7 +1495,7 @@ int main(int argc, char** argv) {
   ROS_INFO("Calling getTestCasesNoObColl");
   // Build an index list
   //
-  std::vector<int> noObCollTestInd = getTestCasesNoObColl("/home/sterlingm/ros_workspace/src/ramp/data/system-level-testing/ext/0-1-3");
+  //std::vector<int> noObCollTestInd = getTestCasesNoObColl("/home/sterlingm/ros_workspace/src/ramp/data/system-level-testing/ext/0-1-3");
 
 
   ros::Duration d_history(1);
@@ -1534,7 +1535,8 @@ int main(int argc, char** argv) {
     //TestCaseTwo tc = generateTestCase(initial_state, num_obs);
     ramp_msgs::MotionState initial_state;
     double d_states;
-    TestCaseExt tc = generateTestCaseExt(initial_state, noObCollTestInd[i], num_obs, true, d_states);
+    //TestCaseExt tc = generateTestCaseExt(initial_state, noObCollTestInd[i], num_obs, true, d_states);
+    TestCaseExt tc = generateTestCaseExt(initial_state, i_startTest+i, num_obs, true, d_states);
     tc.d_states = ros::Duration(d_states);
     tc.abtc = abtc; 
     ROS_INFO("Done generate test case");
