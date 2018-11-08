@@ -33,6 +33,8 @@ ros::Publisher pub_obs, pub_resetOdom;
 
 std::vector<int> ob_delay;
 
+std::vector<trajectory_msgs::JointTrajectoryPoint> obsP;
+
 /*
  * Data to collect
  */
@@ -406,6 +408,12 @@ void setStaticObGazebo(ramp_msgs::Obstacle ob, const std::string name)
   {
     ROS_INFO("Problem setting state");
   }
+
+  trajectory_msgs::JointTrajectoryPoint obP;
+  obP.positions.push_back(ob.ob_ms.positions[0]);
+  obP.positions.push_back(ob.ob_ms.positions[1]);
+
+  obsP.push_back(obP);
 }
 
 
@@ -1093,6 +1101,7 @@ void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
   ros::Duration d_elapsed = ros::Time::now() - tc.t_begin;
 
   double dRobotThreshold = 0.6;
+  double dObThreshold = 0.5;
   
   for(int i=0;i<tc.ob_trjs.size();i++)
   {
@@ -1115,6 +1124,18 @@ void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
       trajectory_msgs::JointTrajectoryPoint p = tc.ob_trjs[i].trajectory.points[temp_index]; 
 
       globalTc.obs[i].msg.ob_ms.positions = p.positions;
+      double min_dist=1000;
+      for(int j=0;j<num_obs;j++)
+      {
+        if(i != j)
+        {
+          double d = sqrt( pow( globalTc.obs[j].msg.ob_ms.positions[0]-p.positions[0], 2) + pow(globalTc.obs[j].msg.ob_ms.positions[1]-p.positions[1], 2) );
+          if(d<min_dist)
+          {
+            min_dist = d;
+          }
+        }
+      }
 
       std::ostringstream name;
       name<<"system_level_obstacle";
@@ -1135,7 +1156,7 @@ void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
       double dRobot = sqrt( pow( getModelState.response.pose.position.x - latestUpdate.msg_.positions[0], 2) + pow(getModelState.response.pose.position.y - latestUpdate.msg_.positions[1], 2) );
 
 
-      if(dRobot > dRobotThreshold)
+      if(dRobot > dRobotThreshold && min_dist > dObThreshold)
       {
         // Don't need to build an obstacle msg, need to move in Gazebo
         gazebo_msgs::SetModelState setModelState;
