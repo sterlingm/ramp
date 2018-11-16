@@ -49,7 +49,7 @@ std::vector<bool> icAtColl;
 MotionState latestUpdate;
 
 ros::ServiceClient setModelSrv;
-ros::ServiceClient getModelSrv;
+//ros::ServiceClient getModelSrv;
 
 // Initializes a vector of Ranges that the Planner is initialized with
 void initDOF(const std::vector<double> dof_min, const std::vector<double> dof_max) 
@@ -426,9 +426,10 @@ void resetRobotOdom()
 
 void setRobotInitialPos()
 {
+  ROS_INFO("In setRobotInitialPos");
   // Don't need to build an obstacle msg, need to move in Gazebo
   gazebo_msgs::SetModelState setModelState;
-  gazebo_msgs::ModelState modelState; 
+  gazebo_msgs::ModelState modelState;
   modelState.model_name = "mobile_base";
   modelState.reference_frame = "map";
   modelState.pose.position.x = 0;
@@ -442,6 +443,8 @@ void setRobotInitialPos()
 
   setModelState.request.model_state = modelState;
 
+  //ROS_INFO("Calling setModelSrv...");
+  //ROS_INFO("modelState.pose.position: %f, %f, %f orientation: %f, %f %f %f", modelState.pose.position.x, modelState.pose.position.y, modelState.pose.position.z, modelState.pose.orientation.x, modelState.pose.orientation.y, modelState.pose.orientation.z, modelState.pose.orientation.w);
   if(setModelSrv.call(setModelState))
   {
     ROS_INFO("Set state");
@@ -450,6 +453,8 @@ void setRobotInitialPos()
   {
     ROS_INFO("Problem setting state");
   }
+
+  ROS_INFO("Exiting setRobotInitialPos");
 }
 
 
@@ -779,7 +784,7 @@ TestCaseExt generateTestCaseExt(const MotionState robot_state, int i_test, int n
   Range r(2, 5);
   result.d_states = ros::Duration( r.random() );
   ROS_INFO("d_states: %f", result.d_states.toSec());
-    
+
   // Here, use file to get test info
   if(useFile)
   {
@@ -932,21 +937,21 @@ TestCaseExt generateTestCaseExt(const MotionState robot_state, int i_test, int n
   double d_initialDelay = 0;
   ROS_INFO("Initial delay: %f", d_initialDelay);
   
-  // 1 (1 after previous obstacle)
-  Range r_secondDelay(result.d_states.toSec()*0.0, result.d_states.toSec()*0.9);
+  // 2 (2 after previous obstacle)
+  Range r_secondDelay(result.d_states.toSec()*1.0, result.d_states.toSec()*1.9);
   double d_secondDelay = r_secondDelay.random();
   ROS_INFO("Second delay: %f total: %f", d_secondDelay, d_initialDelay + d_secondDelay);
 
-  // 3 (2 after previous obstacle)
-  Range r_thirdDelay(result.d_states.toSec()*1.0, result.d_states.toSec()*1.9);
+  // 3 (1 after previous obstacle)
+  Range r_thirdDelay(result.d_states.toSec()*0.0, result.d_states.toSec()*0.9);
   double d_thirdDelay = r_thirdDelay.random();
   ROS_INFO("Third delay: %f total: %f", d_thirdDelay, d_initialDelay + d_secondDelay + d_thirdDelay);
   
 
   // Set all of them
   result.obs[0].d_s = ros::Duration(d_initialDelay);
-  //result.obs[1].d_s = ros::Duration(d_initialDelay + d_secondDelay);
-  //result.obs[2].d_s = ros::Duration(d_initialDelay + d_secondDelay + d_thirdDelay);
+  result.obs[1].d_s = ros::Duration(d_initialDelay + d_secondDelay);
+  result.obs[2].d_s = ros::Duration(d_initialDelay + d_secondDelay + d_thirdDelay);
  
 
   return result;
@@ -1094,8 +1099,9 @@ void pubObTrjExt(const ros::TimerEvent e, TestCaseExt& tc)
  */
 void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
 {
-  /*ROS_INFO("In pubObTrjGazebo");
-  ROS_INFO("tc.t_begin: %f", tc.t_begin.toSec());
+  ros::NodeHandle handle;
+  //ROS_INFO("In pubObTrjGazebo");
+  /*ROS_INFO("tc.t_begin: %f", tc.t_begin.toSec());
   ROS_INFO("ros::Time::now(): %f", ros::Time::now().toSec());*/
 
   ros::Duration d_elapsed = ros::Time::now() - tc.t_begin;
@@ -1137,7 +1143,7 @@ void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
         }
       }
 
-      std::ostringstream name;
+      std::stringstream name;
       name<<"system_level_obstacle";
       //if(i>0)
       name<<"_"<<i;
@@ -1145,11 +1151,9 @@ void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
       
       // Get the position of the obstacle in gazebo
       gazebo_msgs::GetModelState getModelState;
-      gazebo_msgs::ModelState modelState; 
-      modelState.model_name = name.str();
+      ros::ServiceClient getModelSrv = handle.serviceClient<gazebo_msgs::GetModelState>("/gazebo/get_model_state");
 
       getModelState.request.model_name = name.str();
-      
       getModelSrv.call(getModelState);
 
       // Get distance to robot
@@ -1160,13 +1164,17 @@ void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
       {
         // Don't need to build an obstacle msg, need to move in Gazebo
         gazebo_msgs::SetModelState setModelState;
-        gazebo_msgs::ModelState modelState; 
-        modelState.model_name = name.str();
-        modelState.reference_frame = "map";
-        modelState.pose.position.x = p.positions[0];
-        modelState.pose.position.y = p.positions[1];
+        // New model state?
+        gazebo_msgs::ModelState ms;
+        
+        ms.reference_frame = "map";
+        ms.model_name = name.str();
+        ms.pose.position.x = p.positions[0];
+        ms.pose.position.y = p.positions[1];
 
-        setModelState.request.model_state = modelState;
+        setModelState.request.model_state = ms;
+
+        //ROS_INFO("setModelState.request.model_state.pose: (%f, %f)", ms.pose.position.x, ms.pose.position.y);
 
         if(setModelSrv.call(setModelState))
         {
@@ -1191,6 +1199,7 @@ void bestTrajCb(const ramp_msgs::RampTrajectory::ConstPtr& msg)
 
 bool checkIfObOnGoal(TestCaseExt tc)
 {
+  //ROS_INFO("In checkIfObOnGoal");
   std::vector<double> goal;
   goal.push_back(2);
   goal.push_back(2);
@@ -1204,17 +1213,19 @@ bool checkIfObOnGoal(TestCaseExt tc)
     // Do .42 b/c we also need to consider if obstacles is close enough to prevent the robot from getting to the goal w/o collision
     if(dist < 0.42)
     {
+      //ROS_INFO("Exiting checkIfObOnGoal");
       return true;
     }
   }
   
+  //ROS_INFO("Exiting checkIfObOnGoal");
   return false;
 }
 
 
 void imminentCollisionCb(const std_msgs::Bool msg)
 {
-  ROS_INFO("Gen: In imminentCollisionCb, msg: %s", msg.data ? "True" : "False");
+  //ROS_INFO("Gen: In imminentCollisionCb, msg: %s", msg.data ? "True" : "False");
   IC_current = msg.data;
   if(msg.data)
   {
@@ -1411,8 +1422,8 @@ int main(int argc, char** argv) {
   checkCollTimer.stop();
   checkCollAmongObsTimer.stop();
   
-  int num_tests = 63;
-  int i_startTest = 27; // set equal to # of tests completed so far
+  int num_tests = 6;
+  int i_startTest = 94; // set equal to # of tests completed so far
 
 
   // Make an ObstacleList Publisher
@@ -1423,7 +1434,7 @@ int main(int argc, char** argv) {
 
   //gaz
   setModelSrv = handle.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
-  getModelSrv = handle.serviceClient<gazebo_msgs::GetModelState>("/gazebo/get_model_state");
+  //getModelSrv = handle.serviceClient<gazebo_msgs::GetModelState>("/gazebo/get_model_state");
 
   ROS_INFO("Created serviceClient");
 
@@ -1435,7 +1446,7 @@ int main(int argc, char** argv) {
   //ob_trj_timer = handle.createTimer(ros::Duration(1./20.), boost::bind(pubObTrjExt, _1, tc));
  
 
-  std::string path = "/home/sterlingm/ros_workspace/src/ramp/data/system-level-testing/gazebo/ext/0-1-3/";
+  std::string path = "/home/sterlingm/ros_workspace/src/ramp/data/system-level-testing/gazebo/ext/0-2-3/";
 
 
   // Open files for data
@@ -1503,6 +1514,7 @@ int main(int argc, char** argv) {
   for(int i=0;i<num_tests;i++)
   {
     setRobotInitialPos();
+    ROS_INFO("Past setRobotInitialPos");
 
     /*
      *
@@ -1517,26 +1529,15 @@ int main(int argc, char** argv) {
     ABTC abtc;
 
     /*
-     * Create test case where all obstacles stop, move, stop for 1 second each
-     */
-    for(int i_ob=0;i_ob<num_obs;i_ob++)
-    {
-      abtc.moving[i_ob]   = 0;
-      abtc.moving[i_ob+3] = 1;
-      abtc.moving[i_ob+6] = 0;
-      abtc.times[i_ob] = 1;
-      abtc.times[i_ob+3] = 1;
-      abtc.times[i_ob+6] = 1;
-    }
-    
-    /*
      * Get test data for the abtc
      */
     //TestCaseTwo tc = generateTestCase(initial_state, num_obs);
     ramp_msgs::MotionState initial_state;
     double d_states;
     //TestCaseExt tc = generateTestCaseExt(initial_state, noObCollTestInd[i], num_obs, true, d_states);
+    ROS_INFO("Generating test case");
     TestCaseExt tc = generateTestCaseExt(initial_state, i_startTest+i, num_obs, true, d_states);
+    ROS_INFO("Past generating test case");
     tc.d_states = ros::Duration(d_states);
     tc.abtc = abtc; 
     ROS_INFO("Done generate test case");
@@ -1778,6 +1779,8 @@ int main(int argc, char** argv) {
     if(bestTrajec.feasible)
     {
       bestTrajec_fe.push_back(true);
+      ROS_INFO("bestTrajec.trajectory.points.size(): %i", (int)bestTrajec.trajectory.points.size());
+      ROS_INFO("bestTrajec.trajectory.points[ bestTrajec.trajectory.points.size()-1].time_from_start.toSec(): %f", bestTrajec.trajectory.points[ bestTrajec.trajectory.points.size()-1 ].time_from_start.toSec());
       time_left.push_back( bestTrajec.trajectory.points[ bestTrajec.trajectory.points.size()-1 
       ].time_from_start.toSec());
 
@@ -1828,13 +1831,15 @@ int main(int argc, char** argv) {
     }
 
 
+    ROS_INFO("Before checking coll");
     int numColls = 0;
     int numICAtColl = 0;
     for(int i=0;i<num_obs;i++)
     {
-      numColls += colls[i] ? 1 : 0;  
-      numICAtColl += icAtColl[i] ? 1 : 0;
+      numColls += colls.at(i) ? 1 : 0;  
+      numICAtColl += icAtColl.at(i) ? 1 : 0;
     }
+    ROS_INFO("After checking coll");
     f_colls<<numColls<<std::endl;
     f_icAtColl<<numICAtColl<<std::endl;
 

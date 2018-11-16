@@ -790,7 +790,7 @@ const int Planner::estimateIfOnCurve(const MotionState ms, const ramp_msgs::Bezi
     if(xPastTwo || yPastTwo)
     {
       //ROS_INFO("Returning 3 (after curve)");
-      ROS_INFO("xSlope: %s xSlopeTwo: %s xSegOne: %s xSegTwo: %s ySlope: %s ySlopeTwo: %s ySegOne: %s ySegTwo: %s",
+      /*ROS_INFO("xSlope: %s xSlopeTwo: %s xSegOne: %s xSegTwo: %s ySlope: %s ySlopeTwo: %s ySegOne: %s ySegTwo: %s",
           xSlope ? "True" : "False",
           xSlopeTwo ? "True" : "False",
           xSegOne ? "True" : "False",
@@ -798,7 +798,7 @@ const int Planner::estimateIfOnCurve(const MotionState ms, const ramp_msgs::Bezi
           ySlope ? "True" : "False",
           ySlopeTwo ? "True" : "False",
           ySegOne ? "True" : "False",
-          ySegTwo ? "True" : "False");
+          ySegTwo ? "True" : "False");*/
       return 3;
     }
   } // end if past segment 1
