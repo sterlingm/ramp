@@ -772,13 +772,13 @@ TestCaseExt generateTestCaseExt(const MotionState robot_state, int num_obs)
   double d_initialDelay = 0;
   ROS_INFO("Initial delay: %f", d_initialDelay);
   
-  // 1
-  Range r_secondDelay(result.d_states.toSec()*0.0, result.d_states.toSec()*0.9);
+  // 3
+  Range r_secondDelay(result.d_states.toSec()*2.0, result.d_states.toSec()*2.9);
   double d_secondDelay = r_secondDelay.random();
   ROS_INFO("Second delay: %f total: %f", d_secondDelay, d_initialDelay + d_secondDelay);
 
-  // 4 (3 after previous obstacle)
-  Range r_thirdDelay(result.d_states.toSec()*2.0, result.d_states.toSec()*2.9);
+  // 4 (1 after previous)
+  Range r_thirdDelay(result.d_states.toSec()*0.0, result.d_states.toSec()*0.9);
   double d_thirdDelay = r_thirdDelay.random();
   ROS_INFO("Third delay: %f total: %f", d_thirdDelay, d_initialDelay + d_secondDelay + d_thirdDelay);
   
@@ -795,7 +795,7 @@ TestCaseExt generateTestCaseExt(const MotionState robot_state, int num_obs)
 
   // If not starting at same state time
   result.obs[2].d_s = ros::Duration(d_initialDelay + d_secondDelay + d_thirdDelay);
-  //result.obs[2].d_s = ros::Duration(d_thirdDelay);
+  //result.obs[2].d_s = ros::Duration(d_initialDelay+d_thirdDelay);
  
 
   return result;
@@ -1116,7 +1116,7 @@ int main(int argc, char** argv) {
   checkCollTimer.stop();
   checkCollAmongObsTimer.stop();
   
-  int num_tests = 29;
+  int num_tests = 34;
 
 
   // Make an ObstacleList Publisher
@@ -1131,7 +1131,8 @@ int main(int argc, char** argv) {
   //ob_trj_timer = handle.createTimer(ros::Duration(1./20.), boost::bind(pubObTrjExt, _1, tc));
   
   
-  std::string path = "/home/sterlingm/ros_workspace/src/ramp/data/system-level-testing/ext/0-1-4/";
+  std::string abtcStr="0-3-4";
+  std::string path = "/home/sterlingm/ros_workspace/src/ramp/data/system-level-testing/ext/"+abtcStr+"/";
 
 
   // Open files for data

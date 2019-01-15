@@ -771,7 +771,7 @@ TestCaseTwo generateTestCase(const MotionState robot_state, int num_obs)
  * Does NOT generate an ABTC
  * Put that in later on once single test case is working well
  */
-TestCaseExt generateTestCaseExt(const MotionState robot_state, int i_test, int num_obs, bool useFile, double& d_states)
+TestCaseExt generateTestCaseExt(const MotionState robot_state, int i_test, int num_obs, bool useFile, double& d_states, std::string abtcStr)
 {
   TestCaseExt result;
 
@@ -780,17 +780,14 @@ TestCaseExt generateTestCaseExt(const MotionState robot_state, int i_test, int n
   
   double obInitD = 0.75;
 
-  // Get the random duration for state changes
-  Range r(2, 5);
-  result.d_states = ros::Duration( r.random() );
-  ROS_INFO("d_states: %f", result.d_states.toSec());
 
   // Here, use file to get test info
   if(useFile)
   {
-    std::string filename = "/home/sterlingm/ros_workspace/src/ramp/data/system-level-testing/ext/0-1-3/testInfo.txt";
+    // Change me
+    std::string filename = "/home/sterlingm/ros_workspace/src/ramp/data/system-level-testing/ext/"+abtcStr+"/testInfo.txt";
     std::ifstream f_info;
-    f_info.open(filename, std::ios::in | std::ios::binary); 
+    f_info.open(filename, std::ios::in | std::ios::binary);
 
     // First, skip ahead to the current test case lines
     for(int i=0;i<i_test;i++)
@@ -854,105 +851,118 @@ TestCaseExt generateTestCaseExt(const MotionState robot_state, int i_test, int n
       // Make obstacle msg
       ob.msg = buildObstacleMsg(ob.x, ob.y, ob.v_i, ob.relative_direction, ob.w);
       result.obs.push_back(ob);
+
+      
       result.ob_list.obstacles.push_back(ob.msg);
     } // end for each obstacle
     
+
     // get d_states value for test case 
     std::string dstatesStr;
     std::getline(f_info, dstatesStr, '\n');
-    d_states = atof((char*)dstatesStr.c_str());
+    result.d_states = ros::Duration(atof((char*)dstatesStr.c_str()));
+    ROS_INFO("d_states: %f", result.d_states.toSec());
 
     f_info.close();
   } // end if useFile
 
   else
   {
-
-  // Generate all obstacles and push them onto test case
-  for(int i=0;i<num_obs;i++)
-  {
-    ObInfoExt temp = generateObInfoGridExt(robot_state);
-
-    if(i == 1)
-    {
-      // Get position distance from other obstacle
-      std::vector<double> one, two;
-      one.push_back(result.obs[0].x);
-      one.push_back(result.obs[0].y);
-      two.push_back(temp.x);
-      two.push_back(temp.y);
-      double dist = utility.positionDistance(one, two);
-      while(dist < obInitD) 
-      {
-        //ROS_INFO("one: (%f, %f) temp: (%f, %f)", one[0], one[1], two[0], two[1]);
-        
-        temp = generateObInfoGridExt(robot_state);
-        two[0] = temp.x;
-        two[1] = temp.y;
-        dist = utility.positionDistance(one, two);
-      }
-
-    }
-    else if (i == 2)
-    {
-      // Get position distance from other two obstacles
-      std::vector<double> one, two, three;
-      one.push_back(result.obs[0].x);
-      one.push_back(result.obs[0].y);
-      two.push_back(result.obs[1].x);
-      two.push_back(result.obs[1].y);
-      three.push_back(temp.x);
-      three.push_back(temp.y);
-      double dist1 = utility.positionDistance(one, three);
-      double dist2 = utility.positionDistance(two, three);
-      while(dist1 < obInitD || dist2 < obInitD)
-      {
-        //ROS_INFO("one: (%f, %f) two:(%f, %f) temp: (%f, %f)", one[0], one[1], two[0], two[1], three[0], three[1]);
-        temp = generateObInfoGridExt(robot_state);
-        three[0] = temp.x;
-        three[1] = temp.y;
-        dist1 = utility.positionDistance(one, three);
-        dist2 = utility.positionDistance(two, three);
-      }
-    }
-
-    // What is this used for?
-    temp.msg = buildObstacleMsg(temp.x, temp.y, temp.v_i, temp.relative_direction, temp.w);
-
-    result.obs.push_back(temp);
-    result.ob_list.obstacles.push_back(temp.msg);
-    //ROS_INFO("result.obs.size(): %i", (int)result.obs.size());
-    //ROS_INFO("result.ob_list.obstacles.size(): %i", (int)result.ob_list.obstacles.size());
-  }
   
+    // Get the random duration for state changes
+    Range r(2, 5);
+    result.d_states = ros::Duration( r.random() );
+    ROS_INFO("d_states: %f", result.d_states.toSec());
+
+    // Generate all obstacles and push them onto test case
+    for(int i=0;i<num_obs;i++)
+    {
+      ObInfoExt temp = generateObInfoGridExt(robot_state);
+
+      if(i == 1)
+      {
+        // Get position distance from other obstacle
+        std::vector<double> one, two;
+        one.push_back(result.obs[0].x);
+        one.push_back(result.obs[0].y);
+        two.push_back(temp.x);
+        two.push_back(temp.y);
+        double dist = utility.positionDistance(one, two);
+        while(dist < obInitD) 
+        {
+          //ROS_INFO("one: (%f, %f) temp: (%f, %f)", one[0], one[1], two[0], two[1]);
+          
+          temp = generateObInfoGridExt(robot_state);
+          two[0] = temp.x;
+          two[1] = temp.y;
+          dist = utility.positionDistance(one, two);
+        }
+
+      }
+      else if (i == 2)
+      {
+        // Get position distance from other two obstacles
+        std::vector<double> one, two, three;
+        one.push_back(result.obs[0].x);
+        one.push_back(result.obs[0].y);
+        two.push_back(result.obs[1].x);
+        two.push_back(result.obs[1].y);
+        three.push_back(temp.x);
+        three.push_back(temp.y);
+        double dist1 = utility.positionDistance(one, three);
+        double dist2 = utility.positionDistance(two, three);
+        while(dist1 < obInitD || dist2 < obInitD)
+        {
+          //ROS_INFO("one: (%f, %f) two:(%f, %f) temp: (%f, %f)", one[0], one[1], two[0], two[1], three[0], three[1]);
+          temp = generateObInfoGridExt(robot_state);
+          three[0] = temp.x;
+          three[1] = temp.y;
+          dist1 = utility.positionDistance(one, three);
+          dist2 = utility.positionDistance(two, three);
+        }
+      }
+
+      // What is this used for?
+      temp.msg = buildObstacleMsg(temp.x, temp.y, temp.v_i, temp.relative_direction, temp.w);
+
+      result.obs.push_back(temp);
+      result.ob_list.obstacles.push_back(temp.msg);
+      //ROS_INFO("result.obs.size(): %i", (int)result.obs.size());
+      //ROS_INFO("result.ob_list.obstacles.size(): %i", (int)result.ob_list.obstacles.size());
+    }
+    
+
+
+    /*
+     ********************************************************************
+     *    Manually set the initial delay values to control the ABTC! 
+     ********************************************************************
+     */
+    // Change me
+    // 0
+    double d_initialDelay = 0;
+    ROS_INFO("Initial delay: %f", d_initialDelay);
+    
+    // a=1 minus state delay, b=a+0.9
+    // 2 (2 after previous obstacle)
+    Range r_secondDelay(result.d_states.toSec()*1.0, result.d_states.toSec()*1.9);
+    double d_secondDelay = r_secondDelay.random();
+    ROS_INFO("Second delay: %f total: %f", d_secondDelay, d_initialDelay + d_secondDelay);
+
+    // 2 (0 after previous obstacle)
+    Range r_thirdDelay(result.d_states.toSec()*1.0, result.d_states.toSec()*1.9);
+    double d_thirdDelay = r_thirdDelay.random();
+    ROS_INFO("Third delay: %f total: %f", d_thirdDelay, d_initialDelay + d_secondDelay + d_thirdDelay);
+    
+
+    // Set all of them
+    result.obs[0].d_s = ros::Duration(d_initialDelay);
+    result.obs[1].d_s = ros::Duration(d_initialDelay);
+    //result.obs[1].d_s = ros::Duration(d_initialDelay + d_secondDelay);
+    //result.obs[2].d_s = ros::Duration(d_initialDelay + d_secondDelay + d_thirdDelay);
+    result.obs[2].d_s = ros::Duration(d_initialDelay);
+   
   } // end else not using file
-
-
-  /*
-   ********************************************************************
-   *    Manually set the initial delay values to control the ABTC! 
-   ********************************************************************
-   */
-  // 0
-  double d_initialDelay = 0;
-  ROS_INFO("Initial delay: %f", d_initialDelay);
-  
-  // 2 (2 after previous obstacle)
-  Range r_secondDelay(result.d_states.toSec()*1.0, result.d_states.toSec()*1.9);
-  double d_secondDelay = r_secondDelay.random();
-  ROS_INFO("Second delay: %f total: %f", d_secondDelay, d_initialDelay + d_secondDelay);
-
-  // 3 (1 after previous obstacle)
-  Range r_thirdDelay(result.d_states.toSec()*0.0, result.d_states.toSec()*0.9);
-  double d_thirdDelay = r_thirdDelay.random();
-  ROS_INFO("Third delay: %f total: %f", d_thirdDelay, d_initialDelay + d_secondDelay + d_thirdDelay);
-  
-
-  // Set all of them
-  result.obs[0].d_s = ros::Duration(d_initialDelay);
-  result.obs[1].d_s = ros::Duration(d_initialDelay + d_secondDelay);
-  result.obs[2].d_s = ros::Duration(d_initialDelay + d_secondDelay + d_thirdDelay);
- 
 
   return result;
 }
@@ -1115,18 +1125,22 @@ void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
     double d_elap_ob = d_elapsed.toSec() - tc.obs[i].d_s.toSec();
     int index = d_elap_ob*10;
 
+    //ROS_INFO("tc.t_begin: %f tc.obs[%i].d_s: %f (ros::Time::now() - tc.t_begin).toSec(): %f", tc.t_begin.toSec(), i, tc.obs[i].d_s.toSec(), (ros::Time::now() - tc.t_begin).toSec());
+
     if( (ros::Time::now() - tc.t_begin).toSec() > tc.obs[i].d_s.toSec())
     {
-      //ROS_INFO("In if");
 
       int temp_index = index >= ((int)tc.ob_trjs[i].trajectory.points.size()-1) ? tc.ob_trjs[i].trajectory.points.size()-1 : 
         index;
+
+      //ROS_INFO("index: %i trj_size: %i", index, (int)tc.ob_trjs[i].trajectory.points.size());
 
       if(temp_index - tc.obs[i].last_index > 2)
       {
         temp_index = tc.obs[i].last_index+1;
       }
-        
+      //ROS_INFO("temp_index: %i", temp_index);
+
       trajectory_msgs::JointTrajectoryPoint p = tc.ob_trjs[i].trajectory.points[temp_index]; 
 
       globalTc.obs[i].msg.ob_ms.positions = p.positions;
@@ -1159,8 +1173,11 @@ void pubObTrjGazebo(const ros::TimerEvent e, TestCaseExt& tc)
       // Get distance to robot
       double dRobot = sqrt( pow( getModelState.response.pose.position.x - latestUpdate.msg_.positions[0], 2) + pow(getModelState.response.pose.position.y - latestUpdate.msg_.positions[1], 2) );
 
+      //ROS_INFO("minDist: %f dRobot: %f dObThreshold: %f", min_dist, dRobot, dObThreshold);
+
 
       if(dRobot > dRobotThreshold && min_dist > dObThreshold)
+      //if(min_dist > dObThreshold)
       {
         // Don't need to build an obstacle msg, need to move in Gazebo
         gazebo_msgs::SetModelState setModelState;
@@ -1422,8 +1439,8 @@ int main(int argc, char** argv) {
   checkCollTimer.stop();
   checkCollAmongObsTimer.stop();
   
-  int num_tests = 6;
-  int i_startTest = 94; // set equal to # of tests completed so far
+  int num_tests = 5;
+  int i_startTest = 95; // set equal to # of tests completed so far
 
 
   // Make an ObstacleList Publisher
@@ -1446,7 +1463,9 @@ int main(int argc, char** argv) {
   //ob_trj_timer = handle.createTimer(ros::Duration(1./20.), boost::bind(pubObTrjExt, _1, tc));
  
 
-  std::string path = "/home/sterlingm/ros_workspace/src/ramp/data/system-level-testing/gazebo/ext/0-2-3/";
+  // Change me each ABTC
+  std::string abtcStr = "0-3-5";
+  std::string path = "/home/sterlingm/ros_workspace/src/ramp/data/system-level-testing/gazebo/ext/"+abtcStr+"/";
 
 
   // Open files for data
@@ -1536,9 +1555,9 @@ int main(int argc, char** argv) {
     double d_states;
     //TestCaseExt tc = generateTestCaseExt(initial_state, noObCollTestInd[i], num_obs, true, d_states);
     ROS_INFO("Generating test case");
-    TestCaseExt tc = generateTestCaseExt(initial_state, i_startTest+i, num_obs, true, d_states);
+    TestCaseExt tc = generateTestCaseExt(initial_state, i_startTest+i, num_obs, true, d_states, abtcStr);
     ROS_INFO("Past generating test case");
-    tc.d_states = ros::Duration(d_states);
+    //tc.d_states = ros::Duration(d_states);
     tc.abtc = abtc; 
     ROS_INFO("Done generate test case");
 
@@ -1585,6 +1604,7 @@ int main(int argc, char** argv) {
       tr.sl_final_speed = tc.obs[j].v_f;
       //tr.sl_init_dur    = tc.obs[j].d_vi;
       //tr.sl_final_dur   = tc.obs[j].d_vf;
+      ROS_INFO("tc.d_states: %f", tc.d_states.toSec());
       // Changed to have a static time to be in a state for all obstacles
       tr.sl_init_dur    = tc.d_states;
       tr.sl_final_dur   = tc.d_states;

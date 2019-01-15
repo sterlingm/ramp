@@ -1,8 +1,8 @@
 %directory_prefix = 'advanced_robotics';
 %abtc = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
-%abtc = {'0-0-0', '0-1-1', '0-1-3', '0-2-3', '0-2-4'};
-directory_prefix = 'ext';
-abtc = {'0-0-0'};
+%abtc = {'0-3-6'};
+abtc = {'0-0-0', '0-0-1', '0-0-2', '0-0-3', '0-1-1', '0-1-2', '0-1-3', '0-1-4', '0-2-2', '0-2-3', '0-2-4', '0-2-5', '0-3-3', '0-3-4', '0-3-5', '0-3-6'};
+directory_prefix = 'gazebo/ext';
 num_abtcs = size(abtc,2);
 num_tests=100;
 
@@ -51,14 +51,15 @@ for i=1:size(f_fe,2)
     data_re(1:num_tests,i) = importdata(f_re{i}{1});
     data_ic_st(1:num_tests,i) = importdata(f_ic_st{i}{1});
 
-    data_coll(1:num_tests,i) = importdata(f_coll{i}{1});
-    data_icAtColl(1:num_tests,i) = importdata(f_icAtColl{i}{1});
-    data_obOnGoal(1:num_tests,i) = importdata(f_obOnGoal{i}{1});
+    %data_coll(1:num_tests,i) = importdata(f_coll{i}{1});
+    %data_icAtColl(1:num_tests,i) = importdata(f_icAtColl{i}{1});
+    %data_obOnGoal(1:num_tests,i) = importdata(f_obOnGoal{i}{1});
     
     data_tl{i} = importdata(f_tl{i}{1});
 
 end
 
+clean_fe_icst_data;
 
 % Get collision and imminent collision info
 num_colls = sum(data_coll);
@@ -75,6 +76,11 @@ for i=1:size(data_infe,1)
     if data_infe(i) == 1 && data_obOnGoal(i) == 1
         num_obOnGoalInfe = num_obOnGoalInfe + 1;
     end
+    
+end
+
+for i=1:16
+    data_infe_count(i)=sum( data_infe(:,i)) - sum(data_ic_st(:,i));
 end
 
 % Strip Time Left values that are greater than 1000
@@ -136,6 +142,9 @@ perc_all_fe = (s / size(data_all_fe,1)) - perc_all_re;
 
 s = sum(data_all_ic_st(:) == 1);
 perc_all_ic_st = s / size(data_all_ic_st,1);
+
+s = sum(data_infe_count(:));
+perc_infe = s / size(data_all_fe,1);
     
 nbins = 50;
 tl_hist = hist(data_all_tl, nbins);
@@ -143,7 +152,8 @@ bar(tl_hist);
 xlabel('Seconds left in trajectory');
 
 
-perc_all = [perc_all_re perc_all_fe 1-(perc_all_re+perc_all_fe+perc_all_ic_st) perc_all_ic_st];
+perc_all = [perc_all_re perc_all_fe perc_infe perc_all_ic_st];
+%perc_all = [perc_all_re perc_all_fe 1-(perc_all_re+perc_all_fe+perc_all_ic_st) perc_all_ic_st];
 perc_values = {sprintf('%.0f%%', 100*perc_all(1)); sprintf('%.0f%%', 100*perc_all(2)); sprintf('%.0f%%', 100*perc_all(3)); sprintf('%.0f%%', 100*perc_all(4))};
 
 strs = {strcat('Goal: ', perc_values{1}) ; strcat('Feasible: ', perc_values{2}) ; strcat('Infeasible: ', perc_values{3}); strcat('I.C. (stuck): ', perc_values{4})};

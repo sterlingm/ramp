@@ -108,5 +108,5 @@ shrink_ranges: false
 
 
 #gazebo_model_names: ['cardboard_box', 'cardboard_box_0']
-gazebo_model_names: []
+#gazebo_model_names: []
 
