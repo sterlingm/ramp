@@ -59,7 +59,7 @@ nav_msgs::OccupancyGrid hilbertMap;
 
 Utility util;
 double rate;
-ros::Publisher pub_obj, pub_rviz, pub_cons_costmap, pub_half_costmap, pub_global_costmap, pub_combinedHmap;
+ros::Publisher pub_obj, pub_rviz, pub_cons_costmap, pub_cropped_costmap, pub_global_costmap, pub_combinedHmap;
 std::vector<Obstacle> obs;
 ramp_msgs::ObstacleList list;
 ramp_msgs::ObstacleList staticObsList;
@@ -1704,7 +1704,7 @@ Point getGlobalCoords(const Circle& cir)
  */ 
 void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::OccupancyGrid& result)
 {
-  //////////ROS_INFO("In cropCostmap");
+  //ROS_INFO("In cropCostmap");
 
   float res = grid->info.resolution;
   float w = grid->info.width  * res;
@@ -1713,8 +1713,8 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
 
   float x_min=ranges[0].min;
   float y_min=ranges[1].min;
-  float x_max=ranges[0].max+0.25;
-  float y_max=ranges[1].max+0.25;
+  float x_max=ranges[0].max;
+  float y_max=ranges[1].max;
   
   //ROS_INFO("costmap origin: (%f,%f) width: %i height: %i resolution: %f w: %f h: %f", grid->info.origin.position.x, grid->info.origin.position.y, grid->info.width, grid->info.height, grid->info.resolution, w, h);
 
@@ -1739,13 +1739,10 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   p_vec.push_back(p_c);
   p_vec.push_back(p_d);
 
-  for(int i=0;i<p_vec.size();i++)
+  /*for(int i=0;i<p_vec.size();i++)
   {
-    //////////ROS_INFO("p_vec[%i]: (%f,%f)", i, p_vec[i].getX(), p_vec[i].getY());
-    tf::Vector3 p_i_w = tf_base_to_global * p_vec[i];
-    p_w_vec.push_back(p_i_w);
-    //////////ROS_INFO("p_w_vec[%i]: (%f,%f)", i, p_w_vec[i].getX(), p_w_vec[i].getY());
-  }
+    ROS_INFO("p_vec[%i]: (%f,%f)", i, p_vec[i].getX(), p_vec[i].getY());
+  }*/
 
 
   // Check if we need to crop
@@ -1753,26 +1750,28 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   float delta_x_max = fabs(x_max - p_c.getX());
   float delta_y_min = fabs(y_min - p_a.getY());
   float delta_y_max = fabs(y_max - p_c.getY());
+  //ROS_INFO("x_min: %f x_max: %f y_min: %f y_max: %f", x_min, x_max, y_min, y_max);
   //ROS_INFO("delta_x_min: %f delta_x_max: %f delta_y_min: %f delta_y_max: %f", delta_x_min, delta_x_max, delta_y_min, delta_y_max);
-  
-  int x_min_ind = p_a.getX() < x_min ? delta_x_min / res : 0;
-  int x_max_ind = p_c.getX() > x_max ? delta_x_max / res : 0;
-  int y_min_ind = p_a.getY() < y_min ? delta_y_min / res : 0;
-  int y_max_ind = p_c.getY() > y_max ? delta_y_max / res : 0;
+
+  int x_min_ind = p_a.getX() < x_min ? ceil(delta_x_min / res) : 0;
+  int x_max_ind = p_c.getX() > x_max ? ceil(delta_x_max / res) : 0;
+  int y_min_ind = p_a.getY() < y_min ? ceil(delta_y_min / res) : 0;
+  int y_max_ind = p_c.getY() > y_max ? ceil(delta_y_max / res) : 0;
   //ROS_INFO("x_min_ind: %i x_max_ind: %i y_min_ind: %i y_max_ind: %i", x_min_ind, x_max_ind, y_min_ind, y_max_ind);
 
   int width_new   = grid->info.width  - x_max_ind - x_min_ind;
   int height_new  = grid->info.height - y_max_ind - y_min_ind;
-  if(width_new > height_new)
+  /*if(width_new > height_new)
   {
     width_new = height_new;
     x_min_ind++;
   }
   else if(height_new > width_new)
   {
+    ROS_INFO("In height_new > width_new");
     height_new = width_new;
     y_min_ind++;
-  }
+  }*/
   
   /*ROS_INFO("width_new: %i height_new: %i", width_new, height_new);
   ROS_INFO("grid->info.height-y_max_ind: %i", grid->info.height-y_max_ind);
@@ -1782,7 +1781,7 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
     int c_offset = (c*grid->info.width);
     for(int r=x_min_ind;r<grid->info.width-x_max_ind;r++)
     {
-      //////////ROS_INFO("c: %i c_offset: %i r: %i total: %i", c, c_offset, r, c_offset+r);
+      //ROS_INFO("c: %i c_offset: %i r: %i total: %i", c, c_offset, r, c_offset+r);
       result.data.push_back(grid->data[c_offset + r]);
     }
   }
@@ -1795,6 +1794,7 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
 
   //////////ROS_INFO("result.info.width: %i result.info.height: %i", result.info.width, result.info.height);
   //////////ROS_INFO("result.info.origin.position: (%f,%f)", result.info.origin.position.x, result.info.origin.position.y);
+  //ROS_INFO("Exiting cropCostmap");
 }
 
 
@@ -2484,12 +2484,12 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     cropCostmap(grid, cropped);
     //cropCostmapForHmapExp(grid, cropped);
     //ROS_INFO("Done cropping costmap");
+    // Publish the modified costmap(s)
+    pub_cropped_costmap.publish(cropped);
 
     transformCostmap(cropped);
     //ROS_INFO("Done transforming costmap");
 
-    double grid_resolution = grid->info.resolution; 
-    
     global_grid = cropped;
     ////ROS_INFO("global grid (w,h): (%i,%i)", global_grid.info.width, global_grid.info.height);
     
@@ -2536,10 +2536,7 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
   
     // ***
     transformCostmap(global_grid);
-    pub_global_costmap.publish(global_costmap);
 
-    double grid_resolution = grid->info.resolution; 
-    
     global_grid = *grid;
     
     // Call this
@@ -2554,6 +2551,8 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
     //////////ROS_INFO("Resolution: width: %i height: %i", grid->info.width, grid->info.height);
     accumulateCostmaps(global_grid, prev_grids, accumulated_grid);
     //ROS_INFO("After accumulateCostmaps");
+    
+    pub_global_costmap.publish(global_costmap);
    
     // Set global_grid 
     // Why have separate 'global_costmap'?
@@ -2572,8 +2571,6 @@ void costmapCb(const nav_msgs::OccupancyGridConstPtr grid)
       prev_grids.erase(prev_grids.begin(), prev_grids.begin()+1);
     }
 
-    // Publish the modified costmap(s)
-    //pub_half_costmap.publish(half);
 
     // ***
 
@@ -3078,7 +3075,7 @@ int main(int argc, char** argv)
   pub_obj = handle.advertise<ramp_msgs::ObstacleList>("obstacles", 1);
   pub_rviz = handle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 2);
   pub_cons_costmap = handle.advertise<nav_msgs::OccupancyGrid>("accumulated_costmap", 2);
-  pub_half_costmap = handle.advertise<nav_msgs::OccupancyGrid>("half_costmap", 2);
+  pub_cropped_costmap = handle.advertise<nav_msgs::OccupancyGrid>("cropped_costmap", 2);
   pub_global_costmap = handle.advertise<nav_msgs::OccupancyGrid>("global_costmap", 2);
   pub_combinedHmap = handle.advertise<nav_msgs::OccupancyGrid>("combined_map", 1);
 

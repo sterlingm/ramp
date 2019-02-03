@@ -861,7 +861,7 @@ void pubObTrj(const ros::TimerEvent e, TestCaseTwo& tc)
       else
       {
         ob = buildObstacleMsg(p.positions[0], p.positions[1], tc.obs[i].v, p.positions[2], tc.obs[i].w);
-      } 
+      }
 
      
       tc.obs[i].msg = ob;

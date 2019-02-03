@@ -18,7 +18,7 @@ costmap:
     always_send_full_costmap: true
     unknown_cost_value: 10
     track_unknown_space: true
-    origin_x: 2.0
+    origin_x: 0.0
     origin_y: 0.0
 
     inflation_layer:
