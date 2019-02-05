@@ -25,6 +25,9 @@
 <node name="ramp_sensing" pkg="ramp_sensing" type="ramp_sensing" /> 
 
 
+<!-- map->odom transform -->
+<node name="pub_map_odom" pkg="ramp_planner" type="pub_map_odom" output="screen" />
+
 <!-- Simulation -->
 <node name="stageros" pkg="stage_ros" type="stageros" args="/home/sterlingm/ros_workspace/src/ramp/ramp_launch/launch/world/single_robot.world" /> 
 <node name="ramp_control" pkg="ramp_control" type="ramp_control" output="log" >
@@ -33,8 +36,5 @@
   <param name="orientation" type="double" value="0.785" />
 </node>
 
-
-<!-- Trajectory Visualization -->
-<!-- <node name="trajectory_visualisation" pkg="trajectory_visualisation" type="trajectory_visualisation" output="screen" /> -->
 
 </launch>
