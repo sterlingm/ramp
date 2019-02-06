@@ -140,7 +140,8 @@ class Planner {
               const double              T_weight=0,
               const double              A_weight=0,
               const double              D_weight=0,
-              bool                      show_full_traj=0);
+              bool                      show_full_traj=0,
+              bool                      write_data=true);
     
     // Send the best trajectory to the control package
     void sendBest();
@@ -587,6 +588,8 @@ class Planner {
     std::vector<int> num_trajecs_eval_;
 
     ros::Time t_startedFeas_;
+
+    bool writeData_;
 
     // Files
     std::ofstream f_runtime_;

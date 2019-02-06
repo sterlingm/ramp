@@ -35,6 +35,8 @@ fixed_control_cycle_rate: 1.0
 
 sensing_cycle_rate: 10
 
+write_data: true
+
 
 
 # Sensing parameters #
