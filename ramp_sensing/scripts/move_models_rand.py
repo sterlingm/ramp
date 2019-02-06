@@ -22,7 +22,7 @@ class MyNode:
     def __init__(self):
         self.get_model_state = rospy.ServiceProxy('gazebo/get_model_state', GetModelState)
         self.set_model_state = rospy.ServiceProxy('gazebo/set_model_state', SetModelState)
-        self.num_obs = 2
+        self.num_obs = 4
 
         self.listener = tf.TransformListener()
         self.tf_pos = tuple()
@@ -66,8 +66,8 @@ class MyNode:
 
         random.seed(rospy.Time.now())
 
-        speeds = [0.2, 0.2]
-        #speeds = [0.33, 0.33, 0.66, 0.66]
+        #speeds = [0.2, 0.2]
+        speeds = [0.2, 0.2, 1.0, 1.0]
         ds = [s * r.to_sec() for s in speeds]
         print ds
 
