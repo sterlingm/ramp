@@ -17,6 +17,8 @@ using namespace std::chrono;
 Utility utility;
 std::vector<double> durs;
 
+bool write_data;
+
 
 void fixDuplicates(ramp_msgs::TrajectoryRequest& req)
 {
@@ -165,7 +167,10 @@ void writeData()
 
 void shutdown(int sigint)
 {
-  writeData();
+  if(write_data)
+  {
+    writeData();
+  }
   ros::shutdown();
 }
 
@@ -183,9 +188,11 @@ int main(int argc, char** argv) {
   // Declare the service that gives a path and returns a trajectory
   ros::ServiceServer service = n.advertiseService("trajectory_generator", requestCallback);
 
+  n.getParam("ramp/write_data", write_data);
   
- // Set function to run at shutdown
- signal(SIGINT, shutdown);
+  
+  // Set function to run at shutdown
+  signal(SIGINT, shutdown);
   
 
   ros::AsyncSpinner spinner(8);
