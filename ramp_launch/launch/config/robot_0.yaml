@@ -16,5 +16,5 @@ max_speed_linear: 0.33
 max_speed_angular: 1.5708
 
 # relative to map
-start: [0.0, 0.0, 1.5708]
-goal:  [1.0, 4.5, 0.0]
+start: [0.0, 2.5, 0.0]
+goal:  [5.0, 3.0, 0.0]

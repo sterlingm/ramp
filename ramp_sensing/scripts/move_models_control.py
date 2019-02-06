@@ -21,13 +21,14 @@ class MyNode:
     def __init__(self):
         self.get_model_state = rospy.ServiceProxy('gazebo/get_model_state', GetModelState)
         self.set_model_state = rospy.ServiceProxy('gazebo/set_model_state', SetModelState)
-        self.num_obs = 1
+        self.num_obs = 2
 
         self.listener = tf.TransformListener()
         self.tf_pos = tuple()
         self.tf_rot = tuple()
 
         self.sub_update = rospy.Subscriber('update', MotionState, self.updateCb)
+        #rospy.sleep(0.5)
 
         self.robotPos = []
 
