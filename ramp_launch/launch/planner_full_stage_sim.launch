@@ -29,7 +29,7 @@
 <node name="pub_map_odom" pkg="ramp_planner" type="pub_map_odom" output="screen" />
 
 <!-- Simulation -->
-<node name="stageros" pkg="stage_ros" type="stageros" args="/home/sterlingm/ros_workspace/src/ramp/ramp_launch/launch/world/single_robot.world" /> 
+<node name="stageros" pkg="stage_ros" type="stageros" args="$(find ramp_launch)/launch/world/single_robot.world" /> 
 <node name="ramp_control" pkg="ramp_control" type="ramp_control" output="log" >
   <remap from="odometry" to="odom" />
   <param name="simulation" value="true" />
