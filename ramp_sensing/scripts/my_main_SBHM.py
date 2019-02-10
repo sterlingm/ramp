@@ -199,8 +199,8 @@ def writeMap(bhm_mdl, fname_read, fname_write):
     print len(lines)
     # For each line, get the location
     for i,l in enumerate(lines):
-        print i
-        print l
+        #print i
+        #print l
         # Sometimes the last entry is empty
         if l != '':
             # Split l by commas
@@ -356,16 +356,17 @@ def main_bhm():
 #
 #        # subplot parameters are for the whole plot
 #        # rows of subplots, columns of subplots, # of subplot
-        tic = comp_timer.time()
+        '''tic = comp_timer.time()
         pl.subplot(1,3,1)
         pl.scatter(X[:, 0], X[:, 1], c=y, cmap='jet', s=50, edgecolors='')
         pl.colorbar()
         pl.xlim([cell_max_min[0], cell_max_min[1]]); pl.ylim([cell_max_min[2], cell_max_min[3]])
         toc = comp_timer.time()
         print("  Time elapsed (Subplot 1) = {:.0f} ms".format(1000*(toc-tic)))
+        '''
         
-        tic = comp_timer.time()
-        pl.subplot(1,3,2)
+        '''tic = comp_timer.time()
+        #pl.subplot(1,3,2)
 #        #pl.scatter(q_x[:, 0], q_x[:, 1], c=(q_mn*2-1), cmap='jet', s=25, 
 #        #marker='8', vmin=-1, vmax=1, edgecolors='')
         pl.scatter(q_x[:, 0], q_x[:, 1], c=(q_mn), cmap='jet', s=25, marker='8', vmin=0, vmax=1, edgecolors='')
@@ -373,9 +374,10 @@ def main_bhm():
         pl.xlim([cell_max_min[0], cell_max_min[1]]); pl.ylim([cell_max_min[2], cell_max_min[3]])
         toc = comp_timer.time()
         print("  Time elapsed (Subplot 2) = {:.0f} ms".format(1000*(toc-tic)))
+        '''
         
-        tic = comp_timer.time()
-        pl.subplot(1,3,3)
+        '''tic = comp_timer.time()
+        #pl.subplot(1,3,3)
         #pl.scatter(q_x[:, 0], q_x[:, 1], c=np.round(q_mn*2-1, 0), cmap='jet', 
 #        #s=25, marker='8',edgecolors='')
         pl.scatter(q_x[:, 0], q_x[:, 1], c=np.round(q_mn, 0), cmap='jet', s=25, marker='8',edgecolors='')
@@ -386,6 +388,7 @@ def main_bhm():
         toc = comp_timer.time()
         print("  Time elapsed (Subplot 3) = {:.0f} ms".format(1000*(toc-tic)))
         #pl.show()
+        '''
 #        
         pl.close("all")
 #

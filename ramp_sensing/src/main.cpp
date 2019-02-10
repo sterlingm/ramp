@@ -1792,7 +1792,7 @@ void cropCostmap(const nav_msgs::OccupancyGridConstPtr grid, nav_msgs::Occupancy
   result.info.origin.position.x += (x_min_ind*res);
   result.info.origin.position.y += (y_min_ind*res);
 
-  //////////ROS_INFO("result.info.width: %i result.info.height: %i", result.info.width, result.info.height);
+  //ROS_INFO("result.info.width: %i result.info.height: %i", result.info.width, result.info.height);
   //////////ROS_INFO("result.info.origin.position: (%f,%f)", result.info.origin.position.x, result.info.origin.position.y);
   //ROS_INFO("Exiting cropCostmap");
 }

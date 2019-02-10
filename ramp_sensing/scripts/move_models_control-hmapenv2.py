@@ -21,7 +21,7 @@ class MyNode:
     def __init__(self):
         self.get_model_state = rospy.ServiceProxy('gazebo/get_model_state', GetModelState)
         self.set_model_state = rospy.ServiceProxy('gazebo/set_model_state', SetModelState)
-        self.num_obs = 2
+        self.num_obs = 4
 
         self.listener = tf.TransformListener()
         self.tf_pos = tuple()
@@ -34,6 +34,7 @@ class MyNode:
 
 
     def updateCb(self, msg):
+        print 'In updateCb'
 
         # Crease PoseStamped from MotionState msg
         m = PoseStamped()
@@ -61,7 +62,7 @@ class MyNode:
         rospy.sleep(1)
         (self.tf_pos, self.tf_rot) = self.listener.lookupTransform('map', 'odom', rospy.Time(0))
 
-        r = rospy.Duration(0.05)
+        r = rospy.Duration(0.01)
 
         inc = 0.1
         while True:
@@ -79,29 +80,27 @@ class MyNode:
                         res = self.get_model_state(req.name, req.relative_entity_name)
                         
 
-                        # Get distance to robot
-                        distToRobot = math.sqrt( math.pow(self.robotPos[0]-res.pose.position.x, 2) + math.pow(self.robotPos[1]-res.pose.position.y, 2) )
-                        print 'distToRobot: %s' % distToRobot
+                        # Set new state
+                        setReq = ModelState()
+                        setReq.model_name = model_name
+                        setReq.reference_frame = 'map'
 
-                        # cardboard box radius is about .25m, turtlebot radius is also about .2m
-                        # Set it higher to account for some network lag
-                        if distToRobot > 1.0:
-                            # Set new state
-                            setReq = ModelState()
-                            setReq.model_name = model_name
-                            setReq.reference_frame = 'map'
+                        if i < 2:
+                            inc = inc / 5.0
+                        else:
+                            inc = inc * 5.0
 
-                            if i % 2 == 0:
-                                setReq.pose.position.x = res.pose.position.x + inc
-                                setReq.pose.position.y = res.pose.position.y + inc
-                            else:
-                                setReq.pose.position.x = res.pose.position.x - inc
-                                setReq.pose.position.y = res.pose.position.y - inc
+                        if i % 2 == 0:
+                            setReq.pose.position.x = res.pose.position.x + inc
+                            setReq.pose.position.y = res.pose.position.y + inc
+                        else:
+                            setReq.pose.position.x = res.pose.position.x - inc
+                            setReq.pose.position.y = res.pose.position.y - inc
 
-                            #setReq.pose.position.y = res.pose.position.y
+                        #setReq.pose.position.y = res.pose.position.y
 
-                            # Call the service
-                            setRes = self.set_model_state(setReq)
+                        # Call the service
+                        setRes = self.set_model_state(setReq)
                         
                         rospy.sleep(r)
                 inc *= -1
@@ -116,6 +115,7 @@ def main():
 
 
     n = MyNode()
+    rospy.sleep(0.5)
     n.start()
 
 

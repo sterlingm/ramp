@@ -73,8 +73,8 @@ def main():
     grid.info.resolution = 0.05
     # Added +1 for static map for medium env 1
     if len(sys.argv) > 1:
-        grid.info.width = ((x_max - x_min + grid.info.resolution) * 20)+1
-        grid.info.height = ((y_max - y_min + grid.info.resolution) * 20)+1
+        grid.info.width = ((x_max - x_min + grid.info.resolution) * 20)
+        grid.info.height = ((y_max - y_min + grid.info.resolution) * 20)
     else:
         grid.info.width = ((x_max - x_min + grid.info.resolution) * 20)
         grid.info.height = ((y_max - y_min + grid.info.resolution) * 20)

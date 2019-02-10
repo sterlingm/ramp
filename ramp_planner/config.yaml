@@ -1,5 +1,5 @@
 # RAMP misc parameters #
-population_size: 6
+population_size: 7
 
 sub_populations: false
 
@@ -15,11 +15,11 @@ error_reduction: true
 only_sensing: false
 
 # If false, control cycles are cut off
-moving_robot: false
+moving_robot: true
 
 preplanning_cycles: 100
 
-sensing_before_control_cycle: true
+sensing_before_control_cycle: false
 
 pop_traj_type: 1 #0=holonomic, 1=hybrid
 
@@ -31,7 +31,7 @@ stop_after_ppcs: false
 
 try_ic_loop: false
 
-fixed_control_cycle_rate: 1.0
+fixed_control_cycle_rate: 1.4
 
 sensing_cycle_rate: 10
 
@@ -49,9 +49,9 @@ crop_map: true
 
 # Remember that the combined map is published on /combined_map 
 # Remember to set track_unknown_space = true in the costmap param file
-use_hilbert_map: false
+use_hilbert_map: true
 
-use_static_map: false
+use_static_map: true
 
 use_odom_topics: false
 
@@ -68,11 +68,11 @@ eval_weight_T: 1.00 #1 #1.75
 
 # As D weight increases, overall contribution of D to the cost decreases
 # This is because high values of D are good so we add 1/D to the fitness cost
-eval_weight_D: 0.20 #0.13 #.2
+eval_weight_D: 0.00 #0.13 #.2
 
-eval_weight_A: 0.01 #0.48 #0.01
+eval_weight_A: 0.00 #0.48 #0.01
 
-eval_weight_P: 0.00
+eval_weight_P: 2.00
 
 
 

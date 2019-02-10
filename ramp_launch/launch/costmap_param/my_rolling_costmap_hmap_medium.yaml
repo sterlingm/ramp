@@ -19,7 +19,7 @@ costmap:
     unknown_cost_value: 10
     track_unknown_space: true
     origin_x: 0.0
-    origin_y: 0.0
+    origin_y: 3.5
 
     inflation_layer:
       enabled: true

@@ -47,7 +47,7 @@
 <!-- <node name="process_hmap" pkg="ramp_sensing" type="process_hmap" output="screen" /> -->
 
 <!-- Move obstacles -->
-<node name="move_obstacles" pkg="ramp_planner" type="move_gazebo_obs" output="log" />
+<!-- <node name="move_obstacles" pkg="ramp_planner" type="move_gazebo_obs" output="log" /> -->
 
 
 

@@ -67,7 +67,7 @@ class MyNode:
         random.seed(rospy.Time.now())
 
         #speeds = [0.2, 0.2]
-        speeds = [0.2, 0.2, 1.0, 1.0]
+        speeds = [0.33, 0.33, 1.0, 1.0]
         ds = [s * r.to_sec() for s in speeds]
         print ds
 

@@ -17,7 +17,7 @@ costmap:
     robot_radius: 0.225
     always_send_full_costmap: true
     unknown_cost_value: 10
-    track_unknown_space: false
+    track_unknown_space: true
     origin_x: 0.0
     origin_y: 3.5
 
