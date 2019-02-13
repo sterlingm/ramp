@@ -21,6 +21,8 @@ int count_single = 0;
 double T_weight, D_weight, A_weight, P_weight;
 std::vector<double> dof_min, dof_max;
 
+bool write_data;
+
 /** Srv callback to evaluate a trajectory */
 bool handleRequest(ramp_msgs::EvaluationSrv::Request& reqs,
                    ramp_msgs::EvaluationSrv::Response& resps) 
@@ -247,7 +249,10 @@ void writeData()
 
 void shutdown(int sigint)
 {
-  writeData();
+  if(write_data)
+  {
+    writeData();
+  }
   ros::shutdown();
 }
 
@@ -273,6 +278,7 @@ int main(int argc, char** argv) {
   handle.getParam("/ramp/eval_weight_P", P_weight);
   handle.getParam("/robot_info/DOF_min", dof_min);
   handle.getParam("/robot_info/DOF_max", dof_max);
+  handle.getParam("ramp/write_data", write_data);
 
   // Set weights
   ev.T_weight_ = T_weight;

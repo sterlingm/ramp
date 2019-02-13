@@ -15,6 +15,7 @@ float costmap_origin_x, costmap_origin_y, costmap_res;
 std::vector<ramp_msgs::Range> ranges;
 std::vector<double> dof_min;
 std::vector<double> dof_max;
+bool write_data;
 
 std::vector<double> durs;
 
@@ -121,6 +122,11 @@ void loadParameters(const ros::NodeHandle& handle)
   {
     ROS_ERROR("Did not find parameters robot_info/DOF_min, robot_info/DOF_max");
   }
+
+  if(handle.hasParam("ramp/write_data"))
+  {
+    handle.getParam("ramp/write_data", write_data);
+  }
 }
 
 
@@ -144,7 +150,10 @@ void writeData()
 
 void shutdown(int sigint)
 {
-  writeData();
+  if(write_data)
+  {
+    writeData();
+  }
   ros::shutdown();
 }
 

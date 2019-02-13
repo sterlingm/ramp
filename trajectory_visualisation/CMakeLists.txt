@@ -3,8 +3,8 @@ project(trajectory_visualisation)
 
 
 find_package(catkin REQUIRED COMPONENTS roscpp ramp_msgs)
-#find_package(Qt4 REQUIRED COMPONENTS QtCore QtGui QtWebKit QtOpengl)
 find_package(Qt4 REQUIRED COMPONENTS QtCore QtGui QtOpengl)
+#find_package(Qt4 REQUIRED COMPONENTS QtCore QtGui QtWebKit QtOpengl)
 include(${QT_USE_FILE})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 

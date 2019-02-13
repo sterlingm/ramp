@@ -26,6 +26,7 @@ bool                shrink_ranges;
 bool                stop_after_ppcs;
 bool                show_full_traj;
 bool                try_ic_loop;
+bool                write_data;
 double              t_cc_rate;
 double              t_sc_rate;
 double              T_weight, A_weight, D_weight;
@@ -357,7 +358,10 @@ void loadParameters(const ros::NodeHandle handle)
     handle.getParam("ramp/try_ic_loop", try_ic_loop);
   }
 
-
+  if(handle.hasParam("ramp/write_data"))
+  {
+    handle.getParam("ramp/write_data", write_data);
+  }
 
 
   std::cout<<"\n------- Done loading parameters -------\n";
@@ -562,7 +566,7 @@ int main(int argc, char** argv)
    */
  
   // Initialize the planner
-  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, global_frame, update_topic, pt, num_ppcs, stop_after_ppcs, sensingBeforeCC, t_sc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction, try_ic_loop, T_weight, A_weight, D_weight, show_full_traj);
+  my_planner.init(id, handle, start, goal, ranges, max_speed_linear, max_speed_angular, population_size, radius, sub_populations, global_frame, update_topic, pt, num_ppcs, stop_after_ppcs, sensingBeforeCC, t_sc_rate, t_cc_rate, only_sensing, moving_robot, errorReduction, try_ic_loop, T_weight, A_weight, D_weight, show_full_traj, write_data);
   my_planner.modifications_   = modifications;
   my_planner.evaluations_     = evaluations;
   my_planner.seedPopulation_  = seedPopulation;

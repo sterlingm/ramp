@@ -1818,7 +1818,7 @@ void Planner::initStartGoal(const MotionState s, const MotionState g) {
 
 
 /** Initialize the handlers and allocate them on the heap */
-void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int num_ppcs, bool stop_after_ppcs, const bool sensingBeforeCC, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction, const bool try_ic_loop, const double T_weight, const double A_weight, const double D_weight, bool show_full_traj)
+void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState s, const MotionState g, const std::vector<Range> r, const double max_speed_linear, const double max_speed_angular, const int population_size, const double robot_radius, const bool sub_populations, const std::string global_frame, const std::string update_topic, const TrajectoryType pop_type, const int num_ppcs, bool stop_after_ppcs, const bool sensingBeforeCC, const double t_sc_rate, const double t_fixed_cc, const bool only_sensing, const bool moving_robot, const bool errorReduction, const bool try_ic_loop, const double T_weight, const double A_weight, const double D_weight, bool show_full_traj, bool write_data)
 {
   ////ROS_INFO("In Planner::init");
 
@@ -1880,6 +1880,7 @@ void Planner::init(const uint8_t i, const ros::NodeHandle& h, const MotionState 
   errorReduction_       = errorReduction;
   show_full_traj_       = show_full_traj;
   generationsPerCC_     = controlCycle_.toSec() / planningCycle_.toSec();
+  writeData_            = write_data;
   
   T_weight_ = T_weight;
   A_weight_ = A_weight;
@@ -4527,6 +4528,7 @@ void Planner::writeData()
   openFiles();
   writeGeneralData();
   writeDurationData();
+  closeFiles();
 }
 
 
@@ -4690,8 +4692,10 @@ void Planner::goTest(float sec)
   imminentCollisionTimer_.stop();
   ob_dists_timer_.stop();
 
-  writeData();
-  closeFiles();
+  if(writeData_)
+  {
+    writeData();
+  }
 
   //////////ROS_INFO("Total number of planning cycles: %i", generation_-1);
   //////////ROS_INFO("Total number of control cycles:  %i", num_cc_);
@@ -4884,10 +4888,10 @@ void Planner::go()
 
 
   printData();
-  writeData();
-
-  // Close files opened for data writing
-  closeFiles();
+  if(writeData_)
+  {
+    writeData();
+  }
 
   //ROS_INFO("Planning done!");
   ////////////////ROS_INFO("latestUpdate_: %s\ngoal: %s", latestUpdate_.toString().c_str(), goal_.toString().c_str());
