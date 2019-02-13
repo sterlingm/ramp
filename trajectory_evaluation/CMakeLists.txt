@@ -47,12 +47,12 @@ add_dependencies(${PROJECT_NAME} ramp_msgs_generate_messages_cpp)
 
 ## ============= Testing Section =============================================
 
-catkin_add_gtest(trajectory_evaluation_testFunctionality test/trajectory_evaluation_testFunctionality.cpp src/collision_detection.cpp src/euclidean_distance.cpp src/evaluate.cpp src/orientation.cpp src/utility.cpp)
+#catkin_add_gtest(trajectory_evaluation_testFunctionality test/trajectory_evaluation_testFunctionality.cpp src/collision_detection.cpp src/euclidean_distance.cpp src/evaluate.cpp src/orientation.cpp src/utility.cpp)
 
-target_link_libraries(trajectory_evaluation_testFunctionality ${catkin_LIBRARIES} pthread)
+#target_link_libraries(trajectory_evaluation_testFunctionality ${catkin_LIBRARIES} pthread)
 
-catkin_add_gtest(trajectory_evaluation_testPerformance test/trajectory_evaluation_testPerformance.cpp src/collision_detection.cpp src/euclidean_distance.cpp src/evaluate.cpp src/orientation.cpp src/utility.cpp)
-target_link_libraries(trajectory_evaluation_testPerformance ${catkin_LIBRARIES} pthread)
+#catkin_add_gtest(trajectory_evaluation_testPerformance test/trajectory_evaluation_testPerformance.cpp src/collision_detection.cpp src/euclidean_distance.cpp src/evaluate.cpp src/orientation.cpp src/utility.cpp)
+#target_link_libraries(trajectory_evaluation_testPerformance ${catkin_LIBRARIES} pthread)
 
 ##============================================================================
 

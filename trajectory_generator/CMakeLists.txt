@@ -42,10 +42,10 @@ add_dependencies(${PROJECT_NAME} ramp_msgs_generate_messages_cpp)
 
 ## ============= Testing Section =============================================
 
-catkin_add_gtest(trajectory_generator_testFunctionality test/trajectory_generator_testFunctionality.cpp src/bezier_curve.cpp src/circle.cpp src/line.cpp src/mobile_base.cpp src/prediction.cpp src/utility.cpp)
-target_link_libraries(trajectory_generator_testFunctionality ${catkin_LIBRARIES} ReflexxesTypeII)
+#catkin_add_gtest(trajectory_generator_testFunctionality test/trajectory_generator_testFunctionality.cpp src/bezier_curve.cpp src/circle.cpp src/line.cpp src/mobile_base.cpp src/prediction.cpp src/utility.cpp)
+#target_link_libraries(trajectory_generator_testFunctionality ${catkin_LIBRARIES} ReflexxesTypeII)
 
-catkin_add_gtest(trajectory_generator_testPerformance test/trajectory_generator_testPerformance.cpp src/bezier_curve.cpp src/circle.cpp src/line.cpp src/mobile_base.cpp src/prediction.cpp src/utility.cpp)
-target_link_libraries(trajectory_generator_testPerformance ${catkin_LIBRARIES} ReflexxesTypeII)
+#catkin_add_gtest(trajectory_generator_testPerformance test/trajectory_generator_testPerformance.cpp src/bezier_curve.cpp src/circle.cpp src/line.cpp src/mobile_base.cpp src/prediction.cpp src/utility.cpp)
+#target_link_libraries(trajectory_generator_testPerformance ${catkin_LIBRARIES} ReflexxesTypeII)
 
 ##============================================================================

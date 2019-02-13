@@ -39,8 +39,8 @@ add_dependencies(${PROJECT_NAME} ramp_msgs_generate_messages_cpp)
 
 #========# Unit tests ==========#
 
-#catkin_add_gtest(insert_test test/insert_test.cpp src/constraints.cpp src/utility.cpp src/insert.cpp)
-#target_link_libraries(insert_test ${catkin_LIBRARIES})
+catkin_add_gtest(insert_test test/insert_test.cpp src/constraints.cpp src/utility.cpp src/insert.cpp)
+target_link_libraries(insert_test ${catkin_LIBRARIES})
 
 #catkin_add_gtest(delete_test test/delete_test.cpp src/constraints.cpp src/utility.cpp src/delete.cpp)
 #target_link_libraries(delete_test ${catkin_LIBRARIES})

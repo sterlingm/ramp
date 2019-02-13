@@ -112,7 +112,7 @@ target_link_libraries(move_gazebo_obs ${catkin_LIBRARIES} yaml-cpp)
 
 
 ## ============= Testing Section =============================================
-catkin_add_gtest(fullPath_testFunctionality test/fullPath_testFunctionality.cpp src/range.cpp src/utility.cpp)
-set_target_properties(fullPath_testFunctionality PROPERTIES COMPILE_FLAGS -std=c++0x)
-target_link_libraries(fullPath_testFunctionality ${catkin_LIBRARIES} pthread)
+#catkin_add_gtest(fullPath_testFunctionality test/fullPath_testFunctionality.cpp src/range.cpp src/utility.cpp)
+#set_target_properties(fullPath_testFunctionality PROPERTIES COMPILE_FLAGS -std=c++0x)
+#target_link_libraries(fullPath_testFunctionality ${catkin_LIBRARIES} pthread)
 ##============================================================================
