@@ -51,6 +51,10 @@ target_link_libraries(insert_test ${catkin_LIBRARIES})
 #catkin_add_gtest(swap_test test/swap_test.cpp src/constraints.cpp src/utility.cpp src/swap.cpp)
 #target_link_libraries(swap_test ${catkin_LIBRARIES})
 
+#===============================================#
+catkin_add_gtest(range_test test/range_test.cpp src/range.cpp)
+target_link_libraries(range_test ${catkin_LIBRARIES})
+
 
 
 
