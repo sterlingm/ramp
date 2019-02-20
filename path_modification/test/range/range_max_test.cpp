@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include "../include/range.h"
 
-TEST(TestSuite, randtest)
+TEST(TestSuite, randtest_max)
 {
 
   // make range object // 
@@ -12,7 +12,7 @@ TEST(TestSuite, randtest)
   float num = myrange.random();
   
   // check if num between min and max //
-  EXPECT_GT(num , 0);
+  EXPECT_LT(num , 1);
 
 
 

@@ -38,8 +38,11 @@ add_dependencies(${PROJECT_NAME} ramp_msgs_generate_messages_cpp)
 
 
 #========# Unit tests ==========#
+#Had to change dir from test/insert_test.cpp to ==> test/insert/insert_test.cpp
+#nameing of files could possibly change later
 
-catkin_add_gtest(insert_test test/insert_test.cpp src/constraints.cpp src/utility.cpp src/insert.cpp)
+#insert test#
+catkin_add_gtest(insert_test test/insert/insert_test.cpp src/constraints.cpp src/utility.cpp src/insert.cpp)
 target_link_libraries(insert_test ${catkin_LIBRARIES})
 
 #catkin_add_gtest(delete_test test/delete_test.cpp src/constraints.cpp src/utility.cpp src/delete.cpp)
@@ -52,8 +55,14 @@ target_link_libraries(insert_test ${catkin_LIBRARIES})
 #target_link_libraries(swap_test ${catkin_LIBRARIES})
 
 #===============================================#
-catkin_add_gtest(range_test test/range_test.cpp src/range.cpp)
-target_link_libraries(range_test ${catkin_LIBRARIES})
+#range test#
+#min
+catkin_add_gtest(range_min_test test/range/range_min_test.cpp src/range.cpp)
+target_link_libraries(range_min_test ${catkin_LIBRARIES})
+
+#max
+catkin_add_gtest(range_max_test test/range/range_max_test.cpp src/range.cpp)
+target_link_libraries(range_max_test ${catkin_LIBRARIES})
 
 
 
