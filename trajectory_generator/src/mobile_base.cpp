@@ -66,8 +66,8 @@ void MobileBase::initReflexxes()
   
 
   // Maximum acceleration
-  reflexxesData_.inputParameters->MaxAccelerationVector->VecData[0] = 1.0;
-  reflexxesData_.inputParameters->MaxAccelerationVector->VecData[1] = (2.f*PI)/3.f;
+  reflexxesData_.inputParameters->MaxAccelerationVector->VecData[0] = 0.5;
+  reflexxesData_.inputParameters->MaxAccelerationVector->VecData[1] = PI/2.f;
   
 
   // As the maximum jerk values are not known, this is just to try

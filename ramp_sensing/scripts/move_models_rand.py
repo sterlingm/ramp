@@ -22,7 +22,7 @@ class MyNode:
     def __init__(self):
         self.get_model_state = rospy.ServiceProxy('gazebo/get_model_state', GetModelState)
         self.set_model_state = rospy.ServiceProxy('gazebo/set_model_state', SetModelState)
-        self.num_obs = 4
+        self.num_obs = 1
 
         self.listener = tf.TransformListener()
         self.tf_pos = tuple()
@@ -73,8 +73,8 @@ class MyNode:
 
         directions = [(random.randrange(-180, 180) / 180.0) * math.pi for i in range(0,self.num_obs)]
 
-        ob_x_range = [2.0, 4.25]
-        ob_y_range = [3.0, 4.5]
+        ob_x_range = [0.0, 1.5]
+        ob_y_range = [2.5, 4.5]
 
         ob_fast_x_range = [2.5, 4.5]
         ob_fast_y_range = [0.5, 2.0]

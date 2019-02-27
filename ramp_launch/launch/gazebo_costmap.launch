@@ -21,8 +21,9 @@
 <!-- <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_hmap_exp_dy_ob2.launch" /> -->
 <!-- <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_hmap_exp_large1.launch" /> -->
 <!-- <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_hmap_exp_medium.launch" /> -->
+<include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_hmap_exp_medium_close_to_static.launch" />
 <!-- <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_hmap_exp_medium2.launch" /> -->
-<include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_hmap_exp_medium_fast_obs.launch" />
+<!-- <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_hmap_exp_medium_fast_obs.launch" /> -->
 <!-- <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_hmap_exp_static.launch" /> -->
 <node name="pub_tf_missing_turtlebot_gazebo"  pkg="ramp_sensing" type="pub_tf_missing_turtlebot_gazebo" />
 

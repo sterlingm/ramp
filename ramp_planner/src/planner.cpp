@@ -1285,7 +1285,7 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
   // full_eval is for predicting segments that are not generated
   // Used to have param for this, but it was only used for movingOn_
   // so it was replaced with hmap param
-  result.full_eval = true;
+  result.full_eval = false;
   result.hmap_eval = hmap;
 
   // Set hmap obs
@@ -2027,8 +2027,8 @@ void Planner::seedPopulation()
   
   ramp_msgs::KnotPoint kp1;
   
-  kp1.motionState.positions.push_back(3.);
-  kp1.motionState.positions.push_back(0.);
+  kp1.motionState.positions.push_back(1.5);
+  kp1.motionState.positions.push_back(4.0);
   kp1.motionState.positions.push_back(PI/4);
   
   kp1.motionState.velocities.push_back(0);
@@ -2038,7 +2038,7 @@ void Planner::seedPopulation()
   std::vector<KnotPoint> all;
   all.push_back(start_);
   all.push_back(kp);
-  //all.push_back(kp1);
+  all.push_back(kp1);
   all.push_back(goal_);
 
   Path p1(all);
@@ -2046,8 +2046,8 @@ void Planner::seedPopulation()
 
   ramp_msgs::KnotPoint kp2;
   
+  kp2.motionState.positions.push_back(1.5);
   kp2.motionState.positions.push_back(1.0);
-  kp2.motionState.positions.push_back(4.75);
   kp2.motionState.positions.push_back(PI/2.);
   
   kp2.motionState.velocities.push_back(0);
@@ -2081,7 +2081,7 @@ void Planner::seedPopulation()
   /**** Create the vector of Paths ****/
 
   std::vector<Path> paths;
-  //paths.push_back(p1);
+  paths.push_back(p1);
   paths.push_back(p2);
   //paths.push_back(p3);
   /************************************/
@@ -4717,29 +4717,6 @@ void Planner::go()
   std::cin.get();
  
 
-  // Seed the population
-  if(seedPopulation_) 
-  {
-    std::cout<<"\nSeeding transPopulation\n";
-    seedPopulation();
-    i_best_prev_ = population_.calcBestIndex();
-    std::cout<<"\ntransPopulation seeded!\n";
-    std::cout<<"\n"<<population_.fitnessFeasibleToString()<<"\n";
-    std::cout<<"\n** transPop **:"<<population_.toString();
-
-    // Evaluate after seeding
-    evaluatePopulation(evalHMap_);
-
-    // Set movingOn
-    movingOn_ = population_.get(population_.calcBestIndex()).getSubTrajectory(controlCycle_.toSec());
-    //////////ROS_INFO("movingOn: %s", movingOn_.toString().c_str());
-    
-
-    //sendPopulation();
-    std::cout<<"\ntransPopulation seeded! Press enter to continue\n";
-    //std::cin.get();
-  }
-
 
   // Create sub-populations if enabled
   if(subPopulations_) 
@@ -4774,6 +4751,24 @@ void Planner::go()
       ros::spinOnce();
       r.sleep();
     } 
+  }
+
+  // Seed the population
+  if(seedPopulation_) 
+  {
+    seedPopulation();
+    i_best_prev_ = population_.calcBestIndex();
+
+    // Evaluate after seeding
+    evaluatePopulation(evalHMap_);
+
+    // Set movingOn
+    movingOn_ = population_.get(population_.calcBestIndex()).getSubTrajectory(controlCycle_.toSec());
+    //////////ROS_INFO("movingOn: %s", movingOn_.toString().c_str());
+    
+
+    sendPopulation();
+    //std::cin.get();
   }
 
   //ROS_INFO("Finished pre-planning cycles!");

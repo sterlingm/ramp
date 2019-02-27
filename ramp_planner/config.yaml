@@ -1,5 +1,5 @@
 # RAMP misc parameters #
-population_size: 7
+population_size: 8
 
 sub_populations: false
 
@@ -7,7 +7,7 @@ modifications: true
 
 evaluations: true
 
-seed_population: false
+seed_population: true
 
 error_reduction: true
 
@@ -15,7 +15,7 @@ error_reduction: true
 only_sensing: false
 
 # If false, control cycles are cut off
-moving_robot: true
+moving_robot: false
 
 preplanning_cycles: 100
 
@@ -72,7 +72,7 @@ eval_weight_D: 0.00 #0.13 #.2
 
 eval_weight_A: 0.00 #0.48 #0.01
 
-eval_weight_P: 2.00
+eval_weight_P: 0.00
 
 
 
