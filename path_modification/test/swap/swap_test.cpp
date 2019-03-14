@@ -3,9 +3,10 @@
 #include "../include/swap.h"
 
 
-TEST(TestSuite, perform)
+TEST(TestSuite, swap_perform)
 {
 
+  // make kp
   ramp_msgs::KnotPoint kp1;
   kp1.motionState.positions.push_back(1);
   kp1.motionState.positions.push_back(1);
@@ -25,23 +26,39 @@ TEST(TestSuite, perform)
   kp4.motionState.positions.push_back(4);
   kp4.motionState.positions.push_back(4);
   kp4.motionState.positions.push_back(4);
-
+  
+  // make path
   ramp_msgs::Path p;
+  ramp_msgs::Path e;
+  
+  //path p
   p.points.push_back(kp1); 
   p.points.push_back(kp2);
   p.points.push_back(kp3);
   p.points.push_back(kp4);
-
+  
+  // set size before perform
   size_t p_size = p.points.size();
+  size_t e_size = e.points.size();
 
+  // create swap object(using multiple because of for loop)
   Swap s;
+  Swap se;//swap empty
+  
+  // s 
   s.path_ = p;
   ramp_msgs::Path old = p;  
   s.perform();
+  
+  // se
+  se.path_ = e;
+  ramp_msgs::Path old_e = e;  
+  se.perform();
 
 
   // Check the size
   EXPECT_EQ(s.path_.points.size(), p_size);
+  EXPECT_EQ(se.path_.points.size(), e_size);
 
 
   // Check that TWO states have changed after perform()
@@ -57,8 +74,25 @@ TEST(TestSuite, perform)
     } // end if
   } // end for
 
+
+  // check that empty did not perform swap
+  uint8_t ecount=0;
+  for(uint8_t i=0;i<s.path_.points.size();i++)
+  {
+    ramp_msgs::MotionState me = se.path_.points.at(i).motionState;
+    ramp_msgs::MotionState me_old = old_e.points.at(i).motionState;
+    if( sqrt( pow( me.positions.at(0) - me_old.positions.at(0), 2) +
+              pow( me.positions.at(1) - me_old.positions.at(1), 2) ) > 0.0001)
+    {
+      ecount++;
+    } // end if
+  } // end for
+  
+  //check swap
+  EXPECT_EQ(ecount, 0);
   EXPECT_EQ(count, 2);
-}
+  
+}// end test
 
 
 int main(int argc, char** argv)
