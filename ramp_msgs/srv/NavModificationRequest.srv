@@ -1,0 +1,9 @@
+nav_msgs/Path[] paths
+string op
+float64 repair_dist
+float64 repair_dir
+float64 repair_ob_r
+
+---
+
+nav_msgs/Path[]  mod_paths
