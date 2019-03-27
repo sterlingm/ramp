@@ -8,6 +8,7 @@
 #include <math.h>
 #include "ramp_msgs/Path.h"
 #include "ramp_msgs/Range.h"
+#include "nav_msgs/Path.h"
 #include <ros/console.h>
 
 #define PI 3.14159f

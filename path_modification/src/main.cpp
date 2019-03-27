@@ -69,6 +69,29 @@ bool handleRequest(ramp_msgs::ModificationRequest::Request& req,
 }
 
 
+
+bool handleNavRequest(ramp_msgs::NavModificationRequest::Request& req,
+                   ramp_msgs::NavModificationRequest::Response& res)
+{
+	high_resolution_clock::time_point tStart = high_resolution_clock::now();
+
+  Modifier mod(req, ranges);
+
+  // Set utility members
+  mod.in_.utility_ = u; 
+  mod.chg_.utility_ = u;
+  mod.repair_.utility_ = u;
+
+	res.mod_paths = mod.navPerform();
+
+  duration<double> time_span = duration_cast<nanoseconds>(high_resolution_clock::now()-tStart);
+  durs.push_back( time_span.count() );
+
+	return true;
+}
+
+
+
 // Initializes a vector of Ranges that the Planner is initialized with
 void initDOF(const std::vector<double> dof_min, const std::vector<double> dof_max) 
 {

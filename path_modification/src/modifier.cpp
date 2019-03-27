@@ -16,6 +16,13 @@ Modifier::Modifier(ramp_msgs::ModificationRequest::Request& req, std::vector<ram
   }*/
 }
 
+Modifier::Modifier(ramp_msgs::NavModificationRequest::Request& req, std::vector<ramp_msgs::Range> r) : navMod_req(req), ranges_(r) 
+{
+  in_.ranges_ = r;
+  chg_.ranges_ = r;
+  repair_.ranges_ = r;
+}
+
 const std::vector<ramp_msgs::Path> Modifier::perform() 
 {
   std::vector<ramp_msgs::Path> result;
@@ -93,4 +100,19 @@ const std::vector<ramp_msgs::Path> Modifier::perform()
 
 
   return result;
+}
+
+
+
+const std::vector<nav_msgs::Path> Modifier::navPerform() 
+{
+  std::vector<nav_msgs::Path> result;
+
+	if(mod_req.op == "insert") 
+  {
+    in_.navPath_ = navMod_req.paths.at(0); 
+    result.push_back(in_.navPerform());
+  }
+
+	return result;
 }
