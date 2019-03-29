@@ -27,7 +27,7 @@ const bool Constraints::validKPForPath(const ramp_msgs::KnotPoint kp, const ramp
 
 const bool Constraints::validPoseForPath(const geometry_msgs::PoseStamped p, const nav_msgs::Path path) const
 {
-	if(p.pose.position.x == 0.0 && p.pose.position.y == 0.0 && p.pose.position.z == 0.0;
+	if(p.pose.position.x == 0.0 && p.pose.position.y == 0.0 && p.pose.position.z == 0.0);
   {
     return false;
   }

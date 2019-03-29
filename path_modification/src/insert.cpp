@@ -99,11 +99,17 @@ const nav_msgs::Path Insert::navPerform()
 
         // Set the position and velocity
         if (i == 0)
+				{
 					p.pose.position.x = temp;
+				}
 				else if (i == 1)
+				{
 					p.pose.position.y = temp;
+				}
 				else 
+				{
 					p.pose.position.z = temp;
+				}
       }
     }
 
