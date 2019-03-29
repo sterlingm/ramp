@@ -114,5 +114,11 @@ const std::vector<nav_msgs::Path> Modifier::navPerform()
     result.push_back(in_.navPerform());
   }
 
+	else if(mod_req.op == "delete") 
+  {
+    del_.navPath_ = navMod_req.paths.at(0);
+    result.push_back(del_.navPerform());
+  }
+
 	return result;
 }
