@@ -78,7 +78,7 @@ const nav_msgs::Path Insert::navPerform()
     }
 
 
-    // Generate a new, random motion state
+    // Generate a new PoseStamped
     geometry_msgs::PoseStamped p;
 
     while(!checkConstraints_.validPoseForPath(p, navPath_))

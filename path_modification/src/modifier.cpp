@@ -108,16 +108,28 @@ const std::vector<nav_msgs::Path> Modifier::navPerform()
 {
   std::vector<nav_msgs::Path> result;
 
-	if(mod_req.op == "insert") 
+	if(navMod_req.op == "insert") 
   {
     in_.navPath_ = navMod_req.paths.at(0); 
     result.push_back(in_.navPerform());
   }
 
-	else if(mod_req.op == "delete") 
+	else if(navMod_req.op == "delete") 
   {
     del_.navPath_ = navMod_req.paths.at(0);
     result.push_back(del_.navPerform());
+  }
+
+	else if(navMod_req.op == "change") 
+  {
+    chg_.navPath_ = navMod_req.paths.at(0);
+    result.push_back(chg_.navPerform());
+  }
+
+	else if(navMod_req.op == "swap") 
+  {
+    swap_.navPath_ = navMod_req.paths.at(0);
+    result.push_back(swap_.navPerform());
   }
 
 	return result;
