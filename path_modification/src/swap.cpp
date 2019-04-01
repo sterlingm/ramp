@@ -2,6 +2,7 @@
 
 
 Swap::Swap(const ramp_msgs::Path p) : path_(p) {}
+Swap::Swap(const nav_msgs::Path p) : navPath_(p) {}
 
 
 /** Swap does NOT swap the velocity values! Only the positions! */
