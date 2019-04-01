@@ -132,5 +132,12 @@ const std::vector<nav_msgs::Path> Modifier::navPerform()
     result.push_back(swap_.navPerform());
   }
 
+	else if(navMod_req.op == "crossover") 
+  {
+    cross_.navPath1_ = navMod_req.paths.at(0);
+    cross_.navPath2_ = navMod_req.paths.at(1);
+    result = cross_.navPerform();
+  }
+
 	return result;
 }
