@@ -1,7 +1,7 @@
 # RAMP misc parameters #
 population_size: 8
 
-sub_populations: false
+sub_populations: true
 
 modifications: true
 
@@ -15,7 +15,7 @@ error_reduction: true
 only_sensing: false
 
 # If false, control cycles are cut off
-moving_robot: false
+moving_robot: true
 
 preplanning_cycles: 100
 
@@ -49,7 +49,7 @@ crop_map: true
 
 # Remember that the combined map is published on /combined_map 
 # Remember to set track_unknown_space = true in the costmap param file
-use_hilbert_map: true
+use_hilbert_map: false
 
 use_static_map: true
 

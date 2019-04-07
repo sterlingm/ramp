@@ -79,8 +79,8 @@ def main():
         grid.info.width = ((x_max - x_min + grid.info.resolution) * 20)
         grid.info.height = ((y_max - y_min + grid.info.resolution) * 20)
 
-    #print('(x_max - x_min - grid.info.resolution): %f' % \
-            #(x_max - x_min + grid.info.resolution))
+    print('(x_max - x_min - grid.info.resolution): %f' % \
+            (x_max - x_min + grid.info.resolution))
     
     grid.info.origin.position.x = xs[0]
     grid.info.origin.position.y = ys[0]

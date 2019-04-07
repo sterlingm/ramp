@@ -8,7 +8,8 @@
   <!-- <rosparam file="$(find ramp_launch)/launch/costmap_param/my_rolling_costmap_hmap.yaml" command="load" /> -->
   <!-- <rosparam file="$(find ramp_launch)/launch/costmap_param/my_rolling_costmap.yaml" command="load" /> -->
   <!-- <rosparam file="$(find ramp_launch)/launch/costmap_param/my_rolling_costmap_hmap_large.yaml" command="load" /-->
-  <rosparam file="$(find ramp_launch)/launch/costmap_param/my_rolling_costmap_hmap_medium.yaml" command="load" />
+  <!-- <rosparam file="$(find ramp_launch)/launch/costmap_param/my_rolling_costmap_hmap_medium.yaml" command="load" /> -->
+  <rosparam file="$(find ramp_launch)/launch/costmap_param/my_rolling_costmap_hmap_small.yaml" command="load" />
   <!-- <rosparam file="$(find ramp_launch)/launch/costmap_param/my_rolling_costmap_hmap_medium2.yaml" command="load" /> -->
 </node>
 
@@ -21,7 +22,8 @@
 <!-- <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_hmap_exp_dy_ob2.launch" /> -->
 <!-- <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_hmap_exp_large1.launch" /> -->
 <!-- <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_hmap_exp_medium.launch" /> -->
-<include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_hmap_exp_medium_close_to_static.launch" />
+<!-- <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_hmap_exp_medium_close_to_static.launch" /> -->
+<include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_hmap_exp_small.launch" />
 <!-- <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_hmap_exp_medium2.launch" /> -->
 <!-- <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_hmap_exp_medium_fast_obs.launch" /> -->
 <!-- <include file="$(find turtlebot_gazebo)/launch/my_turtlebot_world_hmap_exp_static.launch" /> -->

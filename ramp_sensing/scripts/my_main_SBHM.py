@@ -165,7 +165,7 @@ def load_parameters(case, fname):
     cell_resolution = (0.5,0.5)
     #cell_max_min = (0, 5.0, -0.45, 3.0)
     #cell_max_min = (0, 3.5, 0, 3.5)
-    cell_max_min = (0, 5.0, 0, 5.0)
+    cell_max_min = (0, 3.5, 0, 3.5)
     gamma = 0.2
     parameters = \
         {'sim': \
@@ -329,68 +329,69 @@ def main_bhm():
 
         # fit the model
         tic = comp_timer.time()
-        bhm_mdl.fit(X, y)
+        if len(X) > 0:
+            bhm_mdl.fit(X, y)
 
-        toc = comp_timer.time()
-        fitTimes.append(toc-tic)
-        fitStr = '%s\n' % (toc-tic)
-        f_fitTimes.write(fitStr)
-        print("  Time elapsed (Model fitting) = {:.0f} ms".format(1000*(toc-tic)))
+            toc = comp_timer.time()
+            fitTimes.append(toc-tic)
+            fitStr = '%s\n' % (toc-tic)
+            f_fitTimes.write(fitStr)
+            print("  Time elapsed (Model fitting) = {:.0f} ms".format(1000*(toc-tic)))
 #
 #
 #        # query the model
-        tic = comp_timer.time()
-        q_resolution = 0.1
-        xx, yy = np.meshgrid(np.arange(cell_max_min[0], cell_max_min[1], q_resolution), np.arange(cell_max_min[2], 
-            cell_max_min[3], q_resolution))
-        q_x = np.hstack((xx.ravel()[:, np.newaxis], yy.ravel()[:, np.newaxis]))
-        q_mn = bhm_mdl.predict_proba(q_x)[:,1]
-        toc = comp_timer.time()
-        queryTimes.append(toc-tic)
-        queryStr = '%s\n' % (toc-tic)
-        f_queryTimes.write(queryStr)
-        print("  Time elapsed (Querying model) = {:.0f} ms".format(1000*(toc-tic)))
+            tic = comp_timer.time()
+            q_resolution = 0.1
+            xx, yy = np.meshgrid(np.arange(cell_max_min[0], cell_max_min[1], q_resolution), np.arange(cell_max_min[2], 
+                cell_max_min[3], q_resolution))
+            q_x = np.hstack((xx.ravel()[:, np.newaxis], yy.ravel()[:, np.newaxis]))
+            q_mn = bhm_mdl.predict_proba(q_x)[:,1]
+            toc = comp_timer.time()
+            queryTimes.append(toc-tic)
+            queryStr = '%s\n' % (toc-tic)
+            f_queryTimes.write(queryStr)
+            print("  Time elapsed (Querying model) = {:.0f} ms".format(1000*(toc-tic)))
 #
 #        # model
-        pl.figure(figsize=(30,5))
+            pl.figure(figsize=(30,5))
 #
 #        # subplot parameters are for the whole plot
 #        # rows of subplots, columns of subplots, # of subplot
-        '''tic = comp_timer.time()
-        pl.subplot(1,3,1)
-        pl.scatter(X[:, 0], X[:, 1], c=y, cmap='jet', s=50, edgecolors='')
-        pl.colorbar()
-        pl.xlim([cell_max_min[0], cell_max_min[1]]); pl.ylim([cell_max_min[2], cell_max_min[3]])
-        toc = comp_timer.time()
-        print("  Time elapsed (Subplot 1) = {:.0f} ms".format(1000*(toc-tic)))
-        '''
-        
-        '''tic = comp_timer.time()
-        #pl.subplot(1,3,2)
+            '''tic = comp_timer.time()
+            pl.subplot(1,3,1)
+            pl.scatter(X[:, 0], X[:, 1], c=y, cmap='jet', s=50, edgecolors='')
+            pl.colorbar()
+            pl.xlim([cell_max_min[0], cell_max_min[1]]); pl.ylim([cell_max_min[2], cell_max_min[3]])
+            toc = comp_timer.time()
+            print("  Time elapsed (Subplot 1) = {:.0f} ms".format(1000*(toc-tic)))
+            '''
+            
+            '''tic = comp_timer.time()
+            #pl.subplot(1,3,2)
 #        #pl.scatter(q_x[:, 0], q_x[:, 1], c=(q_mn*2-1), cmap='jet', s=25, 
 #        #marker='8', vmin=-1, vmax=1, edgecolors='')
-        pl.scatter(q_x[:, 0], q_x[:, 1], c=(q_mn), cmap='jet', s=25, marker='8', vmin=0, vmax=1, edgecolors='')
-        pl.colorbar()
-        pl.xlim([cell_max_min[0], cell_max_min[1]]); pl.ylim([cell_max_min[2], cell_max_min[3]])
-        toc = comp_timer.time()
-        print("  Time elapsed (Subplot 2) = {:.0f} ms".format(1000*(toc-tic)))
-        '''
-        
-        '''tic = comp_timer.time()
-        #pl.subplot(1,3,3)
-        #pl.scatter(q_x[:, 0], q_x[:, 1], c=np.round(q_mn*2-1, 0), cmap='jet', 
+            pl.scatter(q_x[:, 0], q_x[:, 1], c=(q_mn), cmap='jet', s=25, marker='8', vmin=0, vmax=1, edgecolors='')
+            pl.colorbar()
+            pl.xlim([cell_max_min[0], cell_max_min[1]]); pl.ylim([cell_max_min[2], cell_max_min[3]])
+            toc = comp_timer.time()
+            print("  Time elapsed (Subplot 2) = {:.0f} ms".format(1000*(toc-tic)))
+            '''
+            
+            '''tic = comp_timer.time()
+            #pl.subplot(1,3,3)
+            #pl.scatter(q_x[:, 0], q_x[:, 1], c=np.round(q_mn*2-1, 0), cmap='jet', 
 #        #s=25, marker='8',edgecolors='')
-        pl.scatter(q_x[:, 0], q_x[:, 1], c=np.round(q_mn, 0), cmap='jet', s=25, marker='8',edgecolors='')
-        pl.colorbar()
-        pl.xlim([cell_max_min[0], cell_max_min[1]]); pl.ylim([cell_max_min[2], cell_max_min[3]])
-        pl.savefig(os.path.join(ros_pkg_path, data_dir_str, 'output/sim/seq_map_1iter_t' + str(ith_scan) + '.png'), 
-                bbox_inches='tight')
-        toc = comp_timer.time()
-        print("  Time elapsed (Subplot 3) = {:.0f} ms".format(1000*(toc-tic)))
-        #pl.show()
-        '''
+            pl.scatter(q_x[:, 0], q_x[:, 1], c=np.round(q_mn, 0), cmap='jet', s=25, marker='8',edgecolors='')
+            pl.colorbar()
+            pl.xlim([cell_max_min[0], cell_max_min[1]]); pl.ylim([cell_max_min[2], cell_max_min[3]])
+            pl.savefig(os.path.join(ros_pkg_path, data_dir_str, 'output/sim/seq_map_1iter_t' + str(ith_scan) + '.png'), 
+                    bbox_inches='tight')
+            toc = comp_timer.time()
+            print("  Time elapsed (Subplot 3) = {:.0f} ms".format(1000*(toc-tic)))
+            #pl.show()
+            '''
 #        
-        pl.close("all")
+            pl.close("all")
 #
 
     print('Done training Hilbert map, writing map to file')

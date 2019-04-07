@@ -2027,8 +2027,8 @@ void Planner::seedPopulation()
   
   ramp_msgs::KnotPoint kp1;
   
-  kp1.motionState.positions.push_back(1.5);
-  kp1.motionState.positions.push_back(4.0);
+  kp1.motionState.positions.push_back(2.75);
+  kp1.motionState.positions.push_back(1.0);
   kp1.motionState.positions.push_back(PI/4);
   
   kp1.motionState.velocities.push_back(0);
@@ -2037,7 +2037,7 @@ void Planner::seedPopulation()
 
   std::vector<KnotPoint> all;
   all.push_back(start_);
-  all.push_back(kp);
+  //all.push_back(kp);
   all.push_back(kp1);
   all.push_back(goal_);
 
@@ -2046,8 +2046,8 @@ void Planner::seedPopulation()
 
   ramp_msgs::KnotPoint kp2;
   
-  kp2.motionState.positions.push_back(1.5);
-  kp2.motionState.positions.push_back(1.0);
+  kp2.motionState.positions.push_back(0.25);
+  kp2.motionState.positions.push_back(0.75);
   kp2.motionState.positions.push_back(PI/2.);
   
   kp2.motionState.velocities.push_back(0);
@@ -2081,7 +2081,8 @@ void Planner::seedPopulation()
   /**** Create the vector of Paths ****/
 
   std::vector<Path> paths;
-  paths.push_back(p1);
+  //paths.push_back(p1);
+  paths.push_back(p2);
   paths.push_back(p2);
   //paths.push_back(p3);
   /************************************/
@@ -2095,7 +2096,7 @@ void Planner::seedPopulation()
     requestTrajectory(paths.at(i), trajec);
     evaluateTrajectory(trajec);
     //////ROS_INFO("Seeded trajec: %s", trajec.toString().c_str());
-    population_.replace(0, trajec);
+    population_.replace(i, trajec);
     //int index = population_.add(trajec); 
     /*if(index > -1)
     {
