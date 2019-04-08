@@ -20,7 +20,7 @@ import sys
 import numpy as np
 import datetime
 import gym
-from gym.spaces import prng
+#from gym.spaces import prng
 import rospy
 import time
 from std_msgs.msg import Header
@@ -92,7 +92,7 @@ seed_str = input("Enter a seed for random generator (must be integer): ")
 seed_int = int(seed_str)
 np.random.seed(seed_int) # numpy
 env.seed(seed_int) # env
-prng.seed(seed_int) # space
+#prng.seed(seed_int) # space
 assert len(env.action_space.shape) == 1 # assert action is a vector (not a matrix or tensor)
 action_size = env.action_space.shape[0] # number of scalars in one action
 assert len(env.observation_space.shape) == 1 # assert observatoin is a vector (not a matrix or tensor)
