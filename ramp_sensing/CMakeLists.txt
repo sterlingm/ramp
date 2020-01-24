@@ -5,7 +5,8 @@ find_package(catkin REQUIRED COMPONENTS cmake_modules geometry_msgs map_msgs mes
 find_package(OpenCV REQUIRED)
 find_package(PkgConfig)
 find_package(Eigen3 REQUIRED)
-pkg_check_modules(BFL REQUIRED orocos-bfl)
+pkg_check_modules(BFL REQUIRED bfl)
+#pkg_check_modules(BFL REQUIRED orocos-bfl)
 
 #######################################
 ## Declare ROS messages and services ##
@@ -35,9 +36,9 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBS} ${BFL_L
 add_dependencies(${PROJECT_NAME} ramp_msgs_generate_messages_cpp)
 
 
-add_executable(sensing_dynamic_means src/circle_filter.cpp src/circle_packer.cpp src/GridMap2D.cpp src/main_dm.cpp src/obstacle.cpp src/polypartition.cpp src/utility.cpp)
-target_link_libraries(sensing_dynamic_means ${catkin_LIBRARIES} ${OpenCV_LIBS} ${BFL_LIBRARIES})
-add_dependencies(sensing_dynamic_means ramp_msgs_generate_messages_cpp)
+## add_executable(sensing_dynamic_means src/circle_filter.cpp src/circle_packer.cpp src/GridMap2D.cpp src/main_dm.cpp src/obstacle.cpp src/polypartition.cpp src/utility.cpp)
+## target_link_libraries(sensing_dynamic_means ${catkin_LIBRARIES} ${OpenCV_LIBS} ${BFL_LIBRARIES})
+## add_dependencies(sensing_dynamic_means ramp_msgs_generate_messages_cpp)
 
 add_executable(convert_hilbert_data src/main_convert_map_to_hilbert_data.cpp)
 target_link_libraries(convert_hilbert_data ${catkin_LIBRARIES} ${OpenCV_LIBS} ${BFL_LIBRARIES})
