@@ -1,7 +1,7 @@
 # RAMP misc parameters #
 population_size: 8
 
-sub_populations: true
+sub_populations: false
 
 modifications: true
 
@@ -51,7 +51,7 @@ crop_map: true
 # Remember to set track_unknown_space = true in the costmap param file
 use_hilbert_map: false
 
-use_static_map: true
+use_static_map: false
 
 use_odom_topics: false
 

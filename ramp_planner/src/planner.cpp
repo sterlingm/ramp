@@ -4715,7 +4715,7 @@ void Planner::go()
   evaluatePopulation(evalHMap_);
   //ROS_INFO("Initial population evaluated");
   sendPopulation();
-  std::cin.get();
+  //std::cin.get();
  
 
 

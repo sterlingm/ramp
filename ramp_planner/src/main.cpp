@@ -585,13 +585,19 @@ int main(int argc, char** argv)
    */
   ROS_INFO("Planner is waiting for sensing module to be ready");
   bool sensingReady = false;
-  while(sensingReady == false && ros::ok())
+
+
+  /*
+   * TURN BACK ON WHEN NEEDED
+   *
+   */
+  /*while(sensingReady == false && ros::ok())
   {
     //ROS_INFO("In while");
     handle.param("/ramp/sensing_ready", sensingReady, false);
     ros::spinOnce();
     r.sleep();
-  }
+  }*/
   ROS_INFO("Sensing module is ready!");
 
 
