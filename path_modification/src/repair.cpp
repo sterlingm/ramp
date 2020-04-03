@@ -1,4 +1,5 @@
 #include "repair.h"
+#include <swri_profiler/profiler.h>
 
 
 
@@ -11,6 +12,7 @@ Repair::Repair(const ramp_msgs::Path p) : path_(p) {}
  */
 const std::vector<double> Repair::getNewPosition(const double value, const double other_value, const double bound, const double theta, const double r, bool x_dim) const
 {
+  SWRI_PROFILE("PathMod-Repair-Perform");
   /*ROS_INFO("In Repair::getNewPosition");
   ROS_INFO("value: %f other_value: %f", value, other_value);
   ROS_INFO("bound: %f theta: %f r: %f x_dim: %s", bound, theta, r, x_dim ? "True" : "False");*/

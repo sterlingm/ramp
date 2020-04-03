@@ -1,9 +1,11 @@
 #include "delete.h"
+#include <swri_profiler/profiler.h>
 
 Delete::Delete(const ramp_msgs::Path p) : path_(p) {}
 
 
 const ramp_msgs::Path Delete::perform() {
+  SWRI_PROFILE("PathMod-Delete-Perform");
 
   if(path_.points.size() > 2) 
   {

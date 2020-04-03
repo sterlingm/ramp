@@ -1,4 +1,5 @@
 #include "insert.h"
+#include <swri_profiler/profiler.h>
 
 
 Insert::Insert(const ramp_msgs::Path p) : path_(p) {}
@@ -8,6 +9,7 @@ Insert::Insert(const ramp_msgs::Path p) : path_(p) {}
 
 const ramp_msgs::Path Insert::perform() 
 {
+  SWRI_PROFILE("PathMod-Insert-Perform");
 
   if(path_.points.size() < 7)
   {

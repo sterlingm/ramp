@@ -1,0 +1,7 @@
+<launch>
+
+<node name="rviz" pkg="rviz" type="rviz" /> 
+
+<node name="profiler" pkg="ramp_profiler" type="profiler" output="screen" /> 
+
+</launch>

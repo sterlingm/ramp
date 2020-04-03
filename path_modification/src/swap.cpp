@@ -1,4 +1,5 @@
 #include "swap.h"
+#include <swri_profiler/profiler.h>
 
 
 Swap::Swap(const ramp_msgs::Path p) : path_(p) {}
@@ -7,6 +8,7 @@ Swap::Swap(const ramp_msgs::Path p) : path_(p) {}
 /** Swap does NOT swap the velocity values! Only the positions! */
 const ramp_msgs::Path Swap::perform() 
 {
+  SWRI_PROFILE("PathMod-Swap-Perform");
 
   if(path_.points.size() > 3) 
   {

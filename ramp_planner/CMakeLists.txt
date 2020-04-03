@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ramp_planner)
 
-find_package(catkin REQUIRED COMPONENTS gazebo_msgs geometry_msgs message_generation ramp_msgs roscpp roslib std_msgs tf)
+find_package(catkin REQUIRED COMPONENTS gazebo_msgs geometry_msgs message_generation ramp_msgs roscpp roslib std_msgs tf swri_profiler)
 
 
 

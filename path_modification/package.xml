@@ -22,11 +22,15 @@
   <build_depend>ramp_msgs</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>roslib</build_depend>
+  <build_depend>swri_profiler</build_depend>
+  <build_depend>swri_profiler_msgs</build_depend>
   
   <run_depend>message_runtime</run_depend>
   <run_depend>ramp_msgs</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>roslib</run_depend>
+  <run_depend>swri_profiler</run_depend>
+  <run_depend>swri_profiler_msgs</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

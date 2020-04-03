@@ -6,6 +6,7 @@
 #include <fstream>
 #include <signal.h>
 #include <ros/package.h>
+#include <swri_profiler/profiler.h>
 using namespace std::chrono;
 
 Utility u;
@@ -22,6 +23,7 @@ std::vector<double> durs;
 bool handleRequest(ramp_msgs::ModificationRequest::Request& req,
                    ramp_msgs::ModificationRequest::Response& res)
 {
+  SWRI_PROFILE("PathMod-Main-HandleRequest");
   //ROS_INFO("Operator: %s", req.op.c_str());
 
   high_resolution_clock::time_point tStart = high_resolution_clock::now();

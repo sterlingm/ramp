@@ -1,4 +1,5 @@
 #include "modifier.h"
+#include <swri_profiler/profiler.h>
 
 
 Modifier::Modifier(const ros::NodeHandle& h, const unsigned int n) : num_ops(n), repair_dir_(0), repair_dist_(101), repair_ob_r_(0.5)
@@ -107,6 +108,7 @@ const std::vector<int> Modifier::getTargets(const std::string& op, const Populat
  * */
 void Modifier::buildModificationRequest(const Population& pop, bool imminent_collision, ramp_msgs::ModificationRequest& result)
 {
+  SWRI_PROFILE("Planner-Planner-BuildModReq");
 
   // Push the target paths onto the modification request
   std::vector<int> targets;
@@ -159,9 +161,13 @@ const std::vector<Path> Modifier::perform(const Population& pop, bool imminent_c
   buildModificationRequest(pop, imminent_collision, mr); 
   ////ROS_INFO("ModificationResult built, pop size: %i # of paths: %i", (int)pop.size(), (int)mr.response.mod_paths.size()); 
 
+  SWRI_PROFILE("Planner-Modifier-Perform-Sent");
+
   // If the request was successful
   if(h_mod_req_->request(mr)) 
   {
+    SWRI_PROFILE("Planner-Modifier-Perform-Received");
+
     ros::Time t_m = ros::Time::now();
     
     // Push on the modified paths

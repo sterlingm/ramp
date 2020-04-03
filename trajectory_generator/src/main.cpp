@@ -12,6 +12,7 @@
 #include <signal.h>
 #include <fstream>
 #include <ros/package.h>
+#include <swri_profiler/profiler.h>
 using namespace std::chrono;
 
 Utility utility;
@@ -20,6 +21,7 @@ std::vector<double> durs;
 
 void fixDuplicates(ramp_msgs::TrajectoryRequest& req)
 {
+  SWRI_PROFILE("TrajGen-Main-FixDuplicates");
   int i=0;
   while(i<req.path.points.size()-1)
   {
@@ -46,6 +48,7 @@ void fixDuplicates(ramp_msgs::TrajectoryRequest& req)
 
 bool checkGoal(ramp_msgs::TrajectoryRequest req)
 {
+  SWRI_PROFILE("TrajGen-Main-CheckGoal");
   // Circle predictions only have one knotpoint
   if(req.path.points.size() == 1)
   {
@@ -70,6 +73,8 @@ bool checkGoal(ramp_msgs::TrajectoryRequest req)
 bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
                       ramp_msgs::TrajectorySrv::Response& res) 
 {
+  SWRI_PROFILE("TrajGen-Main-RequestCallback|Start");
+
   //ROS_INFO("In trajectory generator requestCallback");
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
   for(uint8_t i=0;i<req.reqs.size();i++)
@@ -81,6 +86,7 @@ bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
     /*
      * Check for start == goal
      */
+    SWRI_PROFILE("TrajGen-Main-RequestCallback|CheckGoal");
     if(checkGoal(treq))
     {
       tres.trajectory.trajectory.points.push_back(utility.getTrajectoryPoint(treq.path.points.at(0).motionState));
@@ -98,6 +104,7 @@ bool requestCallback( ramp_msgs::TrajectorySrv::Request& req,
     }
 
     // Build trajectory
+    SWRI_PROFILE("TrajGen-Main-RequestCallback|TrajReq");
     if(treq.type != PREDICTION) 
     {
       fixDuplicates(treq);

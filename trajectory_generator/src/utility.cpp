@@ -1,4 +1,5 @@
 #include "utility.h"
+#include <swri_profiler/profiler.h> 
 
 Utility::Utility() {}
 
@@ -55,6 +56,8 @@ const double Utility::findAngleToVector(const std::vector<double> p) const {
 
 
 const double Utility::findAngleFromAToB(const trajectory_msgs::JointTrajectoryPoint a, const trajectory_msgs::JointTrajectoryPoint b) const {
+  SWRI_PROFILE("TrajGen-Utility-FindAngleFromAToB");
+
   std::vector<double> c;
   std::vector<double> d;
   
@@ -213,6 +216,8 @@ const ramp_msgs::KnotPoint Utility::getKnotPoint(const ramp_msgs::MotionState ms
 }
 
 const trajectory_msgs::JointTrajectoryPoint Utility::getTrajectoryPoint(const ramp_msgs::MotionState ms) const {
+  SWRI_PROFILE("TrajGen-Utility-GetTrajectoryPoint");
+  
   trajectory_msgs::JointTrajectoryPoint result;
 
   for(unsigned int i=0;i<ms.positions.size();i++) {

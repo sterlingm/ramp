@@ -1,4 +1,5 @@
 #include "modifier.h"
+#include <swri_profiler/profiler.h>
 
 Modifier::Modifier(ramp_msgs::ModificationRequest::Request& req) : mod_req(req) {}
 
@@ -18,6 +19,7 @@ Modifier::Modifier(ramp_msgs::ModificationRequest::Request& req, std::vector<ram
 
 const std::vector<ramp_msgs::Path> Modifier::perform() 
 {
+  SWRI_PROFILE("PathMod-Modifier-Perform");
   std::vector<ramp_msgs::Path> result;
 
   /*ROS_INFO("Modifier received path: %s", u.toString(mod_req.paths[0]).c_str());

@@ -1,4 +1,5 @@
 #include "planner.h"
+#include <swri_profiler/profiler.h>
 
 
 /*****************************************************
@@ -1346,6 +1347,7 @@ void Planner::buildEvaluationRequest(const RampTrajectory& trajec, ramp_msgs::Ev
 
 void Planner::requestTrajectory(ramp_msgs::TrajectorySrv& tr, std::vector<RampTrajectory>& result, const int id)
 {
+  SWRI_PROFILE("Planner-Planner-RequestTrajectory");
   //////////ROS_INFO("In Planner::requestTrajectory(ramp_msgs::TrajectorySrv)");
   //std::cout<<"\nid: "<<id;
   
@@ -1353,8 +1355,11 @@ void Planner::requestTrajectory(ramp_msgs::TrajectorySrv& tr, std::vector<RampTr
   num_trajecs_gen_.push_back(tr.request.reqs.size());
   
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
+
+  SWRI_PROFILE("Planner-Planner-BeforeTrajReq");
   if(h_traj_req_->request(tr)) 
   {
+    SWRI_PROFILE("Planner-Planner-AfterTrajReq");
     high_resolution_clock::time_point tEnd = high_resolution_clock::now();
     duration<double> time_span = duration_cast<microseconds>(tEnd - tStart);
     trajec_durs_.push_back(time_span.count());
@@ -2796,6 +2801,8 @@ void Planner::getTransitionTrajectory(const RampTrajectory& trj_movingOn, const 
 /** Modify a Path */
 const std::vector<Path> Planner::modifyPath() 
 { 
+  SWRI_PROFILE("TrajGen-Planner-ModifyPath");
+
   if(log_enter_exit_)
   {
     ////ROS_INFO("In modifyPath");
@@ -3995,6 +4002,8 @@ void Planner::buildLineList(const RampTrajectory& trajec, int id, visualization_
 
 void Planner::requestEvaluation(std::vector<RampTrajectory>& trajecs, bool hmap)
 {
+  SWRI_PROFILE("Planner-Planner-RequestEvaluation|hmap");
+
   ramp_msgs::EvaluationSrv srv;
   buildEvaluationSrv(trajecs, srv, hmap);
 
@@ -4002,8 +4011,11 @@ void Planner::requestEvaluation(std::vector<RampTrajectory>& trajecs, bool hmap)
   num_trajecs_eval_.push_back(trajecs.size());
 
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
+
+  SWRI_PROFILE("Planner-Planner-BeforeEvalReq|hmap");
   if(h_eval_req_->request(srv))
   {
+    SWRI_PROFILE("Planner-Planner-AfterEvalReq|hmap");
     duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now() - tStart);
     eval_durs_.push_back( time_span.count() );
     for(uint16_t i=0;i<trajecs.size();i++)
@@ -4022,6 +4034,7 @@ void Planner::requestEvaluation(std::vector<RampTrajectory>& trajecs, bool hmap)
 
 void Planner::requestEvaluation(ramp_msgs::EvaluationRequest& request) 
 {
+  SWRI_PROFILE("Planner-Planner-RequestEvaluation");
   ////////ROS_INFO("In Planner::requestEvaluation(EvaluationRequest&)");
   ramp_msgs::EvaluationSrv srv;
   srv.request.reqs.push_back(request);
@@ -4029,8 +4042,10 @@ void Planner::requestEvaluation(ramp_msgs::EvaluationRequest& request)
   num_trajecs_eval_.push_back(1);
 
   high_resolution_clock::time_point tStart = high_resolution_clock::now();
+  SWRI_PROFILE("Planner-Planner-BeforeEvalReq");
   if(h_eval_req_->request(srv))
   {
+    SWRI_PROFILE("Planner-Planner-AfterEvalReq");
     duration<double> time_span = duration_cast<microseconds>(high_resolution_clock::now() - tStart);
     eval_durs_.push_back( time_span.count() );
     //////////////ROS_INFO("Setting fitness: %f", srv.response.resps[0].fitness);
@@ -4704,7 +4719,7 @@ void Planner::goTest(float sec)
 
 void Planner::go() 
 {
-
+  SWRI_PROFILE("Planner-Planner-Go");
   // t=0
   generation_ = 0;
   

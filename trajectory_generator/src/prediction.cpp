@@ -1,4 +1,5 @@
 #include "prediction.h"
+#include <swri_profiler/profiler.h>
 
 Prediction::Prediction() {}
 
@@ -17,6 +18,8 @@ void Prediction::init(const ramp_msgs::TrajectoryRequest req)
 
 bool Prediction::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs::TrajectoryResponse& res) 
 {
+  SWRI_PROFILE("TrajGen-Prediction-TrajectoryRequest");
+
   //ROS_INFO("In Prediction::trajectoryRequest");
   res.trajectory.i_knotPoints.push_back(0);
 

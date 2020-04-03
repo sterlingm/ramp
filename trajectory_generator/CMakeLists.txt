@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(trajectory_generator)
 
-find_package(catkin REQUIRED COMPONENTS geometry_msgs message_generation ramp_msgs roscpp roslib)
-
+find_package(catkin REQUIRED COMPONENTS geometry_msgs message_generation ramp_msgs roscpp roslib swri_profiler)
 
 #########################################
 #### Declare ROS messages and services ##

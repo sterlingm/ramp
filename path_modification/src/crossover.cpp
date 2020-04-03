@@ -1,10 +1,12 @@
 #include "crossover.h"
+#include <swri_profiler/profiler.h>
 
 Crossover::Crossover(const ramp_msgs::Path p1, const ramp_msgs::Path p2) : path1_(p1), path2_(p2) {} 
 
 
 const std::vector<ramp_msgs::Path> Crossover::perform() 
 {
+  SWRI_PROFILE("PathMod-Crossover-Perform");
   std::vector<ramp_msgs::Path> result;
 
   //Randomly choose a configuration in each path to split on

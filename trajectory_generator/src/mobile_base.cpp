@@ -1,4 +1,5 @@
 #include "mobile_base.h"
+#include <swri_profiler/profiler.h>
 
 /** Constructor */
 MobileBase::MobileBase() : planning_full_(false), i_XDOF_(0), i_THETADOF_(1) 
@@ -140,6 +141,7 @@ void MobileBase::init(const ramp_msgs::TrajectoryRequest req)
 // different than its current value **********************
 void MobileBase::setTarget(const ramp_msgs::MotionState& ms) 
 {
+  SWRI_PROFILE("TrajGen-MobileBase-SetTarget");
   //////ROS_INFO("In MobileBase::setTarget");
   //////ROS_INFO("ms: %s", utility_.toString(ms).c_str());
   //////ROS_INFO("Prev: %s", utility_.toString(path_.points.at(i_kp_-1).motionState).c_str());
@@ -314,6 +316,7 @@ void MobileBase::setSelectionVectorRotation() {
  **/
 void MobileBase::setInitialMotion() 
 {
+  SWRI_PROFILE("TrajGen-MobileBase-SetInitialMotion");
   //ROS_INFO("In MobileBase::setInitialMotion");
   
   // Initialise the time to use for each trajectory point
@@ -608,6 +611,7 @@ const ramp_msgs::MotionState MobileBase::getMaxMS() const {
 
 void MobileBase::bezier(ramp_msgs::Path& p, bool only_curve, std::vector<BezierCurve>& result)
 {
+  SWRI_PROFILE("TrajGen-MobileBase-Bezier");
   //////ROS_INFO("Entered MobileBase::bezier");
 
   ramp_msgs::Path p_copy = p;
@@ -1019,6 +1023,8 @@ const trajectory_msgs::JointTrajectoryPoint MobileBase::spinOnce(bool vertical_l
 /** Given Reflexxes data, return a trajectory point */
 const trajectory_msgs::JointTrajectoryPoint MobileBase::buildTrajectoryPoint(const ReflexxesData data, bool vertical_line) 
 {
+  SWRI_PROFILE("TrajGen-MobileBase-BuildTrajectoryPoint");
+
   ////ROS_INFO("In MobileBase::buildTrajectoryPoint");
   //printReflexxesSpinInfo();
 
@@ -1323,6 +1329,8 @@ const trajectory_msgs::JointTrajectoryPoint MobileBase::buildTrajectoryPoint(con
 
 
 const std::vector<uint8_t> MobileBase::getCurveKPs(const std::vector<BezierCurve> curves) const {
+  SWRI_PROFILE("TrajGen-MobileBase-GetCurveKPs");
+  
   std::vector<uint8_t> result;
   
   for(uint8_t i_c=0; i_c < curves.size(); i_c++) {
@@ -1387,6 +1395,8 @@ bool MobileBase::checkSpeed(const ramp_msgs::Path p, const std::vector<uint8_t> 
 // Service callback, the input is a path and the output a trajectory
 bool MobileBase::trajectoryRequest(ramp_msgs::TrajectoryRequest& req, ramp_msgs::TrajectoryResponse& res) 
 {
+  SWRI_PROFILE("TrajGen-MobileBase-TrajectoryRequest");
+
   //////ROS_INFO("In MobileBase::trajectoryRequest");
   //////ROS_INFO("type_: %i HOLONOMIC: %i", req.type, HOLONOMIC); 
 
@@ -1864,6 +1874,7 @@ const std::vector<trajectory_msgs::JointTrajectoryPoint> MobileBase::rotate(cons
 
 void MobileBase::rotateOOP(const double start, const double goal, const double start_v, const double start_a, std::vector<trajectory_msgs::JointTrajectoryPoint>& result)
 {
+  SWRI_PROFILE("TrajGen-MobileBase-RotateOOP");
   //ROS_INFO("In MobileBase::rotate");
   //ROS_INFO("start: %f goal: %f start_v: %f start_a: %f", start, goal, start_v, start_a);
 

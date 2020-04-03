@@ -1,4 +1,5 @@
 #include "bezier_curve.h"
+#include <swri_profiler/profiler.h>
 
 
 
@@ -943,6 +944,7 @@ void BezierCurve::calculateConstants() {
 /** Generate all the motion states on the curve */
 const std::vector<ramp_msgs::MotionState> BezierCurve::generateCurve() 
 {
+  SWRI_PROFILE("TrajGen-BezierCurve-GenerateCurve");
   ////ROS_INFO("Entered BezierCurve::generateCurve()");
   //////////ROS_INFO("Points so far: ");
   for(uint8_t i=0;i<points_.size();i++)

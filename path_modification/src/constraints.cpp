@@ -1,8 +1,11 @@
 #include "constraints.h"
+#include <swri_profiler/profiler.h>
 
 
 const bool Constraints::validKPForPath(const ramp_msgs::KnotPoint kp, const ramp_msgs::Path p) const
 {
+  SWRI_PROFILE("PathMod-Constraints-ValidKPForPath");
+
   if(kp.motionState.positions.size() == 0)
   {
     return false;

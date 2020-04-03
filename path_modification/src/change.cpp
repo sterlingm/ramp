@@ -1,4 +1,5 @@
 #include "change.h"
+#include <swri_profiler/profiler.h>
 
 
 
@@ -7,6 +8,7 @@ Change::Change(const ramp_msgs::Path p) : path_(p) {}
 
 const ramp_msgs::Path Change::perform() 
 {
+  SWRI_PROFILE("PathMod-Change-Perform");
   //ROS_INFO("Before: %s", utility_.toString(path_).c_str()); 
 
   if(path_.points.size() > 2) 
